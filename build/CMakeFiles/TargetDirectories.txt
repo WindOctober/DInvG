@@ -1,3 +1,0 @@
-/home/windoctober/Desktop/Clang-based-Invariant-Generator/build/CMakeFiles/rebuild_cache.dir
-/home/windoctober/Desktop/Clang-based-Invariant-Generator/build/CMakeFiles/edit_cache.dir
-/home/windoctober/Desktop/Clang-based-Invariant-Generator/build/CMakeFiles/Inv.dir
