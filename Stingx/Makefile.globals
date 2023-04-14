@@ -1,0 +1,27 @@
+
+HOME=/home/srirams/StanfordStuff/
+## HOME=/usr/local/
+
+## ppl.hh gmp.h should be here
+GLBINCS =  -I $(HOME)/include/ 
+# -I $(HOME)/include/PPL
+
+## libgmp.a and libppl.a locations.
+
+GLBLIBS = -L $(HOME)/lib  
+#-L $(HOME)/lib/PPL
+
+## 
+## if bison --version says that bison is version 
+## 1.875, there is no need to edit any further.
+##
+
+BISON=bison
+
+##
+## if bison's version is less than 1.875, please
+## download the latest version of bison and if 
+## locally installed, update this variable
+##BISON=/afs/cs.stanford.edu/u/srirams/bin/bison
+
+
