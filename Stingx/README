@@ -1,0 +1,471 @@
+# StInGX: An extension of StInG
+
+StInGX is an invariant generator extended and modified from original StInG (https://theory.stanford.edu/~srirams/Software/sting.html), so that to be more scalable and efficient.
+
+The sections are as follows:
+- Section 1: Getting Started Guide
+- Section 2: Step by Step Instructions
+
+This extension tool 'StInGX' has a low dependency for other library and is easy to install and use.
+
+We have configured and installed all the necessary dependency in a virtual machine (VMware Workstation 16, output file format is .ova), so you can skip to Section 2 (omit Section 1) and reproduce the experiments directly with our virtual machine. The password and other necessary information of the virtual machine is as follows:
+
+- Virtual Machine name: oopsla2022-paper200
+- Virtual Machine default configure: 2 Core and 4GB memory (recommended configure in paper: Intel Core i7-7700 (3.6 GHz) machine with 15.5 GiB of memory)
+
+- Username: paper200
+
+- Password: oops22-paper200
+- All the directory and files are put in Desktop: 
+  - /Desktop/StInGX
+    - /ModelExamples
+      - /output
+      - script-many
+      - script-newdfs_sequences
+      - smallscript-many
+      - smallscript-newdfs_sequences
+      - script-svcomp_invgen.sh
+      - (others...)
+    - /ProgramExamples
+      - /output
+      - script-many
+      - script-newdfs_sequences
+      - smallscript-many
+      - smallscript-newdfs_sequences
+      - (others...)
+  - /Desktop/InvGen-Experiment
+    - /svcomp_invgen
+    - script-invgen.sh
+  - /Desktop/sparse1
+  - /Desktop/Artifact Document
+
+# 1 Getting Started Guide
+
+We recommend you to use StInGX in Linux OS (such as Ubuntu 20.04 LTS, etc.).
+
+The StInGX is depended on some libraries and let's firstly install them as follow:
+
+## 1.1 Install the lib for PPL
+
+The StInGX is depended on lib of PPL in version 1.2 (https://www.bugseng.com/ppl) and actually the PPL is depended on GMP yet.
+
+Here are two method to install PPL, we recommend you to use the automatically install.
+
+- ### Automatically install PPL 1.2 by Linux command (recommended)
+
+The five libraries (GDB, GCC, M4, GMP, PPL) are all needed for running StInGX successfully.
+
+Due to the dependency relation, we recommend you to execute command as following orders:
+
+1. GDB: `sudo apt-get install gdb`
+2. GCC: `sudo apt-get install gcc (or g++)`
+3. M4 : `sudo apt-get install m4`
+4. GMP: `sudo apt-get install libgmp10 libgmp-dev`
+5. PPL: `sudo apt-get install ppl-dev`
+
+- ### Mannually install PPL 1.2 by Official Website
+
+You also can install them from official website.
+
+1. GMP: https://gmplib.org/
+
+2. PPL: https://www.bugseng.com/ppl
+
+## 1.2 Test whether the PPL installation successfully
+
+After you install all the depended libraries as above, you should be able to use the StInGX.
+
+Try in the following command:
+
+1. Open the tool directory: `cd StInGX`
+2. Now, you can see binary file of StInGX named "lstingx" in current directory. Then run this binary without input: `./lstingx`
+3. If you can see some output information (instead of error) as follows, then the StInGX could be used on your system! And you can skip section 1.3. (After run "lstingx" without input, you could run command `ctrl+c` to exit)
+
+```
+- Initialize_before_Parser doing...Done!
+
+- Scan_Input doing...
+argc: 1
+argv: ./lstingx
+Done!
+```
+
+4. In case that the library is installed but StInGX (i.e. "lstingx") still could not run, you could remake the binary file of StInGX as explained in section 1.3.
+
+## 1.3 Install the lib for Make
+
+You could remake the binary file of StInGX "lstingx" by following command
+
+1. Open the tool directory and you can see "Makefile": `cd StInGX`
+2. Remake the binary file "lstingx" from file "Makefile" by command: `make`
+3. If it outputs error when `make`, check the depended libraries (Bison, Flex, Makedepend) the `make` need.
+4. You can install them by the following command:
+   1. Bison: `sudo apt-get install bison`
+   2. Flex: `sudo apt-get install flex`
+   3. Makedepend: `sudo apt-get install xutils-dev`
+
+# 2 Step by Step Instructions
+
+After the Section 1, we can use StInGX as expectation.
+
+Now, we will introduce how to reproduce our experimental results.
+
+
+
+First, our experiments take at most ten hours to run fully, so we prepare two version of scripts:
+
+1. "script-*": a complete script to reproduce all the data for our paper in 10 hours
+2. "smallscript-*": a short and quick script to reproduce the necessary data in few seconds
+
+You can verifiy the algorithm by just running the "smallscript-*".
+
+
+
+The basic operation to run binary file is in the following command (**you can skip these concrete command and just use above scripts to reproduce paper data**):
+
+- For original StInG (be used to comparison) command line
+
+`../lstingx many < ${input_file} > ${output_file}`
+
+- For Our Approach command line
+
+```
+
+../lstingx newdfs_sequences target_prior2 ${divide} ${projection} < ${input_file} > ${output_file}
+
+For divide opinion: four_per_group, three_per_group, two_per_group, one_per_group
+
+For projection opinion: KEC, FEC, REC, noProjection
+
+The concrete description of these opinions are illustrated in paper section 6 and also the following section 2.1
+
+```
+
+If necessary, you can evaluate single file by single command line (this command line is the same as that mentioned in the above scripts).
+
+
+
+Considering the running time, we put the experimental data in our packages for reference if needed.
+
+The relation between files in our packages and Tables in our paper will be explained in following section.
+
+## 2.1 Reproduce the Data of Table 3-6 in Main Paper
+
+To reproduce all the data of Table 3-6, just follows the command:
+
+1. Open the tool directory: `cd StInGX`
+2. Open the "ModelExamples" directory: `cd ModelExamples`
+3. Running the complete script: `./script-many` and `./script-newdfs_sequences`
+4. Back to the tool directory and open the "ProgramExamples" directory: `cd ..` and `cd ProgramExamples`
+5. Running the complete script: `./script-many` and `./script-newdfs_sequences`
+6. All data are stored in "output" directory
+
+
+
+After running over, we get all the data of Table 3-6. 
+
+Next we explain the relation between data file and paper tables, and there are some data we have made ready to reference.
+
+- For Table 3
+  - The data of `scheduler'` is stored in `ModelExamples/output/origin_scheduler_torun_folder`
+    - The data of `StInG` is stored in `ModelExamples/output/origin_scheduler_torun_folder/many`.
+    - The data of `Our Approach, Reordered-Expansion: Gen-Proj` is stored is stored in `ModelExamples/output/origin_scheduler_torun_folder/newdfs_sequences/target_prior2/one_per_group/noProjection`.
+  - The data of `Scheduler` is stored in `ProgramExamples/output/fixedup_scheduler_torun_folder`
+    - The data of `StInG` is stored in `ProgramExamples/output/fixedup_scheduler_torun_folder/many`.
+    - The data of `Our Approach, Reordered-Expansion: Gen-Proj` is stored is stored in `ProgramExamples/output/fixedup_scheduler_torun_folder/newdfs_sequences/target_prior2/one_per_group/noProjection`.
+  - The data of `Fischer` and `Cars` are the similar with `Scheduler`
+
+For example, in Table 3, the `Scheduler'` 2p has five elements: Loc, Dim, Time, Banged, Speedup. 
+
+1) The "Loc" is corresponding to text "Location" number in file "scheduler-2p-empty2.in"
+2) The "Dim" is corresponding to text "nd" in file "scheduler-2p-empty2.in"
+3) The "Time" is corresponding to total text "dfs_traverse Time" in file "scheduler-2p-empty2.in"
+4) The "Banged" is corresponding to total text "*bang*ed" in file "scheduler-2p-empty2.in"
+5) The "Speedup" is computed by ratio of `StInG` and `Our Approach`
+
+```
+(ModelExamples/output/origin_scheduler_torun_folder/many/scheduler-2p-empty2.in)
+
+...
+
+  「 l2, l: 8, n: 7, nd: 16 」
+
+...
+
+----------------------------- 
+| The Locations read in are: 
+----------------------------- 
+
+Location: l1
+# of variables: 7
+Initial Condition: [[ 
+| 
+...
+| 
+]]
+Invariant: [[ 
+| 
+...
+| 
+]]
+
+Location: l2
+# of variables: 7
+[ no initial condition set]
+Invariant: [[ 
+| 
+...
+| 
+]]
+
+/----------------------------- 
+| Status after Solver: 
+----------------------------- 
+| # of Contexts generated = 23
+| # pruned by inclusion tests in vcl = 10
+| # pruned in Clump.cc = 0
+| # of invariants *weav*ed = 7
+| The collect_invariant Time Taken (0.01s) = 0
+| # *bang*ed = 26
+| The dfs_traverse Time Taken (0.01s) = 1
+| Total Time taken (0.01s) = 5
+\----------------------------- 
+
+```
+
+
+
+Especially, in Table 3, the `Scheduler` 3p has the element "Line" which is corresponding to the text line in file `ProgramExamples/fixedup_scheduler/scheduler-3p-fixedup-empty23.c`. `Fischer` and `Cars` are similar.
+
+- For Table 4
+
+The data is stored in the same way as showed in Table 3, so we can easily to find them relation.
+
+Especially, there are few corresponding relation we could point out:
+
+1. The "Our Approach" in Table is corresponding to "newdfs_sequences" in file directory
+2. The "Reordered-Expansion" in Table is corresponding to "target_prior2" in file directory
+3. The "Gen-Proj"in Table is corresponding to "noProjection" in file directory
+4. The "FME"in Table is corresponding to "REC" in file directory
+5. The "Block"in Table is corresponding to "FEC" in file directory
+6. The "Block+"in Table is corresponding to "KEC" in file directory
+7. All data of Table 3 is corresponding to "one_per_group"
+8. The "Gen-Time" in Table is corresponding to "collect_invariant Time" in file directory
+
+- For Table 5
+
+1. The "none"in Table is corresponding to "one_per_group" in file directory
+2. The "two"in Table is corresponding to "two_per_group" in file directory
+3. The "three"in Table is corresponding to "three_per_group" in file directory
+4. The "four"in Table is corresponding to "four_per_group" in file directory
+
+- For Table 6
+
+The "Max"in Table is corresponding to maximal text "dfs_traverse Time" in file (which is smaller than total text "dfs_traverse Time")
+
+## 2.2 Reproduce the Data of Table 7-13 in Appendix
+
+After running over the command in section 2.1, we also get all the data of Table 7-13. 
+
+And the data is stored in the same way as showed above.
+
+1. Table 7-10 is corresponding to "none"
+
+2. Each column in Time (such as 1,...,12,...,14) is the "dfs_traverse Time" in file, and "Max" is the biggest one in them
+
+## 2.3 Reproduce the Data of Table 14 in Appendix
+
+We also compare our StInGX with InvGen (https://www.cse.iitb.ac.in/~akg/invgen/index.html)
+
+### First Install InvGen (Omit this section if you use in Virtual Machine)
+
+After we download binary file in website, we could find that this tool InvGen is 32-bit (released in 2009), so we need to install a 32-64 translator as following command in order to run this tool on a 64-bit system (2022).
+
+`sudo apt-get install lib32z1`
+
+Without this command, you may get an error "bash: ./invgen: No such file or directory".
+
+### Reproduce the Data of Table 14
+
+1. Open the tool directory: `cd StInGX`
+2. Open the "ModelExamples" directory: `cd ModelExamples`
+3. Running the complete script: `./script-svcomp_invgen.sh`
+4. All data are stored in "output/svcomp_invgen" directory
+5. Back to the root directory and open the another tool "InvGen-Experiment" directory: `cd ../..` and `cd InvGen-Experiment`
+6. Running the complete script: `./script-invgen.sh`
+7. All data are stored in "svcomp_invgen" directory
+
+- For Table 14
+
+The data is stored in the same way as showed above.
+
+Especially, in Table 14, the `InvGen` column has two elements: Successful, Time.
+
+1. "Successful" of `InvGen` in Table is corresponding to the last part "Printing Strengthening" in the "*.pl.invgenout" file. For example, the "Printing Strengthening" part in "down.pl.invgenout" has two pc, so the "Successful" is two.
+
+```
+(InvGen-Experiment/svcomp_invgen/down/down.pl.invgenout)
+
+#Printing Strengthening ==
+#pc(main-5-13): [n=10,i=10,j>=0,k=j,j=<10]
+#pc(main-1-9): [n=10,j=10,i=<10,k=i,i>=0]
+#=========================
+```
+
+2. "Successful" of `Our Approach` in Table is corresponding to text "Location" number in file. For example:
+
+```
+(ModelExamples/output/svcomp_invgen/down.c_blockwhile.in)
+
+----------------------------- 
+| The Locations read in are: 
+----------------------------- 
+
+Location: l0
+# of variables: 4
+「 l: 0, n: 4, nd: 15 」
+Initial Condition: [[ 
+| 
+...
+| 
+]]
+Invariant: [[ 
+| 
+...
+| 
+]]
+
+Location: l2
+# of variables: 4
+「 l: 5, n: 4, nd: 15 」
+[ no initial condition set]
+Invariant: [[ 
+| 
+...
+| 
+]]
+
+Location: l4
+# of variables: 4
+「 l: 10, n: 4, nd: 15 」
+[ no initial condition set]
+Invariant: [[ 
+| 
+...
+| 
+]]
+
+/----------------------------- 
+| Status after Solver: 
+----------------------------- 
+| Time Taken Unit: (0.01s)
+| # of Contexts generated = 9
+|
+| # of pruned vcl in intra-transition = 2
+| # of pruned nodes by self inspection = 0, Time = 0
+| # of pruned by backtracking = 0, Time = 0
+| # of merged for sub sequences = 0
+|
+| t: collect_invariant Time
+| w: invariants *weav*ed
+| LOC 0: t = 0, w = 3
+| LOC 1: t = 0, w = 3
+| LOC 2: t = 1, w = 3
+| TOTAL: t = 1, w = 9
+|
+| t: dfs_traverse Time
+| b: path *bang*ed
+| PRE_0: t = 0, b = 0
+| PRE_1: t = 0, b = 0
+| PRE_2: t = 1, b = 0
+| PST_0: t = 0, b = 5
+| PST_1: t = 0, b = 7
+| PST_2: t = 1, b = 3
+| TOTAL: t = 2, b = 15
+|
+| TOTAL Time = 3
+\----------------------------- 
+
+```
+
+So the "Successful" and "Time" in `Our Approach` is "3" and "0.03s", respectively.
+
+## 2.4 Reproduce the Parser
+
+In Section 6 of the paper, we said that we convert C language (i.e., suffix .c format mentioned above) to our LinTS format (i.e., suffix .in and .c.txt format mentioned above) via Sparse. Although we have prepared LinTS file in our Virtual Machine, we still introduce how to use the sparse as a parser here.
+
+### Sparse: A linux static analysis tool
+
+Sparse is a tool for detecting bugs in linux kernel (https://www.kernel.org/doc/html/v4.12/dev-tools/sparse.html), and it can convert C source code to abstract syntax tree and intermediate representation, which are easy to handle.
+
+We have extended Sparse in order to convert C source code to LinTS format.
+
+### 2.4.1 Getting Started Guide (Omit this section if you use in Virtual Machine)
+
+Our experiment was run on Ubuntu 20.04 LTS, we recommand you to run sparse on Ubuntu or other linux operating systems. Sparse is depended on some libaries and let's firstly install them as follows:
+
+    sudo apt-get install libxml2-dev libsqlite3-dev libgtk-3-dev llvm
+
+### 2.4.2 Compiling the Source Code (Omit this section if you use in Virtual Machine)
+
+After installing the dependencies for sparse, we can now compile the source code, as follows:
+
+    make
+
+### 2.4.3 Converting C Source codes to LinTs
+
+After compiling the source code, we can find two binary program `convert` and `convert_car` in the root directory, and they will be used to convert the c source codes to LinTs format.
+
+Our test cases are stored in the folders `fischer/`, `scheduler/` and `cars/`, respectively. By the way, the output of our program will also be stored in the same folder as the source program.
+
+* **Fischer**: Run the following command to convert the source code of fischer 10p into LinTs format: 
+
+
+        ./convert fischer/fischer-10p-mp.c
+    
+    The output is saved as `fisher/fischer-10p-mp.c.txt`.
+
+
+* **Scheduler**: Run the following command to convert the source code of scheduler 7p into LinTs format: 
+
+
+        ./convert scheduler/scheduler-7p-fixedup-empty234567.c
+    
+    The output is saved as `scheduler/scheduler-7p-fixedup-empty234567.c.txt`.
+
+* **Cars**: Run the following command to convert the source code of cars 6p into LinTs format: 
+
+
+         ./convert_car cars/cars-6p-fixed-multiloc-simple.c
+    
+    The output is saved as `cars/cars-6p-fixed-multiloc-simple.c.txt`.
+
+---
+Hongming Liu
+PhD student
+Shanghai Jiao Tong University, China
+
+——————
+Following context is copied from origin README in SAS2004 (https://link.springer.com/chapter/10.1007/978-3-540-27864-1_7)
+——————
+
+1.  The LICENSE file contains the license for this release.
+ Please set the appropriate paths to the PPL and the gmp 
+library in the makefile.
+
+2. The Examples directory contains some examples. Running the makefile
+compiles to a binary called lsting.  Look at Examples/LowDim/doit for 
+a script to run the examples with invariance checking.
+
+2. Please edit Makefile.globals setting appropriate paths
+ to the PPL and the GMP includes/libraries.
+ Please set the path for bison version 1.875.
+
+3. Maintenance queries can be sent to me at srirams@nec-labs.com
+or at srirams@theory.stanford.edu
+
+---
+Sriram Sankaranarayanan
+Erstwhile PhD student
+Stanford University, CA
+

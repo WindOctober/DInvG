@@ -1,0 +1,10 @@
+#! /bin/sh
+
+for i in `ls *.cc *.h *.y *.l`
+do
+echo Converting $i .. 
+cat $i | sed s/NNC_Polyhedron/C_Polyhedron/g > tempf
+cp tempf $i
+done
+
+rm tempf
