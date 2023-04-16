@@ -5,6 +5,28 @@ add_executable(Inv ${CMAKE_SOURCE_DIR}/main.cpp)
 set(EXECUTABLE_OUTPUT_PATH "${CMAKE_SOURCE_DIR}")
 include_directories(${CMAKE_SOURCE_DIR})
 include_directories(${CMAKE_SOURCE_DIR}/src/)
+
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE INTERNAL "")
+set(COPY_COMPILE_COMMANDS "${CMAKE_SOURCE_DIR}/compile_commands.json")
+
+add_custom_command(
+    OUTPUT ${COPY_COMPILE_COMMANDS}
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    ${CMAKE_BINARY_DIR}/compile_commands.json
+    ${COPY_COMPILE_COMMANDS}
+    DEPENDS ${CMAKE_BINARY_DIR}/compile_commands.json
+    COMMENT "Copying compile_commands.json to project root directory"
+)
+
+foreach(target Inv) # 替换为您的项目名称或实际目标列表
+    add_custom_command(TARGET ${target} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        ${CMAKE_BINARY_DIR}/compile_commands.json
+        ${COPY_COMPILE_COMMANDS}
+        COMMENT "Copying compile_commands.json to project root directory"
+    )
+endforeach()
+
 #Adjust LLVM_CONFIG
 
 set(LLVM_CONFIG "llvm-config" CACHE PATH "Path to llvm-config executable")
