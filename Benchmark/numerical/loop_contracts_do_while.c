@@ -8,7 +8,7 @@ int main()
   do
   {
     x++;
-  } while(x < 10) 
+  } while(x < 10); 
 
   assert(x == 10);
 }
