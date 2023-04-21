@@ -173,31 +173,6 @@ void do_some_propagation(){
     }
 }
 
-bool search_location(const char *name, Location **what){
-    vector<Location *>::iterator vi;
-    string nstr(name);
-    for (vi = loclist->begin(); vi < loclist->end(); vi++) {
-        if ((*vi)->matches(nstr)) {
-            *what = (*vi);
-            return true;
-        }
-    }
-
-    return false;
-}
-
-bool search_transition_relation(char *name, TransitionRelation **what){
-    vector<TransitionRelation *>::iterator vi;
-    string nstr(name);
-    for (vi = trlist->begin(); vi < trlist->end(); vi++) {
-        if ((*vi)->matches(nstr)) {
-            *what = (*vi);
-            return true;
-        }
-    }
-
-    return false;
-}
 
 int parse_cmd_line(char *x)
 {
@@ -1675,15 +1650,25 @@ void Clear_Location_Invariant()
     }
 }
 
-void Initial_with_input(vector<string> var_list,int max_prop_steps){
+void Initial_with_input(vector<string> Vars,int max_prop_steps,vector<Location*> Locations,vector<TransitionRelation*> Transitions){
     f=new var_info();
-    for(int i=0;i<var_list.size();i++){
-        f->search_and_insert(var_list[i].c_str());
+    for(int i=0;i<Vars.size();i++){
+        f->search_and_insert(Vars[i].c_str());
     }
     dimension=f->get_dimension();
-    prop_steps=max_prop_steps;
     
+    prop_steps=max_prop_steps;
+    //Requires: Locations have set initial assertions, possible invariant assertions.
+    for(int i=0;i<Locations.size();i++){
+        loclist->push_back(Locations[i]);
+    }
+    //Requires: Transitions have set locs, trans relations.
+    for(int i=0;i<Transitions.size();i++){
+        trlist->push_back(Transitions[i]);
+    }
+    return;
 }
+
 int main(int argc, char *argv[])
 {
     ios::sync_with_stdio(false);
