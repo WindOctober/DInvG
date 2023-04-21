@@ -1,0 +1,10 @@
+BasedOnStyle: Google
+IndentWidth: 4
+SpaceInEmptyParentheses: false
+BreakBeforeBraces: Stroustrup
+SpaceAfterCStyleCast: false
+SpacesInAngles: false
+SpaceAfterTemplateKeyword: false
+SpacesInCStyleCastParentheses: false
+SpacesInParentheses: false
+SpacesInSquareBrackets: false

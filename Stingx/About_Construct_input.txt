@@ -1,0 +1,284 @@
+%union{
+    char *string;
+    var_info *v;
+    int dummy;
+    int integer;
+    char identifier[MAX_ID_SIZE];
+    Location *ll;
+    TransitionRelation *tt;
+    Linear_Expression *li;
+    Constraint *cc;
+    C_Polyhedron *pp;
+    vector<int> *vv;
+}
+
+%token<integer> INT
+%token<identifier> IDENT
+%token PRIME END VARIABLED LOCATION TRANSITION 
+%token EQ LEQ GEQ LE GE 
+%token PRES PROPS INVARIANT
+
+%type<identifier> identifier 
+%type<ll> location_identifier location_descriptor
+%type<tt> transition_identifier transition_descriptor 
+%type<li> linear_expression primed_linear_expression linear_term primed_term
+%type<cc> linear_inequality primed_linear_inequality 
+%type<pp> linear_assertion primed_linear_assertion preservative 
+%type<vv> variable_list
+
+
+program : system_descriptor END{};
+
+system_descriptor :
+    location_descriptor system_descriptor {} 
+|   transition_descriptor system_descriptor {} 
+|   location_descriptor {} 
+|   transition_descriptor {} 
+|   invariant_descriptor system_descriptor {}
+|   invariant_descriptor {}
+;
+
+location_descriptor : 
+    LOCATION location_identifier { $$ = $2; }
+|   LOCATION location_identifier linear_assertion{
+        $$ = $2;
+        $$->set_polyhedron($3);
+    }
+;
+
+transition_descriptor: 
+    TRANSITION transition_identifier ':' location_identifier ',' location_identifier ',' primed_linear_assertion{
+        $$ = $2;
+        $$->set_locs($4, $6);
+        $$->set_relation($8);
+    }
+|   TRANSITION transition_identifier ':' location_identifier ',' primed_linear_assertion
+    {
+        $$ = $2;
+        $$->set_locs($4, $4);
+        $$->set_relation($6);
+    }
+;
+
+invariant_descriptor : 
+    INVARIANT location_identifier linear_assertion{
+        $2->set_invariant_polyhedron($3);
+    }
+|   INVARIANT location_identifier ':' linear_assertion{
+        $2->set_invariant_polyhedron($4);
+    };
+
+location_identifier: 
+    identifier{
+        // search loclist for the identifier
+        Location *what;
+        if (!search_location($1, &what)) {
+            $$ = new Location(dimension, f, fd, fm, $1);
+            loclist->push_back($$);
+        }
+        else
+            $$ = what;
+    }
+;
+
+transition_identifier : identifier{
+    // search loclist for the identifier
+    TransitionRelation *what;
+    if (!search_transition_relation($1, &what)) {
+        $$ = new TransitionRelation(dimension, f, fd, fm, $1);
+        trlist->push_back($$);
+    }
+    else {
+        cout << "Error: Already Encountered transition name #" << what << $1;
+        $$ = what;
+    }
+};
+
+linear_assertion : 
+    linear_inequality linear_assertion
+    {
+        $$ = $2;
+        //$$->add_constraint_and_minimize(*$1);
+        $$->add_constraint(*$1);
+        delete ($1);
+    }
+|   linear_inequality
+    {
+        $$ = new C_Polyhedron(dimension, UNIVERSE);
+        //$$->add_constraint_and_minimize(*$1);
+        $$->add_constraint(*$1);
+        delete ($1);
+    }
+;
+
+linear_inequality : 
+    linear_expression LEQ linear_expression{
+        $$ = new Constraint(*$1 <= *$3);
+        delete ($1);
+        delete ($3);
+    }
+|   linear_expression GEQ linear_expression{
+        $$ = new Constraint(*$1 >= *$3);
+        delete ($1);
+        delete ($3);
+    }
+|   linear_expression EQ linear_expression
+    {
+        $$ = new Constraint(*$1 == *$3);
+        delete ($1);
+        delete ($3);
+    }
+;
+
+linear_term : 
+    identifier{
+        int i = f->search($1);
+        if (i == VAR_NOT_FOUND) {
+            string x = string("Error:: Variable ") + $1 + string(" not found");
+            yyerror(x);
+            exit(1);
+        }
+        $$ = new Linear_Expression(Variable(i));
+    }
+|   INT { $$ = new Linear_Expression($1); }
+|   INT '*' identifier{
+        int i = f->search($3);
+        if (i == VAR_NOT_FOUND) {
+            string x = string("Error:: Variable ") + $3 + string(" not found");
+            yyerror(x);
+            exit(1);
+        }
+        $$ = new Linear_Expression($1 * Variable(i));
+    }
+;
+
+linear_expression :
+    linear_term{ 
+        $$ = $1;
+    }
+|   linear_expression '+' linear_term{
+        $$ = $1;
+        (*$1) += (*$3);
+        delete ($3);
+    }
+|   linear_expression '-' linear_term{
+        $$ = $1;
+        (*$1) -= (*$3);
+        delete ($3);
+    }
+|   '-' linear_term %prec UMINUS{
+        $$ = $2;
+        (*$2) = -(*$2);
+    }
+;
+
+primed_linear_assertion : 
+    primed_linear_inequality primed_linear_assertion{
+        $$ = $2;
+        //$$->add_constraint_and_minimize(*$1);
+        $$->add_constraint(*$1);
+        delete ($1);
+    }
+|   primed_linear_inequality{
+        $$ = new C_Polyhedron(2 * dimension, UNIVERSE);
+        //$$->add_constraint_and_minimize(*$1);
+        $$->add_constraint(*$1);
+        delete ($1);
+    }
+|   preservative { $$ = $1; }
+|   preservative primed_linear_assertion{
+        $$ = $2;
+        $$->intersection_assign(*$1);
+        delete ($1);
+    };
+
+preservative : 
+    PRES '[' variable_list ']'{
+        $$ = new C_Polyhedron(2 * dimension, UNIVERSE);
+        vector<int>::iterator vi = $3->begin();
+        for (; vi < $3->end(); ++vi) {
+            Linear_Expression ll = Variable((*vi)) - Variable((*vi) + dimension);
+            //$$->add_constraint_and_minimize(ll ==0);
+            $$->add_constraint(ll == 0);
+        }
+        delete ($3);
+    }
+;
+
+variable_list : 
+    identifier variable_list{
+        int i = find_variable($1);
+        $$ = $2;
+        $$->push_back(i);
+    }
+|   identifier ',' variable_list{
+        int i = find_variable($1);
+        $$ = $3;
+        $$->push_back(i);
+    }
+|   identifier{
+        int i = find_variable($1);
+        $$ = new vector<int>();
+        $$->push_back(i);
+    }
+;
+
+primed_linear_inequality :
+    primed_linear_expression LEQ primed_linear_expression{
+        $$ = new Constraint(*$1 <= *$3);
+        delete ($1);
+        delete ($3);
+    }
+|   primed_linear_expression EQ primed_linear_expression{
+        $$ = new Constraint(*$1 == *$3);
+        delete ($1);
+        delete ($3);
+    }
+|   primed_linear_expression GEQ primed_linear_expression{
+        $$ = new Constraint(*$1 >= *$3);
+        delete ($1);
+        delete ($3);
+    }
+;
+
+primed_term : 
+    identifier{
+        int i = find_variable($1);
+        $$ = new Linear_Expression(Variable(i));
+    }
+|   PRIME identifier
+    {
+        int i = find_variable($2);
+        $$ = new Linear_Expression(Variable(i + dimension));
+    }
+| INT { $$ = new Linear_Expression($1); }
+| INT '*' identifier
+{
+    int i = find_variable($3);
+    $$ = new Linear_Expression($1 * Variable(i));
+}
+| INT '*' PRIME identifier
+{
+    int i = find_variable($4);
+    $$ = new Linear_Expression($1 * Variable(i + dimension));
+};
+
+primed_linear_expression : 
+    primed_term { $$ = $1; }
+|   primed_linear_expression '+' primed_term{
+        $$ = $1;
+        (*$1) += (*$3);
+        delete ($3);
+    }
+|   primed_linear_expression '-' primed_term{
+        $$ = $1;
+        (*$1) -= (*$3);
+        delete ($3);
+    }
+|   '-' primed_term %prec UMINUS{
+        $$ = $2;
+        (*$2) = -(*$2);
+    }
+;
+
+identifier : IDENT { strcpy($$, $1); };

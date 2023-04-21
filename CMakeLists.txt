@@ -83,7 +83,9 @@ link_directories(${LLVM_LD_PATH})
 include_directories(${LLVM_INCLUDE_FLAGS})
 target_link_libraries(Inv ${CLANG_LIBS})
 
-#set CXX flags
+add_subdirectory(Stingx)
+target_link_libraries(Inv lstingx)
 
+#set CXX flags
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS}  ${LLVM_LD_FLAGS}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -I/usr/lib/gcc/x86_64-linux-gnu/9/include -DENABLE_LLVM_SHARED=1 ${LLVM_CXX_FLAGS}")
