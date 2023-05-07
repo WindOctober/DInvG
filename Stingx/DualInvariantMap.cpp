@@ -25,15 +25,14 @@
 #include "PolyUtils.h"
 #include "myassertions.h"
 
-void DualInvariantMap::populate()
-{
+void DualInvariantMap::populate() {
     // dualize and add values
 
-    vector<Location *>::const_iterator vi;
+    vector<Location*>::const_iterator vi;
     for (vi = vloc_.begin(); vi != vloc_.end(); ++vi) {
         C_Polyhedron dualp(n_, UNIVERSE);
         if ((*vi)->initial_poly_set()) {
-            C_Polyhedron const &pp = (*vi)->get_poly_reference();
+            C_Polyhedron const& pp = (*vi)->get_poly_reference();
             dualize(pp, dualp);
         }
         add_value_to_map((*vi)->get_name(), dualp);
@@ -41,24 +40,23 @@ void DualInvariantMap::populate()
     return;
 }
 
-DualInvariantMap::DualInvariantMap(int n, var_info *fd,
-                                   vector<Location *> const &vloc)
-    : InvariantMap(vloc)
-{
+DualInvariantMap::DualInvariantMap(int n,
+                                   var_info* fd,
+                                   vector<Location*> const& vloc)
+    : InvariantMap(vloc) {
     n_ = n;
     f_ = fd;
     populate();
 }
 
-void DualInvariantMap::H79_narrowing_assign(DualInvariantMap const &im)
-{
-    vector<Location *>::const_iterator vi;
+void DualInvariantMap::H79_narrowing_assign(DualInvariantMap const& im) {
+    vector<Location*>::const_iterator vi;
 
     for (vi = vloc_.begin(); vi != vloc_.end(); ++vi) {
         // obtain a name and a polyhedron
-        string const &name = (*vi)->get_name();
-        C_Polyhedron const &poly = im(name);
-        C_Polyhedron &my_poly = operator[](name);
+        string const& name = (*vi)->get_name();
+        C_Polyhedron const& poly = im(name);
+        C_Polyhedron& my_poly = operator[](name);
 
         H79_narrow(my_poly, poly);
     }
@@ -66,14 +64,13 @@ void DualInvariantMap::H79_narrowing_assign(DualInvariantMap const &im)
     return;
 }
 
-void DualInvariantMap::primalize(InvariantMap &result)
-{
-    vector<Location *>::const_iterator vi;
+void DualInvariantMap::primalize(InvariantMap& result) {
+    vector<Location*>::const_iterator vi;
 
     for (vi = vloc_.begin(); vi != vloc_.end(); ++vi) {
         // obtain a name and a polyhedron
-        string const &name = (*vi)->get_name();
-        C_Polyhedron const &my_poly = operator()(name);
+        string const& name = (*vi)->get_name();
+        C_Polyhedron const& my_poly = operator()(name);
         primal(my_poly, result[name]);
     }
 

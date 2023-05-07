@@ -37,14 +37,12 @@
 
 using namespace std;
 
-inline int length(int num)
-{
+inline int length(int num) {
     int sum = 0;
 
     if (num == 0) {
         sum = 1;
-    }
-    else {
+    } else {
         while (num) {
             sum++;
             num /= 10;
@@ -53,8 +51,7 @@ inline int length(int num)
     return sum;
 }
 
-inline void autoprint(int max_index, int index)
-{
+inline void autoprint(int max_index, int index) {
     int diff = length(max_index) - length(index);
     for (int i = 1; i <= diff; i++) {
         cout << " ";
@@ -62,15 +59,14 @@ inline void autoprint(int max_index, int index)
     cout << index;
 }
 
-inline string& replace_all(string& src, const string& old_value,
-                           const string& new_value)
-{
+inline string& replace_all(string& src,
+                           const string& old_value,
+                           const string& new_value) {
     for (string::size_type pos(0); pos != string::npos;
          pos += new_value.length()) {
         if ((pos = src.find(old_value, pos)) != string::npos) {
             src.replace(pos, old_value.length(), new_value);
-        }
-        else
+        } else
             break;
     }
     return src;

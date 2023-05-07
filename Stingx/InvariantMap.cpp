@@ -24,15 +24,13 @@
 #include "Timer.h"
 #include "myassertions.h"
 
-bool InvariantMap::entry_exists(string const &what) const
-{
+bool InvariantMap::entry_exists(string const& what) const {
     // check using STL routine
     return (m_.find(what) != m_.end());
 }
 
-void InvariantMap::add_value_to_map(string const &what,
-                                    C_Polyhedron const &poly)
-{
+void InvariantMap::add_value_to_map(string const& what,
+                                    C_Polyhedron const& poly) {
     // first see if it is already there
     // if so raise hell about it
 
@@ -44,11 +42,10 @@ void InvariantMap::add_value_to_map(string const &what,
     m_.insert(StringPolyPair(what, poly));
 }
 
-InvariantMap::InvariantMap(var_info *f, vector<Location *> const &vloc)
-    : f_(f), n_(f->get_dimension()), nloc_(vloc.size()), vloc_(vloc)
-{
+InvariantMap::InvariantMap(var_info* f, vector<Location*> const& vloc)
+    : f_(f), n_(f->get_dimension()), nloc_(vloc.size()), vloc_(vloc) {
     // now construct the string map
-    vector<Location *>::const_iterator vi;
+    vector<Location*>::const_iterator vi;
 
     // iterate through the locations
     for (vi = vloc.begin(); vi < vloc.end(); ++vi) {
@@ -62,9 +59,8 @@ InvariantMap::InvariantMap(var_info *f, vector<Location *> const &vloc)
     return;
 }
 
-C_Polyhedron &InvariantMap::operator[](Location const *l)
-{
-    string const &what = l->get_name();
+C_Polyhedron& InvariantMap::operator[](Location const* l) {
+    string const& what = l->get_name();
     /* this is checked anyway
     PRECONDITION ( (entry_exists(what)),   "InvariantMap::operator[] --> entry
     does not exist");
@@ -72,8 +68,7 @@ C_Polyhedron &InvariantMap::operator[](Location const *l)
     return (*this)[what];
 }
 
-C_Polyhedron &InvariantMap::operator[](string const &what)
-{
+C_Polyhedron& InvariantMap::operator[](string const& what) {
     StringPolyMap::iterator vi = m_.find(what);
     PRECONDITION((vi != m_.end()),
                  "InvariantMap::operator[] --> entry does not exist");
@@ -81,9 +76,8 @@ C_Polyhedron &InvariantMap::operator[](string const &what)
     return (*vi).second;
 }
 
-C_Polyhedron const &InvariantMap::operator()(Location const *l) const
-{
-    string const &what = l->get_name();
+C_Polyhedron const& InvariantMap::operator()(Location const* l) const {
+    string const& what = l->get_name();
     /* this is checked anyway
     PRECONDITION ( (entry_exists(what)),   "InvariantMap::operator[] --> entry
     does not exist");
@@ -91,8 +85,7 @@ C_Polyhedron const &InvariantMap::operator()(Location const *l) const
     return operator()(what);
 }
 
-C_Polyhedron const &InvariantMap::operator()(string const &what) const
-{
+C_Polyhedron const& InvariantMap::operator()(string const& what) const {
     StringPolyMap::const_iterator vi = m_.find(what);
 
     PRECONDITION((vi != m_.end()),
@@ -101,18 +94,17 @@ C_Polyhedron const &InvariantMap::operator()(string const &what) const
     return (*vi).second;
 }
 
-void InvariantMap::H79_widening_assign(InvariantMap const &im)
-{
+void InvariantMap::H79_widening_assign(InvariantMap const& im) {
     // iterate through each string and obtain the polyhedron corresponding to
     // it. perform a H79 widening for it
 
-    vector<Location *>::const_iterator vi;
+    vector<Location*>::const_iterator vi;
 
     for (vi = vloc_.begin(); vi != vloc_.end(); ++vi) {
         // obtain a name and a polyhedron
-        string const &name = (*vi)->get_name();
-        C_Polyhedron const &poly = im(name);
-        C_Polyhedron &my_poly = operator[](name);
+        string const& name = (*vi)->get_name();
+        C_Polyhedron const& poly = im(name);
+        C_Polyhedron& my_poly = operator[](name);
         // do the widening
         // Constraint_System cs = my_poly.constraints();
         my_poly.H79_widening_assign(poly);
@@ -121,18 +113,17 @@ void InvariantMap::H79_widening_assign(InvariantMap const &im)
     return;
 }
 
-void InvariantMap::BHRZ03_widening_assign(InvariantMap const &im)
-{
+void InvariantMap::BHRZ03_widening_assign(InvariantMap const& im) {
     // iterate through each string and obtain the polyhedron corresponding to
     // it. perform a BHRZ03 widening for it
 
-    vector<Location *>::const_iterator vi;
+    vector<Location*>::const_iterator vi;
 
     for (vi = vloc_.begin(); vi != vloc_.end(); ++vi) {
         // obtain a name and a polyhedron
-        string const &name = (*vi)->get_name();
-        C_Polyhedron const &poly = im(name);
-        C_Polyhedron &my_poly = operator[](name);
+        string const& name = (*vi)->get_name();
+        C_Polyhedron const& poly = im(name);
+        C_Polyhedron& my_poly = operator[](name);
         // do the widening
         my_poly.BHRZ03_widening_assign(poly);
     }
@@ -140,17 +131,16 @@ void InvariantMap::BHRZ03_widening_assign(InvariantMap const &im)
     return;
 }
 
-void InvariantMap::assign(InvariantMap const &im)
-{
+void InvariantMap::assign(InvariantMap const& im) {
     PRECONDITION(im.get_dimension() == n_,
                  " InvariantMap::assign -- dimension mismatch");
 
-    vector<Location *>::const_iterator vi;
+    vector<Location*>::const_iterator vi;
     for (vi = vloc_.begin(); vi != vloc_.end(); ++vi) {
         // obtain a name and a polyhedron
-        string const &name = (*vi)->get_name();
-        C_Polyhedron const &poly = im(name);
-        C_Polyhedron &my_poly = operator[](name);
+        string const& name = (*vi)->get_name();
+        C_Polyhedron const& poly = im(name);
+        C_Polyhedron& my_poly = operator[](name);
 
         my_poly = poly;  // replace my_poly.. and we are done
     }
@@ -158,13 +148,12 @@ void InvariantMap::assign(InvariantMap const &im)
     return;
 }
 
-void InvariantMap::print(ostream &out) const
-{
+void InvariantMap::print(ostream& out) const {
     StringPolyMap::const_iterator vi;
 
     for (vi = m_.begin(); vi != m_.end(); ++vi) {
-        string const &what = (*vi).first;
-        C_Polyhedron const &poly = (*vi).second;
+        string const& what = (*vi).first;
+        C_Polyhedron const& poly = (*vi).second;
 
         out << "Location: " << what << endl;
         out << "[[ " << endl;
@@ -175,40 +164,38 @@ void InvariantMap::print(ostream &out) const
     return;
 }
 
-bool InvariantMap::equals(InvariantMap const &im) const
-{
+bool InvariantMap::equals(InvariantMap const& im) const {
     StringPolyMap::const_iterator vi;
 
     for (vi = m_.begin(); vi != m_.end(); ++vi) {
-        string const &what = (*vi).first;
-        C_Polyhedron const &poly1 = (*vi).second;
-        C_Polyhedron const &poly2 = im(what);
+        string const& what = (*vi).first;
+        C_Polyhedron const& poly1 = (*vi).second;
+        C_Polyhedron const& poly2 = im(what);
         // check logical equivalence
-        if (!poly1.contains(poly2) || !poly2.contains(poly1)) return false;
+        if (!poly1.contains(poly2) || !poly2.contains(poly1))
+            return false;
     }
 
     return true;
 }
 
-ostream &operator<<(ostream &out, InvariantMap const &what)
-{
+ostream& operator<<(ostream& out, InvariantMap const& what) {
     what.print(out);
     return out;
 }
 
-bool InvariantMap::check_consecution(vector<TransitionRelation *> *vrels) const
-{
-    vector<TransitionRelation *>::iterator vi;
+bool InvariantMap::check_consecution(vector<TransitionRelation*>* vrels) const {
+    vector<TransitionRelation*>::iterator vi;
 
     bool retval = true;
 
     // iterate through the transitions
     for (vi = vrels->begin(); vi != vrels->end(); ++vi) {
-        string const &pr = (*vi)->get_preloc_name();
-        string const &po = (*vi)->get_postloc_name();
+        string const& pr = (*vi)->get_preloc_name();
+        string const& po = (*vi)->get_postloc_name();
         // obtain the pre and post polys
-        C_Polyhedron const &pre_poly = operator()(pr);
-        C_Polyhedron const &post_poly = operator()(po);
+        C_Polyhedron const& pre_poly = operator()(pr);
+        C_Polyhedron const& post_poly = operator()(po);
 
         C_Polyhedron temp(n_, UNIVERSE);
         // compute post(pre, transition)

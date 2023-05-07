@@ -25,11 +25,11 @@
 
 extern int dimension;
 extern var_info *f, *fd, *fm;
-extern vector<Location *> *loclist;
-extern vector<TransitionRelation *> *trlist;
+extern vector<Location*>* loclist;
+extern vector<TransitionRelation*>* trlist;
 extern int get_index_of_transition(string name);
 extern bool backtrack_flag;
-extern C_Polyhedron *trivial;
+extern C_Polyhedron* trivial;
 extern int debug;
 extern int bang_count;
 extern int single_pre_prune_bang_count;
@@ -47,28 +47,47 @@ extern int merge_count;
 extern int bang_count_in_merge;
 extern Counter counter;
 extern Timer single_merge_sub_sequences_timer;
-extern void collect_invariants(C_Polyhedron &cpoly, C_Polyhedron &invd);
+extern void collect_invariants(C_Polyhedron& cpoly, C_Polyhedron& invd);
 extern void collect_invariants_for_one_location_by_eliminating(
-    int target_index, C_Polyhedron &cpoly, C_Polyhedron &invd);
+    int target_index,
+    C_Polyhedron& cpoly,
+    C_Polyhedron& invd);
 extern void Clear_Location_Invariant();
 extern void Print_Location();
 extern bool print_tree;
 
-void Tree::initialize(vector<Clump> &outer_vcl) { this->vcl = outer_vcl; }
+void Tree::initialize(vector<Clump>& outer_vcl) {
+    this->vcl = outer_vcl;
+}
 
-Tree::Tree() { ; }
+Tree::Tree() {
+    ;
+}
 
-Tree::Tree(vector<Clump> &outer_vcl) { initialize(outer_vcl); }
+Tree::Tree(vector<Clump>& outer_vcl) {
+    initialize(outer_vcl);
+}
 
-void Tree::set_tree(vector<Clump> &outer_vcl) { initialize(outer_vcl); }
+void Tree::set_tree(vector<Clump>& outer_vcl) {
+    initialize(outer_vcl);
+}
 
-void Tree::set_ra(int amount) { ra = amount; }
-void Tree::set_er(int amount) { er = amount; }
-void Tree::set_unra(int amount) { unra = amount; }
-void Tree::set_uner(int amount) { uner = amount; }
-void Tree::set_target_index(int index) { target_index = index; }
-void Tree::set_max_clump_count()
-{
+void Tree::set_ra(int amount) {
+    ra = amount;
+}
+void Tree::set_er(int amount) {
+    er = amount;
+}
+void Tree::set_unra(int amount) {
+    unra = amount;
+}
+void Tree::set_uner(int amount) {
+    uner = amount;
+}
+void Tree::set_target_index(int index) {
+    target_index = index;
+}
+void Tree::set_max_clump_count() {
     int max = -1;
     vector<Clump>::iterator vi;
 
@@ -81,8 +100,7 @@ void Tree::set_max_clump_count()
     max_clump_count = max;
 }
 
-void Tree::Original_Prior(vector<Clump> &outer_vcl)
-{
+void Tree::Original_Prior(vector<Clump>& outer_vcl) {
     // copy from "prior2"
 
     vector<int> related_location_index;
@@ -105,16 +123,13 @@ void Tree::Original_Prior(vector<Clump> &outer_vcl)
             tr_postloc_name = (*trlist)[transition_index]->get_postloc_name();
             if (tr_preloc_name == target || tr_postloc_name == target) {
                 related_transition_index.push_back(j);
-            }
-            else {
+            } else {
                 unrelated_transition_index.push_back(j);
             }
-        }
-        else if (vi->get_category() == "Location") {
+        } else if (vi->get_category() == "Location") {
             if (vi->get_name() == target) {
                 related_location_index.push_back(j);
-            }
-            else {
+            } else {
                 unrelated_location_index.push_back(j);
             }
         }
@@ -149,8 +164,7 @@ void Tree::Original_Prior(vector<Clump> &outer_vcl)
     set_tree(outer_vcl);
 }
 
-void Tree::Reorder_Target_Prior_1(vector<Clump> &outer_vcl)
-{
+void Tree::Reorder_Target_Prior_1(vector<Clump>& outer_vcl) {
     vector<int> first_index;
     vector<int> second_index;
     string target = (*loclist)[target_index]->get_name();
@@ -170,18 +184,15 @@ void Tree::Reorder_Target_Prior_1(vector<Clump> &outer_vcl)
             if (tr_preloc_name == target || tr_postloc_name == target) {
                 first_index.push_back(j);
                 related_transition_index++;
-            }
-            else {
+            } else {
                 second_index.push_back(j);
                 unrelated_transition_index++;
             }
-        }
-        else if (vi->get_category() == "Location") {
+        } else if (vi->get_category() == "Location") {
             if (vi->get_name() == target) {
                 first_index.push_back(j);
                 related_location_index++;
-            }
-            else {
+            } else {
                 second_index.push_back(j);
                 unrelated_location_index++;
             }
@@ -205,8 +216,7 @@ void Tree::Reorder_Target_Prior_1(vector<Clump> &outer_vcl)
     set_tree(ordered_vcl);
 }
 
-void Tree::Reorder_Target_Prior_2(vector<Clump> &outer_vcl)
-{
+void Tree::Reorder_Target_Prior_2(vector<Clump>& outer_vcl) {
     vector<int> related_location_index;
     vector<int> unrelated_location_index;
     vector<int> related_transition_index;
@@ -227,16 +237,13 @@ void Tree::Reorder_Target_Prior_2(vector<Clump> &outer_vcl)
             tr_postloc_name = (*trlist)[transition_index]->get_postloc_name();
             if (tr_preloc_name == target || tr_postloc_name == target) {
                 related_transition_index.push_back(j);
-            }
-            else {
+            } else {
                 unrelated_transition_index.push_back(j);
             }
-        }
-        else if (vi->get_category() == "Location") {
+        } else if (vi->get_category() == "Location") {
             if (vi->get_name() == target) {
                 related_location_index.push_back(j);
-            }
-            else {
+            } else {
                 unrelated_location_index.push_back(j);
             }
         }
@@ -269,8 +276,7 @@ void Tree::Reorder_Target_Prior_2(vector<Clump> &outer_vcl)
     set_tree(ordered_vcl);
 }
 
-void Tree::Reorder_Target_Prior_3(vector<Clump> &outer_vcl)
-{
+void Tree::Reorder_Target_Prior_3(vector<Clump>& outer_vcl) {
     vector<int> related_location_index;
     vector<int> unrelated_location_index;
     vector<int> related_transition_index;
@@ -291,16 +297,13 @@ void Tree::Reorder_Target_Prior_3(vector<Clump> &outer_vcl)
             tr_postloc_name = (*trlist)[transition_index]->get_postloc_name();
             if (tr_preloc_name == target || tr_postloc_name == target) {
                 related_transition_index.push_back(j);
-            }
-            else {
+            } else {
                 unrelated_transition_index.push_back(j);
             }
-        }
-        else if (vi->get_category() == "Location") {
+        } else if (vi->get_category() == "Location") {
             if (vi->get_name() == target) {
                 related_location_index.push_back(j);
-            }
-            else {
+            } else {
                 unrelated_location_index.push_back(j);
             }
         }
@@ -354,8 +357,7 @@ void Tree::Reorder_Target_Prior_3(vector<Clump> &outer_vcl)
     set_tree(ordered_vcl);
 }
 
-void Tree::extract_vcl_for_one_location_about_intra(vector<Clump> &outer_vcl)
-{
+void Tree::extract_vcl_for_one_location_about_intra(vector<Clump>& outer_vcl) {
     vector<int> related_location_index;
     vector<int> unrelated_location_index;
     vector<int> related_transition_index;
@@ -376,16 +378,13 @@ void Tree::extract_vcl_for_one_location_about_intra(vector<Clump> &outer_vcl)
             tr_postloc_name = (*trlist)[transition_index]->get_postloc_name();
             if (tr_preloc_name == target || tr_postloc_name == target) {
                 related_transition_index.push_back(j);
-            }
-            else {
+            } else {
                 unrelated_transition_index.push_back(j);
             }
-        }
-        else if (vi->get_category() == "Location") {
+        } else if (vi->get_category() == "Location") {
             if (vi->get_name() == target) {
                 related_location_index.push_back(j);
-            }
-            else {
+            } else {
                 unrelated_location_index.push_back(j);
             }
         }
@@ -405,31 +404,27 @@ void Tree::extract_vcl_for_one_location_about_intra(vector<Clump> &outer_vcl)
     int rlid;
     if (target_prior_index.size() == 1) {
         rlid = target_prior_index[0];
-    }
-    else {
-        cout << endl
-              << "Error: There are more than one related location index";
+    } else {
+        cout << endl << "Error: There are more than one related location index";
     }
     ordered_vcl.push_back(outer_vcl[rlid]);
 
     set_tree(ordered_vcl);
 }
 
-void Tree::Print_Prune_Tree(int depth, string weavedorbanged)
-{
+void Tree::Print_Prune_Tree(int depth, string weavedorbanged) {
     int dth;
     int ncl = size();
 
     // cout<<endl;
     cout << endl
-          << "( " << weavedorbanged << " Prune Tree, current length is "
-          << ncl - depth;
+         << "( " << weavedorbanged << " Prune Tree, current length is "
+         << ncl - depth;
     if (weavedorbanged == "Banged") {
         cout << endl << "( in ";
         if (ncl - depth > get_ra() + get_er()) {
             cout << "unrelated transition";
-        }
-        else {
+        } else {
             cout << "related transition";
         }
     }
@@ -441,8 +436,7 @@ void Tree::Print_Prune_Tree(int depth, string weavedorbanged)
         for (int j = 0; j < get_clump(dth - 1).get_count(); j++) {
             if (j == get_clump(dth - 1).get_gli() && dth > depth) {
                 cout << "[" << j << "]";
-            }
-            else {
+            } else {
                 cout << " " << j << " ";
             }
         }
@@ -451,21 +445,19 @@ void Tree::Print_Prune_Tree(int depth, string weavedorbanged)
     }
 }
 
-void Tree::Print_Prune_Tree(int depth, int hb, int lb, string weavedorbanged)
-{
+void Tree::Print_Prune_Tree(int depth, int hb, int lb, string weavedorbanged) {
     int dth;
     int ncl = size();
 
     // cout<<endl;
     cout << endl
-          << "( " << weavedorbanged << " Prune Tree, current length is "
-          << hb + 1 - depth;
+         << "( " << weavedorbanged << " Prune Tree, current length is "
+         << hb + 1 - depth;
     if (weavedorbanged == "Banged") {
         cout << endl << "( in ";
         if (ncl - depth > get_ra() + get_er()) {
             cout << "unrelated transition";
-        }
-        else {
+        } else {
             cout << "related transition";
         }
     }
@@ -478,16 +470,13 @@ void Tree::Print_Prune_Tree(int depth, int hb, int lb, string weavedorbanged)
         for (int j = 0; j < get_max_clump_count(); j++) {
             if (get_clump(dth - 1).get_count() - 1 < j) {
                 cout << "   ";
-            }
-            else if (lb <= dth - 1 && dth - 1 <= hb) {
+            } else if (lb <= dth - 1 && dth - 1 <= hb) {
                 if (j == get_clump(dth - 1).get_gli() && dth > depth) {
                     cout << "[" << j << "]";
-                }
-                else {
+                } else {
                     cout << " " << j << " ";
                 }
-            }
-            else {
+            } else {
                 cout << " " << j << " ";
             }
         }
@@ -508,38 +497,35 @@ void Tree::Print_Prune_Tree(int depth, int hb, int lb, string weavedorbanged)
         }
         */
         cout << " --  b: "
-              << counter.get_pre_pbc_about_location_and_depth(
-                     get_target_index(), dth - 1);
+             << counter.get_pre_pbc_about_location_and_depth(get_target_index(),
+                                                             dth - 1);
         cout << " --  " << get_clump(dth - 1).get_category();
         if (get_clump(dth - 1).get_category() == "Location") {
             cout << "_Intra";
-        }
-        else if (get_clump(dth - 1).get_category() == "Transition") {
+        } else if (get_clump(dth - 1).get_category() == "Transition") {
             cout << "_Inter";
-        }
-        else {
+        } else {
             cout << "Neither Location nor Transition!!!";
         }
         cout << ":: " << get_clump(dth - 1).get_name();
     }
 }
 
-void Tree::Print_Prune_Sequence_Tree(vector<int> sequence, int depth,
-                                     string weavedorbanged)
-{
+void Tree::Print_Prune_Sequence_Tree(vector<int> sequence,
+                                     int depth,
+                                     string weavedorbanged) {
     int dth, i;
     int ncl = size();
 
     // cout<<endl;
     cout << endl
-          << "( " << weavedorbanged << " Prune Tree, current length is "
-          << ncl - depth;
+         << "( " << weavedorbanged << " Prune Tree, current length is "
+         << ncl - depth;
     if (weavedorbanged == "Banged") {
         cout << endl << "( in ";
         if (ncl - depth > get_ra() + get_er()) {
             cout << "unrelated transition";
-        }
-        else {
+        } else {
             cout << "related transition";
         }
     }
@@ -553,11 +539,9 @@ void Tree::Print_Prune_Sequence_Tree(vector<int> sequence, int depth,
         for (int j = 0; j < get_max_clump_count(); j++) {
             if (get_clump(dth - 1).get_count() - 1 < j) {
                 cout << "   ";
-            }
-            else if (j == sequence[i] && dth > depth) {
+            } else if (j == sequence[i] && dth > depth) {
                 cout << "[" << j << "]";
-            }
-            else {
+            } else {
                 cout << " " << j << " ";
             }
         }
@@ -573,30 +557,31 @@ void Tree::Print_Prune_Sequence_Tree(vector<int> sequence, int depth,
         }
         */
         cout << " --  b: "
-              << counter.get_pst_pbc_about_location_and_depth(
-                     get_target_index(), dth - 1);
+             << counter.get_pst_pbc_about_location_and_depth(get_target_index(),
+                                                             dth - 1);
         cout << " --  " << get_clump(dth - 1).get_category();
         cout << ":: " << get_clump(dth - 1).get_name();
         i++;
     }
 }
 
-void Tree::Print_Prune_Sequence_Tree(vector<int> sequence, int depth, int hb,
-                                     int lb, string weavedorbanged)
-{
+void Tree::Print_Prune_Sequence_Tree(vector<int> sequence,
+                                     int depth,
+                                     int hb,
+                                     int lb,
+                                     string weavedorbanged) {
     int dth, i;
     int ncl = size();
 
     // cout<<endl;
     cout << endl
-          << "( " << weavedorbanged << " Prune Tree, current length is "
-          << hb + 1 - depth;
+         << "( " << weavedorbanged << " Prune Tree, current length is "
+         << hb + 1 - depth;
     if (weavedorbanged == "Banged") {
         cout << endl << "( in ";
         if (ncl - depth > get_ra() + get_er()) {
             cout << "unrelated transition";
-        }
-        else {
+        } else {
             cout << "related transition";
         }
     }
@@ -610,12 +595,10 @@ void Tree::Print_Prune_Sequence_Tree(vector<int> sequence, int depth, int hb,
             if (lb <= dth - 1 && dth - 1 <= hb) {
                 if (j == sequence[i] && dth > depth) {
                     cout << "[" << j << "]";
-                }
-                else {
+                } else {
                     cout << " " << j << " ";
                 }
-            }
-            else {
+            } else {
                 cout << " " << j << " ";
             }
         }
@@ -627,8 +610,7 @@ void Tree::Print_Prune_Sequence_Tree(vector<int> sequence, int depth, int hb,
     }
 }
 
-void Tree::prune_node_self_inspection(int target_index, C_Polyhedron &invd)
-{
+void Tree::prune_node_self_inspection(int target_index, C_Polyhedron& invd) {
     int dth = size() - 1;
     vector<Clump>::iterator vi;
 
@@ -649,19 +631,17 @@ void Tree::prune_node_self_inspection(int target_index, C_Polyhedron &invd)
         vi = vcl.begin() + dth;
         (*vi).clear();
         cout << endl
-              << "depth: " << dth
-              << ", clear_lower_gli, gli : " << (*vi).get_gli() << " "
-              << (*vi).get_category() << "::" << (*vi).get_name();
+             << "depth: " << dth
+             << ", clear_lower_gli, gli : " << (*vi).get_gli() << " "
+             << (*vi).get_category() << "::" << (*vi).get_name();
     }
 }
 
-void Tree::insert_pruned_node(int depth, vector<int> node_gli)
-{
+void Tree::insert_pruned_node(int depth, vector<int> node_gli) {
     pruned_node.emplace_back(depth, node_gli);
 }
 
-void Tree::store_conflict_node()
-{
+void Tree::store_conflict_node() {
     vector<pair<int, vector<int>>>::iterator vi;
     vector<int> node_gli;
     vector<int>::iterator it;
@@ -681,16 +661,14 @@ void Tree::store_conflict_node()
     // conflict_depth = new_conflict_depth;
     if (conflict_depth.size() != 0) {
         first_conflict = *conflict_depth.begin();
-    }
-    else {
+    } else {
         first_conflict = -1;
     }
 
     return;
 }
 
-void Tree::store_clumps_gli()
-{
+void Tree::store_clumps_gli() {
     int dth;
     vector<Clump>::iterator vi;
     // vector<int> new_clumps_gli;
@@ -702,8 +680,7 @@ void Tree::store_clumps_gli()
     // clumps_gli = new_clumps_gli;
 }
 
-void Tree::prune_clumps_by_hierarchy_inclusion()
-{
+void Tree::prune_clumps_by_hierarchy_inclusion() {
     cout << endl;
     cout << endl << "> > > prune_clumps_by_hierarchy_inclusion()";
     vector<Clump>::iterator vi;
@@ -751,70 +728,43 @@ void Tree::prune_clumps_by_hierarchy_inclusion()
 }
 
 vector<vector<vector<int>>> Tree::sequences_generation(
-    string divide_into_sections, C_Polyhedron &initp)
-{
+    string divide_into_sections,
+    C_Polyhedron& initp) {
     cout << endl << "> > > Tree::sequences generation()";
 
     vector<vector<vector<int>>> sequences;
 
     if (divide_into_sections == "divide_by_target_relation_based_on_StInG") {
         sequences = divide_by_target_relation_based_on_StInG(initp);
-    }
-    else if (divide_into_sections == "no_divide_for_test") {
+    } else if (divide_into_sections == "no_divide_for_test") {
         sequences = no_divide_for_test(initp);
-    }
-    else if (divide_into_sections == "divide_by_target_relation") {
+    } else if (divide_into_sections == "divide_by_target_relation") {
         sequences = divide_by_target_relation(initp);
-    }
-    else if (divide_into_sections == "one_per_group") {
+    } else if (divide_into_sections == "one_per_group") {
         sequences = one_per_group(initp);
-    }
-    else if (divide_into_sections == "two_per_group") {
+    } else if (divide_into_sections == "two_per_group") {
         sequences = two_per_group(initp);
-    }
-    else if (divide_into_sections == "three_per_group") {
+    } else if (divide_into_sections == "three_per_group") {
         sequences = three_per_group(initp);
-    }
-    else if (divide_into_sections == "four_per_group") {
+    } else if (divide_into_sections == "four_per_group") {
         sequences = four_per_group(initp);
-    }
-    else if (divide_into_sections == "divide_target_into_double") {
+    } else if (divide_into_sections == "divide_target_into_double") {
         sequences = divide_target_into_double(initp);
-    }
-    else if (divide_into_sections == "divide_by_inter_transition") {
+    } else if (divide_into_sections == "divide_by_inter_transition") {
         sequences = divide_by_inter_transition(initp);
-    }
-    else if (divide_into_sections == "divide_prior2_into_four") {
+    } else if (divide_into_sections == "divide_prior2_into_four") {
         sequences = divide_prior2_into_four(initp);
-    }
-    else {
+    } else {
         cout << endl << "divide_into_sections: wrong type";
     }
 
-    //  Merge, especially like as "two_per_group"
-    // sequences = merge_sub_sequences(sequences,initp);
-    // sequences = merge_sub_sequences(sequences,initp);
-    // sequences = merge_sub_sequences(sequences,initp);
-
-    // Merge target location
-    // sequences = merge_target_sub_sequences(sequences,initp);
-    // sequences = merge_target_sub_sequences(sequences,initp);
-    // sequences = merge_target_sub_sequences(sequences,initp);
-
-    // Merge first two sub_sequences
-    // sequences = merge_first_sub_sequences(sequences, initp);
-    // sequences = merge_first_sub_sequences(sequences, initp);
-
-    // Merge end two sub_sequences
-    // sequences = merge_end_sub_sequences(sequences, initp);
 
     cout << endl << "< < < Tree::sequences generation()";
     return sequences;
 }
 
 vector<vector<vector<int>>> Tree::divide_by_target_relation_based_on_StInG(
-    C_Polyhedron &initp)
-{
+    C_Polyhedron& initp) {
     cout << endl << "> > > Tree::divide_by_target_relation_based_on_StInG()";
     vector<vector<vector<int>>> sequences;
 
@@ -839,10 +789,10 @@ vector<vector<vector<int>>> Tree::divide_by_target_relation_based_on_StInG(
             length_hb, length_lb, initp);
 
         cout << endl
-              << "sub_sequences.size()/capacity():" << sub_sequences.size()
-              << "/" << sub_sequences.capacity();
+             << "sub_sequences.size()/capacity():" << sub_sequences.size()
+             << "/" << sub_sequences.capacity();
         cout << endl
-              << "This PRE_LOC has banged:" << single_pre_prune_bang_count;
+             << "This PRE_LOC has banged:" << single_pre_prune_bang_count;
         sequences.push_back(sub_sequences);
         // cout<<endl<<"3.";
         // Print_Location();
@@ -852,8 +802,7 @@ vector<vector<vector<int>>> Tree::divide_by_target_relation_based_on_StInG(
     return sequences;
 }
 
-vector<vector<vector<int>>> Tree::no_divide_for_test(C_Polyhedron &initp)
-{
+vector<vector<vector<int>>> Tree::no_divide_for_test(C_Polyhedron& initp) {
     cout << endl << "> > > Tree::no_divide_for_test()";
     vector<vector<vector<int>>> sequences;
 
@@ -877,10 +826,10 @@ vector<vector<vector<int>>> Tree::no_divide_for_test(C_Polyhedron &initp)
             length_hb, length_lb, initp);
 
         cout << endl
-              << "sub_sequences.size()/capacity():" << sub_sequences.size()
-              << "/" << sub_sequences.capacity();
+             << "sub_sequences.size()/capacity():" << sub_sequences.size()
+             << "/" << sub_sequences.capacity();
         cout << endl
-              << "This PRE_LOC has banged:" << single_pre_prune_bang_count;
+             << "This PRE_LOC has banged:" << single_pre_prune_bang_count;
         sequences.push_back(sub_sequences);
         // cout<<endl<<"3.";
         // Print_Location();
@@ -890,8 +839,8 @@ vector<vector<vector<int>>> Tree::no_divide_for_test(C_Polyhedron &initp)
     return sequences;
 }
 
-vector<vector<vector<int>>> Tree::divide_by_target_relation(C_Polyhedron &initp)
-{
+vector<vector<vector<int>>> Tree::divide_by_target_relation(
+    C_Polyhedron& initp) {
     cout << endl << "> > > Tree::divide_by_target_relation()";
     vector<vector<vector<int>>> sequences;
 
@@ -910,10 +859,10 @@ vector<vector<vector<int>>> Tree::divide_by_target_relation(C_Polyhedron &initp)
         sub_sequences = dfs_sub_sequences_traverse(length_hb, length_lb, initp);
 
         cout << endl
-              << "sub_sequences.size()/capacity():" << sub_sequences.size()
-              << "/" << sub_sequences.capacity();
+             << "sub_sequences.size()/capacity():" << sub_sequences.size()
+             << "/" << sub_sequences.capacity();
         cout << endl
-              << "This PRE_LOC has banged:" << single_pre_prune_bang_count;
+             << "This PRE_LOC has banged:" << single_pre_prune_bang_count;
         sequences.push_back(sub_sequences);
     }
 
@@ -921,8 +870,7 @@ vector<vector<vector<int>>> Tree::divide_by_target_relation(C_Polyhedron &initp)
     return sequences;
 }
 
-vector<vector<vector<int>>> Tree::one_per_group(C_Polyhedron &initp)
-{
+vector<vector<vector<int>>> Tree::one_per_group(C_Polyhedron& initp) {
     cout << endl << "> > > Tree::one_per_group()";
     vector<vector<vector<int>>> sequences;
 
@@ -944,10 +892,10 @@ vector<vector<vector<int>>> Tree::one_per_group(C_Polyhedron &initp)
         sub_sequences = dfs_sub_sequences_traverse(length_hb, length_lb, initp);
 
         cout << endl
-              << "sub_sequences.size()/capacity():" << sub_sequences.size()
-              << "/" << sub_sequences.capacity();
+             << "sub_sequences.size()/capacity():" << sub_sequences.size()
+             << "/" << sub_sequences.capacity();
         cout << endl
-              << "This PRE_LOC has banged:" << single_pre_prune_bang_count;
+             << "This PRE_LOC has banged:" << single_pre_prune_bang_count;
         sequences.push_back(sub_sequences);
     }
 
@@ -956,8 +904,7 @@ vector<vector<vector<int>>> Tree::one_per_group(C_Polyhedron &initp)
     return sequences;
 }
 
-vector<vector<vector<int>>> Tree::two_per_group(C_Polyhedron &initp)
-{
+vector<vector<vector<int>>> Tree::two_per_group(C_Polyhedron& initp) {
     cout << endl << "> > > Tree::two_per_group()";
     vector<vector<vector<int>>> sequences;
 
@@ -968,8 +915,7 @@ vector<vector<vector<int>>> Tree::two_per_group(C_Polyhedron &initp)
         for (int i = ncl - 1; i > 0; i = i - 2) {
             length_bound.push_back(make_pair(i, i - 1));
         }
-    }
-    else {
+    } else {
         int i;
         length_bound.push_back(make_pair(ncl - 1, ncl - 1));
         for (i = ncl - 1 - 1; i > 0; i = i - 2) {
@@ -989,10 +935,10 @@ vector<vector<vector<int>>> Tree::two_per_group(C_Polyhedron &initp)
         sub_sequences = dfs_sub_sequences_traverse(length_hb, length_lb, initp);
 
         cout << endl
-              << "sub_sequences.size()/capacity():" << sub_sequences.size()
-              << "/" << sub_sequences.capacity();
+             << "sub_sequences.size()/capacity():" << sub_sequences.size()
+             << "/" << sub_sequences.capacity();
         cout << endl
-              << "This PRE_LOC has banged:" << single_pre_prune_bang_count;
+             << "This PRE_LOC has banged:" << single_pre_prune_bang_count;
         sequences.push_back(sub_sequences);
     }
 
@@ -1000,8 +946,7 @@ vector<vector<vector<int>>> Tree::two_per_group(C_Polyhedron &initp)
     return sequences;
 }
 
-vector<vector<vector<int>>> Tree::three_per_group(C_Polyhedron &initp)
-{
+vector<vector<vector<int>>> Tree::three_per_group(C_Polyhedron& initp) {
     cout << endl << "> > > Tree::three_per_group()";
     vector<vector<vector<int>>> sequences;
 
@@ -1028,10 +973,10 @@ vector<vector<vector<int>>> Tree::three_per_group(C_Polyhedron &initp)
         sub_sequences = dfs_sub_sequences_traverse(length_hb, length_lb, initp);
 
         cout << endl
-              << "sub_sequences.size()/capacity():" << sub_sequences.size()
-              << "/" << sub_sequences.capacity();
+             << "sub_sequences.size()/capacity():" << sub_sequences.size()
+             << "/" << sub_sequences.capacity();
         cout << endl
-              << "This PRE_LOC has banged:" << single_pre_prune_bang_count;
+             << "This PRE_LOC has banged:" << single_pre_prune_bang_count;
         sequences.push_back(sub_sequences);
     }
 
@@ -1039,8 +984,7 @@ vector<vector<vector<int>>> Tree::three_per_group(C_Polyhedron &initp)
     return sequences;
 }
 
-vector<vector<vector<int>>> Tree::four_per_group(C_Polyhedron &initp)
-{
+vector<vector<vector<int>>> Tree::four_per_group(C_Polyhedron& initp) {
     cout << endl << "> > > Tree::four_per_group()";
     vector<vector<vector<int>>> sequences;
 
@@ -1067,10 +1011,10 @@ vector<vector<vector<int>>> Tree::four_per_group(C_Polyhedron &initp)
         sub_sequences = dfs_sub_sequences_traverse(length_hb, length_lb, initp);
 
         cout << endl
-              << "sub_sequences.size()/capacity():" << sub_sequences.size()
-              << "/" << sub_sequences.capacity();
+             << "sub_sequences.size()/capacity():" << sub_sequences.size()
+             << "/" << sub_sequences.capacity();
         cout << endl
-              << "This PRE_LOC has banged:" << single_pre_prune_bang_count;
+             << "This PRE_LOC has banged:" << single_pre_prune_bang_count;
         sequences.push_back(sub_sequences);
     }
 
@@ -1078,8 +1022,8 @@ vector<vector<vector<int>>> Tree::four_per_group(C_Polyhedron &initp)
     return sequences;
 }
 
-vector<vector<vector<int>>> Tree::divide_target_into_double(C_Polyhedron &initp)
-{
+vector<vector<vector<int>>> Tree::divide_target_into_double(
+    C_Polyhedron& initp) {
     cout << endl << "> > > Tree::divide_target_into_double()";
     vector<vector<vector<int>>> sequences;
 
@@ -1111,10 +1055,10 @@ vector<vector<vector<int>>> Tree::divide_target_into_double(C_Polyhedron &initp)
         sub_sequences = dfs_sub_sequences_traverse(length_hb, length_lb, initp);
 
         cout << endl
-              << "sub_sequences.size()/capacity():" << sub_sequences.size()
-              << "/" << sub_sequences.capacity();
+             << "sub_sequences.size()/capacity():" << sub_sequences.size()
+             << "/" << sub_sequences.capacity();
         cout << endl
-              << "This PRE_LOC has banged:" << single_pre_prune_bang_count;
+             << "This PRE_LOC has banged:" << single_pre_prune_bang_count;
         sequences.push_back(sub_sequences);
     }
 
@@ -1123,8 +1067,7 @@ vector<vector<vector<int>>> Tree::divide_target_into_double(C_Polyhedron &initp)
 }
 
 vector<vector<vector<int>>> Tree::divide_by_inter_transition(
-    C_Polyhedron &initp)
-{
+    C_Polyhedron& initp) {
     cout << endl << "> > > Tree::divide_by_inter_transition()";
     vector<vector<vector<int>>> sequences;
 
@@ -1153,10 +1096,10 @@ vector<vector<vector<int>>> Tree::divide_by_inter_transition(
         sub_sequences = dfs_sub_sequences_traverse(length_hb, length_lb, initp);
 
         cout << endl
-              << "sub_sequences.size()/capacity():" << sub_sequences.size()
-              << "/" << sub_sequences.capacity();
+             << "sub_sequences.size()/capacity():" << sub_sequences.size()
+             << "/" << sub_sequences.capacity();
         cout << endl
-              << "This PRE_LOC has banged:" << single_pre_prune_bang_count;
+             << "This PRE_LOC has banged:" << single_pre_prune_bang_count;
         sequences.push_back(sub_sequences);
     }
 
@@ -1164,8 +1107,7 @@ vector<vector<vector<int>>> Tree::divide_by_inter_transition(
     return sequences;
 }
 
-vector<vector<vector<int>>> Tree::divide_prior2_into_four(C_Polyhedron &initp)
-{
+vector<vector<vector<int>>> Tree::divide_prior2_into_four(C_Polyhedron& initp) {
     cout << endl << "> > > Tree::divide_prior2_into_four()";
     vector<vector<vector<int>>> sequences;
 
@@ -1201,10 +1143,10 @@ vector<vector<vector<int>>> Tree::divide_prior2_into_four(C_Polyhedron &initp)
         sub_sequences = dfs_sub_sequences_traverse(length_hb, length_lb, initp);
 
         cout << endl
-              << "sub_sequences.size()/capacity():" << sub_sequences.size()
-              << "/" << sub_sequences.capacity();
+             << "sub_sequences.size()/capacity():" << sub_sequences.size()
+             << "/" << sub_sequences.capacity();
         cout << endl
-              << "This PRE_LOC has banged:" << single_pre_prune_bang_count;
+             << "This PRE_LOC has banged:" << single_pre_prune_bang_count;
         sequences.push_back(sub_sequences);
     }
 
@@ -1213,8 +1155,8 @@ vector<vector<vector<int>>> Tree::divide_prior2_into_four(C_Polyhedron &initp)
 }
 
 vector<vector<vector<int>>> Tree::merge_sub_sequences(
-    vector<vector<vector<int>>> sequences, C_Polyhedron initp)
-{
+    vector<vector<vector<int>>> sequences,
+    C_Polyhedron initp) {
     cout << endl << "> > > Tree::merge_sub_sequences()";
     cout << endl << "| sequences.size(): " << sequences.size();
 
@@ -1236,8 +1178,7 @@ vector<vector<vector<int>>> Tree::merge_sub_sequences(
                      (*(*(it + 1)).begin()).size();
                 lb = lb;
             }
-        }
-        else {
+        } else {
             for (it = sequences.begin(); it < sequences.end() - 1;
                  it = it + 2) {
                 hb = hb;
@@ -1255,8 +1196,7 @@ vector<vector<vector<int>>> Tree::merge_sub_sequences(
             }
         }
         merge_count++;
-    }
-    else {
+    } else {
         merged_sequences = sequences;
     }
 
@@ -1266,8 +1206,8 @@ vector<vector<vector<int>>> Tree::merge_sub_sequences(
 }
 
 vector<vector<vector<int>>> Tree::merge_target_sub_sequences(
-    vector<vector<vector<int>>> sequences, C_Polyhedron initp)
-{
+    vector<vector<vector<int>>> sequences,
+    C_Polyhedron initp) {
     cout << endl << "> > > Tree::merge_target_sub_sequences()";
     cout << endl << "| sequences.size(): " << sequences.size();
 
@@ -1293,8 +1233,7 @@ vector<vector<vector<int>>> Tree::merge_target_sub_sequences(
             merged_sequences.push_back(*it);
         }
         merge_count++;
-    }
-    else {
+    } else {
         merged_sequences = sequences;
     }
 
@@ -1304,8 +1243,8 @@ vector<vector<vector<int>>> Tree::merge_target_sub_sequences(
 }
 
 vector<vector<vector<int>>> Tree::merge_first_sub_sequences(
-    vector<vector<vector<int>>> sequences, C_Polyhedron initp)
-{
+    vector<vector<vector<int>>> sequences,
+    C_Polyhedron initp) {
     cout << endl << "> > > Tree::merge_first_sub_sequences()";
     cout << endl << "| sequences.size(): " << sequences.size();
 
@@ -1333,8 +1272,7 @@ vector<vector<vector<int>>> Tree::merge_first_sub_sequences(
             merged_sequences.push_back(*it);
         }
         merge_count++;
-    }
-    else {
+    } else {
         merged_sequences = sequences;
     }
 
@@ -1344,8 +1282,8 @@ vector<vector<vector<int>>> Tree::merge_first_sub_sequences(
 }
 
 vector<vector<vector<int>>> Tree::merge_end_sub_sequences(
-    vector<vector<vector<int>>> sequences, C_Polyhedron initp)
-{
+    vector<vector<vector<int>>> sequences,
+    C_Polyhedron initp) {
     cout << endl << "> > > Tree::merge_end_sub_sequences()";
     cout << endl << "| sequences.size(): " << sequences.size();
 
@@ -1374,8 +1312,7 @@ vector<vector<vector<int>>> Tree::merge_end_sub_sequences(
         //}
 
         merge_count++;
-    }
-    else {
+    } else {
         merged_sequences = sequences;
     }
 
@@ -1385,9 +1322,10 @@ vector<vector<vector<int>>> Tree::merge_end_sub_sequences(
 }
 
 vector<vector<int>> Tree::Merge(vector<vector<int>> sub_sequences1,
-                                vector<vector<int>> sub_sequences2, int hb,
-                                int lb, C_Polyhedron initp)
-{
+                                vector<vector<int>> sub_sequences2,
+                                int hb,
+                                int lb,
+                                C_Polyhedron initp) {
     vector<vector<int>> merged_sub_sequences;
     bang_count_in_merge = 0;
 
@@ -1408,23 +1346,27 @@ vector<vector<int>> Tree::Merge(vector<vector<int>> sub_sequences1,
         single_merge_sub_sequences_timer.compute_time_elapsed();
 
     cout << endl
-          << "| hb:" << hb << ", lb:" << lb
-          << ", weave_in_merge:" << invd_vp.get_count()
-          << ", bang_in_merge:" << bang_count_in_merge
-          << ", time:" << single_merge_sub_sequences_time;
+         << "| hb:" << hb << ", lb:" << lb
+         << ", weave_in_merge:" << invd_vp.get_count()
+         << ", bang_in_merge:" << bang_count_in_merge
+         << ", time:" << single_merge_sub_sequences_time;
     cout << endl
-          << "merged_sub_sequences.capacity():"
-          << merged_sub_sequences.capacity();
+         << "merged_sub_sequences.capacity():"
+         << merged_sub_sequences.capacity();
     cout << endl
-          << "merged_sub_sequences.size():" << merged_sub_sequences.size();
+         << "merged_sub_sequences.size():" << merged_sub_sequences.size();
     return merged_sub_sequences;
 }
 
 void Tree::Merge_recursive2(vector<vector<vector<int>>> two_sub_sequences,
-                            vector<vector<int>> &merged_sub_sequences,
-                            vector<int> &sequence, int i, int depth,
-                            C_Polyhedron &cpoly, Clump &invd_vp, int hb, int lb)
-{
+                            vector<vector<int>>& merged_sub_sequences,
+                            vector<int>& sequence,
+                            int i,
+                            int depth,
+                            C_Polyhedron& cpoly,
+                            Clump& invd_vp,
+                            int hb,
+                            int lb) {
     if (i == two_sub_sequences.size() - 1) {
         // cout<<endl;
         // cout<<endl<<"/-----------------------------";
@@ -1436,9 +1378,9 @@ void Tree::Merge_recursive2(vector<vector<vector<int>>> two_sub_sequences,
                                                   cpoly, sequence);
         collect_timer.stop();
         cout << endl
-              << "- The collect_invariant_polys_and_sub_sequences Time Taken "
-                 "(0.01s) = "
-              << collect_timer.compute_time_elapsed();
+             << "- The collect_invariant_polys_and_sub_sequences Time Taken "
+                "(0.01s) = "
+             << collect_timer.compute_time_elapsed();
         // cout<<endl<<"\\-----------------------------"<<endl;
         return;
     }
@@ -1455,8 +1397,7 @@ void Tree::Merge_recursive2(vector<vector<vector<int>>> two_sub_sequences,
             has_the_same_sequences_from_the_left(banged_s, s)) {
             j++;
             continue;
-        }
-        else {
+        } else {
             banged_s.clear();
             s_banged_flag = false;
         }
@@ -1487,8 +1428,7 @@ void Tree::Merge_recursive2(vector<vector<vector<int>>> two_sub_sequences,
         if (s_banged_flag != true) {
             Merge_recursive2(two_sub_sequences, merged_sub_sequences, read_s,
                              i + 1, depth - index, p, invd_vp, hb, lb);
-        }
-        else {
+        } else {
             ;
         }
         j++;
@@ -1551,8 +1491,9 @@ int hb, int lb){
 }
 */
 vector<vector<int>> Tree::dfs_sub_sequences_traverse_based_on_StInG(
-    int hb, int lb, C_Polyhedron &initp)
-{
+    int hb,
+    int lb,
+    C_Polyhedron& initp) {
     cout << endl << "> > > Tree::dfs_sub_sequences_traverse_based_on_StInG()";
     vector<vector<int>> sub_sequences;
 
@@ -1579,9 +1520,9 @@ vector<vector<int>> Tree::dfs_sub_sequences_traverse_based_on_StInG(
     return sub_sequences;
 }
 
-vector<vector<int>> Tree::dfs_sub_sequences_traverse(int hb, int lb,
-                                                     C_Polyhedron &initp)
-{
+vector<vector<int>> Tree::dfs_sub_sequences_traverse(int hb,
+                                                     int lb,
+                                                     C_Polyhedron& initp) {
     cout << endl << "> > > Tree::dfs_sub_sequences_traverse()";
     vector<vector<int>> sub_sequences;
 
@@ -1606,15 +1547,18 @@ vector<vector<int>> Tree::dfs_sub_sequences_traverse(int hb, int lb,
                                          invd_vp);
 
     cout << endl
-          << "This sub_sequences invd_vp has weaved:" << invd_vp.get_count();
+         << "This sub_sequences invd_vp has weaved:" << invd_vp.get_count();
     cout << endl << "< < < Tree::dfs_sub_sequences_traverse()";
     return sub_sequences;
 }
 
 void Tree::dfs_sub_sequences_traverse_recursive_based_on_StInG(
-    vector<vector<int>> &sub_sequences, int hb, int lb, int depth,
-    C_Polyhedron &cpoly, C_Polyhedron &invd)
-{
+    vector<vector<int>>& sub_sequences,
+    int hb,
+    int lb,
+    int depth,
+    C_Polyhedron& cpoly,
+    C_Polyhedron& invd) {
     // cout<<endl<<"> > >
     // Tree::dfs_sub_sequences_traverse_recursive_based_on_StInG()";
 
@@ -1659,8 +1603,7 @@ void Tree::dfs_sub_sequences_traverse_recursive_based_on_StInG(
                 cout << endl << "Pruned by backtracking in depth " << depth;
                 get_clump(depth - 1).clear();
                 return;
-            }
-            else {
+            } else {
                 if (backtrack_success >= 1) {
                     backtrack_count++;
                     backtrack_success = 0;
@@ -1677,9 +1620,12 @@ void Tree::dfs_sub_sequences_traverse_recursive_based_on_StInG(
 }
 
 void Tree::dfs_sub_sequences_traverse_recursive(
-    vector<vector<int>> &sub_sequences, int hb, int lb, int depth,
-    C_Polyhedron &cpoly, Clump &invd_vp)
-{
+    vector<vector<int>>& sub_sequences,
+    int hb,
+    int lb,
+    int depth,
+    C_Polyhedron& cpoly,
+    Clump& invd_vp) {
     // cout<<endl<<"> > > Tree::dfs_sub_sequences_traverse_recursive()";
 
     // cout<<endl<<"depth:"<<depth<<", cpoly:";
@@ -1740,8 +1686,7 @@ void Tree::dfs_sub_sequences_traverse_recursive(
                 cout << endl << "Pruned by backtracking in depth " << depth;
                 get_clump(depth - 1).clear();
                 return;
-            }
-            else {
+            } else {
                 if (backtrack_success >= 1) {
                     backtrack_count++;
                     backtrack_success = 0;
@@ -1756,15 +1701,14 @@ void Tree::dfs_sub_sequences_traverse_recursive(
     return;
 }
 
-void Tree::collect_invariant_polys(C_Polyhedron &cpoly, Clump &invd_vp)
-{
+void Tree::collect_invariant_polys(C_Polyhedron& cpoly, Clump& invd_vp) {
     invd_vp.insert(cpoly);
     cout << endl << "  invd_vp.size():" << invd_vp.get_count();
 }
 
-void Tree::collect_sub_sequences(vector<vector<int>> &sub_sequences, int hb,
-                                 int lb)
-{
+void Tree::collect_sub_sequences(vector<vector<int>>& sub_sequences,
+                                 int hb,
+                                 int lb) {
     // cout<<endl<<"> > > Tree::collect_sub_sequences()";
 
     vector<int> s;
@@ -1782,9 +1726,11 @@ void Tree::collect_sub_sequences(vector<vector<int>> &sub_sequences, int hb,
 }
 
 void Tree::collect_invariant_polys_and_sub_sequences(
-    Clump &invd_vp, vector<vector<int>> &sub_sequences, C_Polyhedron &cpoly,
-    int hb, int lb)
-{
+    Clump& invd_vp,
+    vector<vector<int>>& sub_sequences,
+    C_Polyhedron& cpoly,
+    int hb,
+    int lb) {
     // cout<<endl<<"> > > Tree::collect_invariant_polys_and_sub_sequences()";
 
     //  collect sub_sequences
@@ -1816,9 +1762,10 @@ void Tree::collect_invariant_polys_and_sub_sequences(
 }
 
 void Tree::collect_invariant_polys_and_sub_sequences(
-    Clump &invd_vp, vector<vector<int>> &sub_sequences, C_Polyhedron &cpoly,
-    vector<int> &sequence)
-{
+    Clump& invd_vp,
+    vector<vector<int>>& sub_sequences,
+    C_Polyhedron& cpoly,
+    vector<int>& sequence) {
     // cout<<endl<<"> > > Tree::collect_invariant_polys_and_sub_sequences()";
 
     //  collect sub_sequences
@@ -1928,8 +1875,8 @@ sequence){
 }
 */
 void Tree::dfs_sequences_traverse(vector<vector<vector<int>>> sequences,
-                                  C_Polyhedron &initp, C_Polyhedron &invd)
-{
+                                  C_Polyhedron& initp,
+                                  C_Polyhedron& invd) {
     cout << endl << "> > > Tree::dfs_sequences_traverse()";
 
     // Test for reading sequences
@@ -1964,9 +1911,12 @@ void Tree::dfs_sequences_traverse(vector<vector<vector<int>>> sequences,
 }
 
 void Tree::dfs_sequences_traverse_recursive2(
-    vector<int> &sequence, vector<vector<vector<int>>> sequences, int i,
-    int depth, C_Polyhedron &cpoly, C_Polyhedron &invd)
-{
+    vector<int>& sequence,
+    vector<vector<vector<int>>> sequences,
+    int i,
+    int depth,
+    C_Polyhedron& cpoly,
+    C_Polyhedron& invd) {
     if (total_timer.compute_time_elapsed() >= total_time) {
         cout << endl << "Time is up!";
         return;
@@ -1992,8 +1942,8 @@ void Tree::dfs_sequences_traverse_recursive2(
         cout << endl << "- Have Collected " << weave_count << " invariant(s)";
         collect_timer.stop();
         cout << endl
-              << "- The collect_invariants Time Taken (0.01s) = "
-              << collect_timer.compute_time_elapsed();
+             << "- The collect_invariants Time Taken (0.01s) = "
+             << collect_timer.compute_time_elapsed();
         collect_time = collect_time + collect_timer.compute_time_elapsed();
         single_collect_time =
             single_collect_time + collect_timer.compute_time_elapsed();
@@ -2002,8 +1952,8 @@ void Tree::dfs_sequences_traverse_recursive2(
             cout << endl << "- cpoly: " << endl << "  " << cpoly;
             cout << endl << "- invd: " << endl << "  " << invd;
             cout << endl
-                  << "- invariant: " << endl
-                  << "  " << (*loclist)[target_index]->get_invariant();
+                 << "- invariant: " << endl
+                 << "  " << (*loclist)[target_index]->get_invariant();
         }
         cout << endl << "\\-----------------------------";
         return;
@@ -2021,8 +1971,7 @@ void Tree::dfs_sequences_traverse_recursive2(
             has_the_same_sequences_from_the_left(banged_s, s)) {
             j++;
             continue;
-        }
-        else {
+        } else {
             banged_s.clear();
             s_banged_flag = false;
         }
@@ -2055,8 +2004,8 @@ void Tree::dfs_sequences_traverse_recursive2(
                     cout << endl << "- cpoly: " << endl << "  " << cpoly;
                     cout << endl << "- invd: " << endl << "  " << invd;
                     cout << endl
-                          << "- invariant: " << endl
-                          << "  " << (*loclist)[target_index]->get_invariant();
+                         << "- invariant: " << endl
+                         << "  " << (*loclist)[target_index]->get_invariant();
                     cout << endl << "\\-----------------------------";
                 }
 
@@ -2070,8 +2019,7 @@ void Tree::dfs_sequences_traverse_recursive2(
         if (s_banged_flag != true) {
             dfs_sequences_traverse_recursive2(read_s, sequences, i + 1,
                                               depth - index, p, invd);
-        }
-        else {
+        } else {
             ;
         }
         j++;
@@ -2080,8 +2028,7 @@ void Tree::dfs_sequences_traverse_recursive2(
 }
 
 bool Tree::has_the_same_sequences_from_the_left(vector<int> banged_s,
-                                                vector<int> s)
-{
+                                                vector<int> s) {
     for (int i = 0; i < banged_s.size(); i++) {
         if (banged_s[i] != s[i]) {
             return false;

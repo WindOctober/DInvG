@@ -27,13 +27,15 @@ extern string projection;
 extern int debug_3;
 
 void repack_constraints_based_on_protection(
-    Constraint_System &cs, Constraint_System &cs_only_unprotected,
-    Constraint_System &cs_mixed_protected, Constraint_System &cs_only_protected,
-    int l, int r)
-{
+    Constraint_System& cs,
+    Constraint_System& cs_only_unprotected,
+    Constraint_System& cs_mixed_protected,
+    Constraint_System& cs_only_protected,
+    int l,
+    int r) {
     // cout<<endl;
     cout << endl
-          << "> > > In repack_constraints_based_on_protection(), doing...";
+         << "> > > In repack_constraints_based_on_protection(), doing...";
     // cout<<endl<<"      "<<"Before repacking, cs is ";
     // cout<<endl<<"      "<<cs;
 
@@ -46,8 +48,7 @@ void repack_constraints_based_on_protection(
                 if ((*vi).coefficient(Variable(i)) != 0) {
                     flag_unprotected = 1;
                 }
-            }
-            else if (l <= i && i < r) {
+            } else if (l <= i && i < r) {
                 if ((*vi).coefficient(Variable(i)) != 0) {
                     flag_protected = 1;
                 }
@@ -56,12 +57,10 @@ void repack_constraints_based_on_protection(
         if (flag_unprotected == 1 && flag_protected == 0) {
             cs_only_unprotected.insert(*vi);
             flag_unprotected = 0;
-        }
-        else if (flag_unprotected == 0 && flag_protected == 1) {
+        } else if (flag_unprotected == 0 && flag_protected == 1) {
             cs_only_protected.insert(*vi);
             flag_protected = 0;
-        }
-        else if (flag_unprotected == 1 && flag_protected == 1) {
+        } else if (flag_unprotected == 1 && flag_protected == 1) {
             cs_mixed_protected.insert(*vi);
             flag_unprotected = 0;
             flag_protected = 0;
@@ -75,12 +74,11 @@ void repack_constraints_based_on_protection(
     // cout<<endl<<"      "<<"After repacking, cs_only_protected is ";
     // cout<<endl<<"      "<<cs_only_protected;
     cout << endl
-          << "< < < Out of repack_constraints_based_on_protection(), done!";
+         << "< < < Out of repack_constraints_based_on_protection(), done!";
     return;
 }
 
-void restruct_generators(Generator_System &gs)
-{
+void restruct_generators(Generator_System& gs) {
     // cout<<endl;
     // cout<<endl<<"> > > In restruct_generators(), doing...";
 
@@ -120,8 +118,7 @@ void restruct_generators(Generator_System &gs)
     // cout<<endl<<"< < < Out of restruct_generators(), done!";
 }
 
-void eliminate_by_Farkas(C_Polyhedron &result, int lb)
-{
+void eliminate_by_Farkas(C_Polyhedron& result, int lb) {
     cout << endl;
     cout << endl << "> > > In eliminate_by_Farkas(), doing...";
     // cout<<"- - - 1. Constraint_System cs is "<<endl<<"      "<<cs;
@@ -168,24 +165,21 @@ void eliminate_by_Farkas(C_Polyhedron &result, int lb)
             // cout<<endl<<"Constraint is Non-Strict inequality"<<endl;
             // cout<<endl<<"add constraints "<<Variable(j)<<" >= 0"<<endl;
             yTAeq0.add_constraint(Variable(j) >= 0);
-        }
-        else if ((*vi).type() == Constraint::STRICT_INEQUALITY) {
+        } else if ((*vi).type() == Constraint::STRICT_INEQUALITY) {
             // cout<<endl<<"Constraint is Strict inequality"<<endl;
-        }
-        else if ((*vi).type() == Constraint::EQUALITY) {
+        } else if ((*vi).type() == Constraint::EQUALITY) {
             //  Do nothing if Ax == b
             equality_count++;
             // cout<<endl<<"Constraint is Equality"<<endl;
-        }
-        else {
+        } else {
             // cout<<endl<<"Unknown Constraint !! "<<endl;
         }
         j++;
     }
     if (equality_count + non_strict_inequality_count != n_y) {
         cout << endl
-              << "Warning! equality + non_strict_inequality != Rows(Lines) in "
-                 "b>=Ax";
+             << "Warning! equality + non_strict_inequality != Rows(Lines) in "
+                "b>=Ax";
     }
     //    Now those are all the constraints.
     // cout<<endl<<"- - - 3. y^T*A=0 (has added some y>=0) is
@@ -259,39 +253,38 @@ void eliminate_by_Farkas(C_Polyhedron &result, int lb)
     result = poly_yTbgeq0;
 
     cout << endl
-          << "- - - "
-          << " { " << n_y << " } "
-          << " * "
-          << " [ " << lb << " ] "
-          << " & "
-          << " ' " << cs.space_dimension() - lb << " ' ";
+         << "- - - "
+         << " { " << n_y << " } "
+         << " * "
+         << " [ " << lb << " ] "
+         << " & "
+         << " ' " << cs.space_dimension() - lb << " ' ";
     cout << " of Rows * Columns( [Vars] & 'to be eliminated' ) in [b] >= 'Ax'";
     cout << endl
-          << "      "
-          << "+{ " << equality_count << " } "
-          << " of equalities";
+         << "      "
+         << "+{ " << equality_count << " } "
+         << " of equalities";
     cout << endl
-          << "      "
-          << "+{ " << non_strict_inequality_count << " } "
-          << " of non_strict-inequalities";
+         << "      "
+         << "+{ " << non_strict_inequality_count << " } "
+         << " of non_strict-inequalities";
     cout << endl
-          << "- - - "
-          << "   " << nc_yTAeq0 << "   "
-          << " * "
-          << " { " << cs_yTAeq0.space_dimension() << " } "
-          << " of Rows * Columns in {y^T} * 'A' == 0";
+         << "- - - "
+         << "   " << nc_yTAeq0 << "   "
+         << " * "
+         << " { " << cs_yTAeq0.space_dimension() << " } "
+         << " of Rows * Columns in {y^T} * 'A' == 0";
     cout << endl
-          << "- - - "
-          << "   " << nc_yTbgeq0 << "   "
-          << " * "
-          << " [ " << cs_yTbgeq0.space_dimension() << " ] "
-          << " of Rows * Columns in {y^T} * [b] >= 0";
+         << "- - - "
+         << "   " << nc_yTbgeq0 << "   "
+         << " * "
+         << " [ " << cs_yTbgeq0.space_dimension() << " ] "
+         << " of Rows * Columns in {y^T} * [b] >= 0";
     cout << endl << "< < < Out of eliminate_by_Farkas(), done!";
     return;
 }
 
-void Project_by_Farkas(C_Polyhedron &result, int l, int r)
-{
+void Project_by_Farkas(C_Polyhedron& result, int l, int r) {
     // cout<<endl;
     cout << endl << "> > > Project_by_Farkas(), doing...";
     // cout<<"- - - 1. Constraint_System cs is "<<endl<<"      "<<cs;
@@ -338,24 +331,21 @@ void Project_by_Farkas(C_Polyhedron &result, int l, int r)
             // cout<<endl<<"Constraint is Non-Strict inequality"<<endl;
             // cout<<endl<<"add constraints "<<Variable(j)<<" >= 0"<<endl;
             yTAeq0.add_constraint(Variable(j) >= 0);
-        }
-        else if ((*vi).type() == Constraint::STRICT_INEQUALITY) {
+        } else if ((*vi).type() == Constraint::STRICT_INEQUALITY) {
             // cout<<endl<<"Constraint is Strict inequality"<<endl;
-        }
-        else if ((*vi).type() == Constraint::EQUALITY) {
+        } else if ((*vi).type() == Constraint::EQUALITY) {
             //  Do nothing if Ax == b
             equality_count++;
             // cout<<endl<<"Constraint is Equality"<<endl;
-        }
-        else {
+        } else {
             // cout<<endl<<"Unknown Constraint !! "<<endl;
         }
         j++;
     }
     if (equality_count + non_strict_inequality_count != n_y) {
         cout << endl
-              << "Warning! equality + non_strict_inequality != Rows(Lines) in "
-                 "b>=Ax";
+             << "Warning! equality + non_strict_inequality != Rows(Lines) in "
+                "b>=Ax";
     }
     //    Now those are all the constraints.
     // cout<<endl<<"- - - 3. y^T*A=0 (has added some y>=0) is
@@ -429,39 +419,38 @@ void Project_by_Farkas(C_Polyhedron &result, int l, int r)
     result = poly_yTbgeq0;
 
     cout << endl
-          << "- - - "
-          << " { " << n_y << " } "
-          << " * "
-          << " [ " << r - l << " ] "
-          << " & "
-          << " ' " << cs.space_dimension() - (r - l) << " ' ";
+         << "- - - "
+         << " { " << n_y << " } "
+         << " * "
+         << " [ " << r - l << " ] "
+         << " & "
+         << " ' " << cs.space_dimension() - (r - l) << " ' ";
     cout << " of Rows * Columns( [Vars] & 'to be eliminated' ) in [b] >= 'Ax'";
     cout << endl
-          << "      "
-          << "+{ " << equality_count << " } "
-          << " of equalities";
+         << "      "
+         << "+{ " << equality_count << " } "
+         << " of equalities";
     cout << endl
-          << "      "
-          << "+{ " << non_strict_inequality_count << " } "
-          << " of non_strict-inequalities";
+         << "      "
+         << "+{ " << non_strict_inequality_count << " } "
+         << " of non_strict-inequalities";
     cout << endl
-          << "- - - "
-          << "   " << nc_yTAeq0 << "   "
-          << " * "
-          << " { " << cs_yTAeq0.space_dimension() << " } "
-          << " of Rows * Columns in {y^T} * 'A' == 0";
+         << "- - - "
+         << "   " << nc_yTAeq0 << "   "
+         << " * "
+         << " { " << cs_yTAeq0.space_dimension() << " } "
+         << " of Rows * Columns in {y^T} * 'A' == 0";
     cout << endl
-          << "- - - "
-          << "   " << nc_yTbgeq0 << "   "
-          << " * "
-          << " [ " << cs_yTbgeq0.space_dimension() << " ] "
-          << " of Rows * Columns in {y^T} * [b] >= 0";
+         << "- - - "
+         << "   " << nc_yTbgeq0 << "   "
+         << " * "
+         << " [ " << cs_yTbgeq0.space_dimension() << " ] "
+         << " of Rows * Columns in {y^T} * [b] >= 0";
     cout << endl << "< < < Project_by_Farkas(), done!";
     return;
 }
 
-void Project_by_Kohler(C_Polyhedron &result, int l, int r)
-{
+void Project_by_Kohler(C_Polyhedron& result, int l, int r) {
     // cout<<endl;
     cout << endl << "> > > Project_by_Kohler(), doing...";
     // cout<<endl<<"      "<<"Before Project_by_Kohler(), result is ";
@@ -490,8 +479,7 @@ void Project_by_Kohler(C_Polyhedron &result, int l, int r)
                 if ((*vi).coefficient(Variable(i)) != 0) {
                     flag_unprotected = 1;
                 }
-            }
-            else if (l <= i && i < r) {
+            } else if (l <= i && i < r) {
                 if ((*vi).coefficient(Variable(i)) != 0) {
                     flag_protected = 1;
                 }
@@ -500,12 +488,10 @@ void Project_by_Kohler(C_Polyhedron &result, int l, int r)
         if (flag_unprotected == 1 && flag_protected == 0) {
             cs_only_unprotected.insert(*vi);
             flag_unprotected = 0;
-        }
-        else if (flag_unprotected == 0 && flag_protected == 1) {
+        } else if (flag_unprotected == 0 && flag_protected == 1) {
             cs_only_protected.insert(*vi);
             flag_protected = 0;
-        }
-        else if (flag_unprotected == 1 && flag_protected == 1) {
+        } else if (flag_unprotected == 1 && flag_protected == 1) {
             cs_mixed_protected.insert(*vi);
             flag_unprotected = 0;
             flag_protected = 0;
@@ -516,7 +502,8 @@ void Project_by_Kohler(C_Polyhedron &result, int l, int r)
     dimension_type n_y_only_unprotected = 0;
     dimension_type n_y_mixed_protected = 0;
     dimension_type n_y_only_protected = 0;
-    for (vi = cs.begin(); vi != cs.end(); ++vi) n_y++;
+    for (vi = cs.begin(); vi != cs.end(); ++vi)
+        n_y++;
     for (vi = cs_only_unprotected.begin(); vi != cs_only_unprotected.end();
          ++vi)
         n_y_only_unprotected++;
@@ -564,16 +551,13 @@ void Project_by_Kohler(C_Polyhedron &result, int l, int r)
             // cout<<endl<<"Constraint is Non-Strict inequality"<<endl;
             // cout<<endl<<"add constraints "<<Variable(j)<<" >= 0"<<endl;
             yTAeq0.add_constraint(Variable(j) >= 0);
-        }
-        else if ((*vi).type() == Constraint::STRICT_INEQUALITY) {
+        } else if ((*vi).type() == Constraint::STRICT_INEQUALITY) {
             // cout<<endl<<"Constraint is Strict inequality"<<endl;
-        }
-        else if ((*vi).type() == Constraint::EQUALITY) {
+        } else if ((*vi).type() == Constraint::EQUALITY) {
             //  Do nothing if Ax == b
             equality_count++;
             // cout<<endl<<"Constraint is Equality"<<endl;
-        }
-        else {
+        } else {
             // cout<<endl<<"Unknown Constraint !! "<<endl;
         }
         j++;
@@ -586,16 +570,13 @@ void Project_by_Kohler(C_Polyhedron &result, int l, int r)
             // cout<<endl<<"Constraint is Non-Strict inequality"<<endl;
             // cout<<endl<<"add constraints "<<Variable(j)<<" >= 0"<<endl;
             yTAeq0.add_constraint(Variable(j) >= 0);
-        }
-        else if ((*vi).type() == Constraint::STRICT_INEQUALITY) {
+        } else if ((*vi).type() == Constraint::STRICT_INEQUALITY) {
             // cout<<endl<<"Constraint is Strict inequality"<<endl;
-        }
-        else if ((*vi).type() == Constraint::EQUALITY) {
+        } else if ((*vi).type() == Constraint::EQUALITY) {
             //  Do nothing if Ax == b
             equality_count++;
             // cout<<endl<<"Constraint is Equality"<<endl;
-        }
-        else {
+        } else {
             // cout<<endl<<"Unknown Constraint !! "<<endl;
         }
         j++;
@@ -603,8 +584,8 @@ void Project_by_Kohler(C_Polyhedron &result, int l, int r)
     if (equality_count + non_strict_inequality_count !=
         n_y_mixed_protected + n_y_only_unprotected) {
         cout << endl
-              << "Warning! equality + non_strict_inequality != Rows(Lines) in "
-                 "b>=Ax";
+             << "Warning! equality + non_strict_inequality != Rows(Lines) in "
+                "b>=Ax";
     }
     //    Now those are all the constraints.
     // cout<<endl<<"- - - 3. y^T*A=0 (has added some y>=0) is
@@ -681,8 +662,7 @@ void Project_by_Kohler(C_Polyhedron &result, int l, int r)
         if ((*vi).type() == Constraint::NONSTRICT_INEQUALITY) {
             cs_only_protected_corresponding_dimensions.insert(
                 b_only_protected >= 0);
-        }
-        else if ((*vi).type() == Constraint::EQUALITY) {
+        } else if ((*vi).type() == Constraint::EQUALITY) {
             cs_only_protected_corresponding_dimensions.insert(
                 b_only_protected == 0);
         }
@@ -727,38 +707,32 @@ void Project_by_Kohler(C_Polyhedron &result, int l, int r)
     return;
 }
 
-void Project_by_FouMot(C_Polyhedron &result, int l, int r)
-{
+void Project_by_FouMot(C_Polyhedron& result, int l, int r) {
     cout << endl << "> > > Project_by_FouMot(), doing...";
     bring_to_forward(result, l, r);
     result.remove_higher_space_dimensions(r - l);
     cout << endl << "< < < Project_by_FouMot(), done!";
 }
 
-void Project(C_Polyhedron &result, int l, int r)
-{
+void Project(C_Polyhedron& result, int l, int r) {
     // cout<<endl;
     // cout<<endl<<"Which Projection Strategy: ";
 
     if (projection == "kohler_improvement_eliminate_c") {
         // cout<<"Choose Kohler Projection";
         Project_by_Kohler(result, l, r);
-    }
-    else if (projection == "farkas_eliminate_c") {
+    } else if (projection == "farkas_eliminate_c") {
         // cout<<"Choose Farkas Projection";
         Project_by_Farkas(result, l, r);
-    }
-    else if (projection == "foumot_eliminate_c") {
+    } else if (projection == "foumot_eliminate_c") {
         // cout<<"Choose FouMot Projection";
         Project_by_FouMot(result, l, r);
-    }
-    else {
+    } else {
         cout << endl << "Wrong Type: " << projection << endl;
     }
 }
 
-void contains_test(C_Polyhedron &poly, int lb)
-{
+void contains_test(C_Polyhedron& poly, int lb) {
     cout << endl;
     cout << endl << "> > > In contains_test(), doing...";
 
@@ -793,16 +767,14 @@ void contains_test(C_Polyhedron &poly, int lb)
     if (poly_removed.contains(poly_Farkas) &&
         poly_Farkas.contains(poly_removed)) {
         // Do nothing
-    }
-    else {
+    } else {
         cout << endl << "Warning! poly_removed != poly_Farkas";
     }
 
     cout << endl << "< < < Out of contains_test(), done!";
 }
 
-void bring_to_forward(C_Polyhedron &result, int l, int r)
-{
+void bring_to_forward(C_Polyhedron& result, int l, int r) {
     C_Polyhedron ph(result.space_dimension(), UNIVERSE);
     Constraint_System cs = result.minimized_constraints();
     Linear_Expression lin(0);
@@ -818,8 +790,7 @@ void bring_to_forward(C_Polyhedron &result, int l, int r)
                 if (flag < l) {
                     lin = lin + (*vi).coefficient(Variable(flag)) * Variable(i);
                     flag++;
-                }
-                else {
+                } else {
                     lin = lin + (*vi).coefficient(Variable(i)) * Variable(i);
                 }
             }
@@ -835,11 +806,10 @@ void bring_to_forward(C_Polyhedron &result, int l, int r)
     result = ph;
 }
 
-C_Polyhedron const &swap2_index_and_divide_from(C_Polyhedron &ph, int index)
-{
+C_Polyhedron const& swap2_index_and_divide_from(C_Polyhedron& ph, int index) {
     // cout<<endl<<"In swap2, before swap"<<endl<<ph;
 
-    C_Polyhedron *result = new C_Polyhedron(ph.space_dimension(), UNIVERSE);
+    C_Polyhedron* result = new C_Polyhedron(ph.space_dimension(), UNIVERSE);
     // C_Polyhedron result(ph.space_dimension(), UNIVERSE);
     Constraint_System cs = ph.minimized_constraints();
     // cout<<endl<<"cs: "<<endl<<cs;
@@ -875,8 +845,7 @@ C_Polyhedron const &swap2_index_and_divide_from(C_Polyhedron &ph, int index)
     return *result;
 }
 
-C_Polyhedron swap_index_and_divide_from(C_Polyhedron &ph, int index)
-{
+C_Polyhedron swap_index_and_divide_from(C_Polyhedron& ph, int index) {
     // cout<<endl<<"In swap1, before swap"<<endl<<ph;
 
     C_Polyhedron result(ph.space_dimension(), UNIVERSE);

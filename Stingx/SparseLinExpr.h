@@ -91,8 +91,7 @@ class SparseLinExpr {
 
     void set_coefficient(int index, Rational const& what);
 
-    void set_coefficient(int index, int what)
-    {
+    void set_coefficient(int index, int what) {
         set_coefficient(index, Rational(what, 1));
     }
 
@@ -119,8 +118,7 @@ class SparseLinExpr {
 
     int get_count() const { return count_; }
 
-    int reset_count()
-    {
+    int reset_count() {
         int t = count_;
         count_ = 0;
         return t;
@@ -129,8 +127,7 @@ class SparseLinExpr {
     int count_up() { return count_++; }
     int count_down() { return count_--; }
 
-    bool check_variable_compatibility(var_info const* f1) const
-    {
+    bool check_variable_compatibility(var_info const* f1) const {
         return (f1 == f_);
     }
 
@@ -180,13 +177,13 @@ class SparseLinExpr {
     // convert this into a lin expression, scale that by scale_fact and offset
     // the variables by adding offset. Add the result to ll
 
-    void add_to_lin_expression(Linear_Expression& ll, int scale_fact = 1,
+    void add_to_lin_expression(Linear_Expression& ll,
+                               int scale_fact = 1,
                                int offset = 0) const;
 
     void print(ostream& os) const;
 
-    int obtain_largest_coefficient() const
-    {
+    int obtain_largest_coefficient() const {
         if (is_zero()) {
             cerr << "Fatal Error in SparseLinExpr::obtain_largest_coefficient"
                  << endl
@@ -200,8 +197,7 @@ class SparseLinExpr {
     // functions for setting/getting flags
     bool get_flag() const { return flag_; }
 
-    bool set_flag(bool what)
-    {
+    bool set_flag(bool what) {
         bool t = flag_;
         flag_ = what;
         return t;
@@ -229,7 +225,8 @@ class SparseLinExpr {
 };
 
 ostream& operator<<(
-    ostream& os, SparseLinExpr const& expr);  // to print my beautiful Lin Exprs
+    ostream& os,
+    SparseLinExpr const& expr);  // to print my beautiful Lin Exprs
 
 SparseLinExpr operator*(Rational const& i, SparseLinExpr const& p1);
 

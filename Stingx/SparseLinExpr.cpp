@@ -32,13 +32,11 @@ using namespace std;
 using namespace Parma_Polyhedra_Library;
 using namespace Parma_Polyhedra_Library::IO_Operators;
 
-void SparseLinExpr::clear_out()
-{
+void SparseLinExpr::clear_out() {
     m_.clear();  // that should erase all the entries!
 }
 
-void SparseLinExpr::initialize(int n, var_info *f)
-{
+void SparseLinExpr::initialize(int n, var_info* f) {
     n_ = n;
     f_ = f;
     m_.clear();
@@ -46,10 +44,10 @@ void SparseLinExpr::initialize(int n, var_info *f)
     info_set_ = true;
 }
 
-bool SparseLinExpr::_class_invariant_check() const
-{
+bool SparseLinExpr::_class_invariant_check() const {
     IRMap::const_iterator vi;
-    if (m_.empty()) return true;
+    if (m_.empty())
+        return true;
     for (vi = m_.begin(); vi != m_.end(); ++vi) {
         if ((*vi).first < 0 || (*vi).first > n_) {
             cerr << " Illegal Dimensions!" << endl;
@@ -64,8 +62,7 @@ bool SparseLinExpr::_class_invariant_check() const
     return true;
 }
 
-void SparseLinExpr::add_coefficient(int index, Rational const &what)
-{
+void SparseLinExpr::add_coefficient(int index, Rational const& what) {
     //
     // this will insert the index if it has not been introduced by
     // default The constructor Rational() will be called-- that
@@ -76,9 +73,10 @@ void SparseLinExpr::add_coefficient(int index, Rational const &what)
     PRECONDITION((index >= 0 && index < n_ + 1),
                  "SparseLinExpr::add_coefficient --> illegal index");
 
-    if (what == 0) return;
+    if (what == 0)
+        return;
 
-    Rational &r = m_[index];
+    Rational& r = m_[index];
 
     r += what;
 
@@ -90,8 +88,7 @@ void SparseLinExpr::add_coefficient(int index, Rational const &what)
     return;
 }
 
-void SparseLinExpr::subtract_coefficient(int index, Rational const &what)
-{
+void SparseLinExpr::subtract_coefficient(int index, Rational const& what) {
     //
     // this will insert the index if it has not been introduced by
     // default The constructor Rational() will be called-- that
@@ -102,9 +99,10 @@ void SparseLinExpr::subtract_coefficient(int index, Rational const &what)
     PRECONDITION((index >= 0 && index < n_ + 1),
                  "SparseLinExpr::subtract_coefficient --> illegal index");
 
-    if (what == 0) return;
+    if (what == 0)
+        return;
 
-    Rational &r = m_[index];
+    Rational& r = m_[index];
 
     r -= what;
 
@@ -116,10 +114,9 @@ void SparseLinExpr::subtract_coefficient(int index, Rational const &what)
     return;
 }
 
-void SparseLinExpr::subtract_scaled(SparseLinExpr const &x,
-                                    Rational const &scale)
-{
-    IRMap const &xm = x.get_map();
+void SparseLinExpr::subtract_scaled(SparseLinExpr const& x,
+                                    Rational const& scale) {
+    IRMap const& xm = x.get_map();
     IRMap::const_iterator vi;
     for (vi = xm.begin(); vi != xm.end(); ++vi) {
         subtract_coefficient((*vi).first, (*vi).second * scale);
@@ -127,9 +124,8 @@ void SparseLinExpr::subtract_scaled(SparseLinExpr const &x,
     return;
 }
 
-void SparseLinExpr::add_scaled(SparseLinExpr const &x, Rational const &scale)
-{
-    IRMap const &xm = x.get_map();
+void SparseLinExpr::add_scaled(SparseLinExpr const& x, Rational const& scale) {
+    IRMap const& xm = x.get_map();
     IRMap::const_iterator vi;
     for (vi = xm.begin(); vi != xm.end(); ++vi) {
         add_coefficient((*vi).first, (*vi).second * scale);
@@ -137,8 +133,7 @@ void SparseLinExpr::add_scaled(SparseLinExpr const &x, Rational const &scale)
     return;
 }
 
-void SparseLinExpr::set_coefficient(int index, Rational const &what)
-{
+void SparseLinExpr::set_coefficient(int index, Rational const& what) {
     //
     // this will insert the index if it has not been introduced by
     // default The constructor Rational() will be called-- that
@@ -149,7 +144,7 @@ void SparseLinExpr::set_coefficient(int index, Rational const &what)
     PRECONDITION((index >= 0 && index < n_ + 1),
                  "SparseLinExpr::set_coefficient --> illegal index");
 
-    Rational &r = m_[index];
+    Rational& r = m_[index];
 
     r = what;
 
@@ -165,32 +160,30 @@ void SparseLinExpr::set_coefficient(int index, Rational const &what)
 // This is inline only for this particular file
 //
 
-inline Rational SparseLinExpr::get_coefficient(int index) const
-{
+inline Rational SparseLinExpr::get_coefficient(int index) const {
     PRECONDITION((index >= 0 && index < n_ + 1),
                  "SparseLinExpr::get_coefficient --> illegal index" << index);
 
     IRMap::const_iterator pos = m_.find(index);
 
-    if (pos == m_.end()) return Rational();
+    if (pos == m_.end())
+        return Rational();
 
     return (*pos).second;
 }
 
 SparseLinExpr::SparseLinExpr() : n_(0), count_(1), info_set_(false) {}
 
-SparseLinExpr::SparseLinExpr(int n, var_info *f)
-    : n_(n), f_(f), count_(1), info_set_(true)
-{
+SparseLinExpr::SparseLinExpr(int n, var_info* f)
+    : n_(n), f_(f), count_(1), info_set_(true) {
     PRECONDITION(n <= f_->get_dimension(), " Not enough print info ");
 }
 
-SparseLinExpr::SparseLinExpr(LinExpr const &ll)
+SparseLinExpr::SparseLinExpr(LinExpr const& ll)
     : n_(ll.get_dim()),
       f_(ll.get_info()),
       count_(ll.get_count()),
-      info_set_(true)
-{
+      info_set_(true) {
     int i;
 
     for (i = 0; i < n_ + 1; i++) {
@@ -200,8 +193,7 @@ SparseLinExpr::SparseLinExpr(LinExpr const &ll)
     }
 }
 
-SparseLinExpr SparseLinExpr::operator+(SparseLinExpr const &p1) const
-{
+SparseLinExpr SparseLinExpr::operator+(SparseLinExpr const& p1) const {
     //
     // I am adding this restriction ftb. If it proves to be a p.i.b then I will
     // remove it in later versions
@@ -213,7 +205,8 @@ SparseLinExpr SparseLinExpr::operator+(SparseLinExpr const &p1) const
 
     SparseLinExpr ret_val(n_, f_);
 
-    if (!is_printable()) ret_val.make_unprintable();
+    if (!is_printable())
+        ret_val.make_unprintable();
 
     // for the time being, I will just iterate through all the elements in p1
     // and p2 and add them to ret_val
@@ -226,7 +219,7 @@ SparseLinExpr SparseLinExpr::operator+(SparseLinExpr const &p1) const
         ret_val.add_coefficient((*vi).first, (*vi).second);
     }
 
-    IRMap const &mp = p1.get_map();
+    IRMap const& mp = p1.get_map();
 
     IRMap::const_iterator vj;
 
@@ -239,8 +232,7 @@ SparseLinExpr SparseLinExpr::operator+(SparseLinExpr const &p1) const
     return ret_val;
 }
 
-SparseLinExpr SparseLinExpr::operator-(SparseLinExpr const &p1) const
-{
+SparseLinExpr SparseLinExpr::operator-(SparseLinExpr const& p1) const {
     //
     // I am adding this restriction ftb. If it proves to be a p.i.b then I will
     // remove it in later versions
@@ -252,7 +244,8 @@ SparseLinExpr SparseLinExpr::operator-(SparseLinExpr const &p1) const
 
     SparseLinExpr ret_val(n_, f_);
 
-    if (!is_printable()) ret_val.make_unprintable();
+    if (!is_printable())
+        ret_val.make_unprintable();
 
     // for the time being, I will just iterate through all the elements in p1
     // and p2 and add them to ret_val
@@ -265,7 +258,7 @@ SparseLinExpr SparseLinExpr::operator-(SparseLinExpr const &p1) const
         ret_val.add_coefficient((*vi).first, (*vi).second);
     }
 
-    IRMap const &mp = p1.get_map();
+    IRMap const& mp = p1.get_map();
 
     IRMap::const_iterator vj;
 
@@ -278,14 +271,13 @@ SparseLinExpr SparseLinExpr::operator-(SparseLinExpr const &p1) const
     return ret_val;
 }
 
-SparseLinExpr &SparseLinExpr::operator+=(SparseLinExpr const &sl)
-{
+SparseLinExpr& SparseLinExpr::operator+=(SparseLinExpr const& sl) {
     PRECONDITION(
         (sl.get_dim() == n_),
         "SparseLinExpr::operator+=  -- addition over incompatible dimensions");
 
     IRMap::const_iterator vj;
-    IRMap const &mp = sl.get_map();
+    IRMap const& mp = sl.get_map();
 
     for (vj = mp.begin(); vj != mp.end(); ++vj) {
         add_coefficient((*vj).first, (*vj).second);
@@ -293,14 +285,13 @@ SparseLinExpr &SparseLinExpr::operator+=(SparseLinExpr const &sl)
     return (*this);
 }
 
-SparseLinExpr &SparseLinExpr::operator-=(SparseLinExpr const &sl)
-{
+SparseLinExpr& SparseLinExpr::operator-=(SparseLinExpr const& sl) {
     PRECONDITION(
         (sl.get_dim() == n_),
         "SparseLinExpr::operator-= subtraction over incompatible dimensions");
 
     IRMap::const_iterator vj;
-    IRMap const &mp = sl.get_map();
+    IRMap const& mp = sl.get_map();
 
     for (vj = mp.begin(); vj != mp.end(); ++vj) {
         subtract_coefficient((*vj).first, (*vj).second);
@@ -309,8 +300,7 @@ SparseLinExpr &SparseLinExpr::operator-=(SparseLinExpr const &sl)
     return (*this);
 }
 
-void SparseLinExpr::merge_assign(SparseLinExpr &ex2)
-{
+void SparseLinExpr::merge_assign(SparseLinExpr& ex2) {
     int n2 = ex2.get_dim(), n1 = n_;
     //
     // I am not creating a new var_info
@@ -319,7 +309,7 @@ void SparseLinExpr::merge_assign(SparseLinExpr &ex2)
 
     n_ += n2;  // increase the dimensions!!
 
-    IRMap const &m2 = ex2.get_map();
+    IRMap const& m2 = ex2.get_map();
     IRMap::const_iterator vi;
     for (vi = m2.begin(); vi != m2.end(); vi++) {
         set_coefficient((*vi).first + n1, (*vi).second);
@@ -328,14 +318,13 @@ void SparseLinExpr::merge_assign(SparseLinExpr &ex2)
     return;
 }
 
-SparseLinExpr &SparseLinExpr::operator=(SparseLinExpr const &p1)
-{
+SparseLinExpr& SparseLinExpr::operator=(SparseLinExpr const& p1) {
     initialize(p1.get_dim(), p1.get_info());
 
     count_ = p1.get_count();
 
     IRMap::const_iterator vi;
-    IRMap const &mp = p1.get_map();
+    IRMap const& mp = p1.get_map();
 
     for (vi = mp.begin(); vi != mp.end(); ++vi) {
         set_coefficient((*vi).first, (*vi).second);
@@ -344,8 +333,7 @@ SparseLinExpr &SparseLinExpr::operator=(SparseLinExpr const &p1)
     return (*this);
 }
 
-SparseLinExpr &SparseLinExpr::operator*=(Rational const &r)
-{
+SparseLinExpr& SparseLinExpr::operator*=(Rational const& r) {
     if (r == 0) {
         clear_out();
         return (*this);
@@ -363,8 +351,7 @@ SparseLinExpr &SparseLinExpr::operator*=(Rational const &r)
     return (*this);
 }
 
-SparseLinExpr &SparseLinExpr::operator*=(int i)
-{
+SparseLinExpr& SparseLinExpr::operator*=(int i) {
     if (i == 0) {
         clear_out();
         return (*this);
@@ -381,9 +368,8 @@ SparseLinExpr &SparseLinExpr::operator*=(int i)
     return (*this);
 }
 
-bool SparseLinExpr::operator==(SparseLinExpr const &t) const
-{
-    const IRMap &mp = t.get_map();
+bool SparseLinExpr::operator==(SparseLinExpr const& t) const {
+    const IRMap& mp = t.get_map();
 
     return (m_ == mp);  // That should do it?
 }
@@ -412,28 +398,28 @@ bool SparseLinExpr::operator==(SparseLinExpr const &t) const
  * }
  */
 
-Rational SparseLinExpr::operator()(int index) const
-{
+Rational SparseLinExpr::operator()(int index) const {
     return get_coefficient(index);
 }
 
-bool SparseLinExpr::is_constant() const
-{
+bool SparseLinExpr::is_constant() const {
     INVARIANT((_class_invariant_check()),
               "Class SparseLinExpr:: Invariant violation");
 
-    if (m_.size() == 0) return true;
-    if (m_.size() > 1) return false;
+    if (m_.size() == 0)
+        return true;
+    if (m_.size() > 1)
+        return false;
     IRMap::const_iterator vt = m_.begin();
 
     // Is the only entry for the constant?
-    if ((*vt).first == n_) return true;
+    if ((*vt).first == n_)
+        return true;
 
     return false;
 }
 
-int SparseLinExpr::get_denominator_lcm() const
-{
+int SparseLinExpr::get_denominator_lcm() const {
     IRMap::const_iterator vi;
     IRPair pir;
     int run = 1;
@@ -449,8 +435,7 @@ int SparseLinExpr::get_denominator_lcm() const
     return run;
 }
 
-int SparseLinExpr::get_numerator_gcd() const
-{
+int SparseLinExpr::get_numerator_gcd() const {
     int run = 1;
     bool first_number_seen = false;
 
@@ -465,16 +450,14 @@ int SparseLinExpr::get_numerator_gcd() const
         if (!first_number_seen) {
             first_number_seen = true;
             run = (pir.second).num();
-        }
-        else
+        } else
             run = gcd(run, (pir.second).num());
     }
 
     return run;
 }
 
-bool SparseLinExpr::equiv(SparseLinExpr const &l1, Rational &factor) const
-{
+bool SparseLinExpr::equiv(SparseLinExpr const& l1, Rational& factor) const {
     // check if there is a factor such that factor * this = l1
 
     if (l1.is_zero()) {
@@ -484,12 +467,13 @@ bool SparseLinExpr::equiv(SparseLinExpr const &l1, Rational &factor) const
 
     // If l1 is zero and I am not, return false
 
-    if (is_zero()) return false;
+    if (is_zero())
+        return false;
 
     // now check if for each entry in me, the corresponding entry in l1 behaves
     // OK
 
-    IRMap const &mp = l1.get_map();
+    IRMap const& mp = l1.get_map();
     IRMap::const_iterator vi, vj;
     // If sizes are not the same, then assuming the class invariant, there is
     // no way
@@ -522,8 +506,7 @@ bool SparseLinExpr::equiv(SparseLinExpr const &l1, Rational &factor) const
     return true;
 }
 
-void SparseLinExpr::print(ostream &out) const
-{
+void SparseLinExpr::print(ostream& out) const {
     PRECONDITION(info_set_,
                  " asked to print an Expression without a valid var-info ");
 
@@ -549,7 +532,8 @@ void SparseLinExpr::print(ostream &out) const
         INVARIANT(((*vi).second != 0),
                   "Class SparseLinExpr ::print() --> Invariant violated");
 
-        if (!((*vi).second < 0)) out << " + ";
+        if (!((*vi).second < 0))
+            out << " + ";
 
         if (vi->first < n_)
             out << (*vi).second << " * " << f_->get_name((*vi).first);
@@ -558,11 +542,12 @@ void SparseLinExpr::print(ostream &out) const
     }
 }
 
-void SparseLinExpr::add_to_lin_expression(Linear_Expression &ll, int scale_fact,
-                                          int offset) const
-{
+void SparseLinExpr::add_to_lin_expression(Linear_Expression& ll,
+                                          int scale_fact,
+                                          int offset) const {
     // nothing to be done if I am zero
-    if (is_zero()) return;
+    if (is_zero())
+        return;
     // first obtain a scale factor to convert each coefficient to an integer
     Rational factor(get_denominator_lcm(), get_numerator_gcd());
 
@@ -586,17 +571,16 @@ void SparseLinExpr::add_to_lin_expression(Linear_Expression &ll, int scale_fact,
     return;
 }
 
-void SparseLinExpr::occurring_variables(set<int> &what, int k) const
-{
+void SparseLinExpr::occurring_variables(set<int>& what, int k) const {
     IRMap::const_iterator vi;
     for (vi = m_.begin(); vi != m_.end(); ++vi) {
-        if ((*vi).first >= k) what.insert((*vi).first);
+        if ((*vi).first >= k)
+            what.insert((*vi).first);
     }
     return;
 }
 
-void SparseLinExpr::add_variables_in_front(int n1)
-{
+void SparseLinExpr::add_variables_in_front(int n1) {
     PRECONDITION((n1 >= 0),
                  "Asked to remove variables in the guise of adding variables");
 
@@ -615,8 +599,7 @@ void SparseLinExpr::add_variables_in_front(int n1)
     m_ = m1;  // do an assignment
 }
 
-void SparseLinExpr::add_variables_in_back(int n1)
-{
+void SparseLinExpr::add_variables_in_back(int n1) {
     PRECONDITION((n1 >= 0),
                  "Asked to remove variables in the guise of adding variables");
 
@@ -628,8 +611,7 @@ void SparseLinExpr::add_variables_in_back(int n1)
     // that is it
 }
 
-Rational SparseLinExpr::evaluate(Generator const &g) const
-{
+Rational SparseLinExpr::evaluate(Generator const& g) const {
     IRMap::const_iterator vi;
     Rational rt(0, 1), c;
     int i, j;
@@ -651,35 +633,30 @@ Rational SparseLinExpr::evaluate(Generator const &g) const
     return rt;
 }
 
-ostream &operator<<(ostream &os, SparseLinExpr const &sp)
-{
+ostream& operator<<(ostream& os, SparseLinExpr const& sp) {
     sp.print(os);
     return os;
 }
 
-SparseLinExpr operator*(Rational const &i, SparseLinExpr const &p1)
-{
+SparseLinExpr operator*(Rational const& i, SparseLinExpr const& p1) {
     SparseLinExpr p(p1);
     p *= i;
     return p;
 }
 
-SparseLinExpr operator*(SparseLinExpr const &p1, Rational const &i)
-{
+SparseLinExpr operator*(SparseLinExpr const& p1, Rational const& i) {
     SparseLinExpr p(p1);
     p *= i;
     return p;
 }
 
-SparseLinExpr operator*(int i, SparseLinExpr const &p1)
-{
+SparseLinExpr operator*(int i, SparseLinExpr const& p1) {
     SparseLinExpr p(p1);
     p *= i;
     return p;
 }
 
-Linear_Expression SparseLinExpr::to_lin_expression() const
-{
+Linear_Expression SparseLinExpr::to_lin_expression() const {
     int j = get_denominator_lcm();
     int num, den;
 
@@ -695,8 +672,7 @@ Linear_Expression SparseLinExpr::to_lin_expression() const
     return l;
 }
 
-Constraint SparseLinExpr::get_constraint(int ineq_type) const
-{
+Constraint SparseLinExpr::get_constraint(int ineq_type) const {
     Linear_Expression l = to_lin_expression();
     switch (ineq_type) {
         case TYPE_LEQ:
@@ -713,22 +689,19 @@ Constraint SparseLinExpr::get_constraint(int ineq_type) const
     return l == 0;  // by default
 }
 
-void SparseLinExpr::replace_var_info_with(var_info *ninfo)
-{
+void SparseLinExpr::replace_var_info_with(var_info* ninfo) {
     PRECONDITION(ninfo->get_dimension() >= n_, " Insufficient Dimensions ");
 
     f_ = ninfo;
 }
 
-SparseLinExpr operator*(SparseLinExpr const &p1, int i)
-{
+SparseLinExpr operator*(SparseLinExpr const& p1, int i) {
     SparseLinExpr p(p1);
     p *= i;
     return p;
 }
 
-Rational SparseLinExpr::dot_product(SparseLinExpr const &what) const
-{
+Rational SparseLinExpr::dot_product(SparseLinExpr const& what) const {
     // I will for the time being not check any pre/post-conditions.
     int m = what.get_dim();
 
@@ -738,7 +711,7 @@ Rational SparseLinExpr::dot_product(SparseLinExpr const &what) const
 
     for (vi = m_.begin(); vi != m_.end(); ++vi) {
         int i = vi->first;
-        Rational const &r1 = vi->second;
+        Rational const& r1 = vi->second;
 
         if (i <= m + 1) {
             c += r1 * what(i);

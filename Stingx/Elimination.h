@@ -39,9 +39,12 @@ using namespace Parma_Polyhedra_Library;
 using namespace Parma_Polyhedra_Library::IO_Operators;
 
 void repack_constraints_based_on_protection(
-    Constraint_System& cs, Constraint_System& cs_only_unprotected,
-    Constraint_System& cs_mixed_protected, Constraint_System& cs_only_protected,
-    int l, int r);
+    Constraint_System& cs,
+    Constraint_System& cs_only_unprotected,
+    Constraint_System& cs_mixed_protected,
+    Constraint_System& cs_only_protected,
+    int l,
+    int r);
 void restruct_generators(Generator_System& gs);
 
 void eliminate_by_Farkas(C_Polyhedron& result, int lb);

@@ -41,7 +41,8 @@ using namespace std;
 using namespace Parma_Polyhedra_Library;
 using namespace Parma_Polyhedra_Library::IO_Operators;
 
-ostream& print_polyhedron(ostream& in, C_Polyhedron const& np,
+ostream& print_polyhedron(ostream& in,
+                          C_Polyhedron const& np,
                           const var_info* f);
 // print only poly without prefix-symbol
 void print_pure_polyhedron(C_Polyhedron const& np, const var_info* f);
@@ -52,7 +53,8 @@ void print_pure_polyhedron_for_arrayinv(C_Polyhedron const& np,
 void nt_print_pure_polyhedron(C_Polyhedron const& np, const var_info* f);
 ostream& print_clump(ostream& in, Clump const& cl, const var_info* f);
 void nt_print_pure_clump(Clump const& cl, const var_info* f);
-ostream& print_lin_expression(ostream& in, Linear_Expression const& lp,
+ostream& print_lin_expression(ostream& in,
+                              Linear_Expression const& lp,
                               const var_info* f);
 void print_pure_lin_expression(Linear_Expression const& lp, const var_info* f);
 ostream& print_constraint(ostream& in, Constraint const& cc, var_info* f);
@@ -61,17 +63,23 @@ void print_generators(ostream& out, Generator_System const& gg, var_info* f);
 int handle_integers(Coefficient const& t);
 bool handle_integers(Coefficient const& t, int& result);
 C_Polyhedron* add_dimensions_initial(
-    C_Polyhedron* p, int what);  // add what dimensions to p at the beginning
+    C_Polyhedron* p,
+    int what);  // add what dimensions to p at the beginning
 void dualize(C_Polyhedron const& what, C_Polyhedron& result);
 void primal(C_Polyhedron const& what, C_Polyhedron& result);
-void set_up_affine_transform(int n, Constraint const& cc,
-                             Linear_Expression& left, Linear_Expression& right);
-void test_and_add_generator(int n, Generator const& a, C_Polyhedron const& test,
+void set_up_affine_transform(int n,
+                             Constraint const& cc,
+                             Linear_Expression& left,
+                             Linear_Expression& right);
+void test_and_add_generator(int n,
+                            Generator const& a,
+                            C_Polyhedron const& test,
                             C_Polyhedron& result);
 // result is assumed to be narrower than what
 
 void H79_narrow(C_Polyhedron& result, C_Polyhedron const& what);
-void H79_narrow(C_Polyhedron& result, C_Polyhedron const& what,
+void H79_narrow(C_Polyhedron& result,
+                C_Polyhedron const& what,
                 vector<Generator>& frames);
 
 #endif

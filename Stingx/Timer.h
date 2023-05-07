@@ -39,7 +39,7 @@ class Timer {
     // This could of course measure the amount of time doing different things
     // Alarm timers are not being used in this implementation.
 
-private:
+   private:
     long int start_time;    // when did  I start
     long int time_elapsed;  // in clock ticks
     long int nclticks;      // how many clockticks maketh a second
@@ -56,7 +56,7 @@ private:
 
     void initialize(bool frozen, int time_alarmed);
 
-public:
+   public:
     Timer();                  // start the timer .. no alarm
     Timer(int time_alarmed);  // the amount of time in mS
 

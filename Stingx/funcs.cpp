@@ -21,15 +21,18 @@
 
 #include "funcs.h"
 
-int gcd(int a, int b)
-{
-    if (a < 0) a = -a;
+int gcd(int a, int b) {
+    if (a < 0)
+        a = -a;
 
-    if (b < 0) b = -b;
+    if (b < 0)
+        b = -b;
 
-    if (a == 1 || a == 0 || a == b) return a;
+    if (a == 1 || a == 0 || a == b)
+        return a;
 
-    if (b == 1 || b == 0) return b;
+    if (b == 1 || b == 0)
+        return b;
 
     int y1 = a, y2 = b, y3 = b, y4 = 0;
 
@@ -47,15 +50,18 @@ int gcd(int a, int b)
     return y1;
 }
 
-long gcd(long a, long b)
-{
-    if (a < 0) a = -a;
+long gcd(long a, long b) {
+    if (a < 0)
+        a = -a;
 
-    if (b < 0) b = -b;
+    if (b < 0)
+        b = -b;
 
-    if (a == 1 || a == 0 || a == b) return a;
+    if (a == 1 || a == 0 || a == b)
+        return a;
 
-    if (b == 1 || b == 0) return b;
+    if (b == 1 || b == 0)
+        return b;
 
     long y1 = a, y2 = b, y3 = b, y4 = 0;
 
@@ -73,17 +79,21 @@ long gcd(long a, long b)
     return y1;
 }
 
-int lcm(int a, int b)
-{
-    if (a < 0) a = -a;
+int lcm(int a, int b) {
+    if (a < 0)
+        a = -a;
 
-    if (b < 0) b = -b;
+    if (b < 0)
+        b = -b;
 
-    if (a == 0 || b == 0) return 0;
+    if (a == 0 || b == 0)
+        return 0;
 
-    if (a == 1 || a == b) return b;
+    if (a == 1 || a == b)
+        return b;
 
-    if (b == 1 || b == 0) return a;
+    if (b == 1 || b == 0)
+        return a;
 
     int y1 = a, y2 = b, y3 = b, y4 = 0;
 
@@ -114,8 +124,7 @@ WORD listify(int * t, int n){
 
 */
 
-string int_to_str(int i)
-{
+string int_to_str(int i) {
     if (i == 0) {
         return string("0");
     }
@@ -132,7 +141,8 @@ string int_to_str(int i)
         i /= 10;
     }
 
-    if (neg) ret = '-' + ret;
+    if (neg)
+        ret = '-' + ret;
 
     return ret;
 }

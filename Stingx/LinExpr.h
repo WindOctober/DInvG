@@ -94,8 +94,7 @@ class LinExpr {
 
     // check if two linexprs have the same print info.
     // Post-comments : What is the big deal anyway.
-    bool check_variable_compatibility(var_info const* f1) const
-    {
+    bool check_variable_compatibility(var_info const* f1) const {
         return (f1 == f);
     }
 
