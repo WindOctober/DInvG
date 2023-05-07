@@ -30,8 +30,7 @@
 #include "Rational.h"
 #include "SparseLinExpr.h"
 
-void ExpressionStore::initialize(int n, int r, var_info *fn, var_info *fr)
-{
+void ExpressionStore::initialize(int n, int r, var_info* fn, var_info* fr) {
     this->n = n;
     this->r = r;
     this->fn = fn;
@@ -46,14 +45,12 @@ void ExpressionStore::initialize(int n, int r, var_info *fn, var_info *fr)
     */
 }
 
-ExpressionStore::ExpressionStore(int n, int r, var_info *fn, var_info *fr)
-{
+ExpressionStore::ExpressionStore(int n, int r, var_info* fn, var_info* fr) {
     initialize(n, r, fn, fr);
 }
 
-bool ExpressionStore::add_expression(Expression &exp)
-{
-    Expression *e = new Expression(exp);
+bool ExpressionStore::add_expression(Expression& exp) {
+    Expression* e = new Expression(exp);
 
     /* if (exp.is_pure_a()){
        add_linear_expression(e->convert_linear());
@@ -71,8 +68,7 @@ void ExpressionStore::add_linear_expression(SparseLinExpr  exp){
 }
 */
 
-void ExpressionStore::add_transform(LinTransform lt)
-{
+void ExpressionStore::add_transform(LinTransform lt) {
     vector<Expression>::iterator vi;
 
     for (vi = vl->begin(); vi < vl->end(); vi++) {
@@ -80,8 +76,7 @@ void ExpressionStore::add_transform(LinTransform lt)
     }
 }
 
-void ExpressionStore::remove_trivial()
-{
+void ExpressionStore::remove_trivial() {
     // look for zero expressions and remove them vector<Expression >::iterator
     // vi;
     vector<Expression>::iterator vi;
@@ -123,8 +118,7 @@ bool ExpressionStore::is_consistent(){
 
 */
 
-void ExpressionStore::simplify(MatrixStore const &m)
-{
+void ExpressionStore::simplify(MatrixStore const& m) {
     //   bool f=true;
     vector<Expression>::iterator vi;
     SparseLinExpr ll;
@@ -136,7 +130,8 @@ void ExpressionStore::simplify(MatrixStore const &m)
 
     // Now take each expression and simplify it
 
-    for (vi = vl->begin(); vi < vl->end(); vi++) (*vi).simplify(m);
+    for (vi = vl->begin(); vi < vl->end(); vi++)
+        (*vi).simplify(m);
 
     /* This can only be done for equality stores
        for (vi=vl->begin();vi <vl->end();vi++){
@@ -169,12 +164,13 @@ MatrixStore & ExpressionStore::get_m(){
 }
 
 */
-vector<Expression> *ExpressionStore::get_vl() { return vl; }
+vector<Expression>* ExpressionStore::get_vl() {
+    return vl;
+}
 
-ostream &operator<<(ostream &os, ExpressionStore &es)
-{
+ostream& operator<<(ostream& os, ExpressionStore& es) {
     vector<Expression>::iterator vi;
-    vector<Expression> *vl = es.get_vl();
+    vector<Expression>* vl = es.get_vl();
     os << "The Expressions are:" << endl;
     for (vi = vl->begin(); vi < vl->end(); vi++) {
         os << (*vi) << endl;
@@ -184,29 +180,28 @@ ostream &operator<<(ostream &os, ExpressionStore &es)
 }
 
 vector<SparseLinExpr>::iterator ExpressionStore::lin_expr_collected(
-    SparseLinExpr const &l) const
-{
+    SparseLinExpr const& l) const {
     vector<SparseLinExpr>::iterator vi;
     for (vi = le_list->begin(); vi < le_list->end(); vi++) {
-        if ((*vi) == l) return vi;
+        if ((*vi) == l)
+            return vi;
     }
 
     return vi;
 }
 
 vector<LinTransform>::iterator ExpressionStore::lin_transform_collected(
-    LinTransform const &l) const
-{
+    LinTransform const& l) const {
     vector<LinTransform>::iterator vi;
     for (vi = lt_list->begin(); vi < lt_list->end(); vi++) {
-        if ((*vi) == l) return vi;
+        if ((*vi) == l)
+            return vi;
     }
 
     return vi;
 }
 
-bool ExpressionStore::collect_factors()
-{
+bool ExpressionStore::collect_factors() {
     vector<Expression>::iterator vi;
     vector<SparseLinExpr>::iterator vj;
     vector<LinTransform>::iterator vk;

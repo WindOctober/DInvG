@@ -29,8 +29,7 @@ using namespace std;
 
 #define SOMETHING_LONG 10000
 
-void Timer::initialize(bool alarm, int time_alarmed)
-{
+void Timer::initialize(bool alarm, int time_alarmed) {
     nclticks = sysconf(_SC_CLK_TCK);  // the number of clock ticks per second
 
     if (alarm) {
@@ -47,8 +46,7 @@ void Timer::initialize(bool alarm, int time_alarmed)
         // now set the remaining parameters
         time_elapsed = 0;
         this->time_alarmed = (long)((time_alarmed * nclticks) / 1000);
-    }
-    else {
+    } else {
         this->running = true;
 
         this->alarm = false;
@@ -65,26 +63,23 @@ void Timer::initialize(bool alarm, int time_alarmed)
     }
 }
 
-Timer::Timer()
-{
+Timer::Timer() {
     initialize(false,
                SOMETHING_LONG);  // some dummy parameter for time alarmed.
 }
 
-Timer::Timer(int how_much)
-{
+Timer::Timer(int how_much) {
     initialize(true,
                how_much);  // Timer object constructed with the clock ticking
 }
 
-void Timer::start(int how_much)
-{
+void Timer::start(int how_much) {
     initialize(true, how_much);  // timer now actually initialized
 }
 
-long int Timer::compute_time_elapsed()
-{
-    if (!alarm && !running) return time_elapsed;
+long int Timer::compute_time_elapsed() {
+    if (!alarm && !running)
+        return time_elapsed;
 
     struct tms buf;
     times(&buf);
@@ -94,8 +89,7 @@ long int Timer::compute_time_elapsed()
     return time_elapsed;
 }
 
-void Timer::stop()
-{
+void Timer::stop() {
     if (!alarm) {
         if (running) {
             compute_time_elapsed();
@@ -104,7 +98,8 @@ void Timer::stop()
         return;
     }
 
-    if (!running || frozen || time_up) return;
+    if (!running || frozen || time_up)
+        return;
 
     // if time is not up yet
     // 1. compute the time elapsed
@@ -122,8 +117,7 @@ void Timer::stop()
         frozen = true;
 }
 
-void Timer::restart()
-{
+void Timer::restart() {
     if (!alarm) {
         initialize(false, SOMETHING_LONG);
         return;
@@ -151,16 +145,18 @@ void Timer::restart()
     return;
 }
 
-bool Timer::is_time_up()
-{
+bool Timer::is_time_up() {
     // if time is already up then say yes
     // else if not running or frozen then say no
     // else
     //  1. recompute time_elapsed
-    if (!alarm) return false;
+    if (!alarm)
+        return false;
 
-    if (time_up) return true;
-    if (!running || frozen) return false;
+    if (time_up)
+        return true;
+    if (!running || frozen)
+        return false;
     compute_time_elapsed();
 
     if (time_elapsed >= time_alarmed)

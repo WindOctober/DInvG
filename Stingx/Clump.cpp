@@ -28,15 +28,15 @@ extern int clump_prune_count;
 extern int bang_count;
 extern int single_pre_prune_bang_count;
 
-void Clump::initialize() { gli = 0; }
-void Clump::initialize(var_info *fd)
-{
+void Clump::initialize() {
+    gli = 0;
+}
+void Clump::initialize(var_info* fd) {
     nd = fd->get_dimension();
     this->fd = fd;
     gli = 0;
 }
-void Clump::initialize(var_info *fd, string name, string category)
-{
+void Clump::initialize(var_info* fd, string name, string category) {
     nd = fd->get_dimension();
     this->fd = fd;
     gli = 0;
@@ -44,8 +44,7 @@ void Clump::initialize(var_info *fd, string name, string category)
     this->category = category;
 }
 
-void Clump::print_vector_of_poly()
-{
+void Clump::print_vector_of_poly() {
     int clump_poly_count = 0;
     for (vector<C_Polyhedron>::iterator j = vp.begin(); j < vp.end(); j++) {
         cout << endl << "clump_poly_count is " << ++clump_poly_count;
@@ -54,27 +53,32 @@ void Clump::print_vector_of_poly()
     return;
 }
 
-void Clump::replace_vp(vector<C_Polyhedron> new_vp) { vp = new_vp; }
+void Clump::replace_vp(vector<C_Polyhedron> new_vp) {
+    vp = new_vp;
+}
 
-Clump::Clump() { initialize(); }
-Clump::Clump(var_info *fd) { initialize(fd); }
-Clump::Clump(var_info *fd, string name, string category)
-{
+Clump::Clump() {
+    initialize();
+}
+Clump::Clump(var_info* fd) {
+    initialize(fd);
+}
+Clump::Clump(var_info* fd, string name, string category) {
     initialize(fd, name, category);
 }
 
-int Clump::get_count() { return vp.size(); }
+int Clump::get_count() {
+    return vp.size();
+}
 
-void Clump::insert(C_Polyhedron const &p)
-{
+void Clump::insert(C_Polyhedron const& p) {
     vector<C_Polyhedron>::iterator vi;
 
     for (vi = vp.begin(); vi < vp.end(); ++vi) {
         if ((*vi).contains(p)) {
             cout << endl << "Redundant: this contains new";
             return;
-        }
-        else if (p.contains(*vi)) {
+        } else if (p.contains(*vi)) {
             cout << endl << "Back Prune: new contains one of this";
             vi = vp.erase(vi);
             vi--;
@@ -85,8 +89,7 @@ void Clump::insert(C_Polyhedron const &p)
     return;
 }
 
-vector<int> Clump::insert_with_erase_index(C_Polyhedron const &p)
-{
+vector<int> Clump::insert_with_erase_index(C_Polyhedron const& p) {
     vector<int> erase_index;
     vector<int>::reverse_iterator vi;
     int i;
@@ -94,12 +97,11 @@ vector<int> Clump::insert_with_erase_index(C_Polyhedron const &p)
     for (i = 0; i < (int)vp.size(); ++i) {
         if (vp[i].contains(p)) {
             cout << endl << "Redundant: (*vi).contains(p)";
-        }
-        else if (p.contains(vp[i])) {
+        } else if (p.contains(vp[i])) {
             // cout<<endl<<"p.contains(*vi)";
             cout << endl
-                  << "Above part, the " << i + 1
-                  << "th poly is erased by next poly in back-prune";
+                 << "Above part, the " << i + 1
+                 << "th poly is erased by next poly in back-prune";
             erase_index.push_back(i);
             bang_count++;
             single_pre_prune_bang_count++;
@@ -113,8 +115,7 @@ vector<int> Clump::insert_with_erase_index(C_Polyhedron const &p)
     return erase_index;
 }
 
-vector<int> Clump::prune_all(C_Polyhedron &p)
-{
+vector<int> Clump::prune_all(C_Polyhedron& p) {
     vector<int> node_gli;
     vector<int>::iterator vi;
     cout << endl << "prune";
@@ -137,8 +138,7 @@ vector<int> Clump::prune_all(C_Polyhedron &p)
     return node_gli;
 }
 
-vector<int> Clump::prune_target(C_Polyhedron &p, int target_gli)
-{
+vector<int> Clump::prune_target(C_Polyhedron& p, int target_gli) {
     vector<int> node_gli;
     vector<int>::iterator vi;
     cout << endl << "prune";
@@ -161,12 +161,12 @@ vector<int> Clump::prune_target(C_Polyhedron &p, int target_gli)
     return node_gli;
 }
 
-bool Clump::contains(C_Polyhedron &what)
-{
+bool Clump::contains(C_Polyhedron& what) {
     vector<C_Polyhedron>::iterator vi;
 
     for (vi = vp.begin(); vi < vp.end(); ++vi) {
-        if ((*vi).contains(what)) return true;
+        if ((*vi).contains(what))
+            return true;
     }
 
     return false;

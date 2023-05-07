@@ -38,11 +38,11 @@ set(SRC_FILES
     lstingx.cpp
 )
 
-# Create library
+
+
+add_executable(lstingX ${SRC_FILES})
+target_link_libraries(lstingX PUBLIC -lppl -lgmpxx -lgmp)
+
 add_library(lstingx STATIC ${SRC_FILES})
-
-# Link libraries
 target_link_libraries(lstingx PUBLIC -lppl -lgmpxx -lgmp)
-
-# Compiler options
-target_compile_options(lstingx PRIVATE -g -Wall -Wno-deprecated)
+target_compile_options(lstingx PRIVATE -g )

@@ -32,12 +32,12 @@
 
 using namespace std;
 
-string var_info ::get_a_string(int i, const char *prefix)
-{
+string var_info ::get_a_string(int i, const char* prefix) {
     string x;
     int j = (i > 0) ? i : -i, rem;
 
-    if (j == 0) x = (char)'0' + x;
+    if (j == 0)
+        x = (char)'0' + x;
 
     while (j > 0) {
         rem = j % 10;
@@ -49,10 +49,9 @@ string var_info ::get_a_string(int i, const char *prefix)
     return x;
 }
 
-var_info::var_info()
-{
+var_info::var_info() {
     dimension = 0;
-    v = new vector<char *>();
+    v = new vector<char*>();
 }
 /*
 var_info::var_info( var_info f){
@@ -62,28 +61,29 @@ var_info::var_info( var_info f){
 
 */
 
-int var_info::get_dimension() const { return dimension; }
+int var_info::get_dimension() const {
+    return dimension;
+}
 
-var_info::var_info(var_info *f1, var_info *f2)
-{
+var_info::var_info(var_info* f1, var_info* f2) {
     int d1 = f1->get_dimension(), d2 = f2->get_dimension();
     dimension = 0;
-    v = new vector<char *>();
+    v = new vector<char*>();
     int i;
     for (i = 0; i < d1; ++i) {
         insert(f1->get_name(i));
     }
 
-    for (i = 0; i < d2; ++i) insert(f2->get_name(i));
+    for (i = 0; i < d2; ++i)
+        insert(f2->get_name(i));
 }
 
-var_info::var_info(var_info *fr, vector<int> v1)
-{
+var_info::var_info(var_info* fr, vector<int> v1) {
     // project out from fr based on v
 
     int n = fr->get_dimension();
     dimension = 0;
-    this->v = new vector<char *>();
+    this->v = new vector<char*>();
 
     vector<int>::iterator vi;
     int i;
@@ -96,11 +96,10 @@ var_info::var_info(var_info *fr, vector<int> v1)
     return;
 }
 
-var_info::var_info(var_info const *fr)
-{
+var_info::var_info(var_info const* fr) {
     int i;
 
-    this->v = new vector<char *>();
+    this->v = new vector<char*>();
 
     this->dimension = 0;
     for (i = 0; i < fr->dimension; ++i) {
@@ -108,16 +107,16 @@ var_info::var_info(var_info const *fr)
     }
 }
 
-vector<char *> *var_info::get_vector() { return v; }
+vector<char*>* var_info::get_vector() {
+    return v;
+}
 
-int var_info::insert(const char *what, int primed)
-{
-    char *c = (char *)malloc(strlen(what) + 2);
+int var_info::insert(const char* what, int primed) {
+    char* c = (char*)malloc(strlen(what) + 2);
     strcpy(c + primed, what);
     if (primed == 1) {
         c[0] = '`';
-    }
-    else if (primed == 2) {
+    } else if (primed == 2) {
         c[0] = 'c';
         c[1] = '_';
     }
@@ -126,27 +125,25 @@ int var_info::insert(const char *what, int primed)
     return dimension - 1;
 }
 
-int var_info::search(const char *what) const
-{
-    vector<char *>::iterator i = v->begin();
+int var_info::search(const char* what) const {
+    vector<char*>::iterator i = v->begin();
     int j;
     for (j = 0; i != v->end(); j++, i++) {
-        if (strcmp(*i, what) == 0) return j;
+        if (strcmp(*i, what) == 0)
+            return j;
     }
 
     return VAR_NOT_FOUND;
 }
 
-char *var_info::get_name(int dim) const
-{
+char* var_info::get_name(int dim) const {
     PRECONDITION(dim >= 0 && dim < dimension, " Invalid dimension");
     return (*v)[dim];
 }
 
-void var_info::to_array_invariant()
-{
+void var_info::to_array_invariant() {
     vector<string>::iterator i;
-    vector<char *>::iterator j;
+    vector<char*>::iterator j;
     // copy v into arr_v
     for (j = v->begin(); j != v->end(); j++) {
         arr_v.push_back(*j);
@@ -161,47 +158,46 @@ void var_info::to_array_invariant()
     }
 }
 
-string var_info::get_arr_name(int dim) const
-{
+string var_info::get_arr_name(int dim) const {
     PRECONDITION(dim >= 0 && dim < dimension, " Invalid dimension");
     return (arr_v)[dim];
 }
 
-var_info *var_info::dualize()
-{
-    var_info *v1 = new var_info();
+var_info* var_info::dualize() {
+    var_info* v1 = new var_info();
     int i;
-    for (i = 0; i < dimension; i++) v1->insert(get_name(i), 2);
+    for (i = 0; i < dimension; i++)
+        v1->insert(get_name(i), 2);
     v1->insert("d");
 
     return v1;
 }
 
-var_info *var_info::prime()
-{
-    var_info *v1 = new var_info();
+var_info* var_info::prime() {
+    var_info* v1 = new var_info();
     int i;
 
-    for (i = 0; i < dimension; i++) v1->insert(get_name(i));
-    for (i = 0; i < dimension; i++) v1->insert(get_name(i), 1);
+    for (i = 0; i < dimension; i++)
+        v1->insert(get_name(i));
+    for (i = 0; i < dimension; i++)
+        v1->insert(get_name(i), 1);
     return v1;
 }
 
-void var_info::print(ostream &out) const
-{
-    vector<char *>::iterator i;
+void var_info::print(ostream& out) const {
+    vector<char*>::iterator i;
     int j = 0;
     out << " [[ " << endl;
     for (i = v->begin(); i != v->end(); i++) {
         out << *i << "  ,  ";
         j++;
-        if (j % 20 == 0) out << endl;
+        if (j % 20 == 0)
+            out << endl;
     }
     out << "]]" << endl;
 }
 
-int var_info::search_and_insert(const char *what)
-{
+int var_info::search_and_insert(const char* what) {
     int index;
     index = search(what);
     if (index == VAR_NOT_FOUND) {
@@ -210,8 +206,7 @@ int var_info::search_and_insert(const char *what)
     return index;
 }
 
-void var_info::print_dimensions(ostream &out, set<int> const &what) const
-{
+void var_info::print_dimensions(ostream& out, set<int> const& what) const {
     set<int>::iterator vi;
     int j = 0;
     out << "[[  ";
@@ -222,19 +217,20 @@ void var_info::print_dimensions(ostream &out, set<int> const &what) const
 
         out << get_name((*vi)) << "  ,";
         ++j;
-        if (j % 20 == 0) out << endl;
+        if (j % 20 == 0)
+            out << endl;
     }
     out << " ]]" << endl;
     return;
 }
 
-void var_info::resize_to(int what, const char *prefix)
-{
+void var_info::resize_to(int what, const char* prefix) {
     if (dimension > what) {
         v->erase(v->begin() + what, v->end());
         return;
     }
-    if (dimension == what) return;
+    if (dimension == what)
+        return;
 
     // dimension < what
 
@@ -249,8 +245,7 @@ void var_info::resize_to(int what, const char *prefix)
     return;
 }
 
-ostream &operator<<(ostream &out, var_info *const f)
-{
+ostream& operator<<(ostream& out, var_info* const f) {
     f->print(out);
     return out;
 }

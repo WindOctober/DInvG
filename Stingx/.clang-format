@@ -1,7 +1,7 @@
-BasedOnStyle: Google
+BasedOnStyle: Chromium
 IndentWidth: 4
 SpaceInEmptyParentheses: false
-BreakBeforeBraces: Stroustrup
+BreakBeforeBraces: Attach
 SpaceAfterCStyleCast: false
 SpacesInAngles: false
 SpaceAfterTemplateKeyword: false

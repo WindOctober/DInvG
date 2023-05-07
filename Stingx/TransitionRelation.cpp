@@ -34,11 +34,14 @@ extern bool trsat;
 extern bool noexitpath;
 extern int debug_2, debug_3;
 
-void TransitionRelation::initialize(int n, var_info *f, var_info *fd,
-                                    var_info *fm, Location *preloc,
-                                    Location *postloc, C_Polyhedron *rel,
-                                    string name)
-{
+void TransitionRelation::initialize(int n,
+                                    var_info* f,
+                                    var_info* fd,
+                                    var_info* fm,
+                                    Location* preloc,
+                                    Location* postloc,
+                                    C_Polyhedron* rel,
+                                    string name) {
     this->n = n;
     this->f = f;
     fp = f->prime();
@@ -51,14 +54,16 @@ void TransitionRelation::initialize(int n, var_info *f, var_info *fd,
     this->name = name;
     populate_multipliers();
     fired = 0;
- 
+
     guard = new C_Polyhedron(n, UNIVERSE);
     update = new C_Polyhedron(2 * n, UNIVERSE);
 }
 
-void TransitionRelation::initialize(int n, var_info *f, var_info *fd,
-                                    var_info *fm, string name)
-{
+void TransitionRelation::initialize(int n,
+                                    var_info* f,
+                                    var_info* fd,
+                                    var_info* fm,
+                                    string name) {
     this->n = n;
     this->f = f;
     fp = f->prime();
@@ -74,10 +79,15 @@ void TransitionRelation::initialize(int n, var_info *f, var_info *fd,
     update = new C_Polyhedron(2 * n, UNIVERSE);
 }
 
-void TransitionRelation::initialize_without_populating(
-    int n, var_info *f, var_info *fd, var_info *fm, Location *preloc,
-    Location *postloc, C_Polyhedron *rel, string name, int index)
-{
+void TransitionRelation::initialize_without_populating(int n,
+                                                       var_info* f,
+                                                       var_info* fd,
+                                                       var_info* fm,
+                                                       Location* preloc,
+                                                       Location* postloc,
+                                                       C_Polyhedron* rel,
+                                                       string name,
+                                                       int index) {
     this->n = n;
     this->f = f;
     fp = f->prime();
@@ -95,11 +105,12 @@ void TransitionRelation::initialize_without_populating(
     update = new C_Polyhedron(2 * n, UNIVERSE);
 }
 
-void TransitionRelation::initialize_without_populating(int n, var_info *f,
-                                                       var_info *fd,
-                                                       var_info *fm,
-                                                       string name, int index)
-{
+void TransitionRelation::initialize_without_populating(int n,
+                                                       var_info* f,
+                                                       var_info* fd,
+                                                       var_info* fm,
+                                                       string name,
+                                                       int index) {
     this->n = n;
     this->f = f;
     fp = f->prime();
@@ -114,8 +125,7 @@ void TransitionRelation::initialize_without_populating(int n, var_info *f,
     update = new C_Polyhedron(2 * n, UNIVERSE);
 }
 
-bool TransitionRelation::add_guard(Constraint const &ccs)
-{
+bool TransitionRelation::add_guard(Constraint const& ccs) {
     int i, j;
     bool flag = true;
 
@@ -125,7 +135,8 @@ bool TransitionRelation::add_guard(Constraint const &ccs)
 
     for (i = n; i < 2 * n; ++i) {
         flag = handle_integers(ccs.coefficient(Variable(i)), j);
-        if (j != 0 || !flag) return false;
+        if (j != 0 || !flag)
+            return false;
     }
 
     /*
@@ -145,28 +156,28 @@ bool TransitionRelation::add_guard(Constraint const &ccs)
     if (flag) {
         if (ccs.is_equality()) {
             guard->add_constraint(ll == 0);
-        }
-        else if (ccs.is_nonstrict_inequality()) {
+        } else if (ccs.is_nonstrict_inequality()) {
             guard->add_constraint(ll >= 0);
-        }
-        else {
+        } else {
             guard->add_constraint(ll > 0);
         }
     }
     return flag;
 }
 
-bool TransitionRelation::add_preservation_relation(Constraint const &cc)
-{
+bool TransitionRelation::add_preservation_relation(Constraint const& cc) {
     int pres = -1;
     int i, j, j1;
     bool flag = true;
-    if (!cc.is_equality()) return false;
+    if (!cc.is_equality())
+        return false;
     flag = handle_integers(cc.inhomogeneous_term(), j);
 
-    if (!flag) return false;
+    if (!flag)
+        return false;
 
-    if (j != 0) return false;
+    if (j != 0)
+        return false;
 
     for (i = 0; i < n; ++i) {
         // Look at the coefficient of  i and i+n terms
@@ -174,9 +185,11 @@ bool TransitionRelation::add_preservation_relation(Constraint const &cc)
         flag &= handle_integers(cc.coefficient(Variable(i)), j);
         flag &= handle_integers(cc.coefficient(Variable(i + n)), j1);
         // overflow?
-        if (!flag) return false;
+        if (!flag)
+            return false;
         // both are zero?
-        if (j == 0 && j1 == 0) continue;
+        if (j == 0 && j1 == 0)
+            continue;
 
         // both are non-zero and I have not seen any other candidate so far?
 
@@ -188,14 +201,14 @@ bool TransitionRelation::add_preservation_relation(Constraint const &cc)
         return false;
     }
 
-    if (pres == -1) return false;
+    if (pres == -1)
+        return false;
 
     preserved.insert(pres);
     return true;
 }
 
-bool TransitionRelation::split_relation()
-{
+bool TransitionRelation::split_relation() {
     Constraint_System cs = rel->minimized_constraints();
 
     // try to add it under guard if not
@@ -205,22 +218,22 @@ bool TransitionRelation::split_relation()
 
     Constraint_System::const_iterator vi;
     for (vi = cs.begin(); vi != cs.end(); ++vi) {
-        if (add_guard((*vi)) || add_preservation_relation((*vi))) continue;
+        if (add_guard((*vi)) || add_preservation_relation((*vi)))
+            continue;
         update->add_constraint((*vi));
     }
 
     return true;
 }
 
-bool TransitionRelation::is_preserved(int i) const
-{
-    if (preserved.find(i) == preserved.end()) return false;
+bool TransitionRelation::is_preserved(int i) const {
+    if (preserved.find(i) == preserved.end())
+        return false;
     return true;
 }
 
-void TransitionRelation::compute_post_new(const C_Polyhedron *p,
-                                          C_Polyhedron &q) const
-{
+void TransitionRelation::compute_post_new(const C_Polyhedron* p,
+                                          C_Polyhedron& q) const {
     q = *p;
 
     //
@@ -230,7 +243,8 @@ void TransitionRelation::compute_post_new(const C_Polyhedron *p,
 
     q.intersection_assign((*guard));
 
-    if (q.is_empty()) return;
+    if (q.is_empty())
+        return;
 
     q.add_space_dimensions_and_embed(n);
 
@@ -254,62 +268,71 @@ void TransitionRelation::compute_post_new(const C_Polyhedron *p,
     q.remove_space_dimensions(vs);
 }
 
-void TransitionRelation::set_locs(Location *preloc, Location *postloc)
-{
+void TransitionRelation::set_locs(Location* preloc, Location* postloc) {
     this->preloc = preloc;
     this->postloc = postloc;
 }
-void TransitionRelation::set_relation(C_Polyhedron *rel)
-{
+void TransitionRelation::set_relation(C_Polyhedron* rel) {
     this->rel = rel;
     compute_nc();
     split_relation();
 }
 
-void TransitionRelation::compute_nc()
-{
+void TransitionRelation::compute_nc() {
     Constraint_System cs = rel->minimized_constraints();
     Constraint_System::const_iterator vi;
     string str;
     nc = 0;
 
-    for (vi = cs.begin(); vi != cs.end(); ++vi) nc++;
+    for (vi = cs.begin(); vi != cs.end(); ++vi)
+        nc++;
 }
 
-TransitionRelation::TransitionRelation(int n, var_info *f, var_info *fd,
-                                       var_info *fm, string name)
-{
+TransitionRelation::TransitionRelation(int n,
+                                       var_info* f,
+                                       var_info* fd,
+                                       var_info* fm,
+                                       string name) {
     initialize(n, f, fd, fm, name);
 }
 
-TransitionRelation::TransitionRelation(int n, var_info *f, var_info *fd,
-                                       var_info *fm, Location *preloc,
-                                       Location *postloc, C_Polyhedron *rel,
-                                       string name)
-{
+TransitionRelation::TransitionRelation(int n,
+                                       var_info* f,
+                                       var_info* fd,
+                                       var_info* fm,
+                                       Location* preloc,
+                                       Location* postloc,
+                                       C_Polyhedron* rel,
+                                       string name) {
     initialize(n, f, fd, fm, preloc, postloc, rel, name);
 }
 
-TransitionRelation::TransitionRelation(int n, var_info *f, var_info *fd,
-                                       var_info *fm, string name, int index)
-{
+TransitionRelation::TransitionRelation(int n,
+                                       var_info* f,
+                                       var_info* fd,
+                                       var_info* fm,
+                                       string name,
+                                       int index) {
     initialize_without_populating(n, f, fd, fm, name, index);
 }
 
-TransitionRelation::TransitionRelation(int n, var_info *f, var_info *fd,
-                                       var_info *fm, Location *preloc,
-                                       Location *postloc, C_Polyhedron *rel,
-                                       string name, int index)
-{
+TransitionRelation::TransitionRelation(int n,
+                                       var_info* f,
+                                       var_info* fd,
+                                       var_info* fm,
+                                       Location* preloc,
+                                       Location* postloc,
+                                       C_Polyhedron* rel,
+                                       string name,
+                                       int index) {
     initialize_without_populating(n, f, fd, fm, preloc, postloc, rel, name,
                                   index);
 }
 
-void TransitionRelation::strengthen(const C_Polyhedron *p)
-{
+void TransitionRelation::strengthen(const C_Polyhedron* p) {
     guard->intersection_assign(*p);  // update the guard
 
-    C_Polyhedron *q = new C_Polyhedron(*p);
+    C_Polyhedron* q = new C_Polyhedron(*p);
     q->add_space_dimensions_and_embed(n);
     rel->intersection_assign(*q);
     delete (q);
@@ -318,9 +341,8 @@ void TransitionRelation::strengthen(const C_Polyhedron *p)
     split_relation();
 }
 
-void TransitionRelation::compute_post(const C_Polyhedron *p,
-                                      C_Polyhedron &q) const
-{
+void TransitionRelation::compute_post(const C_Polyhedron* p,
+                                      C_Polyhedron& q) const {
     // assume that q=*p
     q = *p;
 
@@ -331,7 +353,8 @@ void TransitionRelation::compute_post(const C_Polyhedron *p,
     Variables_Set vs;
 
     int i;
-    for (i = 0; i < n; i++) vs.insert(Variable(i));
+    for (i = 0; i < n; i++)
+        vs.insert(Variable(i));
 
     q.remove_space_dimensions(vs);
 }
@@ -343,16 +366,15 @@ TransitionRelation * TransitionRelation::compose(TransitionRelation * t){
 
 */
 
-void TransitionRelation::compute_consecution_constraints(Context &c)
-{
+void TransitionRelation::compute_consecution_constraints(Context& c) {
     // Use two expression stores. One for the equations and
     // the other for the inequations
     cout << endl;
     cout << endl
-          << "> > > (intra transition) In compute_consecution_constraints(), "
-             "TransitionRelation : "
-          << name;
-    Clump *preloc_d_cl = preloc->get_d_cl();
+         << "> > > (intra transition) In compute_consecution_constraints(), "
+            "TransitionRelation : "
+         << name;
+    Clump* preloc_d_cl = preloc->get_d_cl();
     bool compute_this_trans = true;
     cout << endl << "Current transition has poly as follows: ";
     cout << endl << "  " << *rel;
@@ -412,8 +434,8 @@ void TransitionRelation::compute_consecution_constraints(Context &c)
                            // Shanghai Jiao Tong University, 2022/09/20
             if (debug_2) {
                 cout << endl
-                      << "- unprimed constraint(in polyd_dis): " << endl
-                      << "  " << (ll == 0);
+                     << "- unprimed constraint(in polyd_dis): " << endl
+                     << "  " << (ll == 0);
             }
         }
 
@@ -444,8 +466,8 @@ void TransitionRelation::compute_consecution_constraints(Context &c)
             polyd_dis.add_constraint(ll == 0);
             if (debug_2) {
                 cout << endl
-                      << "- primed constraint(in polyd_dis): " << endl
-                      << "  " << (ll == 0);
+                     << "- primed constraint(in polyd_dis): " << endl
+                     << "  " << (ll == 0);
             }
         }
 
@@ -462,8 +484,8 @@ void TransitionRelation::compute_consecution_constraints(Context &c)
                        // Shanghai Jiao Tong University, 2022/09/20
         if (debug_2) {
             cout << endl
-                  << "- constant constraint(in polyd_dis): " << endl
-                  << "  " << (ll >= 1);
+                 << "- constant constraint(in polyd_dis): " << endl
+                 << "  " << (ll >= 1);
         }
         ll += Variable(offset1 + n);  // + d_preloc
         // cout<<endl<<"3. ll in ll>=0 is : "<<endl<<ll<<endl;
@@ -486,12 +508,11 @@ void TransitionRelation::compute_consecution_constraints(Context &c)
                          // Tong University, 2022/09/20
                 if (debug_2) {
                     cout << endl
-                          << "- positivity \\lambda constraint(in polyd_dis): "
-                          << endl
-                          << "  " << (Variable(offset2 + j) >= 0);
+                         << "- positivity \\lambda constraint(in polyd_dis): "
+                         << endl
+                         << "  " << (Variable(offset2 + j) >= 0);
                 }
-            }
-            else if ((*vi).type() == Constraint::STRICT_INEQUALITY) {
+            } else if ((*vi).type() == Constraint::STRICT_INEQUALITY) {
                 // cout<<endl<<"Constraint is Strict inequality"<<endl;
                 cerr << "Location::compute_dual_constraints -- Warning: "
                         "Encountered "
@@ -506,17 +527,15 @@ void TransitionRelation::compute_consecution_constraints(Context &c)
                          // Tong University, 2022/09/20
                 if (debug_2) {
                     cout << endl
-                          << "- positivity \\lambda constraint(in polyd_dis): "
-                          << endl
-                          << "  " << (Variable(offset2 + j) > 0);
+                         << "- positivity \\lambda constraint(in polyd_dis): "
+                         << endl
+                         << "  " << (Variable(offset2 + j) > 0);
                 }
-            }
-            else if ((*vi).type() == Constraint::EQUALITY) {
+            } else if ((*vi).type() == Constraint::EQUALITY) {
                 // cout<<endl<<"Constraint is Equality"<<endl;
                 // cout<<endl<<"5. "<<endl<<Variable(offset2+j)<<">=0"<<endl;
                 // polyd.add_constraint(Variable(offset2+j)>=0);
-            }
-            else {
+            } else {
                 // cout<<endl<<"Unknown Constraint !! "<<endl;
             }
             j++;
@@ -525,8 +544,8 @@ void TransitionRelation::compute_consecution_constraints(Context &c)
         if (debug_2) {
             cout << endl << "------------------------------";
             cout << endl
-                  << "- polyd_dis(with \\lambda): " << endl
-                  << "  " << polyd_dis;
+                 << "- polyd_dis(with \\lambda): " << endl
+                 << "  " << polyd_dis;
         }
         // contains_test(polyd, 2*n+2);
         // Timer test_time_for_remove_higher_space_dimensions;
@@ -547,8 +566,8 @@ void TransitionRelation::compute_consecution_constraints(Context &c)
         // "<<test_time_for_remove_higher_space_dimensions.compute_time_elapsed()<<endl;
         if (debug_2) {
             cout << endl
-                  << "- polyd_dis(projected away \\lambda): " << endl
-                  << "  " << polyd_dis;
+                 << "- polyd_dis(projected away \\lambda): " << endl
+                 << "  " << polyd_dis;
         }
 
         // now populate the context
@@ -559,8 +578,8 @@ void TransitionRelation::compute_consecution_constraints(Context &c)
                                                 // Tong University, 2022/09/20
         if (debug_2) {
             cout << endl
-                  << "- cs_dis(projected away \\lambda): " << endl
-                  << "  " << cs_dis;
+                 << "- cs_dis(projected away \\lambda): " << endl
+                 << "  " << cs_dis;
         }
         Expression e(nd, r, fd, fm);
         C_Polyhedron pdis1(nd, UNIVERSE);
@@ -591,8 +610,8 @@ void TransitionRelation::compute_consecution_constraints(Context &c)
                 ll1 *= 0;
                 if (debug_2) {
                     cout << endl
-                          << "- vi=cs_dis.begin()~end(): " << endl
-                          << "  " << (*vi);
+                         << "- vi=cs_dis.begin()~end(): " << endl
+                         << "  " << (*vi);
                 }
                 for (i = 0; i <= n; i++)
                     ll1[l1 + i] =
@@ -601,8 +620,7 @@ void TransitionRelation::compute_consecution_constraints(Context &c)
                     cout << endl << "  ll1(l1): " << endl << "  " << ll1;
                     if ((*vi).is_inequality()) {
                         cout << " >= 0 ";
-                    }
-                    else if ((*vi).is_equality()) {
+                    } else if ((*vi).is_equality()) {
                         cout << " == 0 ";
                     }
                 }
@@ -615,8 +633,7 @@ void TransitionRelation::compute_consecution_constraints(Context &c)
                     cout << endl << "  ll1(l2): " << endl << "  " << ll1;
                     if ((*vi).is_inequality()) {
                         cout << " >= 0 ";
-                    }
-                    else if ((*vi).is_equality()) {
+                    } else if ((*vi).is_equality()) {
                         cout << " == 0 ";
                     }
                 }
@@ -625,8 +642,7 @@ void TransitionRelation::compute_consecution_constraints(Context &c)
                     cout << endl << "  ll1(nd): " << endl << "  " << ll1;
                     if ((*vi).is_inequality()) {
                         cout << " >= 0 ";
-                    }
-                    else if ((*vi).is_equality()) {
+                    } else if ((*vi).is_equality()) {
                         cout << " == 0 ";
                     }
                 }
@@ -638,36 +654,35 @@ void TransitionRelation::compute_consecution_constraints(Context &c)
             preloc_d_cl->insert(pdis1);
             if (debug_2) {
                 cout << endl
-                      << "- pdis1(mu=1 in disabled path): " << endl
-                      << "  " << pdis1;
+                     << "- pdis1(mu=1 in disabled path): " << endl
+                     << "  " << pdis1;
             }
         }
         cout << endl
-              << "  pushing back clump with " << preloc_d_cl->get_count()
-              << " Polyhedra (in falsepath)...";
+             << "  pushing back clump with " << preloc_d_cl->get_count()
+             << " Polyhedra (in falsepath)...";
     }
 
     cout << endl
-          << "< < < Intra-Transition::" << name
-          << " prepare to push back clump with " << preloc_d_cl->get_count()
-          << " Polyhedra";
+         << "< < < Intra-Transition::" << name
+         << " prepare to push back clump with " << preloc_d_cl->get_count()
+         << " Polyhedra";
 
 #ifdef __DEBUG__D_
     cout << "Test Message from "
-             "TransitionRelation::compute_constraints(Context &)"
-          << endl;
+            "TransitionRelation::compute_constraints(Context &)"
+         << endl;
     cout << c;
     cout << "Message ends" << endl << endl;
 #endif
 }
 
-void TransitionRelation::compute_consecution_01(vector<Clump> &vcl)
-{
+void TransitionRelation::compute_consecution_01(vector<Clump>& vcl) {
     cout << endl;
     cout << endl
-          << "> > > (inter transition) In compute_consecution_01(), "
-             "TransitionRelation : "
-          << name;
+         << "> > > (inter transition) In compute_consecution_01(), "
+            "TransitionRelation : "
+         << name;
     Clump cl(fd, name, "Transition");
     bool compute_this_trans = true;
     cout << endl << "Current transition has poly as follows: ";
@@ -778,8 +793,7 @@ void TransitionRelation::compute_consecution_01(vector<Clump> &vcl)
                     Variable(offset2 + j) >=
                     0);  // disabled path; added by Hongming, at Shanghai Jiao
                          // Tong University, 2022/09/13
-            }
-            else if ((*vi).type() == Constraint::STRICT_INEQUALITY) {
+            } else if ((*vi).type() == Constraint::STRICT_INEQUALITY) {
                 cerr << "Location::compute_dual_constraints -- Warning: "
                         "Encountered "
                         "Strict Inequality"
@@ -798,8 +812,8 @@ void TransitionRelation::compute_consecution_01(vector<Clump> &vcl)
         if (debug_2) {
             cout << endl << "------------------------------";
             cout << endl
-                  << "- polyd_dis(with \\lambda): " << endl
-                  << "  " << polyd_dis;
+                 << "- polyd_dis(with \\lambda): " << endl
+                 << "  " << polyd_dis;
         }
         // contains_test(polyd, 2*n+2);
         // Timer test_time_for_remove_higher_space_dimensions;
@@ -821,8 +835,8 @@ void TransitionRelation::compute_consecution_01(vector<Clump> &vcl)
         // "<<test_time_for_remove_higher_space_dimensions.compute_time_elapsed()<<endl;
         if (debug_2) {
             cout << endl
-                  << "- polyd_dis(projected away \\lambda): " << endl
-                  << "  " << polyd_dis;
+                 << "- polyd_dis(projected away \\lambda): " << endl
+                 << "  " << polyd_dis;
         }
 
         // now create two input polyhedra
@@ -833,8 +847,8 @@ void TransitionRelation::compute_consecution_01(vector<Clump> &vcl)
                                                 // Tong University, 2022/09/13
         if (debug_2) {
             cout << endl
-                  << "- cs_dis(projected away \\lambda): " << endl
-                  << "  " << cs_dis;
+                 << "- cs_dis(projected away \\lambda): " << endl
+                 << "  " << cs_dis;
         }
         C_Polyhedron p0(nd, UNIVERSE), p1(nd, UNIVERSE), pdis0(nd, UNIVERSE),
             pdis1(nd, UNIVERSE);
@@ -862,13 +876,13 @@ void TransitionRelation::compute_consecution_01(vector<Clump> &vcl)
             if (debug_2) {
                 cout << endl << "------------------------------";
                 cout << endl
-                      << "- p1(mu=1 in enabled path): " << endl
-                      << "  " << p1;
+                     << "- p1(mu=1 in enabled path): " << endl
+                     << "  " << p1;
             }
         }
         cout << endl
-              << "  pushing back clump with " << cl.get_count()
-              << " Polyhedra...";
+             << "  pushing back clump with " << cl.get_count()
+             << " Polyhedra...";
         if (zero) {
             // mu=0
             ll1 *= 0;
@@ -888,13 +902,13 @@ void TransitionRelation::compute_consecution_01(vector<Clump> &vcl)
             cl.insert(p0);
             if (debug_2) {
                 cout << endl
-                      << "- p0(mu=0 in enabled path): " << endl
-                      << "  " << p0;
+                     << "- p0(mu=0 in enabled path): " << endl
+                     << "  " << p0;
             }
         }
         cout << endl
-              << "  pushing back clump with " << cl.get_count()
-              << " Polyhedra...";
+             << "  pushing back clump with " << cl.get_count()
+             << " Polyhedra...";
         if (falsepath) {
             // mu=1 in disabled path
             ll1 *= 0;
@@ -906,8 +920,8 @@ void TransitionRelation::compute_consecution_01(vector<Clump> &vcl)
                 ll1 *= 0;
                 if (debug_2) {
                     cout << endl
-                          << "- vi=cs_dis.begin()~end(): " << endl
-                          << "  " << (*vi);
+                         << "- vi=cs_dis.begin()~end(): " << endl
+                         << "  " << (*vi);
                 }
                 for (i = 0; i <= n; i++)
                     ll1[l1 + i] =
@@ -924,8 +938,7 @@ void TransitionRelation::compute_consecution_01(vector<Clump> &vcl)
                     cout << endl << "  ll1: " << endl << "  " << ll1;
                     if ((*vi).is_inequality()) {
                         cout << " >= 0 ";
-                    }
-                    else if ((*vi).is_equality()) {
+                    } else if ((*vi).is_equality()) {
                         cout << " == 0 ";
                     }
                 }
@@ -933,13 +946,13 @@ void TransitionRelation::compute_consecution_01(vector<Clump> &vcl)
             cl.insert(pdis1);
             if (debug_2) {
                 cout << endl
-                      << "- pdis1(mu=1 in disabled path): " << endl
-                      << "  " << pdis1;
+                     << "- pdis1(mu=1 in disabled path): " << endl
+                     << "  " << pdis1;
             }
         }
         cout << endl
-              << "  pushing back clump with " << cl.get_count()
-              << " Polyhedra (in falsepath)...";
+             << "  pushing back clump with " << cl.get_count()
+             << " Polyhedra (in falsepath)...";
         /* "mu=0 in disabled path" is trivial
         if (1){
         // mu=0 in disabled path
@@ -959,8 +972,8 @@ void TransitionRelation::compute_consecution_01(vector<Clump> &vcl)
         */
     }
     cout << endl
-          << "< < < Inter-Transition::" << name << " pushing back clump with "
-          << cl.get_count() << " Polyhedra...";
+         << "< < < Inter-Transition::" << name << " pushing back clump with "
+         << cl.get_count() << " Polyhedra...";
     if (cl.get_count() != 0) {
         vcl.push_back(cl);
     }
@@ -969,16 +982,15 @@ void TransitionRelation::compute_consecution_01(vector<Clump> &vcl)
     return;
 }
 
-void TransitionRelation::compute_consecution_constraints(vector<Clump> &vcl,
-                                                         C_Polyhedron &initp)
-{
+void TransitionRelation::compute_consecution_constraints(vector<Clump>& vcl,
+                                                         C_Polyhedron& initp) {
     // First make up a context and add the initiation constraints to it
     if (preloc->get_name() != postloc->get_name()) {
         compute_consecution_01(vcl);
         return;
     }
 
-    Context *cc = preloc->get_context();
+    Context* cc = preloc->get_context();
     compute_consecution_constraints(*cc);
 
     /*
@@ -1095,37 +1107,43 @@ void TransitionRelation::compute_consecution_constraints(vector<Clump> &vcl,
     return;
 }
 
-void TransitionRelation::populate_multipliers()
-{
+void TransitionRelation::populate_multipliers() {
     index = fm->get_dimension();
     string str = "M_" + name;
     fm->insert(str.c_str());
 }
 
-int TransitionRelation::get_range_left() const { return mult_left; }
+int TransitionRelation::get_range_left() const {
+    return mult_left;
+}
 
-int TransitionRelation::get_range_right() const { return mult_right; }
+int TransitionRelation::get_range_right() const {
+    return mult_right;
+}
 
-const string &TransitionRelation::get_name() const { return name; }
+const string& TransitionRelation::get_name() const {
+    return name;
+}
 
-const string &TransitionRelation::get_preloc_name() const
-{
+const string& TransitionRelation::get_preloc_name() const {
     return preloc->get_name();
 }
 
-const string &TransitionRelation::get_postloc_name() const
-{
+const string& TransitionRelation::get_postloc_name() const {
     return postloc->get_name();
 }
 
-const C_Polyhedron &TransitionRelation::get_relation() const { return *rel; }
+const C_Polyhedron& TransitionRelation::get_relation() const {
+    return *rel;
+}
 
-const var_info *TransitionRelation::get_varinfo() const { return fp; }
+const var_info* TransitionRelation::get_varinfo() const {
+    return fp;
+}
 
-ostream &operator<<(ostream &in, TransitionRelation const &t)
-{
+ostream& operator<<(ostream& in, TransitionRelation const& t) {
     // Just print the transition relation
-    var_info const *ff = t.get_varinfo();
+    var_info const* ff = t.get_varinfo();
 
     in << "Transition Relation: " << t.get_name() << endl;
     in << "Pre-Location:" << t.get_preloc_name() << "  "
@@ -1147,7 +1165,7 @@ ostream &operator<<(ostream &in, TransitionRelation const &t)
     in << "]]" << endl;
     in << "Preserved: [[" << endl;
     in << "| " << endl;
-    set<int> const &st = t.get_preserved_set();
+    set<int> const& st = t.get_preserved_set();
     set<int>::iterator vxx;
     for (vxx = st.begin(); vxx != st.end(); ++vxx) {
         in << "├ ";
@@ -1161,14 +1179,15 @@ ostream &operator<<(ostream &in, TransitionRelation const &t)
     return in;
 }
 
-bool TransitionRelation::matches(string &nam) const { return (name == nam); }
+bool TransitionRelation::matches(string& nam) const {
+    return (name == nam);
+}
 
-bool TransitionRelation::fire()
-{
+bool TransitionRelation::fire() {
     if (!preloc->has_initial()) {
         return false;
     }
-    C_Polyhedron *pre_p = preloc->get_initial();
+    C_Polyhedron* pre_p = preloc->get_initial();
     C_Polyhedron post_p(n, UNIVERSE);
     compute_post_new(pre_p, post_p);
 
@@ -1178,10 +1197,11 @@ bool TransitionRelation::fire()
     return true;
 }
 
-int TransitionRelation::get_firing_count() { return fired; }
+int TransitionRelation::get_firing_count() {
+    return fired;
+}
 
-void TransitionRelation::add_preloc_invariant()
-{
+void TransitionRelation::add_preloc_invariant() {
     C_Polyhedron temp(preloc->inv_poly_reference());
     guard->intersection_assign(temp);
     temp.add_space_dimensions_and_embed(n);
@@ -1190,8 +1210,7 @@ void TransitionRelation::add_preloc_invariant()
     return;
 }
 
-DualTransitionRelation TransitionRelation::get_dual_relation() const
-{
+DualTransitionRelation TransitionRelation::get_dual_relation() const {
     // build the sat and the unsat polyhedron
     // first the sat polyhedron
     C_Polyhedron sat(2 * n + 2, UNIVERSE);
@@ -1236,8 +1255,7 @@ DualTransitionRelation TransitionRelation::get_dual_relation() const
     return DualTransitionRelation(f, unsat, sat, preloc, postloc);
 }
 
-void TransitionRelation::dualize_standard(C_Polyhedron &result) const
-{
+void TransitionRelation::dualize_standard(C_Polyhedron& result) const {
     result = C_Polyhedron(2 * n + 2 + nc, UNIVERSE);
     Constraint_System cs = rel->minimized_constraints();
     Constraint_System::const_iterator vi;
@@ -1293,7 +1311,8 @@ void TransitionRelation::dualize_standard(C_Polyhedron &result) const
 
     // now add the constraints on the multipliers
     for (k = 0, vi = cs.begin(); vi != cs.end(); ++vi, ++k) {
-        if ((*vi).is_equality()) continue;
+        if ((*vi).is_equality())
+            continue;
         if ((*vi).is_nonstrict_inequality())
             result.add_constraint(Variable(2 * n + 2 + k) >= 0);
         else
@@ -1306,10 +1325,9 @@ void TransitionRelation::dualize_standard(C_Polyhedron &result) const
     return;
 }
 
-void TransitionRelation::check_map()
-{
-    C_Polyhedron &pre_invariant = preloc->invariant_reference();
-    C_Polyhedron &post_invariant = postloc->invariant_reference();
+void TransitionRelation::check_map() {
+    C_Polyhedron& pre_invariant = preloc->invariant_reference();
+    C_Polyhedron& post_invariant = postloc->invariant_reference();
 
     C_Polyhedron temp(n, UNIVERSE);
 

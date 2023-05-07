@@ -29,8 +29,7 @@
 #include "myassertions.h"
 #include "var-info.h"
 
-void Expression::initialize(int n, int r, var_info *fn, var_info *fr)
-{
+void Expression::initialize(int n, int r, var_info* fn, var_info* fr) {
     // Initialize the parameters of the class
     this->n = n;
     this->r = r;
@@ -41,115 +40,125 @@ void Expression::initialize(int n, int r, var_info *fn, var_info *fr)
     count = 0;
 }
 
-void Expression::zero_out()
-{
+void Expression::zero_out() {
     // set the whole expression to zero
     // Post-comment== Is this being called from somewhere?
 
     int i;
-    for (i = 0; i < r + 1; i++) l[i].init_set(n, fn);
+    for (i = 0; i < r + 1; i++)
+        l[i].init_set(n, fn);
 }
 
-Expression::Expression(int n, int r, var_info *fn, var_info *fr)
-{
+Expression::Expression(int n, int r, var_info* fn, var_info* fr) {
     initialize(n, r, fn, fr);
 }
 
-Expression::~Expression()
-{
+Expression::~Expression() {
     // delete[] l;
 }
 
-Expression::Expression(Expression *e1, Expression *e2)
-{
+Expression::Expression(Expression* e1, Expression* e2) {
     initialize(e1->get_n(), e1->get_r(), e1->get_fn(), e1->get_fr());
     int i;
-    for (i = 0; i < r + 1; i++) l[i] = (*e1)[i] - (*e2)[i];
+    for (i = 0; i < r + 1; i++)
+        l[i] = (*e1)[i] - (*e2)[i];
 }
 
-Expression::Expression(Expression const &e)
-{
+Expression::Expression(Expression const& e) {
     initialize(e.get_n(), e.get_r(), e.get_fn(), e.get_fr());
     int i;
-    for (i = 0; i < r + 1; i++) l[i] = e(i);
-    if (e.is_factored()) factorize();
+    for (i = 0; i < r + 1; i++)
+        l[i] = e(i);
+    if (e.is_factored())
+        factorize();
 }
 
-Expression Expression::operator+(Expression const &p1) const
-{
+Expression Expression::operator+(Expression const& p1) const {
     Expression temp(n, r, fn, fr);
     int i;
-    for (i = 0; i < r + 1; i++) temp[r] = l[r] + p1(r);
+    for (i = 0; i < r + 1; i++)
+        temp[r] = l[r] + p1(r);
 
     return temp;
 }
 
-Expression &Expression::operator+=(Expression const &p1)
-{
+Expression& Expression::operator+=(Expression const& p1) {
     int i;
 
-    for (i = 0; i < r + 1; i++) l[r] += p1(r);
+    for (i = 0; i < r + 1; i++)
+        l[r] += p1(r);
 
     return *this;
 }
 
-Expression Expression::operator-(Expression const &p1) const
-{
+Expression Expression::operator-(Expression const& p1) const {
     Expression temp(n, r, fn, fr);
     int i;
-    for (i = 0; i < r + 1; i++) temp[r] = l[r] - p1(r);
+    for (i = 0; i < r + 1; i++)
+        temp[r] = l[r] - p1(r);
 
     return temp;
 }
 
-Expression &Expression::operator-=(Expression const &p1)
-{
+Expression& Expression::operator-=(Expression const& p1) {
     int i;
-    for (i = 0; i < r + 1; i++) l[r] -= p1(r);
+    for (i = 0; i < r + 1; i++)
+        l[r] -= p1(r);
 
     return *this;
 }
 
-Expression &Expression::operator=(Expression const &p1)
-{
+Expression& Expression::operator=(Expression const& p1) {
     // initialize(p1.get_n(),p1.get_r(),p1.get_fn(),p1.get_fr());
-    for (int i = 0; i < r + 1; i++) l[i] = p1(i);
+    for (int i = 0; i < r + 1; i++)
+        l[i] = p1(i);
 
     return (*this);
 }
 
-SparseLinExpr &Expression::operator[](int i) { return l[i]; }
+SparseLinExpr& Expression::operator[](int i) {
+    return l[i];
+}
 
-SparseLinExpr Expression::operator()(int i) const { return l[i]; }
+SparseLinExpr Expression::operator()(int i) const {
+    return l[i];
+}
 
-int Expression::get_n() const { return n; }
-int Expression::get_r() const { return r; }
-var_info *Expression::get_fr() const { return fr; }
-var_info *Expression::get_fn() const { return fn; }
+int Expression::get_n() const {
+    return n;
+}
+int Expression::get_r() const {
+    return r;
+}
+var_info* Expression::get_fr() const {
+    return fr;
+}
+var_info* Expression::get_fn() const {
+    return fn;
+}
 
-bool Expression::is_pure_a() const
-{
+bool Expression::is_pure_a() const {
     // check if for each of the expression l[0].. l[r-1]
     // is zero
 
     for (int i = 0; i < r; i++)
-        if (!l[i].is_zero()) return false;
+        if (!l[i].is_zero())
+            return false;
 
     return true;
 }
 
-bool Expression::is_pure_b() const
-{
+bool Expression::is_pure_b() const {
     // check if each l[0]... l[r] is a constant
 
     for (int i = 0; i < r + 1; i++)
-        if (!l[i].is_constant()) return false;
+        if (!l[i].is_constant())
+            return false;
 
     return true;
 }
 
-SparseLinExpr &Expression::convert_linear()
-{
+SparseLinExpr& Expression::convert_linear() {
     // Call if only the expression is pure a
     if (!is_pure_a()) {
         cerr << "Expression::convert_linear-- Asked to convert an expression "
@@ -163,8 +172,7 @@ SparseLinExpr &Expression::convert_linear()
     return l[r];  // That does it
 }
 
-LinTransform Expression::convert_transform() const
-{
+LinTransform Expression::convert_transform() const {
     //
     // precondition: This is actually a transform
     // assuming this blindly convert.
@@ -179,8 +187,7 @@ LinTransform Expression::convert_transform() const
     return tmp;
 }
 
-void Expression::transform(LinTransform &lin)
-{
+void Expression::transform(LinTransform& lin) {
     if (lin.is_trivial() || lin.is_inconsistent())
         return;  // Nothing to be done here
 
@@ -193,60 +200,61 @@ void Expression::transform(LinTransform &lin)
                    // That completes the transformation
 }
 
-void Expression::simplify(MatrixStore const &c)
-{
-    for (int i = 0; i < r + 1; i++) c.simplify(l[i]);
+void Expression::simplify(MatrixStore const& c) {
+    for (int i = 0; i < r + 1; i++)
+        c.simplify(l[i]);
     return;
 }
 
-bool Expression::is_constant() const
-{
+bool Expression::is_constant() const {
     // Check if each of the r non-linear terms are zero and the last one is a
     // constant
 
     int i;
 
     for (i = 0; i < r; i++)
-        if (!l[i].is_zero()) return false;
+        if (!l[i].is_zero())
+            return false;
 
-    if (l[r].is_constant()) return true;
+    if (l[r].is_constant())
+        return true;
 
     return false;
 }
 
-bool Expression::is_zero() const
-{
+bool Expression::is_zero() const {
     int i;
 
     for (i = 0; i < r + 1; i++)
-        if (!l[i].is_zero()) return false;
+        if (!l[i].is_zero())
+            return false;
 
     return true;
 }
 
-bool Expression::is_inconsistent() const
-{
+bool Expression::is_inconsistent() const {
     int i;
 
     for (i = 0; i < r; i++)
-        if (!l[i].is_zero()) return false;
+        if (!l[i].is_zero())
+            return false;
 
-    if (l[r].is_constant() && !l[r].is_zero()) return true;
+    if (l[r].is_constant() && !l[r].is_zero())
+        return true;
 
     return false;
 }
 
-int Expression::get_denominator_lcm() const
-{
+int Expression::get_denominator_lcm() const {
     int run = 1, j;
     for (int i = 0; i < r + 1; i++) {
-        if ((j = l[i].get_denominator_lcm()) != 0) run = lcm(run, j);
+        if ((j = l[i].get_denominator_lcm()) != 0)
+            run = lcm(run, j);
     }
     return run;
 }
 
-int Expression::get_numerator_gcd() const
-{
+int Expression::get_numerator_gcd() const {
     bool first_number_seen = false;
 
     int run = 1, j;
@@ -263,8 +271,7 @@ int Expression::get_numerator_gcd() const
     return run;
 }
 
-void Expression::adjust()
-{
+void Expression::adjust() {
     int i = get_denominator_lcm(), j = get_numerator_gcd();
     if (j == 0)
         return;  // Nothing much to be done here.. constraint should not have
@@ -272,26 +279,26 @@ void Expression::adjust()
 
     Rational r1(i, j);
 
-    for (i = 0; i < r + 1; i++) l[i] *= r1;
+    for (i = 0; i < r + 1; i++)
+        l[i] *= r1;
 
     return;
 }
 
-bool Expression::is_factored() const { return factored; }
+bool Expression::is_factored() const {
+    return factored;
+}
 
-void Expression::print_factors(ostream &os) const
-{
+void Expression::print_factors(ostream& os) const {
     os << " ( " << tr_fact << " ) * ( " << lin_fact << " ) ";
 }
-ostream &operator<<(ostream &os, Expression const &expr)
-{
+ostream& operator<<(ostream& os, Expression const& expr) {
     os << "├ ";
     if (expr.is_factored()) {
         expr.print_factors(os);
-    }
-    else {
+    } else {
         int r = expr.get_r();
-        var_info *fr = expr.get_fr();
+        var_info* fr = expr.get_fr();
 
         os << fr->get_name(0) << " * (" << expr(0) << " ) ";
         for (int i = 1; i < r; i++) {
@@ -353,8 +360,7 @@ void Expression::compute_dpl_form(){
 }
 
 */
-bool Expression::factorize()
-{
+bool Expression::factorize() {
     /*
     compute_dpl_form(); // compute the polynomial
     int s,c,i,j,k;
@@ -377,10 +383,12 @@ bool Expression::factorize()
     int i0;
     i = 0;
     Rational factor;
-    while (i < r + 1 && l[i].is_zero()) i++;
+    while (i < r + 1 && l[i].is_zero())
+        i++;
 
     // l[i]!=0
-    if (i >= r + 1) return false;  // DO NOT ALLOW THIS TO HAPPEN
+    if (i >= r + 1)
+        return false;  // DO NOT ALLOW THIS TO HAPPEN
     // DETECT trivial terms and take them out
 
     i0 = i;
@@ -388,7 +396,8 @@ bool Expression::factorize()
 
     t[i0] = 1;
     for (i = i0 + 1; i < r + 1; i++) {
-        if (!l[i0].equiv(l[i], factor)) return false;
+        if (!l[i0].equiv(l[i], factor))
+            return false;
         t[i] = factor;
     }
 
@@ -400,14 +409,17 @@ bool Expression::factorize()
     return true;
 }
 
-SparseLinExpr &Expression::get_linear_factor() { return lin_fact; }
+SparseLinExpr& Expression::get_linear_factor() {
+    return lin_fact;
+}
 
-LinTransform &Expression::get_transform_factor() { return tr_fact; }
+LinTransform& Expression::get_transform_factor() {
+    return tr_fact;
+}
 
-Expression *Expression::clone() const
-{
+Expression* Expression::clone() const {
     // create a new expression
-    Expression *ret = new Expression(n, r, fn, fr);
+    Expression* ret = new Expression(n, r, fn, fr);
     for (int i = 0; i < r + 1; i++) {
         (*ret)[i] = l[i];  // Assign the appropriate linear expressions
     }
@@ -416,24 +428,30 @@ Expression *Expression::clone() const
     return ret;
 }
 
-void Expression::reset_count() { count = 0; }
+void Expression::reset_count() {
+    count = 0;
+}
 
-void Expression::add_count(int i) { count += i; }
+void Expression::add_count(int i) {
+    count += i;
+}
 
-int Expression::get_count() { return count; }
+int Expression::get_count() {
+    return count;
+}
 
-bool Expression::transform_matches(LinTransform &lt)
-{
-    if (!factorize()) return false;
+bool Expression::transform_matches(LinTransform& lt) {
+    if (!factorize())
+        return false;
 
     return (lt == tr_fact);
 }
 
-void Expression::drop_transform(LinTransform &lt)
-{
+void Expression::drop_transform(LinTransform& lt) {
     if (transform_matches(lt)) {
         int i;
-        for (i = 0; i < r; i++) l[i] *= 0;
+        for (i = 0; i < r; i++)
+            l[i] *= 0;
 
         l[r] = lin_fact;
         factored = false;
@@ -441,8 +459,7 @@ void Expression::drop_transform(LinTransform &lt)
     return;
 }
 
-SparseLinExpr Expression::to_transform(Generator const &g)
-{
+SparseLinExpr Expression::to_transform(Generator const& g) {
     SparseLinExpr ret(r, fr);
     for (int i = 0; i < r + 1; i++) {
         ret.set_coefficient(
@@ -454,8 +471,7 @@ SparseLinExpr Expression::to_transform(Generator const &g)
     return ret;
 }
 
-void Expression::count_multipliers(int *t)
-{
+void Expression::count_multipliers(int* t) {
     // assume t[0..r-1] is an allocated array or suffer the core dump!
     for (int i = 0; i < r; i++)
         if (!(*this)(i).is_zero()) {
@@ -464,8 +480,7 @@ void Expression::count_multipliers(int *t)
     return;
 }
 
-bool Expression::is_multiplier_present(int index)
-{
+bool Expression::is_multiplier_present(int index) {
     PRECONDITION((index >= 0 && index < r),
                  " expression::is_multiplier_present() -- illegal index");
 

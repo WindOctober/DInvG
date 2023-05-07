@@ -64,15 +64,13 @@ class DualInvariantMap : public InvariantMap {
 
     // DualInvariantMaps can only be narrowed. Do not widen!!!!
 
-    void H79_widening_assign(DualInvariantMap const& im)
-    {
+    void H79_widening_assign(DualInvariantMap const& im) {
         // This should not be called in the first place
         cerr << "FATAL :: DualInvariantMap :: widening called" << endl;
         exit(1);
     }
 
-    void BHRZ03_widening_assign(DualInvariantMap const& im)
-    {
+    void BHRZ03_widening_assign(DualInvariantMap const& im) {
         // This should not be called in the first place
         cerr << "FATAL :: DualInvariantMap :: widening called" << endl;
         exit(1);

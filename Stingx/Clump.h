@@ -116,24 +116,34 @@ class Clump {
     void next();
 };
 
-inline int Clump::get_gli() { return gli; }
-inline int Clump::size() { return vp.size(); }
+inline int Clump::get_gli() {
+    return gli;
+}
+inline int Clump::size() {
+    return vp.size();
+}
 
-inline const string& Clump::get_name() const { return name; }
+inline const string& Clump::get_name() const {
+    return name;
+}
 
-inline const string& Clump::get_category() const { return category; }
+inline const string& Clump::get_category() const {
+    return category;
+}
 
-inline const vector<C_Polyhedron>& Clump::get_vp() const { return vp; }
+inline const vector<C_Polyhedron>& Clump::get_vp() const {
+    return vp;
+}
 
-inline void Clump::clear() { gli = 0; }
+inline void Clump::clear() {
+    gli = 0;
+}
 
-inline bool Clump::has_next()
-{
+inline bool Clump::has_next() {
     return (vp.size() > 0) && (gli < (int)vp.size());
 }
 
-inline C_Polyhedron& Clump::get_reference()
-{
+inline C_Polyhedron& Clump::get_reference() {
     if (gli < 0) {
         // This should not happen.
         // I suck.
@@ -145,8 +155,7 @@ inline C_Polyhedron& Clump::get_reference()
     return vp[gli];
 }
 
-inline C_Polyhedron& Clump::get_reference(int index)
-{
+inline C_Polyhedron& Clump::get_reference(int index) {
     if (index < 0) {
         // This should not happen.
         // I suck.
@@ -158,7 +167,9 @@ inline C_Polyhedron& Clump::get_reference(int index)
     return vp[index];
 }
 
-inline void Clump::next() { gli++; }
+inline void Clump::next() {
+    gli++;
+}
 
 // print the clump
 // ostream & operator << (ostream & in, Clump const & cl);

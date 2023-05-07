@@ -21,8 +21,7 @@
 
 #include "DisequalityStore.h"
 
-void DisequalityStore::initialize(int n, var_info *f)
-{
+void DisequalityStore::initialize(int n, var_info* f) {
     //
     // initialize the store.
     // with n dimensions and var-info f
@@ -40,17 +39,20 @@ void DisequalityStore::initialize(int n, var_info *f)
     // but this is useful anyway.
 
     int i;
-    for (i = 0; i < n; i++) ineqs->add_constraint(Variable(i) >= 0);
+    for (i = 0; i < n; i++)
+        ineqs->add_constraint(Variable(i) >= 0);
 
     // initial store is consistent
     incon = false;
 }
 
-DisequalityStore::DisequalityStore(int n, var_info *f) { initialize(n, f); }
+DisequalityStore::DisequalityStore(int n, var_info* f) {
+    initialize(n, f);
+}
 
-void DisequalityStore::check_consistent()
-{
-    if (incon) return;
+void DisequalityStore::check_consistent() {
+    if (incon)
+        return;
     // first check if ineqs is non-empty
     if (ineqs->is_empty()) {
         // set inconsistent flag
@@ -80,8 +82,7 @@ void DisequalityStore::check_consistent()
     }
 }
 
-bool DisequalityStore::check_consistent(C_Polyhedron &t)
-{
+bool DisequalityStore::check_consistent(C_Polyhedron& t) {
     // just do the same as in check_consistent()..
     // two changes.. 1. do not set ineqs
     //               2. do not use ineqs member
@@ -108,20 +109,19 @@ bool DisequalityStore::check_consistent(C_Polyhedron &t)
     return true;
 }
 
-void DisequalityStore::add_constraint(SparseLinExpr const &p, int ineq_type)
-{
+void DisequalityStore::add_constraint(SparseLinExpr const& p, int ineq_type) {
     // add a constraint
 
     // if inconsistent .. then nothing to be done here.
-    if (incon) return;
+    if (incon)
+        return;
 
     // if the inequality is a disequality .. puch it into
     // vp after converting it to a linear expression a la PPL
 
     if (ineq_type == TYPE_DIS) {
         vp->push_back(p.to_lin_expression());
-    }
-    else {
+    } else {
         ineqs->add_constraint(p.get_constraint(ineq_type));
     }
 
@@ -130,18 +130,20 @@ void DisequalityStore::add_constraint(SparseLinExpr const &p, int ineq_type)
     // return.
 }
 
-bool DisequalityStore::is_consistent() const
-{
+bool DisequalityStore::is_consistent() const {
     // not inconsistent
     return !incon;
 }
 
-int DisequalityStore::get_dimension() const { return n; }
+int DisequalityStore::get_dimension() const {
+    return n;
+}
 
-const var_info *DisequalityStore::get_var_info() const { return f; }
+const var_info* DisequalityStore::get_var_info() const {
+    return f;
+}
 
-void DisequalityStore::print_constraints(ostream &in) const
-{
+void DisequalityStore::print_constraints(ostream& in) const {
     // print the whole thing out using ostream
 
     if (incon) {
@@ -179,8 +181,7 @@ void DisequalityStore::print_constraints(ostream &in) const
     in << endl;
 }
 
-bool DisequalityStore::add_transform(LinTransform const &l)
-{
+bool DisequalityStore::add_transform(LinTransform const& l) {
     // add l==0 after changing l to a linear expression a la PPL
     Linear_Expression l1 = l.to_lin_expression();
     ineqs->add_constraint(l1 == 0);
@@ -188,8 +189,7 @@ bool DisequalityStore::add_transform(LinTransform const &l)
     return incon;
 }
 
-bool DisequalityStore::add_transform_inequality(LinTransform const &l)
-{
+bool DisequalityStore::add_transform_inequality(LinTransform const& l) {
     // a la PPL
     Linear_Expression l1 = l.to_lin_expression();
     // add l>=0
@@ -198,8 +198,7 @@ bool DisequalityStore::add_transform_inequality(LinTransform const &l)
     return incon;
 }
 
-bool DisequalityStore::add_transform_negated(LinTransform const &l)
-{
+bool DisequalityStore::add_transform_negated(LinTransform const& l) {
     // a la PPL
     Linear_Expression l1 = l.to_lin_expression();
     // add l1<> 0
@@ -208,18 +207,16 @@ bool DisequalityStore::add_transform_negated(LinTransform const &l)
     return incon;
 }
 
-ostream &operator<<(ostream &in, DisequalityStore const &ds)
-{
+ostream& operator<<(ostream& in, DisequalityStore const& ds) {
     // print
     ds.print_constraints(in);
     return in;
 }
 
-DisequalityStore *DisequalityStore::clone() const
-{
+DisequalityStore* DisequalityStore::clone() const {
     // clone the disequality store
     // create a new one
-    DisequalityStore *ret = new DisequalityStore(n, f);
+    DisequalityStore* ret = new DisequalityStore(n, f);
     // force set inequalities to ineqs (by cloning ineqs)
 
     ret->set_inequalities(ineqs);
@@ -233,8 +230,7 @@ DisequalityStore *DisequalityStore::clone() const
     return ret;
 }
 
-void DisequalityStore::set_inequalities(C_Polyhedron const *p)
-{
+void DisequalityStore::set_inequalities(C_Polyhedron const* p) {
     // force set the inequalities
     // Post comment: Why not use the copy constructor?
 
@@ -244,15 +240,15 @@ void DisequalityStore::set_inequalities(C_Polyhedron const *p)
     Constraint_System::const_iterator vi;
 
     // add the constraints one by one
-    for (vi = cs.begin(); vi != cs.end(); vi++) ineqs->add_constraint(*vi);
+    for (vi = cs.begin(); vi != cs.end(); vi++)
+        ineqs->add_constraint(*vi);
 
     // unnecessary actually.. but will do it anyways
     check_consistent();
     return;
 }
 
-void DisequalityStore::set_disequalities(vector<SparseLinExpr> *vp)
-{
+void DisequalityStore::set_disequalities(vector<SparseLinExpr>* vp) {
     // each sparselinexpr requires conversion before addition
 
     vector<SparseLinExpr>::iterator vi;
@@ -263,8 +259,7 @@ void DisequalityStore::set_disequalities(vector<SparseLinExpr> *vp)
     check_consistent();
 }
 
-void DisequalityStore::set_disequalities(vector<Linear_Expression> const *vp1)
-{
+void DisequalityStore::set_disequalities(vector<Linear_Expression> const* vp1) {
     // a different format.. just directly clone
 
     // vector<Linear_Expression>::iterator vi;
@@ -274,8 +269,7 @@ void DisequalityStore::set_disequalities(vector<Linear_Expression> const *vp1)
     check_consistent();
 }
 
-bool DisequalityStore::check_status_equalities(LinTransform &lt)
-{
+bool DisequalityStore::check_status_equalities(LinTransform& lt) {
     // check if adding lt==0 will create inconsistencies
     // First add lt==0 to the polyhedron and then check consistency
 
@@ -290,8 +284,7 @@ bool DisequalityStore::check_status_equalities(LinTransform &lt)
     return check_consistent(t);
 }
 
-DisequalityStore::~DisequalityStore()
-{
+DisequalityStore::~DisequalityStore() {
     // the destructor
     delete (vp);
 }

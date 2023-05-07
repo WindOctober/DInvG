@@ -82,8 +82,10 @@ class DualTransitionRelation {
     void manufacture_dual_var_info();
 
    public:
-    DualTransitionRelation(var_info* f, C_Polyhedron const& unsat,
-                           C_Polyhedron const& sat, Location* preloc,
+    DualTransitionRelation(var_info* f,
+                           C_Polyhedron const& unsat,
+                           C_Polyhedron const& sat,
+                           Location* preloc,
                            Location* postloc);
 
     // compute the post condition -- take 1

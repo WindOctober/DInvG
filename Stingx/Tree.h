@@ -46,7 +46,7 @@ using namespace Parma_Polyhedra_Library::IO_Operators;
 class Tree {
    private:
     vector<Clump> vcl;
-    void initialize(vector<Clump> &outer_vcl);
+    void initialize(vector<Clump>& outer_vcl);
     int ra;    // related location(intra)
     int er;    // related transition(inter)
     int unra;  // un-related location(intra)
@@ -61,9 +61,9 @@ class Tree {
 
    public:
     Tree();
-    Tree(vector<Clump> &outer_vcl);
-    void set_tree(vector<Clump> &outer_vcl);
-    vector<Clump> &get_tree();
+    Tree(vector<Clump>& outer_vcl);
+    void set_tree(vector<Clump>& outer_vcl);
+    vector<Clump>& get_tree();
     int size();
     void set_ra(int amount);
     void set_er(int amount);
@@ -77,21 +77,25 @@ class Tree {
     int get_uner();
     int get_target_index();
     int get_max_clump_count();
-    Clump &get_clump(int depth);
-    void Original_Prior(vector<Clump> &outer_vcl);
-    void Reorder_Target_Prior_1(vector<Clump> &outer_vcl);
-    void Reorder_Target_Prior_2(vector<Clump> &outer_vcl);
-    void Reorder_Target_Prior_3(vector<Clump> &outer_vcl);
-    void extract_vcl_for_one_location_about_intra(vector<Clump> &outer_vcl);
+    Clump& get_clump(int depth);
+    void Original_Prior(vector<Clump>& outer_vcl);
+    void Reorder_Target_Prior_1(vector<Clump>& outer_vcl);
+    void Reorder_Target_Prior_2(vector<Clump>& outer_vcl);
+    void Reorder_Target_Prior_3(vector<Clump>& outer_vcl);
+    void extract_vcl_for_one_location_about_intra(vector<Clump>& outer_vcl);
     void Print_Prune_Tree(int depth, string weavedorbanged);
     void Print_Prune_Tree(int depth, int hb, int lb, string weavedorbanged);
-    void Print_Prune_Sequence_Tree(vector<int> sequence, int depth,
+    void Print_Prune_Sequence_Tree(vector<int> sequence,
+                                   int depth,
                                    string weavedorbanged);
-    void Print_Prune_Sequence_Tree(vector<int> sequence, int depth, int hb,
-                                   int lb, string weavedorbanged);
+    void Print_Prune_Sequence_Tree(vector<int> sequence,
+                                   int depth,
+                                   int hb,
+                                   int lb,
+                                   string weavedorbanged);
 
     // prune method 1
-    void prune_node_self_inspection(int target_index, C_Polyhedron &invd);
+    void prune_node_self_inspection(int target_index, C_Polyhedron& invd);
     void insert_pruned_node(int depth, vector<int> node_gli);
     void clear_pruned_node();
     void store_conflict_node();
@@ -104,33 +108,45 @@ class Tree {
 
     // dfs_sequences_traverse
     vector<vector<vector<int>>> sequences_generation(
-        string divide_into_sections, C_Polyhedron &initp);
+        string divide_into_sections,
+        C_Polyhedron& initp);
     vector<vector<vector<int>>> divide_by_target_relation_based_on_StInG(
-        C_Polyhedron &initp);
-    vector<vector<vector<int>>> no_divide_for_test(C_Polyhedron &initp);
-    vector<vector<vector<int>>> divide_by_target_relation(C_Polyhedron &initp);
-    vector<vector<vector<int>>> one_per_group(C_Polyhedron &initp);
-    vector<vector<vector<int>>> two_per_group(C_Polyhedron &initp);
-    vector<vector<vector<int>>> three_per_group(C_Polyhedron &initp);
-    vector<vector<vector<int>>> four_per_group(C_Polyhedron &initp);
-    vector<vector<vector<int>>> divide_target_into_double(C_Polyhedron &initp);
-    vector<vector<vector<int>>> divide_by_inter_transition(C_Polyhedron &initp);
-    vector<vector<vector<int>>> divide_prior2_into_four(C_Polyhedron &initp);
+        C_Polyhedron& initp);
+    vector<vector<vector<int>>> no_divide_for_test(C_Polyhedron& initp);
+    vector<vector<vector<int>>> divide_by_target_relation(C_Polyhedron& initp);
+    vector<vector<vector<int>>> one_per_group(C_Polyhedron& initp);
+    vector<vector<vector<int>>> two_per_group(C_Polyhedron& initp);
+    vector<vector<vector<int>>> three_per_group(C_Polyhedron& initp);
+    vector<vector<vector<int>>> four_per_group(C_Polyhedron& initp);
+    vector<vector<vector<int>>> divide_target_into_double(C_Polyhedron& initp);
+    vector<vector<vector<int>>> divide_by_inter_transition(C_Polyhedron& initp);
+    vector<vector<vector<int>>> divide_prior2_into_four(C_Polyhedron& initp);
     vector<vector<vector<int>>> merge_sub_sequences(
-        vector<vector<vector<int>>> sequences, C_Polyhedron initp);
+        vector<vector<vector<int>>> sequences,
+        C_Polyhedron initp);
     vector<vector<vector<int>>> merge_target_sub_sequences(
-        vector<vector<vector<int>>> sequences, C_Polyhedron initp);
+        vector<vector<vector<int>>> sequences,
+        C_Polyhedron initp);
     vector<vector<vector<int>>> merge_first_sub_sequences(
-        vector<vector<vector<int>>> sequences, C_Polyhedron initp);
+        vector<vector<vector<int>>> sequences,
+        C_Polyhedron initp);
     vector<vector<vector<int>>> merge_end_sub_sequences(
-        vector<vector<vector<int>>> sequences, C_Polyhedron initp);
+        vector<vector<vector<int>>> sequences,
+        C_Polyhedron initp);
     vector<vector<int>> Merge(vector<vector<int>> sub_sequences1,
-                              vector<vector<int>> sub_sequences2, int hb,
-                              int lb, C_Polyhedron initp);
+                              vector<vector<int>> sub_sequences2,
+                              int hb,
+                              int lb,
+                              C_Polyhedron initp);
     void Merge_recursive2(vector<vector<vector<int>>> two_sub_sequences,
-                          vector<vector<int>> &merged_sub_sequences,
-                          vector<int> &sequence, int i, int depth,
-                          C_Polyhedron &cpoly, Clump &invd_vp, int hb, int lb);
+                          vector<vector<int>>& merged_sub_sequences,
+                          vector<int>& sequence,
+                          int i,
+                          int depth,
+                          C_Polyhedron& cpoly,
+                          Clump& invd_vp,
+                          int hb,
+                          int lb);
     // void Merge_recursive(vector<vector<vector<int>>> two_sub_sequences,
     // vector<vector<int>> & merged_sub_sequences, int i, vector<int> sequence,
     // C_Polyhedron initp, Clump & invd_vp, int hb, int lb); void
@@ -138,29 +154,51 @@ class Tree {
     // vector<int> sequence, C_Polyhedron cpoly, Clump & invd_vp, int hb, int
     // lb);
     vector<vector<int>> dfs_sub_sequences_traverse_based_on_StInG(
-        int hb, int lb, C_Polyhedron &initp);
-    vector<vector<int>> dfs_sub_sequences_traverse(int hb, int lb,
-                                                   C_Polyhedron &initp);
+        int hb,
+        int lb,
+        C_Polyhedron& initp);
+    vector<vector<int>> dfs_sub_sequences_traverse(int hb,
+                                                   int lb,
+                                                   C_Polyhedron& initp);
     void dfs_sub_sequences_traverse_recursive_based_on_StInG(
-        vector<vector<int>> &sub_sequences, int hb, int lb, int depth,
-        C_Polyhedron &cpoly, C_Polyhedron &invd);
+        vector<vector<int>>& sub_sequences,
+        int hb,
+        int lb,
+        int depth,
+        C_Polyhedron& cpoly,
+        C_Polyhedron& invd);
     void dfs_sub_sequences_traverse_recursive(
-        vector<vector<int>> &sub_sequences, int hb, int lb, int depth,
-        C_Polyhedron &cpoly, Clump &invd_vp);
-    void collect_invariant_polys(C_Polyhedron &cpoly, Clump &invd_vp);
-    void collect_sub_sequences(vector<vector<int>> &sub_sequences, int hb,
+        vector<vector<int>>& sub_sequences,
+        int hb,
+        int lb,
+        int depth,
+        C_Polyhedron& cpoly,
+        Clump& invd_vp);
+    void collect_invariant_polys(C_Polyhedron& cpoly, Clump& invd_vp);
+    void collect_sub_sequences(vector<vector<int>>& sub_sequences,
+                               int hb,
                                int lb);
     void collect_invariant_polys_and_sub_sequences(
-        Clump &invd_vp, vector<vector<int>> &sub_sequences, C_Polyhedron &cpoly,
-        int hb, int lb);
+        Clump& invd_vp,
+        vector<vector<int>>& sub_sequences,
+        C_Polyhedron& cpoly,
+        int hb,
+        int lb);
     void collect_invariant_polys_and_sub_sequences(
-        Clump &invd_vp, vector<vector<int>> &sub_sequences, C_Polyhedron &cpoly,
-        vector<int> &sequence);
+        Clump& invd_vp,
+        vector<vector<int>>& sub_sequences,
+        C_Polyhedron& cpoly,
+        vector<int>& sequence);
     void dfs_sequences_traverse(vector<vector<vector<int>>> sequences,
-                                C_Polyhedron &initp, C_Polyhedron &invd);
+                                C_Polyhedron& initp,
+                                C_Polyhedron& invd);
     void dfs_sequences_traverse_recursive2(
-        vector<int> &sequence, vector<vector<vector<int>>> sequences, int i,
-        int depth, C_Polyhedron &cpoly, C_Polyhedron &invd);
+        vector<int>& sequence,
+        vector<vector<vector<int>>> sequences,
+        int i,
+        int depth,
+        C_Polyhedron& cpoly,
+        C_Polyhedron& invd);
     bool has_the_same_sequences_from_the_left(vector<int> banged_s,
                                               vector<int> s);
     // void dfs_sequences_traverse_recursive(vector<int> & sequence,
@@ -169,23 +207,47 @@ class Tree {
     // C_Polyhedron & cpoly, C_Polyhedron & invd);
 };
 
-inline vector<Clump> &Tree::get_tree() { return vcl; }
+inline vector<Clump>& Tree::get_tree() {
+    return vcl;
+}
 
-inline int Tree::size() { return vcl.size(); }
+inline int Tree::size() {
+    return vcl.size();
+}
 
-inline int Tree::get_ra() { return ra; }
-inline int Tree::get_er() { return er; }
-inline int Tree::get_unra() { return unra; }
-inline int Tree::get_uner() { return uner; }
-inline int Tree::get_target_index() { return target_index; }
-inline int Tree::get_max_clump_count() { return max_clump_count; }
+inline int Tree::get_ra() {
+    return ra;
+}
+inline int Tree::get_er() {
+    return er;
+}
+inline int Tree::get_unra() {
+    return unra;
+}
+inline int Tree::get_uner() {
+    return uner;
+}
+inline int Tree::get_target_index() {
+    return target_index;
+}
+inline int Tree::get_max_clump_count() {
+    return max_clump_count;
+}
 
-inline Clump &Tree::get_clump(int depth) { return vcl[depth]; }
+inline Clump& Tree::get_clump(int depth) {
+    return vcl[depth];
+}
 
-inline void Tree::clear_pruned_node() { pruned_node.clear(); }
+inline void Tree::clear_pruned_node() {
+    pruned_node.clear();
+}
 
-inline int Tree::get_first_conflict() { return first_conflict; }
+inline int Tree::get_first_conflict() {
+    return first_conflict;
+}
 
-inline void Tree::clear_first_conflict() { first_conflict = -1; }
+inline void Tree::clear_first_conflict() {
+    first_conflict = -1;
+}
 
 #endif

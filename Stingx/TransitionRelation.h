@@ -58,7 +58,7 @@ class TransitionRelation {
         *fp;  // fm is the var_info for non-linear multipliers
     Location *preloc, *postloc;
     // the actual transition relation as a 2n dimensional polyhedron
-    C_Polyhedron *rel;
+    C_Polyhedron* rel;
 
     // structure of the transition relation
     // the structure in rel has been factored into , guard, update and preserved
@@ -75,60 +75,95 @@ class TransitionRelation {
     string name;
 
     int fired;
-    void initialize(int n, var_info *f, var_info *fd, var_info *fm,
-                    Location *preloc, Location *postloc, C_Polyhedron *rel,
+    void initialize(int n,
+                    var_info* f,
+                    var_info* fd,
+                    var_info* fm,
+                    Location* preloc,
+                    Location* postloc,
+                    C_Polyhedron* rel,
                     string name);
-    void initialize(int n, var_info *f, var_info *fd, var_info *fm,
+    void initialize(int n,
+                    var_info* f,
+                    var_info* fd,
+                    var_info* fm,
                     string name);
 
-    void initialize_without_populating(int n, var_info *f, var_info *fd,
-                                       var_info *fm, Location *preloc,
-                                       Location *postloc, C_Polyhedron *rel,
-                                       string name, int index);
-    void initialize_without_populating(int n, var_info *f, var_info *fd,
-                                       var_info *fm, string name, int index);
+    void initialize_without_populating(int n,
+                                       var_info* f,
+                                       var_info* fd,
+                                       var_info* fm,
+                                       Location* preloc,
+                                       Location* postloc,
+                                       C_Polyhedron* rel,
+                                       string name,
+                                       int index);
+    void initialize_without_populating(int n,
+                                       var_info* f,
+                                       var_info* fd,
+                                       var_info* fm,
+                                       string name,
+                                       int index);
 
     bool is_preserved(int i) const;
-    bool add_guard(Constraint const &cc);
-    bool add_preservation_relation(Constraint const &cc);
+    bool add_guard(Constraint const& cc);
+    bool add_preservation_relation(Constraint const& cc);
     bool split_relation();  // if expression is of the for 'x-x , then add
 
-    void dualize_standard(C_Polyhedron &result) const;
+    void dualize_standard(C_Polyhedron& result) const;
 
    public:
-    TransitionRelation(int n, var_info *f, var_info *fd, var_info *fm,
-                       Location *preloc, Location *postloc, C_Polyhedron *rel,
+    TransitionRelation(int n,
+                       var_info* f,
+                       var_info* fd,
+                       var_info* fm,
+                       Location* preloc,
+                       Location* postloc,
+                       C_Polyhedron* rel,
                        string name);
 
-    TransitionRelation(int n, var_info *f, var_info *fd, var_info *fm,
+    TransitionRelation(int n,
+                       var_info* f,
+                       var_info* fd,
+                       var_info* fm,
                        string name);
 
-    TransitionRelation(int n, var_info *f, var_info *fd, var_info *fm,
-                       Location *preloc, Location *postloc, C_Polyhedron *rel,
-                       string name, int index);
+    TransitionRelation(int n,
+                       var_info* f,
+                       var_info* fd,
+                       var_info* fm,
+                       Location* preloc,
+                       Location* postloc,
+                       C_Polyhedron* rel,
+                       string name,
+                       int index);
 
-    TransitionRelation(int n, var_info *f, var_info *fd, var_info *fm,
-                       string name, int index);
+    TransitionRelation(int n,
+                       var_info* f,
+                       var_info* fd,
+                       var_info* fm,
+                       string name,
+                       int index);
 
-    void set_locs(Location *preloc, Location *postloc);
-    void set_relation(C_Polyhedron *rel);
+    void set_locs(Location* preloc, Location* postloc);
+    void set_relation(C_Polyhedron* rel);
 
     void compute_nc();
 
-    void strengthen(const C_Polyhedron *p);
+    void strengthen(const C_Polyhedron* p);
 
-    void compute_post(const C_Polyhedron *p, C_Polyhedron &q) const;
-    void compute_post_new(const C_Polyhedron *p, C_Polyhedron &q) const;
+    void compute_post(const C_Polyhedron* p, C_Polyhedron& q) const;
+    void compute_post_new(const C_Polyhedron* p, C_Polyhedron& q) const;
 
     int get_firing_count();
     // TransitionRelation * compose( TransitionRelation * t);
 
-    void compute_consecution_constraints(Context &c);
+    void compute_consecution_constraints(Context& c);
 
-    void compute_consecution_constraints(vector<Clump> &vcl,
-                                         C_Polyhedron &initp);
+    void compute_consecution_constraints(vector<Clump>& vcl,
+                                         C_Polyhedron& initp);
 
-    void compute_consecution_01(vector<Clump> &vcl);
+    void compute_consecution_01(vector<Clump>& vcl);
 
     void populate_multipliers();  // Compute the number of multipliers required
                                   // and add them to the constraint store
@@ -139,17 +174,15 @@ class TransitionRelation {
     int get_range_right() const;
 
     int get_mult_index() const { return index; }
-    bool matches(string &f) const;
-    const string &get_name() const;
+    bool matches(string& f) const;
+    const string& get_name() const;
 
-    const string &get_preloc_name() const;
-    const int get_preloc_index() const
-    {
+    const string& get_preloc_name() const;
+    const int get_preloc_index() const {
         return get_index_of_location(get_preloc_name());
     }
-    const string &get_postloc_name() const;
-    const int get_postloc_index() const
-    {
+    const string& get_postloc_name() const;
+    const int get_postloc_index() const {
         return get_index_of_location(get_postloc_name());
     }
 
@@ -159,20 +192,20 @@ class TransitionRelation {
 
     DualTransitionRelation get_dual_relation() const;
 
-    const C_Polyhedron &get_relation() const;
-    C_Polyhedron &get_non_const_relation();
+    const C_Polyhedron& get_relation() const;
+    C_Polyhedron& get_non_const_relation();
 
-    const var_info *get_varinfo() const;
+    const var_info* get_varinfo() const;
 
-    C_Polyhedron const &get_guard_poly() const { return (*guard); }
+    C_Polyhedron const& get_guard_poly() const { return (*guard); }
 
-    C_Polyhedron const &get_update_poly() const { return (*update); }
+    C_Polyhedron const& get_update_poly() const { return (*update); }
 
-    set<int> const &get_preserved_set() const { return preserved; }
+    set<int> const& get_preserved_set() const { return preserved; }
 
     void check_map();
 };
 
-ostream &operator<<(ostream &in, TransitionRelation const &t);
+ostream& operator<<(ostream& in, TransitionRelation const& t);
 
 #endif

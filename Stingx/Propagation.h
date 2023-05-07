@@ -52,12 +52,14 @@ void push_back_alltrans_from_transition(int propagate_trans_index,
 
 // propagate invariants from preloc into postloc by projection or matrix-method
 void propagate_invariants(C_Polyhedron& preloc_inv,
-                          C_Polyhedron& trans_relation, int postloc_index);
+                          C_Polyhedron& trans_relation,
+                          int postloc_index);
 
 // propagate invariants from preloc into postloc by projection or matrix-method
 // return the C_Polyhedron::propagation-result
 void propagation_invariants(C_Polyhedron& preloc_inv,
-                            C_Polyhedron& trans_relation, int postloc_index,
+                            C_Polyhedron& trans_relation,
+                            int postloc_index,
                             C_Polyhedron& p);
 
 // propagate the preloc's invariants into postloc's initial-value by projection

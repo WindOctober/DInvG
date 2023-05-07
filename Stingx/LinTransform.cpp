@@ -26,35 +26,40 @@
 #include "LinExpr.h"
 #include "Rational.h"
 
-LinTransform::LinTransform(int n, var_info *fn) { initialize(n, fn); }
+LinTransform::LinTransform(int n, var_info* fn) {
+    initialize(n, fn);
+}
 
-LinTransform::LinTransform() { n = 0; }
+LinTransform::LinTransform() {
+    n = 0;
+}
 
-int LinTransform::get_base() const
-{
+int LinTransform::get_base() const {
     int i;
     for (i = 0; i < n + 1; i++)
-        if (lin[i] != 0) return i;
+        if (lin[i] != 0)
+            return i;
 
     return i;
 }
 
-bool LinTransform::is_trivial() const
-{
+bool LinTransform::is_trivial() const {
     int i;
     for (i = 0; i < n + 1; i++)
-        if (lin[i] != 0) return false;
+        if (lin[i] != 0)
+            return false;
 
     return true;
 }
 
-bool LinTransform::is_inconsistent() const
-{
+bool LinTransform::is_inconsistent() const {
     int i;
     for (i = 0; i < n; i++)
-        if (lin[i] != 0) return false;
+        if (lin[i] != 0)
+            return false;
 
-    if (lin[n] == 0) return false;
+    if (lin[n] == 0)
+        return false;
 
     return true;
 }

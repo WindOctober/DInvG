@@ -59,63 +59,61 @@ class InvariantMap {
      *  vloc_: vector of location references
      *  m_ : the actual map
      */
-    var_info *f_;
+    var_info* f_;
     int n_;
     int nloc_;
-    vector<Location *> const &vloc_;
+    vector<Location*> const& vloc_;
     StringPolyMap m_;
 
     // is there a location with name
-    bool entry_exists(string const &name) const;
+    bool entry_exists(string const& name) const;
     // add a pair to the map.
-    void add_value_to_map(string const &str, C_Polyhedron const &what);
+    void add_value_to_map(string const& str, C_Polyhedron const& what);
     // protected constructor
-    InvariantMap(vector<Location *> const &vloc)
-        : nloc_(vloc.size()), vloc_(vloc)
-    {
-    }
+    InvariantMap(vector<Location*> const& vloc)
+        : nloc_(vloc.size()), vloc_(vloc) {}
 
    public:
     // will compute the initial map
     // set each locations poly to its initial condition.
 
-    InvariantMap(var_info *f, vector<Location *> const &vloc);
+    InvariantMap(var_info* f, vector<Location*> const& vloc);
 
     // accessors by location pointer and name
-    C_Polyhedron &operator[](Location const *l);
-    C_Polyhedron &operator[](string const &what);
+    C_Polyhedron& operator[](Location const* l);
+    C_Polyhedron& operator[](string const& what);
     // constant references
-    C_Polyhedron const &operator()(Location const *l) const;
-    C_Polyhedron const &operator()(string const &what) const;
+    C_Polyhedron const& operator()(Location const* l) const;
+    C_Polyhedron const& operator()(string const& what) const;
     // access members
 
-    var_info *get_var_info() const { return f_; }
+    var_info* get_var_info() const { return f_; }
 
     int get_dimension() const { return n_; }
 
     int get_num_locations() const { return nloc_; }
 
-    StringPolyMap const &get_map_reference() const { return m_; }
+    StringPolyMap const& get_map_reference() const { return m_; }
 
-    StringPolyMap &get_map_reference() { return m_; }
+    StringPolyMap& get_map_reference() { return m_; }
 
     // widen this wrt im CH79
-    void H79_widening_assign(InvariantMap const &im);
+    void H79_widening_assign(InvariantMap const& im);
     // widen wrt BHRZ03
-    void BHRZ03_widening_assign(InvariantMap const &im);
+    void BHRZ03_widening_assign(InvariantMap const& im);
 
     // assign one map into another
-    void assign(InvariantMap const &im);
+    void assign(InvariantMap const& im);
 
     // are the maps equal (check logical equivalence of polyhedra)
 
-    bool equals(InvariantMap const &im) const;
+    bool equals(InvariantMap const& im) const;
 
-    void print(ostream &out) const;
+    void print(ostream& out) const;
 
     // check that the map is an inductive map.
-    bool check_consecution(vector<TransitionRelation *> *vrels) const;
+    bool check_consecution(vector<TransitionRelation*>* vrels) const;
 };
 
-ostream &operator<<(ostream &out, InvariantMap const &what);
+ostream& operator<<(ostream& out, InvariantMap const& what);
 #endif

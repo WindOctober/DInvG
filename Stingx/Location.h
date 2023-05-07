@@ -54,15 +54,15 @@ class Location {
     var_info *f, *fd, *fm;  // the primal and dual var-infos
     bool polyset;           // has the initial condition been set
     string name;            // name
-    Context *c;             // the solver for intra-location transitions
-    C_Polyhedron *p;        // the initial condition
+    Context* c;             // the solver for intra-location transitions
+    C_Polyhedron* p;        // the initial condition
     // If there is none, then initialized to false
 
     // the final invariant that I will compute for the location
     // Post-comments: To do.. change this into an invariant map. I did this
     // initially so that I could run auto-strengthening. But this is to
     // cumbersome.
-    C_Polyhedron *invariant;
+    C_Polyhedron* invariant;
 
     // the final invariant that will be computed for the location
     // which is a disjunctive form stored in a vector.
@@ -72,11 +72,11 @@ class Location {
     bool vp_inv_flag;
 
     // A pre-assigned invariant that i will use to strengthen transitions.
-    C_Polyhedron *loc_inv;
+    C_Polyhedron* loc_inv;
 
     // added by Hongming, 2022/09/19, Shanghai Jiao Tong University
     // A vector of polyhedra stores the disabled-path condition
-    Clump *d_cl;
+    Clump* d_cl;
 
     // has context been made
     bool context_made;
@@ -86,12 +86,20 @@ class Location {
     int l;
 
     // Initialize and form parametric coefficients for the invariant
-    void initialize(int n, var_info *f, var_info *fd, var_info *fm,
-                    C_Polyhedron *p, string name);
+    void initialize(int n,
+                    var_info* f,
+                    var_info* fd,
+                    var_info* fm,
+                    C_Polyhedron* p,
+                    string name);
     // Initialize but do not form new coefficients
-    void initialize_without_populating(int n, var_info *f, var_info *fd,
-                                       var_info *fm, C_Polyhedron *p,
-                                       string name, int left);
+    void initialize_without_populating(int n,
+                                       var_info* f,
+                                       var_info* fd,
+                                       var_info* fm,
+                                       C_Polyhedron* p,
+                                       string name,
+                                       int left);
 
     // added by Hongming, 2022/10/11, Shanghai Jiao Tong University
 
@@ -103,94 +111,102 @@ class Location {
     bool ppged_flag;
 
    public:
-    Location(int n, var_info *f, var_info *fd, var_info *fm, C_Polyhedron *p,
+    Location(int n,
+             var_info* f,
+             var_info* fd,
+             var_info* fm,
+             C_Polyhedron* p,
              string name);
 
-    Location(int n, var_info *f, var_info *fd, var_info *fm, string name);
+    Location(int n, var_info* f, var_info* fd, var_info* fm, string name);
 
     // A location with preset var-infos and a given starting point
 
-    Location(int n, var_info *f, var_info *fd, var_info *fm, string name,
+    Location(int n,
+             var_info* f,
+             var_info* fd,
+             var_info* fm,
+             string name,
              int left);
 
-    Location(int n, var_info *f, var_info *fd, var_info *fm, C_Polyhedron *p,
-             string name, int left);
+    Location(int n,
+             var_info* f,
+             var_info* fd,
+             var_info* fm,
+             C_Polyhedron* p,
+             string name,
+             int left);
 
     // set the initial polyhedron from q into p
-    void set_polyhedron(C_Polyhedron *q);
+    void set_polyhedron(C_Polyhedron* q);
     // set the initial-value polyhedron from q to this
-    void set_initial(C_Polyhedron &q);
+    void set_initial(C_Polyhedron& q);
     // has the inital been set
     bool has_initial();
 
-    void add_clump(vector<Clump> &vcl);
+    void add_clump(vector<Clump>& vcl);
     void make_context();
 
     void compute_dual_constraints();
-    void compute_dual_constraints(Context &cc);       // the dual constraints
-    void compute_dual_constraints(C_Polyhedron &cc);  // the dual constraints
+    void compute_dual_constraints(Context& cc);       // the dual constraints
+    void compute_dual_constraints(C_Polyhedron& cc);  // the dual constraints
 
     int get_dimension() const;
-    const var_info *get_var_info() const;
-    const var_info *get_dual_var_info() const;
+    const var_info* get_var_info() const;
+    const var_info* get_dual_var_info() const;
     int get_range_left() const;
 
     bool matches(string name) const;
 
-    C_Polyhedron const &get_poly_reference() const
-    {
-        if (polyset) return (*p);
+    C_Polyhedron const& get_poly_reference() const {
+        if (polyset)
+            return (*p);
         cerr << " asked reference when poly is not set " << endl;
         abort();
     }
 
-    C_Polyhedron &invariant_reference() { return (*invariant); }
-    C_Polyhedron const &get_invariant() const { return *invariant; }
-    void invariant_intersected_with(C_Polyhedron &what)
-    {
+    C_Polyhedron& invariant_reference() { return (*invariant); }
+    C_Polyhedron const& get_invariant() const { return *invariant; }
+    void invariant_intersected_with(C_Polyhedron& what) {
         invariant->intersection_assign(what);
     }
 
     // push back disjunctive-invariant into vector-poly
-    void set_vp_inv(C_Polyhedron &what)
-    {
+    void set_vp_inv(C_Polyhedron& what) {
         vp_inv.insert(what);
         vp_inv_flag = true;
     }
-    void set_vp_inv(C_Polyhedron *what)
-    {
+    void set_vp_inv(C_Polyhedron* what) {
         vp_inv.insert(*what);
         vp_inv_flag = true;
     }
     bool get_vp_inv_flag() const { return vp_inv_flag; }
 
-    Clump const &get_vp_inv() const { return vp_inv; }
+    Clump const& get_vp_inv() const { return vp_inv; }
 
-    C_Polyhedron *get_initial();
+    C_Polyhedron* get_initial();
 
-    Context *get_context();
+    Context* get_context();
 
     bool initial_poly_set() const { return polyset; }
 
-    void force_polyset()
-    {
+    void force_polyset() {
         cerr << " Encountered a call to Location::force_poly_set()" << endl;
         abort();
         polyset = true;
     }
 
-    C_Polyhedron &get_non_const_poly_reference() { return *p; }
+    C_Polyhedron& get_non_const_poly_reference() { return *p; }
 
-    void set_invariant_polyhedron(C_Polyhedron *what)
-    {
+    void set_invariant_polyhedron(C_Polyhedron* what) {
         loc_inv->intersection_assign((*what));
     }
 
-    C_Polyhedron const &inv_poly_reference() const { return (*loc_inv); }
+    C_Polyhedron const& inv_poly_reference() const { return (*loc_inv); }
 
     // added by Hongming, at Shanghai Jiao Tong University, 2022/09/20
-    Clump *get_d_cl() { return d_cl; }
-    Clump const &get_d_cl_reference() const { return (*d_cl); }
+    Clump* get_d_cl() { return d_cl; }
+    Clump const& get_d_cl_reference() const { return (*d_cl); }
 
     // added by Hongming, at Shanghai Jiao Tong University, 2022/10/11
 
@@ -223,40 +239,45 @@ class Location {
     // propagated by others
     void ppged_flag_befalse() { ppged_flag = false; }
 
-    void extract_invariants_and_update(C_Polyhedron &pp, C_Polyhedron &dualp);
+    void extract_invariants_and_update(C_Polyhedron& pp, C_Polyhedron& dualp);
     void extract_invariants_and_update_for_one_location_by_eliminating(
-        C_Polyhedron &pp, C_Polyhedron &dualp);
+        C_Polyhedron& pp,
+        C_Polyhedron& dualp);
     void propagate_invariants_and_update_for_except_initial_by_propagation(
-        C_Polyhedron &preloc_inv,
-        C_Polyhedron &trans_rel /*, C_Polyhedron & dualp*/);
-    void contains_test(C_Polyhedron &pp, C_Polyhedron &loc_inv,
-                       C_Polyhedron &trans_rel);
+        C_Polyhedron& preloc_inv,
+        C_Polyhedron& trans_rel /*, C_Polyhedron & dualp*/);
+    void contains_test(C_Polyhedron& pp,
+                       C_Polyhedron& loc_inv,
+                       C_Polyhedron& trans_rel);
     void extract_invariants_and_update_for_initial_by_recursive_eliminating(
-        C_Polyhedron &pp, C_Polyhedron &dualp);
+        C_Polyhedron& pp,
+        C_Polyhedron& dualp);
     void extract_invariants_and_update_by_binary_eliminating(
-        C_Polyhedron &pp, C_Polyhedron &dualp);
+        C_Polyhedron& pp,
+        C_Polyhedron& dualp);
 
-    string const &get_name() const;
+    string const& get_name() const;
 
     void populate_coefficients();  // compute the coefficients required and add
                                    // them to the constraint store
-    void add_to_trivial(C_Polyhedron *trivial);
-    void add_to_trivial(C_Polyhedron &trivial);
+    void add_to_trivial(C_Polyhedron* trivial);
+    void add_to_trivial(C_Polyhedron& trivial);
 
     void initialize_invariant();
-    void extract_invariant_from_generator(Generator_System const &g);
-    void extract_invariant_from_generator(Generator const &g);
+    void extract_invariant_from_generator(Generator_System const& g);
+    void extract_invariant_from_generator(Generator const& g);
     void extract_invariant_for_one_location_by_eliminating(
-        Constraint_System const &c);
+        Constraint_System const& c);
     void propagate_invariants_for_except_initial_by_propagation(
-        C_Polyhedron &preloc_inv, C_Polyhedron &trans_rel);
+        C_Polyhedron& preloc_inv,
+        C_Polyhedron& trans_rel);
     void extract_invariant_for_initial_by_recursive_eliminating(
-        Constraint_System const &c);
-    void solve_invariant_from_generator(Generator_System const &g);
-    void solve_invariant_from_generator(Generator const &g);
-    void update_dual_constraints(C_Polyhedron &dualp);
+        Constraint_System const& c);
+    void solve_invariant_from_generator(Generator_System const& g);
+    void solve_invariant_from_generator(Generator const& g);
+    void update_dual_constraints(C_Polyhedron& dualp);
 };
 
-ostream &operator<<(ostream &in, Location const &l);  // print the location
+ostream& operator<<(ostream& in, Location const& l);  // print the location
 
 #endif

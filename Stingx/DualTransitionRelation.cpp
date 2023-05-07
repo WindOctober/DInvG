@@ -28,8 +28,7 @@ using namespace std;
 using namespace Parma_Polyhedra_Library;
 using namespace Parma_Polyhedra_Library::IO_Operators;
 
-bool DualTransitionRelation::add_guard(Constraint const &cc)
-{
+bool DualTransitionRelation::add_guard(Constraint const& cc) {
     Linear_Expression ll(0);
     int i, j;
 
@@ -37,7 +36,8 @@ bool DualTransitionRelation::add_guard(Constraint const &cc)
 
     for (i = 0; i < n_ + 1; ++i) {
         flag = handle_integers(cc.coefficient(Variable(i + n_ + 1)), j);
-        if (!flag || j != 0) return false;
+        if (!flag || j != 0)
+            return false;
         ll += cc.coefficient(Variable(i)) * Variable(i);
     }
     ll += cc.inhomogeneous_term();
@@ -56,8 +56,7 @@ bool DualTransitionRelation::add_guard(Constraint const &cc)
     return true;
 }
 
-void DualTransitionRelation::split_relation()
-{
+void DualTransitionRelation::split_relation() {
     // split unsat_ into guard_ and update_
 
     // guard_ and update_ should be initialized to n_+1 and 2n_+1
@@ -72,7 +71,8 @@ void DualTransitionRelation::split_relation()
     Constraint_System::const_iterator vi;
 
     for (vi = cs.begin(); vi != cs.end(); ++vi) {
-        if (!add_guard(*vi)) update_.add_constraint((*vi));
+        if (!add_guard(*vi))
+            update_.add_constraint((*vi));
     }
 
     // DEBUG INFO
@@ -80,8 +80,7 @@ void DualTransitionRelation::split_relation()
     return;
 }
 
-void DualTransitionRelation::manufacture_dual_var_info()
-{
+void DualTransitionRelation::manufacture_dual_var_info() {
     int i;
     fd_ = new var_info();
     for (i = 0; i < n_; ++i) {
@@ -101,11 +100,11 @@ void DualTransitionRelation::manufacture_dual_var_info()
     fd_->insert("d_1");
 }
 
-DualTransitionRelation::DualTransitionRelation(var_info *f,
-                                               C_Polyhedron const &unsat,
-                                               C_Polyhedron const &sat,
-                                               Location *preloc,
-                                               Location *postloc)
+DualTransitionRelation::DualTransitionRelation(var_info* f,
+                                               C_Polyhedron const& unsat,
+                                               C_Polyhedron const& sat,
+                                               Location* preloc,
+                                               Location* postloc)
     : n_(f->get_dimension()),
       f_(f),
       sat_(sat),
@@ -114,8 +113,7 @@ DualTransitionRelation::DualTransitionRelation(var_info *f,
       update_(2 * n_ + 2, UNIVERSE),
       preloc_(preloc),
       postloc_(postloc),
-      fired_(false)
-{
+      fired_(false) {
     // manufacture a dual var info
     manufacture_dual_var_info();
     // perform a class invariant check
@@ -125,14 +123,12 @@ DualTransitionRelation::DualTransitionRelation(var_info *f,
     split_relation();
 }
 
-bool DualTransitionRelation::OK__()
-{
+bool DualTransitionRelation::OK__() {
     return (sat_.space_dimension() == (unsigned)(2 * (n_ + 1))) &&
            (unsat_.space_dimension() == (unsigned)((n_ + 1)));
 }
 
-void DualTransitionRelation::print(ostream &out) const
-{
+void DualTransitionRelation::print(ostream& out) const {
     // print the contents
 
     out << "Dual Transition Relation : " << preloc_->get_name() << " --->"
@@ -145,9 +141,8 @@ void DualTransitionRelation::print(ostream &out) const
     out << "]] " << endl;
 }
 
-void DualTransitionRelation::compute_post_new(C_Polyhedron const &what,
-                                              C_Polyhedron &result)
-{
+void DualTransitionRelation::compute_post_new(C_Polyhedron const& what,
+                                              C_Polyhedron& result) {
     PRECONDITION(
         what.space_dimension() == (unsigned)(n_ + 1),
         "DualTransitionRelation::compute_post - input's space dimension "
@@ -201,16 +196,16 @@ void DualTransitionRelation::compute_post_new(C_Polyhedron const &what,
     }
 
     Variables_Set vs;
-    for (int i = 0; i <= n_; ++i) vs.insert(Variable(i));
+    for (int i = 0; i <= n_; ++i)
+        vs.insert(Variable(i));
 
     result.remove_space_dimensions(vs);
 
     return;  // done
 }
 
-void DualTransitionRelation::compute_post(C_Polyhedron const &what,
-                                          C_Polyhedron &result) const
-{
+void DualTransitionRelation::compute_post(C_Polyhedron const& what,
+                                          C_Polyhedron& result) const {
     PRECONDITION(
         what.space_dimension() == (unsigned)(n_ + 1),
         "DualTransitionRelation::compute_post - input's space dimension "
@@ -240,15 +235,15 @@ void DualTransitionRelation::compute_post(C_Polyhedron const &what,
     result.intersection_assign(sat_);
 
     Variables_Set vs;
-    for (int i = 0; i <= n_; ++i) vs.insert(Variable(i));
+    for (int i = 0; i <= n_; ++i)
+        vs.insert(Variable(i));
 
     result.remove_space_dimensions(vs);
 
     return;  // done
 }
 
-ostream &operator<<(ostream &out, DualTransitionRelation const &dtr)
-{
+ostream& operator<<(ostream& out, DualTransitionRelation const& dtr) {
     dtr.print(out);
     return out;
 }

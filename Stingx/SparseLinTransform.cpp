@@ -27,8 +27,7 @@ using namespace std;
 using namespace Parma_Polyhedra_Library;
 using namespace Parma_Polyhedra_Library::IO_Operators;
 
-void SparseLinTransform::normal_form_assign(SparseLinExpr &s) const
-{
+void SparseLinTransform::normal_form_assign(SparseLinExpr& s) const {
     // first traverse s from back and look at the first non-zero coefficient
 
     PRECONDITION((s.get_dim() == _n),
@@ -42,12 +41,13 @@ void SparseLinTransform::normal_form_assign(SparseLinExpr &s) const
     for (vi = _m.begin(); vi != _m.end(); ++vi) {
         i = (*vi).first;  // obtain the index.
 
-        if (s(i) == 0) continue;  // nothing to be done in that case
+        if (s(i) == 0)
+            continue;  // nothing to be done in that case
 
         // if s(i) is not zero
 
         // first take the Corresponding transformation
-        SparseLinExpr const &st = (*vi).second;
+        SparseLinExpr const& st = (*vi).second;
 
         // Transformation needs to be multiplied by factor= -s(i)
 
@@ -57,7 +57,7 @@ void SparseLinTransform::normal_form_assign(SparseLinExpr &s) const
 
         // now perform  with s(i) -= factor * st;
 
-        IRMap const &irm = st.get_map();  // the map
+        IRMap const& irm = st.get_map();  // the map
         IRMap::const_iterator vj;         // an iterator for the map
 
         for (vj = irm.begin(); vj != irm.end(); ++vj) {
@@ -81,24 +81,24 @@ void SparseLinTransform::normal_form_assign(SparseLinExpr &s) const
     return;
 }
 
-SparseLinExpr SparseLinTransform::normal_form(SparseLinExpr const &s) const
-{
+SparseLinExpr SparseLinTransform::normal_form(SparseLinExpr const& s) const {
     SparseLinExpr s1(s);
     normal_form_assign(s1);
 
     return s1;
 }
 
-void SparseLinTransform::add_expression(SparseLinExpr const &s)
-{
-    if (s.is_zero()) return;  // I cannot add zero expressions
+void SparseLinTransform::add_expression(SparseLinExpr const& s) {
+    if (s.is_zero())
+        return;  // I cannot add zero expressions
 
     SparseLinExpr s1(s);
     normal_form_assign(s1);  // convert s1 into a normal form
 
     // now obtain the largest non-zero coefficient in s1
 
-    if (s1.is_zero()) return;  // if s1 is implied then return
+    if (s1.is_zero())
+        return;  // if s1 is implied then return
 
     int i = s1.obtain_largest_coefficient();
     // is i already a dependent variable?
