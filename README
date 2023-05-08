@@ -10,13 +10,12 @@
 
 ### **Important Environment**
 
-我们使用以下指令来为我们的环境配置必要的库文件。注意，在运行命令之前，请确保之前未安装过相关版本的clang[防止版本冲突，但实际上估计影响不大]，本次项目使用clang-17,llvm-17，请注意命令使用的顺序不要随意改变。
+我们使用以下指令来为我们的环境配置必要的库文件。注意，在运行命令之前，请确保之前未安装过相关版本的clang[防止版本冲突，但实际上估计影响不大]，本次项目使用clang-10,llvm-10，请注意命令使用的顺序不要随意改变。
 
 方法适用:Vmware WorkStation Pro (Newest Version) + Ubuntu20.04LTS
 
 ```
-wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key 
-sudo apt-key add -
+wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
 sudo add-apt-repository "deb http://apt.llvm.org/focal/ llvm-toolchain-focal main"
 sudo apt-get update
 sudo apt install libclang-10-dev
