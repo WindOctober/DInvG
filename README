@@ -19,7 +19,7 @@ wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key
 sudo apt-key add -
 sudo add-apt-repository "deb http://apt.llvm.org/focal/ llvm-toolchain-focal main"
 sudo apt-get update
-sudo apt install libclang-dev
+sudo apt install libclang-10-dev
 sudo apt-get install clang-10
 sudo apt-get install llvm-10
 ```
