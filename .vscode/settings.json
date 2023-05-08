@@ -60,6 +60,15 @@
         "cfenv": "c",
         "cinttypes": "c",
         "typeinfo": "c",
-        "variant": "c"
+        "variant": "c",
+        "strstream": "cpp",
+        "bitset": "cpp",
+        "chrono": "cpp",
+        "complex": "cpp",
+        "condition_variable": "cpp",
+        "ratio": "cpp",
+        "mutex": "cpp",
+        "thread": "cpp",
+        "typeindex": "cpp"
     }
 }

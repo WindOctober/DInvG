@@ -41,7 +41,7 @@ public:
             if (!cur) return;
             const clang::Stmt *terminator;
             terminator = cur->getTerminator().getStmt();
-            
+            // outs()<<"\t\t\tStatement type:"<<terminator->getStmtClass()<<"\n";
             if (Visited.count(cur)) continue;
             Visited.insert(cur);
             outs()<<"\tBasicBlock:"<<cur->getBlockID()<<"\n";
@@ -61,7 +61,7 @@ public:
                 
                 if (terminator){
                     string condition;
-                    llvm::raw_string_ostream ostream(condition);
+                    raw_string_ostream ostream(condition);
                     terminator->printPretty(ostream,nullptr,pp);
                     ostream.flush();
                     outs()<<"\t\t\tConditional jump with condition: "<<terminator->getStmtClassName()<<"\n";
@@ -187,11 +187,28 @@ protected:
     }
 };
 
+
 static cl::OptionCategory ToolCategory("CFG Tool Options");
+cl::opt<string> InputFilename(cl::Positional, cl::desc("<input file>"), cl::Required,cl::cat(ToolCategory));
+cl::opt<bool> EnableFeature("enable-feature", cl::desc("Enable specific feature"), cl::init(false));
 
 int main(int argc,const char **argv) {
-    auto optionsParser=CommonOptionsParser::create(argc,argv,ToolCategory);
+    cl::HideUnrelatedOptions(ToolCategory);
+    cl::ParseCommandLineOptions(argc, argv);
 
-    ClangTool tool(optionsParser->getCompilations(),optionsParser->getSourcePathList());
+    vector<string> sources;
+    sources.push_back(InputFilename.getValue());
+
+    string errorMsg;
+    int remainingArgc = argc;
+    auto compilationDB = FixedCompilationDatabase::loadFromCommandLine(remainingArgc, argv, errorMsg);
+    if (!compilationDB) {
+        errs() << "Warning: Using default compilation options.\n";
+        SmallString<256> currentDir;
+        sys::fs::current_path(currentDir);
+        compilationDB = std::make_unique<FixedCompilationDatabase>(Twine(currentDir), ArrayRef<std::string>());
+    }
+
+    ClangTool tool(*compilationDB, sources);
     return tool.run(newFrontendActionFactory<CFGFrontendAction>().get());
 }
