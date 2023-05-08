@@ -20,6 +20,6 @@ sudo apt-key add -
 sudo add-apt-repository "deb http://apt.llvm.org/focal/ llvm-toolchain-focal main"
 sudo apt-get update
 sudo apt install libclang-dev
-sudo apt-get install clang
-sudo apt-get install llvm
+sudo apt-get install clang-10
+sudo apt-get install llvm-10
 ```
