@@ -30,7 +30,8 @@ endforeach()
 
 #Adjust LLVM_CONFIG
 
-set(LLVM_CONFIG "llvm-config" CACHE PATH "Path to llvm-config executable")
+set(LLVM_CONFIG "llvm-config-10" CACHE PATH "Path to llvm-config-10 executable")
+message(${LLVM_CONFIG})
 find_program(LLVM_CONFIG_EXECUTABLE ${LLVM_CONFIG})
 if(NOT LLVM_CONFIG_EXECUTABLE)
   message(FATAL_ERROR "llvm-config executable not found. Set LLVM_CONFIG to the path to llvm-config executable.")
@@ -51,7 +52,6 @@ set(CLANG_LIBS
   -lclangFrontend
   -lclangFrontendTool
   -lclangLex
-  -lclangSupport
   -lclangParse
   -lclangSema
   -lclangEdit
@@ -64,7 +64,7 @@ set(CLANG_LIBS
   -lclangSerialization
   -lclangToolingCore
   -lclangTooling
-  -lLLVM-17
+  -lLLVM-10
   -lLLVMSupport
   -Wl,--end-group
 )
