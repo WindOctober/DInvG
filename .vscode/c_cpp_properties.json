@@ -4,6 +4,7 @@
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/**",
+                "${workspaceFolder}/Frontend",
                 "/usr/lib/llvm-10/include"
             ],
             "defines": [],

@@ -70,5 +70,6 @@
         "mutex": "cpp",
         "thread": "cpp",
         "typeindex": "cpp"
-    }
+    },
+    "C_Cpp.errorSquiggles": "disabled"
 }

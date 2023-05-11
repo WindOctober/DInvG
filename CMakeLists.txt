@@ -1,14 +1,16 @@
 cmake_minimum_required(VERSION 3.16.3)
 
 project(PowerInv)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE INTERNAL "")
+set(COPY_COMPILE_COMMANDS "${CMAKE_SOURCE_DIR}/compile_commands.json")
+
 add_executable(Inv ${CMAKE_SOURCE_DIR}/main.cpp)
 set(EXECUTABLE_OUTPUT_PATH "${CMAKE_SOURCE_DIR}")
 include_directories(${CMAKE_SOURCE_DIR})
-include_directories(${CMAKE_SOURCE_DIR}/src/)
 
+file(MAKE_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
 
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE INTERNAL "")
-set(COPY_COMPILE_COMMANDS "${CMAKE_SOURCE_DIR}/compile_commands.json")
 
 add_custom_command(
     OUTPUT ${COPY_COMPILE_COMMANDS}
@@ -28,10 +30,15 @@ foreach(target Inv) # 替换为您的项目名称或实际目标列表
     )
 endforeach()
 
+#Frontend commands
+
+include_directories(${CMAKE_SOURCE_DIR}/Frontend)
+target_link_libraries(Inv Frontend)
+add_subdirectory(Frontend)
+
 #Adjust LLVM_CONFIG
 
 set(LLVM_CONFIG "llvm-config-10" CACHE PATH "Path to llvm-config-10 executable")
-message(${LLVM_CONFIG})
 find_program(LLVM_CONFIG_EXECUTABLE ${LLVM_CONFIG})
 if(NOT LLVM_CONFIG_EXECUTABLE)
   message(FATAL_ERROR "llvm-config executable not found. Set LLVM_CONFIG to the path to llvm-config executable.")
@@ -82,6 +89,7 @@ string(REPLACE "-L" "" LLVM_LD_PATH ${LLVM_LD_FLAGS})
 link_directories(${LLVM_LD_PATH})
 include_directories(${LLVM_INCLUDE_FLAGS})
 target_link_libraries(Inv ${CLANG_LIBS})
+
 
 add_subdirectory(Stingx)
 target_link_libraries(Inv lstingx)
