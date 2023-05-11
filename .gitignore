@@ -2,9 +2,12 @@ build/*
 Inv
 compile_commands.json
 Bak/*
+bin/*
 lstingX
-origin-lstingx
-# *.sh
+Result/*
+origin-lstingX
+*.sh
+.vscode/*
 
 # Prerequisites
 *.d
