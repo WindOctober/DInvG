@@ -3,8 +3,8 @@ Inv
 compile_commands.json
 Bak/*
 lstingX
-origin-lstingx
-# *.sh
+origin-lstingX
+*.sh
 
 # Prerequisites
 *.d
