@@ -13,13 +13,14 @@ void CFGVisitor::TraverseCFG(unique_ptr<CFG>& cfg){
         const CFGBlock* cur=BlockStack.top();
         BlockStack.pop();
         if (!cur) return;
-        const clang::Stmt *terminator;
-        terminator = cur->getTerminator().getStmt();
-        // outs()<<"\t\t\tStatement type:"<<terminator->getStmtClass()<<"\n";
         if (Visited.count(cur)) continue;
         Visited.insert(cur);
+
+
+        const clang::Stmt *terminator;
+        terminator = cur->getTerminator().getStmt();
         outs()<<"\tBasicBlock:"<<cur->getBlockID()<<"\n";
-    
+        
         if (!cur->empty()){
             for (const auto &element : *cur) {
                 if (const Stmt *stmt = element.castAs<CFGStmt>().getStmt()) {
