@@ -29,7 +29,7 @@ public:
         exit(-1);
     }
 
-    void PrintCFG(unique_ptr<CFG>& cfg){
+    void TraverseCFG(unique_ptr<CFG>& cfg){
         stack<const CFGBlock*> BlockStack;
         set<const CFGBlock*> Visited;
         BlockStack.push(&cfg->getEntry());
@@ -140,7 +140,7 @@ public:
             Visited_Functions.insert(callee->getNameAsString());
             auto cfg=CFG::buildCFG(callee,callee->getBody(),context,CFG::BuildOptions());
             outs()<<"CalleeFunction:"<<callee->getNameAsString()<<"\n";
-            PrintCFG(cfg);
+            TraverseCFG(cfg);
         }
         return true;
     }
@@ -154,7 +154,7 @@ public:
         if (func->getNameAsString()=="main" || Main_Functions.count("main")==0) {
             auto cfg=CFG::buildCFG(func,func->getBody(),context,CFG::BuildOptions());
             outs()<<"Function:"<< func->getNameAsString()<<"\n";
-            PrintCFG(cfg);
+            TraverseCFG(cfg);
         }
         return true;
     }
@@ -203,10 +203,10 @@ int main(int argc,const char **argv) {
     int remainingArgc = argc;
     auto compilationDB = FixedCompilationDatabase::loadFromCommandLine(remainingArgc, argv, errorMsg);
     if (!compilationDB) {
-        errs() << "Warning: Using default compilation options.\n";
+        outs() << "[info] Using default compilation options.\n";
         SmallString<256> currentDir;
         sys::fs::current_path(currentDir);
-        compilationDB = std::make_unique<FixedCompilationDatabase>(Twine(currentDir), ArrayRef<std::string>());
+        compilationDB = make_unique<FixedCompilationDatabase>(Twine(currentDir), ArrayRef<string>());
     }
 
     ClangTool tool(*compilationDB, sources);
