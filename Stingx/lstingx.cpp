@@ -7,6 +7,7 @@
 #include "InvariantMap.h"
 #include "Location.h"
 #include "PolyUtils.h"
+#include<regex>
 #include "Propagation.h"
 #include "System.h"
 #include "Timer.h"
@@ -927,18 +928,218 @@ void Initial_with_input() {
     return;
 }
 
+Constraint* read_constraint(string line){
+    regex term_pattern(R"(([-+]?\d*\s*\*\s*)?[-+]?\w+|[-+]?\d+)");
+    sregex_iterator it(line.begin(), line.end(), term_pattern);
+    sregex_iterator end;
+    while (it != end) {
+        string term = it->str();
+        
+        ++it;
+    }
+}
+
 void Scan_Input_2(int argc, char* argv[]) {
     cout << endl << "- Parsing Input Doing...";
 
     cout << endl << "Get Input Variable...";
-    
+    smatch match;
     string line;
-    int stage=0; //Variable Reading.
+    int stage=-1; //Variable Reading.
+    f=new var_info();
+    regex trans_pattern(R"(Transition\s+(\w+):\s*(\w+)\s*,\s*(\w+)\s*,)");
+    regex loc_pattern(R"(Location\s+(\w+))");
+    regex term_pattern(R"(\d+\s*\*\s*\w+|\w+|\d+|[+-]|(<=|=)|\s*)");
+    regex coef_var_pattern(R"((\d+)\s*\*\s*(\w+))");
+    regex var_pattern(R"(\w+)");
+    regex coef_pattern(R"(\d+)");
+    regex sign_pattern(R"([+-])");
+    regex equality_pattern(R"(<=|=)");
+    regex empty_pattern(R"(\s*)");
+    Location *new_location=NULL;
+    C_Polyhedron* new_poly=NULL;
+    TransitionRelation* new_transition=NULL;
     while(getline(cin,line)){
         istringstream iss(line);
         string token;
-        
+        if (stage==-1 || stage==0){
+            while (iss>>token){
+                if (token=="variable" || token=="Variable"){
+                    stage=0;
+                    continue;
+                }
+                else if (stage==1){
+                    cout<<"[warning] Must Start by variable or Varible."<<endl;
+                    exit(1);
+                }
+                if (token=="["){
+                    if (stage==-1){
+                        cout<<"[warning] Missing variable, program execution aborted."<<endl;
+                        exit(1);
+                    }
+                    else{
+                        stage=11;
+                        continue;
+                    }
+                }
+                if (token=="]"){
+                    if (stage==0){
+                        stage=1;
+                        break;
+                    }
+                    else{
+                        cout<<"[warning] Variable stage is ending, program execution aborted."<<endl;
+                        exit(1);
+                    }
+                }
+                f->search_and_insert(token.c_str());
+            }
+            continue;
+        }
+        if (stage==1 || stage==2){
+            if (line.find("end")!=string::npos){
+                if (new_transition && new_poly){
+                    new_transition->set_relation(new_poly);
+                }
+                return;
+            }
+            if (regex_search(line,match,loc_pattern)) {
+                string loc_name = match[1];
+                if (!search_location((char*)token.c_str(),&new_location)){
+                    new_location=new Location(f->get_dimension(),f,fd,fm,token);
+                    loclist->push_back(new_location);
+                }
+                else{
+                    cerr<<"[ERROR] Multi-defined Location."<<endl;
+                    exit(1);
+                }
+            }
+            else if (regex_search(line,match,trans_pattern)){
+                stage=2;
+                if (new_poly && new_location){
+                    new_location->set_polyhedron(new_poly);
+                    new_location=NULL;
+                }
+                if (new_poly && new_transition){
+                    new_transition->set_relation(new_poly);
+                    new_transition=NULL;
+                }
+                string transition_name=match[1];
+                string loc_name_start=match[2];
+                string loc_name_end=match[3];
+                Location* loc_start;
+                Location* loc_end;
+                if (!search_location((char *)loc_name_start.c_str(),&loc_start)){
+                    cerr<<"[ERROR] Transition use undefined location"<<endl;
+                    exit(1);
+                }
+                if (!search_location((char *)loc_name_end.c_str(),&loc_end)){
+                    cerr<<"[ERROR] Transition use undefined location"<<endl;
+                    exit(1);
+                }
+                if (!search_transition_relation((char*)transition_name.c_str(),&new_transition)){
+                    new_transition=new TransitionRelation(f->get_dimension(),f,fd,fm,transition_name);
+                    trlist->push_back(new_transition);
+                }
+                else{
+                    cerr<<"[ERROR] Multi-defined Transition."<<endl;
+                    exit(1);
+                }
+                new_transition->set_locs(loc_start,loc_end);
+            }
+            else{
+                if (!new_poly){
+                    if (stage==1)
+                        new_poly=new C_Polyhedron(f->get_dimension(),UNIVERSE);
+                    else
+                        new_poly=new C_Polyhedron(2*f->get_dimension(),UNIVERSE);
+                }
+                sregex_iterator it(line.begin(),line.end(),term_pattern);
+                sregex_iterator end;
+                if (it==end){
+                    cerr<<"[ERROR] No Matched Pattern, please check your input."<<endl;
+                    exit(1);
+                }
+                bool is_negative=false;
+                bool is_rhs=false;
+                Linear_Expression* le=new Linear_Expression();
+                Linear_Expression* right=new Linear_Expression();
+                int op=0;
+                //0 -> =; 1 -> <=;
+                while(it!=end){
+                    string term=it->str();
+                    if (regex_search(term,match,coef_var_pattern)){
+                        int coef=stoi(match[1]);
+                        if (is_negative) coef=-coef;
+                        string var=match[2];
+                        int index=f->search(var.c_str());
+                        if (stage==2 && var[0]=='\'')
+                            index+=f->get_dimension();
+                        Linear_Expression* res=new Linear_Expression(coef*Variable(index));
+                        if (!is_rhs)
+                            (*le)+=(*res);
+                        else
+                            (*right)+=(*res);
+                        delete(res);
+                    }
+                    else if (regex_search(term,match,var_pattern)){
+                        int coef=1;
+                        if (is_negative) coef=-coef;
+                        string var=match[1];
+                        int index=f->search(var.c_str());
+                        if (stage==2 && var[0]=='\'')
+                            index+=f->get_dimension();
+                        Linear_Expression* res=new Linear_Expression(coef*Variable(index));
+                        if (!is_rhs)
+                            (*le)+=(*res);
+                        else
+                            (*right)+=(*res);
+                        delete(res);
+                    }
+                    else if (regex_search(term,match,coef_pattern)){
+                        int coef=stoi(match[1]);
+                        if (is_negative) coef=-coef;
+                        Linear_Expression* res=new Linear_Expression(coef);
+                        if (!is_rhs)
+                            (*le)+=(*res);
+                        else
+                            (*right)+=(*res);
+                        delete(res);
+                    }
+                    else if (regex_search(term,match,sign_pattern)){
+                        if (match[1]=="-") is_negative=true;
+                        else is_negative=false;
+                    }
+                    else if (regex_search(term,match,equality_pattern)){
+                        if (match[1]=='<=') op=1;
+                        else if (match[2]=='>=') op=2;
+                        else op=0;
+                        is_rhs=true;
+                    }
+                    else if (regex_search(term,match,empty_pattern)){
+                        
+                    }
+                    else{
+                        cerr<<"[ERROR] No Matched Pattern, please check your input."<<endl;
+                        exit(1);
+                    }
+                }
+                Constraint* new_constraint;
+                if (op==2){
+                    new_constraint = new Constraint((*le) >= (*right));
+                }
+                else if (op==1){
+                    new_constraint = new Constraint((*le) <= (*right));
+                }
+                else{
+                    new_constraint = new Constraint((*le) == (*right));
+                }
+            }
+            continue;
+        }
     }
+    dimension=f->get_dimension();
+    exit(0);
 }
 
 int main(int argc, char* argv[]) {
