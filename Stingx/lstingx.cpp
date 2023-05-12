@@ -1,7 +1,7 @@
 
 #include <iostream>
-#include <vector>
 #include <string>
+#include <vector>
 #include "DualInvariantMap.h"
 #include "Elimination.h"
 #include "InvariantMap.h"
@@ -178,7 +178,7 @@ void do_some_propagation() {
     }
 }
 
-Location * get_location(char* name) {
+Location* get_location(char* name) {
     vector<Location*>::iterator vi;
     string nstr(name);
     for (vi = loclist->begin(); vi < loclist->end(); vi++) {
@@ -190,30 +190,30 @@ Location * get_location(char* name) {
     exit(1);
 }
 
-bool search_location( char * name, Location ** what){
-   vector<Location*>::iterator vi;
-   string nstr(name);
-   for(vi=loclist->begin();vi< loclist->end();vi++){
-      if ((*vi)->matches(nstr)){
-         *what=(*vi);
-         return true;
-      }
-   }
+bool search_location(char* name, Location** what) {
+    vector<Location*>::iterator vi;
+    string nstr(name);
+    for (vi = loclist->begin(); vi < loclist->end(); vi++) {
+        if ((*vi)->matches(nstr)) {
+            *what = (*vi);
+            return true;
+        }
+    }
 
-   return false;
+    return false;
 }
 
-bool search_transition_relation( char * name, TransitionRelation ** what){
-   vector<TransitionRelation*>::iterator vi;
-   string nstr(name);
-   for(vi=trlist->begin();vi< trlist->end();vi++){
-      if ((*vi)->matches(nstr)){
-         *what=(*vi);
-         return true;
-      }
-   }
-   
-   return false;
+bool search_transition_relation(char* name, TransitionRelation** what) {
+    vector<TransitionRelation*>::iterator vi;
+    string nstr(name);
+    for (vi = trlist->begin(); vi < trlist->end(); vi++) {
+        if ((*vi)->matches(nstr)) {
+            *what = (*vi);
+            return true;
+        }
+    }
+
+    return false;
 }
 
 int parse_cmd_line(char* x) {
@@ -327,7 +327,6 @@ void collect_invariants_for_one_location_by_eliminating(int target_index,
 
     return;
 }
-
 
 void dfs_sequences_generation_traverse(
     vector<vector<vector<vector<int>>>>& target_sequences,
@@ -811,7 +810,6 @@ vector<int> get_intertid_from_prelid(int prelid) {
     return tid;
 }
 
-
 // return the transition-index
 // which is start from this pre-location-index except intra-transition
 // and except someother transition-index
@@ -929,81 +927,24 @@ void Initial_with_input() {
     return;
 }
 
-void Scan_Input_2(int argc, char *argv[]) {
+void Scan_Input_2(int argc, char* argv[]) {
     cout << endl << "- Parsing Input Doing...";
+
+    cout << endl << "Get Input Variable...";
     
-    char line[100];
-    char *token, *token1, *token2;
-    f = new var_info();
-    Location *loc;
-    TransitionRelation *tr;
-
-    // read each line
-    while (fgets(line, sizeof(line), stdin)) {
-
-        // input variable
-        if (strstr(line, "variable [ ") != NULL) {
-            // extract variables
-            token = strtok(line, " ");
-            while (token != NULL) {
-                token = strtok(NULL, " ");
-                if (token != NULL && token[0] != '[' && token[0] != ']') {
-                    f->search_and_insert(token);
-                }
-            }
-            dimension = f->get_dimension();
-        }
-
-        // input Location
-        if (strstr(line, "Location ") != NULL) {
-            token = strtok(line, " \n");
-            while (token != NULL) {
-                token = strtok(NULL, " \n");
-                if (token != NULL) {
-                    // search loclist for the identifier
-                    Location *what;
-                    if (!search_location(token, &what)){
-                        loc = new Location(dimension,f,fd,fm,token);
-                        loclist->push_back(loc);
-                    }
-                    else {
-                        cout << endl<< "Error: Location " << token << " already exists.";
-                        loc = what; // set loc to the existing location, but it is not added to loclist
-                    }
-                }
-            }
-        }
-
-        // input transition
-        // if (strstr(line, "transition ") != NULL) {
-        //     token = strtok(line, " :,\n");
-        //     token = strtok(NULL, " :,\n");
-        //     TransitionRelation *what;
-        //     if (!search_transition_relation(token, &what)){
-        //         tr = new TransitionRelation(dimension,f,fd,fm,token);
-        //         trlist->push_back(tr);
-        //     }
-        //     else {
-        //         cout << endl<< "Error: Transition " << token << " already exists.";
-        //         tr = what; // set tr to the existing transition, but it is not added to trlist
-        //     }
-        //     // token = strtok(NULL, " :,\n");
-        //     // token1 = token;
-        //     // token = strtok(NULL, " :,\n");
-        //     // token2 = token;
-        //     // tr->set_locs(get_location(token1), get_location(token2));
-        // }
+    string line;
+    int stage=0; //Variable Reading.
+    while(getline(cin,line)){
+        istringstream iss(line);
+        string token;
+        
     }
-
-    cout << endl << "- Parsing Input Done...";
 }
-
 
 int main(int argc, char* argv[]) {
     ios::sync_with_stdio(false);
     total_timer.restart();
     Initialize_before_Parser();
-    //Scan_Input();
     Scan_Input_2(argc, argv);
     Initial_with_input();
     add_preloc_invariants_to_transitions();
@@ -1096,7 +1037,7 @@ int main(int argc, char* argv[]) {
             }
 
             single_weave_count = 0;
-            single_collect_time = 0;    
+            single_collect_time = 0;
             single_post_prune_bang_count = 0;
             single_dfs_sequences_traverse_timer.restart();
 

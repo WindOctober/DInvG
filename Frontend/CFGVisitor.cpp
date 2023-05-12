@@ -76,7 +76,7 @@ void CFGVisitor::TraverseCFG(unique_ptr<CFG>& cfg,unique_ptr<DExpr>& expr){
                 outs()<<"\t\t\tConditional jump with condition: "<<terminator->getStmtClassName()<<"\n";
             }
         }
-        for(auto it=cur->succ_begin();it && it!=cur->succ_end();it++){
+        for(auto it=cur->succ_begin();it!=cur->succ_end();it++){
             const CFGBlock* succ=*it;
             BlockStack.push(*it);
             if (!terminator)
