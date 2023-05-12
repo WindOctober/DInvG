@@ -5,28 +5,31 @@
 #include"clang/AST/RecursiveASTVisitor.h"
 #include"clang/Analysis/CFG.h"
 #include<vector>
+#include<string>
 using namespace clang;
-
+using namespace std;
 enum SExprType{
     
+};
+struct Term{
+    bool primed=false;
+    string var;  
+};
+
+struct SubExpr{
+    enum SExprType type;
+    vector<Term> terms;
 };
 
 class DExpr{
 public:
     DExpr();
     DExpr(Stmt init);
-    
-private:
-    struct Term{
-        bool primed=false;
-        string var;  
-    };
-    struct SubExpr{
-        enum SExprType type;
-        vector<Term> terms;
-    };
     vector<vector<struct SubExpr>> Clauses;
-    
+    DExpr MergeExpr(unique_ptr<DExpr>& expr);
+
+private:
+
 };
 
 #endif
