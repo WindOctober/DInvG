@@ -1,0 +1,30 @@
+variable [ x
+           y ]
+
+Location l1 
+  x = -10
+  y = -10
+Location le 
+transition t1_1: l1,l1,
+  x + y <= -2 
+  x >= 1 
+  'x = x + 1 
+  'x + 'y <= -2
+  'x >= 1 
+transition t2_2: l2,l2,
+  x + y <= -2 
+  x <= 0 
+  'y = y + 1 
+  'x + 'y <= -2 
+  'x <= 0 
+transition t1_e: l1,le,
+  x + y <= -2 
+  x >= 1 
+  'x = x + 1 
+  'x + 'y >= -1 
+transition t2_e: l2,le,
+  x + y <= -2 
+  x <= 0 
+  'y = y + 1 
+  'x + 'y >= -1 
+end

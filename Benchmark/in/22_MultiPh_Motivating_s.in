@@ -1,0 +1,68 @@
+variable [x x0
+          y y0
+          z z0]
+
+Location b1
+    x=x0
+    y=y0
+    z=z0
+
+Location b2
+
+Location b3
+
+Transition t1_1: b1,
+    1000 *  y >= x+1
+    1000 * 'y >='x+1
+    'z=z
+    'x=x+1
+    'y=y
+    'x0=x0 
+    'y0=y0 
+    'z0=z0 
+
+Transition t2_2: b2,
+    1000 *  y <=  x
+    1000 *  y + 999 >=  x
+    1000 * 'y <= 'x
+    1000 * 'y + 999 >= 'x
+    'z=z+1
+    'x=x+1
+    'y=y
+    'x0=x0 
+    'y0=y0 
+    'z0=z0 
+
+Transition t3_3: b3,
+    1000 *  y + 1000 <=  x
+    1000 * 'y + 1000 <= 'x
+    'z=z
+    'x=x+1
+    'y=y
+    'x0=x0 
+    'y0=y0 
+    'z0=z0 
+
+Transition t1_2: b1,b2,
+    1000 *  y >= x + 1
+    1000 * 'y <= 'x
+    1000 * 'y + 999 >= 'x
+    'z=z
+    'x=x+1
+    'y=y
+    'x0=x0 
+    'y0=y0 
+    'z0=z0 
+
+Transition t2_3: b2,b3,
+    1000 * y <= x
+    1000 * y + 999 >= x 
+    1000 * 'y + 1000 <= 'x
+    'z=z+1
+    'x=x+1
+    'y=y
+    'x0=x0 
+    'y0=y0 
+    'z0=z0 
+
+end

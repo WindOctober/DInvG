@@ -85,7 +85,7 @@ string(REPLACE "\n" "" LLVM_INCLUDE_FLAGS ${LLVM_INCLUDE_FLAGS})
 string(REPLACE "\n" "" LLVM_CXX_FLAGS ${LLVM_CXX_FLAGS})
 string(REPLACE "\n" "" LLVM_LD_FLAGS ${LLVM_LD_FLAGS})
 string(REPLACE "-L" "" LLVM_LD_PATH ${LLVM_LD_FLAGS})
-
+set(LLVM_INCLUDE_FLAGS ${LLVM_INCLUDE_FLAGS} CACHE INTERNAL "LLVM include flags")
 link_directories(${LLVM_LD_PATH})
 include_directories(${LLVM_INCLUDE_FLAGS})
 target_link_libraries(Inv ${CLANG_LIBS})

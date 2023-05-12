@@ -1,0 +1,26 @@
+variable [ i i0
+           j j0 ]
+
+Location b1 
+  i = 0 
+  j = 0 
+invariant b1:
+  2 * j  >= 3*i
+  3 >= j
+  3 * i  >= j 
+
+Location le 
+
+transition t1_1: b1, 
+   i <= 2
+  'i <= 2
+  'i = i + 1
+  'j = 3
+
+transition t1_e: b1,le,
+   i <= 2 
+  'i >= 3
+  'i = i + 1
+  'j = 3
+
+end 
