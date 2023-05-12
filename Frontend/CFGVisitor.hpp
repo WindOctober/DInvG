@@ -11,7 +11,7 @@
 #include"clang/AST/RecursiveASTVisitor.h"
 #include"clang/Analysis/CFG.h"
 #include<stack>
-
+#include"DNFExpr.hpp"
 #include<set>
 #include<vector>
 
@@ -38,6 +38,7 @@ public:
     bool VisitFunctionDecl(FunctionDecl *func);
 
 private:
+    void TraverseCFG(unique_ptr<CFG>& cfg,unique_ptr<DExpr>& expression);
     ASTContext *context;
     PrintingPolicy pp;
     VisitorState VS;

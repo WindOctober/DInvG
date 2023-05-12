@@ -1,9 +1,45 @@
 #include "CFGVisitor.hpp"
-
+#include<iostream>
+#include<memory>
 set<string> Main_Functions;
 set<string> Visited_Functions;
 
+void printChildren(const clang::Stmt* stmt, int indent,PrintingPolicy pp) {
+    if (!stmt) {
+        return;
+    }
+    for (const auto* child : stmt->children()) {
+        if (!child) {
+            continue;
+        }
+
+        // Print indent
+        for (int i = 0; i < indent; ++i) {
+            outs() << "  ";
+        }
+
+        // Print the type and content of the child node
+        outs() << child->getStmtClassName() << ": ";
+        string str;
+        raw_string_ostream os(str);
+        child->printPretty(os, nullptr, pp);
+        os.flush();
+        outs()<<str<<"\n";
+        // Recursively print the children of the child node
+        printChildren(child, indent + 1,pp);
+    }
+}
 void CFGVisitor::TraverseCFG(unique_ptr<CFG>& cfg){
+    if(!cfg){
+        errs() << "[warning]:CFG is not initialized";
+        return;
+    }
+    unique_ptr<DExpr> expr=make_unique<DExpr>();
+    TraverseCFG(cfg,expr);
+    return;
+}
+
+void CFGVisitor::TraverseCFG(unique_ptr<CFG>& cfg,unique_ptr<DExpr>& expr){
     stack<const CFGBlock*> BlockStack;
     set<const CFGBlock*> Visited;
     BlockStack.push(&cfg->getEntry());
@@ -17,7 +53,7 @@ void CFGVisitor::TraverseCFG(unique_ptr<CFG>& cfg){
         Visited.insert(cur);
 
 
-        const clang::Stmt *terminator;
+        const Stmt *terminator;
         terminator = cur->getTerminator().getStmt();
         outs()<<"\tBasicBlock:"<<cur->getBlockID()<<"\n";
         
@@ -28,9 +64,7 @@ void CFGVisitor::TraverseCFG(unique_ptr<CFG>& cfg){
                     raw_string_ostream ostream(stmt_str);
                     stmt->printPretty(ostream,nullptr,pp);
                     ostream.flush();
-                    
-                    outs()<<"\t\t\tStatement type:"<<stmt->getStmtClassName()<<"\n";
-                    outs()<<"\t\t\tStatement:"<<stmt_str<<"\n";
+                    printChildren(stmt,0,pp);
                 }
             }
             
@@ -48,7 +82,7 @@ void CFGVisitor::TraverseCFG(unique_ptr<CFG>& cfg){
             if (!terminator)
                 outs()<<"\t\t\tsucc Basic Block is :"<<succ->getBlockID()<<"\n";
             else{
-                if (clang::isa<clang::ForStmt>(terminator)){
+                if (isa<ForStmt>(terminator)){
                     const CFGBlock* Body_Block=*it;
                     it++;
                     if (!(*it)){
@@ -65,7 +99,7 @@ void CFGVisitor::TraverseCFG(unique_ptr<CFG>& cfg){
                         BlockStack.push(Exit_Block);
                     }
                 }
-                else if (clang::isa<clang::IfStmt>(terminator)){
+                else if (isa<IfStmt>(terminator)){
                     if (!succ){
                         error_output("\tunspecified mode for if statement. As there exists no then branch of if statement.");
                     }
@@ -82,7 +116,7 @@ void CFGVisitor::TraverseCFG(unique_ptr<CFG>& cfg){
                         BlockStack.push(Else_Block);
                     }
                 }
-                else if (clang::isa<clang::WhileStmt>(terminator)){
+                else if (isa<WhileStmt>(terminator)){
                     const CFGBlock* Body_Block=*it;
                     it++;
                     if (!(*it)){
@@ -99,7 +133,7 @@ void CFGVisitor::TraverseCFG(unique_ptr<CFG>& cfg){
                         BlockStack.push(Exit_Block);
                     }
                 }
-                else if (clang::isa<clang::ReturnStmt>(terminator)){
+                else if (isa<ReturnStmt>(terminator)){
                     outs()<<"\t\t\tsucc Return Block is :"<<succ->getBlockID()<<"\n";
                 }
             }
@@ -120,6 +154,7 @@ bool CFGVisitor::VisitCallExpr(CallExpr *CE) {
     }
     return true;
 }
+
 bool CFGVisitor::VisitFunctionDecl(FunctionDecl *func) {
     SourceManager &SM = context->getSourceManager();
     if (!SM.isInMainFile(func->getLocation())) return true;
