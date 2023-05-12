@@ -998,39 +998,6 @@ void Scan_Input_2(int argc, char *argv[]) {
     cout << endl << "- Parsing Input Done...";
 }
 
-void Scan_Input() {
-    cout << endl << "- Parsing Input Doing...";
-
-    cout << endl
-         << "please input all the variable you want to use and end with 0:";
-    while (true) {
-        string name;
-        cin >> name;
-        if (name == "0")
-            break;
-        Vars.push_back(name);
-    }
-    cout << endl << "Finish parsing vars.";
-    cout << endl
-         << "please input all the Location you want to use and end with 0:";
-    while (true) {
-        int flag;
-        Location* loc;
-        string name;
-        cout<<endl<<"Does this is the initial Location with initial assertion? if input 1 then yes else input 2 then no else exit";
-        cin>>flag;
-        if (flag==1){
-            cin>>name;
-            cout<<endl<<"Location name is "<<name;
-            
-        }
-        else if (flag==2){
-            
-        }
-        else break;
-    }
-    cout << "Done!" << endl;
-}
 
 int main(int argc, char* argv[]) {
     ios::sync_with_stdio(false);
