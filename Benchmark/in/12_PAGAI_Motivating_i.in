@@ -1,0 +1,46 @@
+variable [ x 
+           p 
+           t ]
+
+Location b1 
+  x = 0 
+  p = 0 
+  t = 0 
+Location b2 
+Location le 
+
+transition t1_2: b1,b2, 
+   p = 0
+  'p = 1
+   t <= 99
+  't <= 99
+  'x = x + 2
+  'p = 1 - p 
+  't = t + 1
+
+transition t1_e: b1,le, 
+   p = 0
+        t <= 99
+100 <= 't
+  'x = x + 2
+  'p = 1 - p 
+  't = t + 1
+
+transition t2_1: b2,b1, 
+   p = 1
+  'p = 0
+   t <= 99
+  't <= 99
+  'x = x - 1 
+  'p = 1 - p 
+  't = t + 1 
+
+transition t2_e: b2,le, 
+   p = 1
+        t <= 99
+100 <= 't
+  'x = x - 1 
+  'p = 1 - p 
+  't = t + 1 
+
+end

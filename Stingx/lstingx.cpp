@@ -928,39 +928,29 @@ void Initial_with_input() {
     return;
 }
 
-Constraint* read_constraint(string line){
-    regex term_pattern(R"(([-+]?\d*\s*\*\s*)?[-+]?\w+|[-+]?\d+)");
-    sregex_iterator it(line.begin(), line.end(), term_pattern);
-    sregex_iterator end;
-    while (it != end) {
-        string term = it->str();
-        
-        ++it;
-    }
-}
-
-void Scan_Input_2(int argc, char* argv[]) {
+void Scan_Input_2() {
     cout << endl << "- Parsing Input Doing...";
 
-    cout << endl << "Get Input Variable...";
+    cout << endl << "Get Input Variable...\n";
     smatch match;
     string line;
     int stage=-1; //Variable Reading.
     f=new var_info();
     regex trans_pattern(R"(Transition\s+(\w+):\s*(\w+)\s*,\s*(\w+)\s*,)");
-    regex loc_pattern(R"(Location\s+(\w+))");
-    regex term_pattern(R"(\d+\s*\*\s*\w+|\w+|\d+|[+-]|(<=|=)|\s*)");
+    regex loc_pattern(R"(Location\s+(\w+)\s*)");
+    regex term_pattern(R"(\s*|[+-]|(<=|=)|\w+|\d+|\d+\s*\*\s*\w+)");
     regex coef_var_pattern(R"((\d+)\s*\*\s*(\w+))");
-    regex var_pattern(R"(\w+)");
-    regex coef_pattern(R"(\d+)");
-    regex sign_pattern(R"([+-])");
-    regex equality_pattern(R"(<=|=)");
-    regex empty_pattern(R"(\s*)");
+    regex var_pattern(R"((\w+)\s*)");
+    regex coef_pattern(R"((\d+)\s*)");
+    regex sign_pattern(R"(([+-])\s*)");
+    regex equality_pattern(R"((<=|=)\s*)");
+    regex empty_pattern(R"((\s*))");
     Location *new_location=NULL;
     C_Polyhedron* new_poly=NULL;
     TransitionRelation* new_transition=NULL;
-    while(getline(cin,line)){
+    while(getline(cin,line)){\
         istringstream iss(line);
+        if (line.length()==0) continue;
         string token;
         if (stage==-1 || stage==0){
             while (iss>>token){
@@ -968,7 +958,7 @@ void Scan_Input_2(int argc, char* argv[]) {
                     stage=0;
                     continue;
                 }
-                else if (stage==1){
+                else if (stage==-1){
                     cout<<"[warning] Must Start by variable or Varible."<<endl;
                     exit(1);
                 }
@@ -978,7 +968,6 @@ void Scan_Input_2(int argc, char* argv[]) {
                         exit(1);
                     }
                     else{
-                        stage=11;
                         continue;
                     }
                 }
@@ -992,6 +981,7 @@ void Scan_Input_2(int argc, char* argv[]) {
                         exit(1);
                     }
                 }
+                // cout<<token<<endl;
                 f->search_and_insert(token.c_str());
             }
             continue;
@@ -1003,10 +993,16 @@ void Scan_Input_2(int argc, char* argv[]) {
                 }
                 return;
             }
-            if (regex_search(line,match,loc_pattern)) {
+            if (regex_match(line,match,loc_pattern)) {
+                if (new_poly && new_location){
+                    new_location->set_polyhedron(new_poly);
+                }
+                new_poly=NULL;
+                new_location=NULL;
                 string loc_name = match[1];
-                if (!search_location((char*)token.c_str(),&new_location)){
-                    new_location=new Location(f->get_dimension(),f,fd,fm,token);
+                cout<<loc_name<<" "<<loc_name.length()<<" "<<token<<endl;
+                if (!search_location((char*)loc_name.c_str(),&new_location)){
+                    new_location=new Location(f->get_dimension(),f,fd,fm,loc_name);
                     loclist->push_back(new_location);
                 }
                 else{
@@ -1018,12 +1014,12 @@ void Scan_Input_2(int argc, char* argv[]) {
                 stage=2;
                 if (new_poly && new_location){
                     new_location->set_polyhedron(new_poly);
-                    new_location=NULL;
                 }
                 if (new_poly && new_transition){
                     new_transition->set_relation(new_poly);
-                    new_transition=NULL;
                 }
+                new_poly=NULL;
+                new_transition=NULL;
                 string transition_name=match[1];
                 string loc_name_start=match[2];
                 string loc_name_end=match[3];
@@ -1068,11 +1064,18 @@ void Scan_Input_2(int argc, char* argv[]) {
                 //0 -> =; 1 -> <=;
                 while(it!=end){
                     string term=it->str();
-                    if (regex_search(term,match,coef_var_pattern)){
+                    // cout<<line<<" split "<<term<<endl;
+                    // if (regex_match(term,match,var_pattern)) cout<<match[1]<<endl;
+                    // else cout<<0<<endl;
+                    if (regex_match(term,match,coef_var_pattern)){
                         int coef=stoi(match[1]);
                         if (is_negative) coef=-coef;
                         string var=match[2];
                         int index=f->search(var.c_str());
+                        if (index==VAR_NOT_FOUND){
+                            cout<<"[ERROR] Undefined variable "<<var<<endl;
+                            exit(1);
+                        }
                         if (stage==2 && var[0]=='\'')
                             index+=f->get_dimension();
                         Linear_Expression* res=new Linear_Expression(coef*Variable(index));
@@ -1082,22 +1085,8 @@ void Scan_Input_2(int argc, char* argv[]) {
                             (*right)+=(*res);
                         delete(res);
                     }
-                    else if (regex_search(term,match,var_pattern)){
-                        int coef=1;
-                        if (is_negative) coef=-coef;
-                        string var=match[1];
-                        int index=f->search(var.c_str());
-                        if (stage==2 && var[0]=='\'')
-                            index+=f->get_dimension();
-                        Linear_Expression* res=new Linear_Expression(coef*Variable(index));
-                        if (!is_rhs)
-                            (*le)+=(*res);
-                        else
-                            (*right)+=(*res);
-                        delete(res);
-                    }
-                    else if (regex_search(term,match,coef_pattern)){
-                        int coef=stoi(match[1]);
+                    else if (regex_match(term,match,coef_pattern)){
+                        int coef=stoi(match[0]);
                         if (is_negative) coef=-coef;
                         Linear_Expression* res=new Linear_Expression(coef);
                         if (!is_rhs)
@@ -1106,23 +1095,45 @@ void Scan_Input_2(int argc, char* argv[]) {
                             (*right)+=(*res);
                         delete(res);
                     }
-                    else if (regex_search(term,match,sign_pattern)){
-                        if (match[1]=="-") is_negative=true;
+                    else if (regex_match(term,match,var_pattern)){
+                        int coef=1;
+                        cout<<line<<" "<<term<<endl;
+                        if (is_negative) coef=-coef;
+                        string var=match[0];
+                        
+                        int index=f->search(var.c_str());
+                        if (index==VAR_NOT_FOUND){
+                            cout<<"[ERROR] Undefined variable "<<var<<endl;
+                            exit(1);
+                        }
+                        if (stage==2 && var[0]=='\'')
+                            index+=f->get_dimension();
+                        Linear_Expression* res=new Linear_Expression(coef*Variable(index));
+                        if (!is_rhs)
+                            (*le)+=(*res);
+                        else
+                            (*right)+=(*res);
+                        delete(res);
+                    }
+                    else if (regex_match(term,match,sign_pattern)){
+                        if (match[0]=="-") is_negative=true;
                         else is_negative=false;
                     }
-                    else if (regex_search(term,match,equality_pattern)){
-                        if (match[1]=='<=') op=1;
-                        else if (match[2]=='>=') op=2;
+                    else if (regex_match(term,match,equality_pattern)){
+                        if (match[0]=="<=") op=1;
+                        else if (match[0]==">=") op=2;
                         else op=0;
                         is_rhs=true;
                     }
-                    else if (regex_search(term,match,empty_pattern)){
-                        
+                    else if (regex_match(term,match,empty_pattern)){
+                        it++;
+                        continue;
                     }
                     else{
                         cerr<<"[ERROR] No Matched Pattern, please check your input."<<endl;
                         exit(1);
                     }
+                    it++;
                 }
                 Constraint* new_constraint;
                 if (op==2){
@@ -1134,6 +1145,7 @@ void Scan_Input_2(int argc, char* argv[]) {
                 else{
                     new_constraint = new Constraint((*le) == (*right));
                 }
+                new_poly->add_constraint(*new_constraint);
             }
             continue;
         }
@@ -1142,11 +1154,11 @@ void Scan_Input_2(int argc, char* argv[]) {
     exit(0);
 }
 
-int main(int argc, char* argv[]) {
+int main() {
     ios::sync_with_stdio(false);
     total_timer.restart();
     Initialize_before_Parser();
-    Scan_Input_2(argc, argv);
+    Scan_Input_2();
     Initial_with_input();
     add_preloc_invariants_to_transitions();
     Print_Status_before_Solver();

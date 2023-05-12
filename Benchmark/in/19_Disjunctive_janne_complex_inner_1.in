@@ -1,0 +1,62 @@
+variable [ x x0 
+           y y0 ]
+
+Location b3 
+  y = y0 
+  x = x0 
+  y0 <= x0 - 1 
+  y0 >= 6 
+Location b4
+Location le
+
+Transition t3_3: b3, 
+   y <=  x - 1
+   y >= 6
+  'y <= 'x - 1
+  'y >= 6
+  'y >= 13 
+  'y = 3 * y 
+  'x = x + 1 
+  'y0 = y0 
+  'x0 = x0
+Transition t3_e: b3,le, 
+   y <=  x - 1
+   y >= 6
+  'y >= 'x
+  'y >= 13 
+  'y = 3 * y 
+  'x = x + 1 
+  'y0 = y0 
+  'x0 = x0
+
+Transition t4_4: b4, 
+   y <=  x - 1
+   y <= 5
+  'y <= 'x - 1
+  'y <= 5
+  'y <= 9 
+  'y = y + 2 
+  'x = x + 1 
+  'y0 = y0 
+  'x0 = x0
+Transition t4_3: b4,b3, 
+   y <=  x - 1
+   y <= 5
+  'y <= 'x - 1
+  'y >= 6
+  'y <= 9 
+  'y = y + 2 
+  'x = x + 1 
+  'y0 = y0 
+  'x0 = x0
+Transition t4_e: b4,le,
+   y <=  x - 1 
+   y <= 5 
+  'y >= 'x 
+  'y <= 9 
+  'y = y + 2 
+  'x = x + 1 
+  'y0 = y0 
+  'x0 = x0
+
+end 
