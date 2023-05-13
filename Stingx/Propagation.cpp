@@ -218,12 +218,14 @@ void propagate_from_inv_to_initval(C_Polyhedron& preloc_inv,
     }
 
     // finally, record the result
-    (*loclist)[postloc_index]->set_initial(result);
+    // if (!result.is_empty()){
+        (*loclist)[postloc_index]->set_initial(result);
 
-    cout << endl
+        cout << endl
          << "* Propagated Initial-value at "
          << (*loclist)[postloc_index]->get_name() << endl
          << "  " << (*loclist)[postloc_index]->get_poly_reference();
+    // }
 }
 
 void propagate_from_inv_to_inv_by_transition(int trans_index) {

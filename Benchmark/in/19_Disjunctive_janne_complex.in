@@ -4,7 +4,7 @@ variable [ x x0
            cnt1 cnt10 
            x_mid x_mid0 
            y_mid y_mid0 
-           cnt_mid cnt_mid0]
+           cnt_mid cnt_mid0 ]
 
 Location b1
     x=x0
