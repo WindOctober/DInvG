@@ -8,6 +8,7 @@ Result/*
 origin-lstingX
 *.sh
 .vscode/*
+tmp/*
 
 # Prerequisites
 *.d

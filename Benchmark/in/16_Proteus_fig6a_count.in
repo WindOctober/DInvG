@@ -49,17 +49,6 @@ transition t1_2: b1,b2,
   'k3 =  k3
   'k4 =  k4
 
-#transition t2_2: b2, 
-#   i <=  n - 1 
-#   j >=  m 
-#  'i <= 'n - 1 
-#  'j >= 'm 
-#  'j  =  0 
-#  'i  =  i + 1 
-#  'm  =  m 
-#  'n  =  n 
-#  'k1 =  k1 
-#  'k2 =  k2 + 1 
 
 transition t2_1: b2,b1, 
    i <=  n - 1 

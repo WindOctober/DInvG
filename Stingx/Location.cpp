@@ -185,10 +185,10 @@ void Location::add_clump(vector<Clump>& vcl) {
     cout << endl
          << "> > > Location::" << name << " already has clump with "
          << cl.get_count() << " Polyhedra...";
-    if (debug_2) {
-        cout << endl << "- cl.print_clump(): ";
-        cl.print_vector_of_poly();
-    }
+    // if (debug_2) {
+    //     cout << endl << "- cl.print_clump(): ";
+    //     cl.print_vector_of_poly();
+    // }
     // cout<<"- The Root Context: "<<endl<<(*c)<<endl;
     c->recursive_strategy(cl);
     cout << endl
