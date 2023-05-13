@@ -35,8 +35,6 @@
 
 #include "Clump.h"
 #include "Context.h"
-#include "DualInvariantMap.h"
-#include "DualTransitionRelation.h"
 #include "Expression.h"
 #include "ExpressionStore.h"
 #include "InvariantMap.h"
@@ -74,7 +72,6 @@ class System {
 
     vector<TransitionRelation*> vtrans;
 
-    vector<DualTransitionRelation> vdtrans;
 
     void compute_initial_context();
     bool context_computed_;
@@ -85,7 +82,6 @@ class System {
 
     void do_some_propagation(InvariantMap& im);
 
-    void dual_propagation(DualInvariantMap& dim);
 
    public:
     System(var_info* f_, var_info* fd_, var_info* fr_);
