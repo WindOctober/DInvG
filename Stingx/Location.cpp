@@ -235,7 +235,7 @@ ostream& operator<<(ostream& in, Location const& l) {
     in << "# of variables: " << n << endl;
     in << "「 l: " << l.get_range_left() << ", n: " << n
        << ", nd: " << l.get_dual_var_info()->get_dimension() << " 」" << endl;
-
+    
     if (l.initial_poly_set()) {
         in << "Initial Condition: [[ " << endl;
         in << "| " << endl;

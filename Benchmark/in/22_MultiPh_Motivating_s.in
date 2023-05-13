@@ -1,6 +1,6 @@
-variable [x x0
+variable [ x x0
           y y0
-          z z0]
+          z z0 ]
 
 Location b1
     x=x0

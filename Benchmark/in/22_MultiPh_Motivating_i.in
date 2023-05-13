@@ -1,4 +1,4 @@
-variable [x y z]
+variable [ x y z ]
 
 Location b1
     x=0

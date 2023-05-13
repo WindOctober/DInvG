@@ -34,7 +34,6 @@ bool arrinv;
 int prop_steps;
 int weave_time;
 int total_time;
-bool ch79, bhrz03, dual;
 string projection;
 string tree_prior;
 string some_per_group;
@@ -90,12 +89,6 @@ C_Polyhedron *trivial, *dualp;
 #define YES_ARRINV 611
 #define NO_ARRINV 612
 #define NO_INSTANTIATION 8
-#define NO_CH79 9
-#define NO_BHRZ03 10
-#define NO_DUAL 11
-#define YES_CH79 12
-#define YES_BHRZ03 13
-#define YES_DUAL 14
 #define INV_CHECK 15
 #define NO_INV_CHECK 16
 
@@ -240,6 +233,7 @@ void Scan_Input() {
                 if (new_transition && new_poly) {
                     new_transition->set_relation(new_poly);
                 }
+				Location* rec;
                 return;
             }
             if (regex_match(line, match, loc_pattern)) {
@@ -315,7 +309,6 @@ void Scan_Input() {
 				else{
 					new_transition->set_locs(loc_start, loc_start);
 				}
-				if (transition_name=="t1_1") test=true;
                 // cout<<transition_name<<" "<<loc_name_start<<"
                 // "<<loc_name_end<<endl;
                 
@@ -326,9 +319,6 @@ void Scan_Input() {
                     new_location->set_polyhedron(new_poly);
                 }
                 if (new_poly && new_transition) {
-					if (new_transition->get_name()=="t1_1"){
-						cout<<*new_poly<<endl;
-					}
                     new_transition->set_relation(new_poly);
                 }
 				if (new_poly && invariant_location){
@@ -679,18 +669,6 @@ int parse_cmd_line(char* x) {
         return NO_ARRINV;
     if (strcmp(x, "noinst") == 0)
         return NO_INSTANTIATION;
-    if (strcmp(x, "noch79") == 0)
-        return NO_CH79;
-    if (strcmp(x, "nobhrz03") == 0)
-        return NO_BHRZ03;
-    if (strcmp(x, "dual") == 0)
-        return YES_DUAL;
-    if (strcmp(x, "ch79") == 0)
-        return YES_CH79;
-    if (strcmp(x, "bhrz03") == 0)
-        return YES_BHRZ03;
-    if (strcmp(x, "nodual") == 0)
-        return NO_DUAL;
     if (strcmp(x, "invcheck") == 0)
         return INV_CHECK;
     if (strcmp(x, "noinvcheck") == 0)
@@ -1612,9 +1590,6 @@ void Initialize_before_Parser() {
     prop_steps = 2;
     weave_time = 360000;
     total_time = 360000;
-    ch79 = false;
-    bhrz03 = false;
-    dual = false;
     cout << "Done!" << endl;
 }
 
@@ -1701,15 +1676,6 @@ void Print_Status_before_Solver() {
     cout << "| Strategy ID # " << num_context << endl;
     cout << "| Strategy name : ";
     switch (num_context) {
-        case 1:
-            cout << "one" << endl;
-            break;
-        case 2:
-            cout << "many" << endl;
-            break;
-        case 6:
-            cout << "newdfs" << endl;
-            break;
         case 7:
             cout << "newdfs_sequences" << endl;
             break;
@@ -1721,10 +1687,6 @@ void Print_Status_before_Solver() {
             break;
     }
 
-    if (num_context == 6) {
-        cout << "| DFS Search method : " << tree_prior << endl;
-        cout << "| Projection method : " << projection << endl;
-    }
 
     if (num_context == 7) {
         cout << "| DFS Search method : " << tree_prior << endl;
@@ -1829,6 +1791,7 @@ int get_index_of_location(string loc_name) {
         }
         i++;
     }
+	return -1;
 }
 
 int get_index_of_transition(string name) {
@@ -1840,6 +1803,7 @@ int get_index_of_transition(string name) {
         }
         i++;
     }
+	return -1;
 }
 
 // return the transition-index which is start from this pre-location-index
@@ -1991,261 +1955,7 @@ int main(int argc, char* argv[]) {
     global_system->compute_duals();
     tt = new int[fm->get_dimension()];
 
-    if (num_context == 1) {
-        //  Implementation for Convert_CNF_to_DNF_and_Print() function
-        //    due to num_context == 1,
-        //    i.e. intra-location / single-location
-
-        glc = global_system->get_context();
-        // Print_Location_and_Transition();
-        trivial = new C_Polyhedron(fd->get_dimension(), UNIVERSE);
-        for (vector<Location*>::iterator vi = loclist->begin();
-             vi < loclist->end(); vi++) {
-            (*vi)->add_to_trivial(trivial);
-        }
-        invd = new C_Polyhedron(*trivial);
-        cout << endl;
-        // cout<<"- The Convert_CNF_to_DNF_and_Print(): "<<endl;
-        // cout<<"- The Root Context: "<<endl<<(*glc)<<endl;
-        glc->Convert_CNF_to_DNF_and_Print(loclist, invd, weave_time, true);
-    }  // if (num_context == 1)
-    else if (num_context == 2) {
-        //  Implementation for Eliminate_c_through_inter_Location() function
-        //  compared with num_context == 3, here is no elimination.
-        //    due to num_context == 2,
-        //    i.e. inter-location / many-locations
-        //  output_file: **many**
-
-        //    dualize using a clump
-        int nd = fd->get_dimension();
-        //    obtain a polyhedron characterizing "trivial"
-        trivial = new C_Polyhedron(nd, UNIVERSE);
-        for (vector<Location*>::iterator vi = loclist->begin();
-             vi < loclist->end(); vi++) {
-            (*vi)->add_to_trivial(trivial);  // Later, use this "trivial" to
-                                             // build (initial) "invd"
-        }
-        //    now dualize each location
-        C_Polyhedron initp(nd,
-                           UNIVERSE);  // for the dualized initial conditions
-        for (vector<Location*>::iterator vi = loclist->begin();
-             vi < loclist->end(); vi++) {
-            (*vi)->make_context();
-            (*vi)->compute_dual_constraints(
-                initp);  // Later, use this "initp" to build (initial) "cpoly"
-        }
-
-        //    now dualize the transition systems and collect the "clumps"
-        vector<Clump> vcl;
-        for (vector<TransitionRelation*>::iterator vj = trlist->begin();
-             vj < trlist->end(); vj++) {
-            (*vj)->compute_consecution_constraints(vcl, initp);
-        }
-        for (vector<Location*>::iterator vi = loclist->begin();
-             vi < loclist->end(); vi++) {
-            (*vi)->add_clump(vcl);
-            //    this also should trigger the simplification of the context
-        }
-        dfs_traverse_timer.restart();
-        dfs_traverse(vcl, initp);
-        dfs_traverse_timer.stop();
-        dfs_traverse_time = dfs_traverse_timer.compute_time_elapsed();
-    }  //    else if (num_context == 2)
-    else if (num_context == 3) {
-        //  Implementation for Eliminate_c_through_inter_Location() function
-        //  compared with num_context == 2, here is elimination!
-        //    due to num_context == 3,
-        //    i.e. inter-location / many-locations
-        //  output_file: **new_many**
-
-        //    dualize using a clump
-        int nd = fd->get_dimension();
-        //    obtain a polyhedron characterizing "trivial"
-        trivial = new C_Polyhedron(nd, UNIVERSE);
-        for (vector<Location*>::iterator vi = loclist->begin();
-             vi < loclist->end(); vi++) {
-            (*vi)->add_to_trivial(trivial);
-        }
-        //    now dualize each location
-        C_Polyhedron initp(nd,
-                           UNIVERSE);  // for the dualized initial conditions
-        for (vector<Location*>::iterator vi = loclist->begin();
-             vi < loclist->end(); vi++) {
-            (*vi)->make_context();
-            (*vi)->compute_dual_constraints(initp);
-        }
-
-        //    now dualize the transition systems and collect the "clumps"
-        vector<Clump> vcl;
-        for (vector<TransitionRelation*>::iterator vj = trlist->begin();
-             vj < trlist->end(); vj++) {
-            (*vj)->compute_consecution_constraints(vcl, initp);
-        }
-        for (vector<Location*>::iterator vi = loclist->begin();
-             vi < loclist->end(); vi++) {
-            (*vi)->add_clump(vcl);
-            //    this also should trigger the simplification of the context
-        }
-
-        dfs_traverse_timer.restart();
-        dfs_traverse_for_initial_by_eliminating(vcl, initp);
-        collect_invariants_for_except_initial_by_propagation();
-        dfs_traverse_timer.stop();
-        dfs_traverse_time = dfs_traverse_timer.compute_time_elapsed();
-
-    }  //    else if (num_context == 3)
-    else if (num_context == 4) {
-        //  Implementation for Recursive_Eliminate_c_through_inter_Location()
-        //  function compared with num_context == 3, here is recursive
-        //  elimination!
-        //    due to num_context == 4,
-        //    i.e. inter-location / many-locations
-        //  output_file: **new_2_many**
-
-        //    dualize using a clump
-        int nd = fd->get_dimension();
-        //    obtain a polyhedron characterizing "trivial"
-        trivial = new C_Polyhedron(nd, UNIVERSE);
-        for (vector<Location*>::iterator vi = loclist->begin();
-             vi < loclist->end(); vi++) {
-            (*vi)->add_to_trivial(trivial);
-        }
-        //    now dualize each location
-        C_Polyhedron initp(nd,
-                           UNIVERSE);  // for the dualized initial conditions
-        for (vector<Location*>::iterator vi = loclist->begin();
-             vi < loclist->end(); vi++) {
-            (*vi)->make_context();
-            (*vi)->compute_dual_constraints(initp);
-        }
-
-        //    now dualize the transition systems and collect the "clumps"
-        vector<Clump> vcl;
-        for (vector<TransitionRelation*>::iterator vj = trlist->begin();
-             vj < trlist->end(); vj++) {
-            (*vj)->compute_consecution_constraints(vcl, initp);
-        }
-        for (vector<Location*>::iterator vi = loclist->begin();
-             vi < loclist->end(); vi++) {
-            (*vi)->add_clump(vcl);
-            //    this also should trigger the simplification of the context
-        }
-        //  Here is the function of "extract_invariant_by_eliminating()"
-        dfs_traverse_timer.restart();
-        dfs_traverse_for_initial_by_recursive_eliminating(vcl, initp);
-        dfs_traverse_timer.stop();
-        dfs_traverse_time = dfs_traverse_timer.compute_time_elapsed();
-
-    }  //    else if (num_context == 4)
-    else if (num_context == 5) {
-        //  Implementation for ...() function
-        //  compared with num_context == 4, here is recursive elimination!
-        //    due to num_context == 5,
-        //    i.e. inter-location / many-locations
-        //  output_file: **new_3_many**
-
-        //    dualize using a clump
-        int nd = fd->get_dimension();
-        //    obtain a polyhedron characterizing "trivial"
-        trivial = new C_Polyhedron(nd, UNIVERSE);
-        for (vector<Location*>::iterator vi = loclist->begin();
-             vi < loclist->end(); vi++) {
-            (*vi)->add_to_trivial(trivial);
-        }
-        //    now dualize each location
-        C_Polyhedron initp(nd,
-                           UNIVERSE);  // for the dualized initial conditions
-        for (vector<Location*>::iterator vi = loclist->begin();
-             vi < loclist->end(); vi++) {
-            (*vi)->make_context();
-            (*vi)->compute_dual_constraints(initp);
-        }
-
-        //    now dualize the transition systems and collect the "clumps"
-        vector<Clump> vcl;
-        for (vector<TransitionRelation*>::iterator vj = trlist->begin();
-             vj < trlist->end(); vj++) {
-            (*vj)->compute_consecution_constraints(vcl, initp);
-        }
-        for (vector<Location*>::iterator vi = loclist->begin();
-             vi < loclist->end(); vi++) {
-            (*vi)->add_clump(vcl);
-            //    this also should trigger the simplification of the context
-        }
-        //  Here is the function of "extract_invariant_by_eliminating()"
-        dfs_traverse_timer.restart();
-        dfs_traverse_for_binary_eliminating(vcl, initp);
-        dfs_traverse_timer.stop();
-        dfs_traverse_time = dfs_traverse_timer.compute_time_elapsed();
-
-    }  //    else if (num_context == 5)
-    else if (num_context == 6) {
-        //  Implementation for Eliminate_c_through_inter_Location() function
-        //  compared with num_context == 3, here is elimination!
-        //    due to num_context == 6,
-        //    i.e. inter-location / many-locations
-        //  output_file: **newdfs**
-
-        //    dualize using a clump
-        int nd = fd->get_dimension();
-        //    obtain a polyhedron characterizing "trivial"
-        trivial = new C_Polyhedron(nd, UNIVERSE);
-        for (vector<Location*>::iterator vi = loclist->begin();
-             vi < loclist->end(); vi++) {
-            (*vi)->add_to_trivial(trivial);
-        }
-        //    now dualize each location
-        C_Polyhedron initp(nd,
-                           UNIVERSE);  // for the dualized initial conditions
-        for (vector<Location*>::iterator vi = loclist->begin();
-             vi < loclist->end(); vi++) {
-            (*vi)->make_context();
-            (*vi)->compute_dual_constraints(initp);
-        }
-
-        //    now dualize the transition systems and collect the "clumps"
-        vector<Clump> vcl;
-        for (vector<TransitionRelation*>::iterator vj = trlist->begin();
-             vj < trlist->end(); vj++) {
-            (*vj)->compute_consecution_constraints(vcl, initp);
-            if (total_timer.compute_time_elapsed() >= weave_time) {
-                cout << "Time is up!" << endl;
-                break;
-            }
-        }
-        for (vector<Location*>::iterator vi = loclist->begin();
-             vi < loclist->end(); vi++) {
-            (*vi)->add_clump(vcl);
-            if (total_timer.compute_time_elapsed() >= weave_time) {
-                cout << "Time is up!" << endl;
-                break;
-            }
-            //    this also should trigger the simplification of the context
-        }
-
-        dfs_traverse_timer.restart();
-        for (int target_index = 0; target_index < loclist->size();
-             target_index++) {
-            single_weave_count = 0;
-            single_bang_count = 0;
-            single_collect_time = 0;
-            single_dfs_traverse_timer.restart();
-
-            dfs_traverse_for_one_location_by_eliminating(target_index, vcl,
-                                                         initp);
-
-            single_dfs_traverse_timer.stop();
-            vector_single_dfs_traverse_time.push_back(
-                single_dfs_traverse_timer.compute_time_elapsed());
-            vector_single_weave_count.push_back(single_weave_count);
-            vector_single_bang_count.push_back(single_bang_count);
-            vector_single_collect_time.push_back(single_collect_time);
-        }
-        dfs_traverse_timer.stop();
-        dfs_traverse_time = dfs_traverse_timer.compute_time_elapsed();
-
-    }  //    else if (num_context == 6)
-    else if (num_context == 7) {
+    if (num_context == 7) {
         //  output_file: **newdfs_sequences**
 
         //  nd
@@ -2339,7 +2049,7 @@ int main(int argc, char* argv[]) {
         dfs_traverse_timer.stop();
         dfs_traverse_time = dfs_traverse_timer.compute_time_elapsed();
 
-    }  //    else if (num_context == 7)
+    } 
     else if (num_context == 8) {
         //  output_file: **newdfs_seq_propagation**
         //  nd
@@ -2505,8 +2215,6 @@ void print_status() {
     cout << " Strategy ID #" << num_context << endl;
     cout << " # of initial propagation steps:" << prop_steps << endl;
     cout << " Weave Time allowed:" << weave_time << endl;
-    cout << " Cousot-Halbwachs to be performed:" << ch79 << endl;
-    cout << " BHRZ03 to be performed:" << bhrz03 << endl;
     cout << "----------------------------------------------------" << endl;
 }
 

@@ -52,7 +52,7 @@ class Location {
    private:
     int n;                  // the number of variables in the location
     var_info *f, *fd, *fm;  // the primal and dual var-infos
-    bool polyset;           // has the initial condition been set
+    bool polyset=false;           // has the initial condition been set
     string name;            // name
     Context* c;             // the solver for intra-location transitions
     C_Polyhedron* p;        // the initial condition
