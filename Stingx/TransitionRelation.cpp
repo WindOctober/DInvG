@@ -21,7 +21,6 @@
 
 #include "TransitionRelation.h"
 
-#include "DualTransitionRelation.h"
 #include "Elimination.h"
 #include "Macro.h"
 #include "PolyUtils.h"
@@ -1208,51 +1207,6 @@ void TransitionRelation::add_preloc_invariant() {
     rel->intersection_assign(temp);
     compute_nc();
     return;
-}
-
-DualTransitionRelation TransitionRelation::get_dual_relation() const {
-    // build the sat and the unsat polyhedron
-    // first the sat polyhedron
-    C_Polyhedron sat(2 * n + 2, UNIVERSE);
-    dualize_standard(sat);
-    int i, j;
-    // now the signs of the first n+1 dimensions [0..n] to the negation of their
-    // signs
-
-    for (i = 0; i <= n; ++i) {
-        Linear_Expression ll = -Variable(i);
-        sat.affine_image(Variable(i), ll);
-    }
-
-    // that should take care of sat
-
-    // now for unsat
-
-    // use sat and set the variables from [n+1.. 2n+1] to [0...-1]
-    C_Polyhedron unsat(n + 1, UNIVERSE);
-    Constraint_System cs = sat.minimized_constraints();
-    Constraint_System::const_iterator vi;
-    bool flag = true;
-    for (vi = cs.begin(); vi != cs.end(); ++vi) {
-        flag = handle_integers((*vi).inhomogeneous_term(), j);
-        Linear_Expression ll(j);
-        for (i = 0; i <= n; ++i) {
-            flag &= handle_integers((*vi).coefficient(Variable(i)), j);
-            ll += j * Variable(i);
-        }
-        flag &= handle_integers((*vi).coefficient(Variable(2 * n + 1)), j);
-        ll -= j;
-        INVARIANT(flag,
-                  "TransitionRelation::get_dual_relation() fatal failure ");
-        if ((*vi).is_equality())
-            unsat.add_constraint(ll == 0);
-        else if ((*vi).is_nonstrict_inequality())
-            unsat.add_constraint(ll >= 0);
-        else
-            unsat.add_constraint(ll == 0);
-    }
-
-    return DualTransitionRelation(f, unsat, sat, preloc, postloc);
 }
 
 void TransitionRelation::dualize_standard(C_Polyhedron& result) const {

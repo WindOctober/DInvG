@@ -49,7 +49,6 @@ using namespace Parma_Polyhedra_Library::IO_Operators;
 
 extern int get_index_of_location(string loc_name);
 
-class DualTransitionRelation;
 
 class TransitionRelation {
    private:
@@ -189,8 +188,6 @@ class TransitionRelation {
     // add a pre-assigned invariant (i.e. Location::loc_inv) that used to
     // strengthen transitions
     void add_preloc_invariant();
-
-    DualTransitionRelation get_dual_relation() const;
 
     const C_Polyhedron& get_relation() const;
     C_Polyhedron& get_non_const_relation();

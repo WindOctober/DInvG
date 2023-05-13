@@ -73,17 +73,11 @@ TransitionRelation const& System::get_transition_relation(int index) const {
     return (*tt);
 }
 
-void System::compute_duals() {
-    vector<TransitionRelation*>::const_iterator vj;
-    for (vj = vtrans.begin(); vj != vtrans.end(); ++vj) {
-        vdtrans.push_back((*vj)->get_dual_relation());
-    }
-}
 
 void System::print(ostream& os) const {
     vector<Location*>::const_iterator vi;
     vector<TransitionRelation*>::const_iterator vj;
-    vector<DualTransitionRelation>::const_iterator vk;
+
     os << "System::" << endl;
     os << " =======================================================" << endl;
     os << " System Locations" << endl;
@@ -97,14 +91,6 @@ void System::print(ostream& os) const {
     for (vj = vtrans.begin(); vj < vtrans.end(); ++vj) {
         os << *(*vj) << endl;
     }
-
-    os << "Dual Transitions " << endl;
-
-    for (vk = vdtrans.begin(); vk != vdtrans.end(); ++vk) {
-        os << *vk << endl;
-    }
-
-    os << " =======================================================" << endl;
 }
 
 ostream& operator<<(ostream& os, System const& sys) {
@@ -297,67 +283,5 @@ void System::compute_invariant(InvariantMap& im) {
          << endl;
     cout << "Time spent widening stuff: (0.01s)" << widening_time << endl;
     cout << endl << endl;
-    return;
-}
-
-void System::dual_propagation(DualInvariantMap& dim) {
-    vector<DualTransitionRelation>::iterator vi;
-    for (vi = vdtrans.begin(); vi < vdtrans.end(); ++vi) {
-        DualTransitionRelation tr = (*vi);
-        string const& preloc = tr.get_preloc_name();
-        string const& postloc = tr.get_postloc_name();
-
-        C_Polyhedron const& p1 = dim(preloc);
-        C_Polyhedron& p2 = dim[postloc];
-
-        // C_Polyhedron temp(n_+1,UNIVERSE);
-        C_Polyhedron temp1(n_ + 1, UNIVERSE);
-        // tr.compute_post(p1,temp);
-        tr.compute_post_new(p1, temp1);
-        // INVARIANT(temp1==temp,
-        //            "Post conditions do not co-incide");
-
-        p2.intersection_assign(temp1);
-        // done
-    }
-}
-
-void System::compute_dual_invariant(InvariantMap& im) {
-    var_info* fd = (*(vdtrans.begin())).get_dual_var_info();
-
-    DualInvariantMap dim(n_ + 1, fd, vloc);
-
-    propagation_time = widening_time = 0;
-    bool termination = false;
-    int steps = 0;
-
-    while (!termination) {
-        //        cout <<"---------------------------"<<endl;
-        //        cout << " steps # "<<steps<<endl;
-        //        cout<<dim<<endl;
-        //        cout<<"------------------------------"<<endl;
-
-        DualInvariantMap dim1(dim);
-        Timer prop_timer;
-        dual_propagation(dim);  // close im under fwd propagation
-
-        prop_timer.stop();
-        propagation_time += prop_timer.compute_time_elapsed();
-
-        Timer widening_timer;
-        dim.H79_narrowing_assign(dim1);
-        widening_timer.stop();
-
-        widening_time += widening_timer.compute_time_elapsed();
-        termination = (dim.equals(dim1));
-        steps++;
-    }
-
-    dim.primalize(im);
-    cout << "The computed invariant map is " << endl;
-    cout << im;
-    cout << endl
-         << "Time spent propagating stuff: (0.01s) " << propagation_time;
-    cout << endl << "Time spent widening stuff: (0.01s)" << widening_time;
     return;
 }

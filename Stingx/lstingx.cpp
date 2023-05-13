@@ -3,7 +3,6 @@
 #include <regex>
 #include <string>
 #include <vector>
-#include "DualInvariantMap.h"
 #include "Elimination.h"
 #include "InvariantMap.h"
 #include "Location.h"
@@ -91,7 +90,6 @@ C_Polyhedron *trivial, *dualp;
 #define NO_INSTANTIATION 8
 #define INV_CHECK 15
 #define NO_INV_CHECK 16
-
 vector<int>** location_matrix;
 int global_binary_i = 0;
 long int global_contains_time = 0;
@@ -160,385 +158,8 @@ void print_status();
 void print_bake_off(InvariantMap const& what);
 
 void check_invariant_ok();
-void Scan_Input() {
-    cout << endl << "- Parsing Input Doing...";
+void Scan_Input();
 
-    cout << endl << "Get Input Variable...\n";
-    smatch match;
-    string line;
-    int stage = -1;  // Variable Reading.
-    f = new var_info();
-    regex trans_pattern(R"((Transition|transition)\s+(\w+):\s*(\w+)\s*,\s*(\w+)\s*,\s*)");
-    regex self_trans_pattern(R"((Transition|transition)\s+(\w+)\s*:\s*(\w+)\s*,\s*)");
-    regex loc_pattern(R"((Location|location)\s+(\w+)\s*)");
-	regex invariant_pattern(R"((Invariant|invariant)\s+(\w+)\s*:?\s*)");
-    regex term_pattern(
-        R"(\s*\d+\s*\*\s*\w+\s*|\s*\d+\s*\*\s*'\w+\s*|\s*'\w+\s*|\s*\w+\s*|\s*\d+\s*|\s*|[+-]|(<=|=|>=))");
-    regex primed_coef_var_pattern(R"(\s*(\d+)\s*\*\s*'(\w+)\s*)");
-    regex coef_var_pattern(R"(\s*(\d+)\s*\*\s*(\w+)\s*)");
-    regex primed_pattern(R"(\s*'(\w+)\s*)");
-    regex var_pattern(R"(\s*(\w+)\s*)");
-    regex coef_pattern(R"(\s*(\d+)\s*)");
-    regex sign_pattern(R"(\s*([+-])\s*)");
-    regex equality_pattern(R"(\s*(<=|=|>=)\s*)");
-    regex empty_pattern(R"(\s*)");
-    Location* new_location = NULL;
-	Location* invariant_location =NULL;
-    C_Polyhedron* new_poly = NULL;
-    TransitionRelation* new_transition = NULL;
-	bool test=false;
-    while (getline(cin, line)) {
-        istringstream iss(line);
-        if (line.length() == 0)
-            continue;
-        string token;
-        if (stage == -1 || stage == 0) {
-            while (iss >> token) {
-                if (token == "variable" || token == "Variable") {
-                    stage = 0;
-                    continue;
-                } else if (stage == -1) {
-                    cout << "[warning] Must Start by variable or Varible."
-                         << endl;
-                    exit(1);
-                }
-                if (token == "[") {
-                    if (stage == -1) {
-                        cout << "[warning] Missing variable, program execution "
-                                "aborted."
-                             << endl;
-                        exit(1);
-                    } else {
-                        continue;
-                    }
-                }
-                if (token == "]") {
-                    if (stage == 0) {
-                        stage = 1;
-                        break;
-                    } else {
-                        cout << "[warning] Variable stage is ending, program "
-                                "execution aborted."
-                             << endl;
-                        exit(1);
-                    }
-                }
-                // cout<<token<<endl;
-                f->search_and_insert(token.c_str());
-            }
-            continue;
-        }
-        if (stage == 1 || stage == 2) {
-            if (line.find("end") != string::npos) {
-                if (new_transition && new_poly) {
-                    new_transition->set_relation(new_poly);
-                }
-				Location* rec;
-                return;
-            }
-            if (regex_match(line, match, loc_pattern)) {
-                if (new_poly && new_location) {
-                    new_location->set_polyhedron(new_poly);
-                }
-                if (new_poly && new_transition) {
-                    new_transition->set_relation(new_poly);
-                }
-				if (new_poly && invariant_location){
-					invariant_location->set_invariant_polyhedron(new_poly);
-				}
-                new_poly = NULL;
-				new_location = NULL;
-				invariant_location=NULL;
-                new_transition = NULL;
-                string loc_name = match[2];
-                // cout<<loc_name<<" "<<loc_name.length()<<" "<<token<<endl;
-                if (!search_location((char*)loc_name.c_str(), &new_location)) {
-                    new_location =
-                        new Location(f->get_dimension(), f, fd, fm, loc_name);
-                    loclist->push_back(new_location);
-                } else {
-                    cerr << "[ERROR] Multi-defined Location." << endl;
-                    exit(1);
-                }
-            } else if (regex_match(line, match, trans_pattern) ||
-                       regex_match(line, match, self_trans_pattern)) {
-				test=false;
-                stage = 2;
-                if (new_poly && new_location) {
-                    new_location->set_polyhedron(new_poly);
-                }
-                if (new_poly && new_transition) {
-                    new_transition->set_relation(new_poly);
-                }
-				if (new_poly && invariant_location){
-					invariant_location->set_invariant_polyhedron(new_poly);
-				}
-                new_poly = NULL;
-				new_location = NULL;
-				invariant_location=NULL;
-                new_transition = NULL;
-                string transition_name = match[2];
-                string loc_name_start = match[3];
-				Location* loc_end;
-				Location* loc_start;
-				// cout<<endl;
-				if (!search_transition_relation((char*)transition_name.c_str(),
-                                                &new_transition)) {
-                    new_transition = new TransitionRelation(
-                        f->get_dimension(), f, fd, fm, transition_name);
-                    trlist->push_back(new_transition);
-                } else {
-                    cerr << "[ERROR] Multi-defined Transition." << endl;
-                    exit(1);
-                }
-                if (!search_location((char*)loc_name_start.c_str(),
-                                     &loc_start)) {
-                    cerr << "[ERROR] Transition use undefined location" << endl;
-                    exit(1);
-                }
-                if (regex_match(line, match, trans_pattern)) {
-                    string loc_name_end = match[4];
-                    if (!search_location((char*)loc_name_end.c_str(),
-                                         &loc_end)) {
-                        cerr << "[ERROR] Transition use undefined location"
-                             << endl;
-                        exit(1);
-                    }
-					new_transition->set_locs(loc_start, loc_end);
-                }
-				else{
-					new_transition->set_locs(loc_start, loc_start);
-				}
-                // cout<<transition_name<<" "<<loc_name_start<<"
-                // "<<loc_name_end<<endl;
-                
-                
-            } 
-			else if (regex_match(line, match, invariant_pattern)){
-				if (new_poly && new_location) {
-                    new_location->set_polyhedron(new_poly);
-                }
-                if (new_poly && new_transition) {
-                    new_transition->set_relation(new_poly);
-                }
-				if (new_poly && invariant_location){
-					invariant_location->set_invariant_polyhedron(new_poly);
-				}
-                new_poly = NULL;
-				new_location = NULL;
-				invariant_location=NULL;
-                new_transition = NULL;
-                string loc_name = match[2];
-                // cout<<loc_name<<" "<<loc_name.length()<<" "<<token<<endl;
-                if (!search_location((char*)loc_name.c_str(), &invariant_location)) {
-                    cerr << "[ERROR] undefined Invariant Location." << endl;
-                    exit(1);
-                }
-			}
-			else {
-                if (!new_poly) {
-                    if (stage == 1)
-                        new_poly =
-                            new C_Polyhedron(f->get_dimension(), UNIVERSE);
-                    else
-                        new_poly =
-                            new C_Polyhedron(2 * f->get_dimension(), UNIVERSE);
-                }
-                sregex_iterator it(line.begin(), line.end(), term_pattern);
-                sregex_iterator end;
-                if (it == end) {
-                    cerr << "[ERROR] No Matched Pattern, please check your "
-                            "input."
-                         << endl;
-                    exit(1);
-                }
-                bool is_negative = false;
-                bool is_rhs = false;
-                Linear_Expression* le = new Linear_Expression();
-                Linear_Expression* right = new Linear_Expression();
-                int op = 0;
-                // 0 -> =; 1 -> <=;
-				bool empty=false;
-                while (it != end) {
-                    string term = it->str();
-                    if (regex_match(term, match, primed_coef_var_pattern)) {
-                        int coef = stoi(match[1]);
-                        if (is_negative)
-                            coef = -coef;
-                        string var = match[2];
-                        int index = f->search(var.c_str());
-                        if (index == VAR_NOT_FOUND) {
-                            cout << "[ERROR] Undefined variable " << var
-                                 << endl;
-                            exit(1);
-                        }
-                        Linear_Expression* res = new Linear_Expression(
-                            abs(coef) * Variable(index + f->get_dimension()));
-                        if (!is_rhs){
-							if (coef>0)
-								(*le) += (*res);
-							else
-								(*le) -= (*res);
-						}
-                        else{
-							if (coef>0)
-								(*right) += (*res);
-							else
-								(*right) -= (*res);
-						}
-                        delete (res);
-                    } else if (regex_match(term, match, coef_var_pattern)) {
-                        int coef = stoi(match[1]);
-                        if (is_negative)
-                            coef = -coef;
-                        string var = match[2];
-						// cout<<match[1]<<" "<<coef<<" "<<line<<endl;
-                        int index = f->search(var.c_str());
-                        if (index == VAR_NOT_FOUND) {
-                            cout << "[ERROR] Undefined variable " << var
-                                 << endl;
-                            exit(1);
-                        }
-                        Linear_Expression* res =
-                            new Linear_Expression(abs(coef) * Variable(index));
-                        if (!is_rhs){
-							if (coef>0)
-								(*le) += (*res);
-							else
-								(*le) -= (*res);
-						}
-                        else{
-							if (coef>0)
-								(*right) += (*res);
-							else
-								(*right) -= (*res);
-						}
-                        delete (res);
-                    } else if (regex_match(term, match, coef_pattern)) {
-                        int coef = stoi(match[1]);
-						// cout<<match[1]<<" "<<coef<<" "<<line<<endl;
-                        if (is_negative)
-                            coef = -coef;
-                        Linear_Expression* res = new Linear_Expression(abs(coef));
-                        if (!is_rhs){
-							if (coef>0)
-								(*le) += (*res);
-							else
-								(*le) -= (*res);
-						}
-                        else{
-							if (coef>0)
-								(*right) += (*res);
-							else
-								(*right) -= (*res);
-						}
-                        delete (res);
-                    } else if (regex_match(term, match, primed_pattern)) {
-                        int coef = 1;
-                        // cout<<line<<" "<<term<<endl;
-                        if (is_negative)
-                            coef = -coef;
-                        string var = match[1];
-
-                        int index = f->search(var.c_str());
-                        if (index == VAR_NOT_FOUND) {
-                            cout << "[ERROR] Undefined variable " << var
-                                 << endl;
-                            exit(1);
-                        }
-                        Linear_Expression* res = new Linear_Expression(
-                            abs(coef) * Variable(index + f->get_dimension()));
-                        if (!is_rhs){
-							if (coef>0)
-								(*le) += (*res);
-							else
-								(*le) -= (*res);
-						}
-                        else{
-							if (coef>0)
-								(*right) += (*res);
-							else
-								(*right) -= (*res);
-						}
-                        delete (res);
-                    } else if (regex_match(term, match, var_pattern)) {
-                        int coef = 1;
-                        // cout<<line<<" "<<term<<endl;
-                        if (is_negative)
-                            coef = -coef;
-                        string var = match[1];
-
-                        int index = f->search(var.c_str());
-                        if (index == VAR_NOT_FOUND) {
-                            cout << "[ERROR] Undefined variable " << var
-                                 << endl;
-                            exit(1);
-                        }
-                        Linear_Expression* res =
-                            new Linear_Expression(abs(coef) * Variable(index));
-                        if (!is_rhs){
-							if (coef>0)
-								(*le) += (*res);
-							else
-								(*le) -= (*res);
-						}
-                        else{
-							if (coef>0)
-								(*right) += (*res);
-							else
-								(*right) -= (*res);
-						}
-                        delete (res);
-                    } else if (regex_match(term, match, sign_pattern)) {
-                        if (match[1] == "-")
-                            is_negative = true;
-                        else
-                            is_negative = false;
-                    } else if (regex_match(term, match, equality_pattern)) {
-                        if (match[1] == "<=")
-                            op = 1;
-                        else if (match[1] == ">=")
-                            op = 2;
-                        else
-                            op = 0;
-                        is_rhs = true;
-						is_negative=false;
-                    } else if (regex_match(term, match, empty_pattern)) {
-                        it++;
-                        continue;
-                    } else {
-                        cerr << "[ERROR] No Matched Pattern, please check your "
-                                "input."
-                             << endl;
-                        exit(1);
-                    }
-                    it++;
-                }
-                Constraint* new_constraint;
-				Linear_Expression* new_le=new Linear_Expression();
-				// cout<<*le<<" "<<*right<<endl;
-                if (op == 2) {
-                    new_constraint = new Constraint((*le) >= (*right));
-                } else if (op == 1) {
-                    new_constraint = new Constraint((*le) <= (*right));
-                } else {
-                    new_constraint = new Constraint((*le) == (*right));
-                }
-                new_poly->add_constraint(*new_constraint);
-				// if (test)
-				// 	new_constraint->ascii_dump();
-				// cout<<*new_constraint<<endl;
-				// cout<<"note here!!!!!!!!!!!!!!!"<<endl;
-                delete (le);
-                delete (right);
-                delete (new_constraint);
-            }
-            continue;
-        }
-    }
-    dimension = f->get_dimension();
-    exit(0);
-}
 
 void do_some_propagation() {
     // try and fire each transition relation
@@ -1952,7 +1573,6 @@ int main(int argc, char* argv[]) {
          vj < trlist->end(); vj++) {
         global_system->add_transition((*vj));
     }
-    global_system->compute_duals();
     tt = new int[fm->get_dimension()];
 
     if (num_context == 7) {
@@ -2270,4 +1890,384 @@ void check_invariant_ok() {
     }
     cerr << "Done!" << endl;
     cout << endl << "< < < Out of check_invariant_ok()";
+}
+
+void Scan_Input() {
+    cout << endl << "- Parsing Input Doing...";
+
+    cout << endl << "Get Input Variable...\n";
+    smatch match;
+    string line;
+    int stage = -1;  // Variable Reading.
+    f = new var_info();
+    regex trans_pattern(R"((Transition|transition)\s+(\w+):\s*(\w+)\s*,\s*(\w+)\s*,\s*)");
+    regex self_trans_pattern(R"((Transition|transition)\s+(\w+)\s*:\s*(\w+)\s*,\s*)");
+    regex loc_pattern(R"((Location|location)\s+(\w+)\s*)");
+	regex invariant_pattern(R"((Invariant|invariant)\s+(\w+)\s*:?\s*)");
+    regex term_pattern(
+        R"(\s*\d+\s*\*\s*\w+\s*|\s*\d+\s*\*\s*'\w+\s*|\s*'\w+\s*|\s*\w+\s*|\s*\d+\s*|\s*|[+-]|(<=|=|>=))");
+    regex primed_coef_var_pattern(R"(\s*(\d+)\s*\*\s*'(\w+)\s*)");
+    regex coef_var_pattern(R"(\s*(\d+)\s*\*\s*(\w+)\s*)");
+    regex primed_pattern(R"(\s*'(\w+)\s*)");
+    regex var_pattern(R"(\s*(\w+)\s*)");
+    regex coef_pattern(R"(\s*(\d+)\s*)");
+    regex sign_pattern(R"(\s*([+-])\s*)");
+    regex equality_pattern(R"(\s*(<=|=|>=)\s*)");
+    regex empty_pattern(R"(\s*)");
+    Location* new_location = NULL;
+	Location* invariant_location =NULL;
+    C_Polyhedron* new_poly = NULL;
+    TransitionRelation* new_transition = NULL;
+	bool test=false;
+    while (getline(cin, line)) {
+        istringstream iss(line);
+        if (line.length() == 0)
+            continue;
+        string token;
+        if (stage == -1 || stage == 0) {
+            while (iss >> token) {
+                if (token == "variable" || token == "Variable") {
+                    stage = 0;
+                    continue;
+                } else if (stage == -1) {
+                    cout << "[warning] Must Start by variable or Varible."
+                         << endl;
+                    exit(1);
+                }
+                if (token == "[") {
+                    if (stage == -1) {
+                        cout << "[warning] Missing variable, program execution "
+                                "aborted."
+                             << endl;
+                        exit(1);
+                    } else {
+                        continue;
+                    }
+                }
+                if (token == "]") {
+                    if (stage == 0) {
+                        stage = 1;
+                        break;
+                    } else {
+                        cout << "[warning] Variable stage is ending, program "
+                                "execution aborted."
+                             << endl;
+                        exit(1);
+                    }
+                }
+                // cout<<token<<endl;
+                f->search_and_insert(token.c_str());
+            }
+            continue;
+        }
+        if (stage == 1 || stage == 2) {
+            if (line.find("end") != string::npos) {
+                if (new_transition && new_poly) {
+                    new_transition->set_relation(new_poly);
+                }
+				Location* rec;
+                return;
+            }
+            if (regex_match(line, match, loc_pattern)) {
+                if (new_poly && new_location) {
+                    new_location->set_polyhedron(new_poly);
+                }
+                if (new_poly && new_transition) {
+                    new_transition->set_relation(new_poly);
+                }
+				if (new_poly && invariant_location){
+					invariant_location->set_invariant_polyhedron(new_poly);
+				}
+                new_poly = NULL;
+				new_location = NULL;
+				invariant_location=NULL;
+                new_transition = NULL;
+                string loc_name = match[2];
+                // cout<<loc_name<<" "<<loc_name.length()<<" "<<token<<endl;
+                if (!search_location((char*)loc_name.c_str(), &new_location)) {
+                    new_location =
+                        new Location(f->get_dimension(), f, fd, fm, loc_name);
+                    loclist->push_back(new_location);
+                } else {
+                    cerr << "[ERROR] Multi-defined Location." << endl;
+                    exit(1);
+                }
+            } else if (regex_match(line, match, trans_pattern) ||
+                       regex_match(line, match, self_trans_pattern)) {
+				test=false;
+                stage = 2;
+                if (new_poly && new_location) {
+                    new_location->set_polyhedron(new_poly);
+                }
+                if (new_poly && new_transition) {
+                    new_transition->set_relation(new_poly);
+                }
+				if (new_poly && invariant_location){
+					invariant_location->set_invariant_polyhedron(new_poly);
+				}
+                new_poly = NULL;
+				new_location = NULL;
+				invariant_location=NULL;
+                new_transition = NULL;
+                string transition_name = match[2];
+                string loc_name_start = match[3];
+				Location* loc_end;
+				Location* loc_start;
+				// cout<<endl;
+				if (!search_transition_relation((char*)transition_name.c_str(),
+                                                &new_transition)) {
+                    new_transition = new TransitionRelation(
+                        f->get_dimension(), f, fd, fm, transition_name);
+                    trlist->push_back(new_transition);
+                } else {
+                    cerr << "[ERROR] Multi-defined Transition." << endl;
+                    exit(1);
+                }
+                if (!search_location((char*)loc_name_start.c_str(),
+                                     &loc_start)) {
+                    cerr << "[ERROR] Transition use undefined location" << endl;
+                    exit(1);
+                }
+                if (regex_match(line, match, trans_pattern)) {
+                    string loc_name_end = match[4];
+                    if (!search_location((char*)loc_name_end.c_str(),
+                                         &loc_end)) {
+                        cerr << "[ERROR] Transition use undefined location"
+                             << endl;
+                        exit(1);
+                    }
+					new_transition->set_locs(loc_start, loc_end);
+                }
+				else{
+					new_transition->set_locs(loc_start, loc_start);
+				}
+                // cout<<transition_name<<" "<<loc_name_start<<"
+                // "<<loc_name_end<<endl;
+                
+                
+            } 
+			else if (regex_match(line, match, invariant_pattern)){
+				if (new_poly && new_location) {
+                    new_location->set_polyhedron(new_poly);
+                }
+                if (new_poly && new_transition) {
+                    new_transition->set_relation(new_poly);
+                }
+				if (new_poly && invariant_location){
+					invariant_location->set_invariant_polyhedron(new_poly);
+				}
+                new_poly = NULL;
+				new_location = NULL;
+				invariant_location=NULL;
+                new_transition = NULL;
+                string loc_name = match[2];
+                // cout<<loc_name<<" "<<loc_name.length()<<" "<<token<<endl;
+                if (!search_location((char*)loc_name.c_str(), &invariant_location)) {
+                    cerr << "[ERROR] undefined Invariant Location." << endl;
+                    exit(1);
+                }
+			}
+			else {
+                if (!new_poly) {
+                    if (stage == 1)
+                        new_poly =
+                            new C_Polyhedron(f->get_dimension(), UNIVERSE);
+                    else
+                        new_poly =
+                            new C_Polyhedron(2 * f->get_dimension(), UNIVERSE);
+                }
+                sregex_iterator it(line.begin(), line.end(), term_pattern);
+                sregex_iterator end;
+                if (it == end) {
+                    cerr << "[ERROR] No Matched Pattern, please check your "
+                            "input."
+                         << endl;
+                    exit(1);
+                }
+                bool is_negative = false;
+                bool is_rhs = false;
+                Linear_Expression* le = new Linear_Expression();
+                Linear_Expression* right = new Linear_Expression();
+                int op = 0;
+                // 0 -> =; 1 -> <=;
+				bool empty=false;
+                while (it != end) {
+                    string term = it->str();
+                    if (regex_match(term, match, primed_coef_var_pattern)) {
+                        int coef = stoi(match[1]);
+                        if (is_negative)
+                            coef = -coef;
+                        string var = match[2];
+                        int index = f->search(var.c_str());
+                        if (index == VAR_NOT_FOUND) {
+                            cout << "[ERROR] Undefined variable " << var
+                                 << endl;
+                            exit(1);
+                        }
+                        Linear_Expression* res = new Linear_Expression(
+                            abs(coef) * Variable(index + f->get_dimension()));
+                        if (!is_rhs){
+							if (coef>0)
+								(*le) += (*res);
+							else
+								(*le) -= (*res);
+						}
+                        else{
+							if (coef>0)
+								(*right) += (*res);
+							else
+								(*right) -= (*res);
+						}
+                        delete (res);
+                    } else if (regex_match(term, match, coef_var_pattern)) {
+                        int coef = stoi(match[1]);
+                        if (is_negative)
+                            coef = -coef;
+                        string var = match[2];
+						// cout<<match[1]<<" "<<coef<<" "<<line<<endl;
+                        int index = f->search(var.c_str());
+                        if (index == VAR_NOT_FOUND) {
+                            cout << "[ERROR] Undefined variable " << var
+                                 << endl;
+                            exit(1);
+                        }
+                        Linear_Expression* res =
+                            new Linear_Expression(abs(coef) * Variable(index));
+                        if (!is_rhs){
+							if (coef>0)
+								(*le) += (*res);
+							else
+								(*le) -= (*res);
+						}
+                        else{
+							if (coef>0)
+								(*right) += (*res);
+							else
+								(*right) -= (*res);
+						}
+                        delete (res);
+                    } else if (regex_match(term, match, coef_pattern)) {
+                        int coef = stoi(match[1]);
+						// cout<<match[1]<<" "<<coef<<" "<<line<<endl;
+                        if (is_negative)
+                            coef = -coef;
+                        Linear_Expression* res = new Linear_Expression(abs(coef));
+                        if (!is_rhs){
+							if (coef>0)
+								(*le) += (*res);
+							else
+								(*le) -= (*res);
+						}
+                        else{
+							if (coef>0)
+								(*right) += (*res);
+							else
+								(*right) -= (*res);
+						}
+                        delete (res);
+                    } else if (regex_match(term, match, primed_pattern)) {
+                        int coef = 1;
+                        // cout<<line<<" "<<term<<endl;
+                        if (is_negative)
+                            coef = -coef;
+                        string var = match[1];
+
+                        int index = f->search(var.c_str());
+                        if (index == VAR_NOT_FOUND) {
+                            cout << "[ERROR] Undefined variable " << var
+                                 << endl;
+                            exit(1);
+                        }
+                        Linear_Expression* res = new Linear_Expression(
+                            abs(coef) * Variable(index + f->get_dimension()));
+                        if (!is_rhs){
+							if (coef>0)
+								(*le) += (*res);
+							else
+								(*le) -= (*res);
+						}
+                        else{
+							if (coef>0)
+								(*right) += (*res);
+							else
+								(*right) -= (*res);
+						}
+                        delete (res);
+                    } else if (regex_match(term, match, var_pattern)) {
+                        int coef = 1;
+                        // cout<<line<<" "<<term<<endl;
+                        if (is_negative)
+                            coef = -coef;
+                        string var = match[1];
+
+                        int index = f->search(var.c_str());
+                        if (index == VAR_NOT_FOUND) {
+                            cout << "[ERROR] Undefined variable " << var
+                                 << endl;
+                            exit(1);
+                        }
+                        Linear_Expression* res =
+                            new Linear_Expression(abs(coef) * Variable(index));
+                        if (!is_rhs){
+							if (coef>0)
+								(*le) += (*res);
+							else
+								(*le) -= (*res);
+						}
+                        else{
+							if (coef>0)
+								(*right) += (*res);
+							else
+								(*right) -= (*res);
+						}
+                        delete (res);
+                    } else if (regex_match(term, match, sign_pattern)) {
+                        if (match[1] == "-")
+                            is_negative = true;
+                        else
+                            is_negative = false;
+                    } else if (regex_match(term, match, equality_pattern)) {
+                        if (match[1] == "<=")
+                            op = 1;
+                        else if (match[1] == ">=")
+                            op = 2;
+                        else
+                            op = 0;
+                        is_rhs = true;
+						is_negative=false;
+                    } else if (regex_match(term, match, empty_pattern)) {
+                        it++;
+                        continue;
+                    } else {
+                        cerr << "[ERROR] No Matched Pattern, please check your "
+                                "input."
+                             << endl;
+                        exit(1);
+                    }
+                    it++;
+                }
+                Constraint* new_constraint;
+				Linear_Expression* new_le=new Linear_Expression();
+				// cout<<*le<<" "<<*right<<endl;
+                if (op == 2) {
+                    new_constraint = new Constraint((*le) >= (*right));
+                } else if (op == 1) {
+                    new_constraint = new Constraint((*le) <= (*right));
+                } else {
+                    new_constraint = new Constraint((*le) == (*right));
+                }
+                new_poly->add_constraint(*new_constraint);
+				// if (test)
+				// 	new_constraint->ascii_dump();
+				// cout<<*new_constraint<<endl;
+				// cout<<"note here!!!!!!!!!!!!!!!"<<endl;
+                delete (le);
+                delete (right);
+                delete (new_constraint);
+            }
+            continue;
+        }
+    }
+    dimension = f->get_dimension();
+    exit(0);
 }

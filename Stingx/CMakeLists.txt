@@ -11,8 +11,6 @@ set(SRC_FILES
     Clump.cpp
     Context.cpp
     DisequalityStore.cpp
-    DualInvariantMap.cpp
-    DualTransitionRelation.cpp
     Expression.cpp
     ExpressionStore.cpp
     funcs.cpp
