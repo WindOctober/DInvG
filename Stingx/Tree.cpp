@@ -1249,8 +1249,6 @@ vector<vector<vector<int>>> Tree::merge_first_sub_sequences(
     cout << endl << "| sequences.size(): " << sequences.size();
 
     vector<vector<vector<int>>> merged_sequences;
-    int ncl = vcl.size();
-    // int target_index = ncl-(ra+er)-1;
 
     if (sequences.size() > 2) {
         vector<vector<vector<int>>>::iterator it;
@@ -1288,7 +1286,6 @@ vector<vector<vector<int>>> Tree::merge_end_sub_sequences(
     cout << endl << "| sequences.size(): " << sequences.size();
 
     vector<vector<vector<int>>> merged_sequences;
-    int ncl = vcl.size();
     // int target_index = ncl-(ra+er)-1;
 
     if (sequences.size() > 2) {

@@ -130,7 +130,6 @@ C_Polyhedron* invd;
 bool inv_check;
 
 void collect_generators(vector<Context*>* children, Generator_System& g);
-int parse_cmd_line(char* x);
 int single_weave_count;
 vector<int> vector_single_weave_count;
 int weave_count;
@@ -155,7 +154,6 @@ bool search_transition_relation(char* w, TransitionRelation** m);
 int find_variable(char* what);
 void add_preloc_invariants_to_transitions();
 void print_status();
-void print_bake_off(InvariantMap const& what);
 
 void check_invariant_ok();
 void Scan_Input();
@@ -211,92 +209,6 @@ bool search_transition_relation(char* name, TransitionRelation** what) {
 
     return false;
 }
-int parse_cmd_line(char* x) {
-    if (strcmp(x, "debug") == 0)
-        return DEBUG;
-    if (strcmp(x, "debug_2") == 0)
-        return DEBUG_2;
-    if (strcmp(x, "debug_3") == 0)
-        return DEBUG_3;
-    if (strcmp(x, "no_print_tree") == 0)
-        return NO_PRINT_TREE;
-    if (strcmp(x, "one") == 0)
-        return ONECONTEXT;
-    if (strcmp(x, "many") == 0)
-        return MANYCONTEXT;
-    if (strcmp(x, "new_many") == 0)
-        return NEW_MANYCONTEXT;
-    if (strcmp(x, "new_2_many") == 0)
-        return NEW_2_MANYCONTEXT;
-    if (strcmp(x, "new_3_many") == 0)
-        return NEW_3_MANYCONTEXT;
-    if (strcmp(x, "newdfs") == 0)
-        return NEWDFS;
-    if (strcmp(x, "newdfs_sequences") == 0)
-        return NEWDFS_SEQUENCES;
-    if (strcmp(x, "newdfs_seq_propagation") == 0)
-        return NEWDFS_SEQ_PROPAGATION;
-    if (strcmp(x, "noProjection") == 0)
-        return NO_PROJECTION;
-    if (strcmp(x, "FEC") == 0)
-        return FARKAS_ELIMINATE_C;
-    if (strcmp(x, "KEC") == 0)
-        return KOHLER_ELIMINATE_C;
-    if (strcmp(x, "REC") == 0)
-        return FOUMOT_ELIMINATE_C;
-    if (strcmp(x, "no_prior") == 0)
-        return NO_PRIOR;
-    if (strcmp(x, "target_prior1") == 0)
-        return TARGET_PRIOR1;
-    if (strcmp(x, "target_prior2") == 0)
-        return TARGET_PRIOR2;
-    if (strcmp(x, "target_prior3") == 0)
-        return TARGET_PRIOR3;
-    if (strcmp(x, "one_per_group") == 0)
-        return ONE_PER_GROUP;
-    if (strcmp(x, "two_per_group") == 0)
-        return TWO_PER_GROUP;
-    if (strcmp(x, "three_per_group") == 0)
-        return THREE_PER_GROUP;
-    if (strcmp(x, "four_per_group") == 0)
-        return FOUR_PER_GROUP;
-    if (strcmp(x, "gendrop") == 0)
-        return GENDROP;
-    if (strcmp(x, "zero_only") == 0)
-        return ZERO_ONLY;
-    if (strcmp(x, "one_only") == 0)
-        return ONE_ONLY;
-    if (strcmp(x, "zero_one") == 0)
-        return ZERO_ONE;
-    if (strcmp(x, "falsepath") == 0)
-        return YES_FALSEPATH;
-    if (strcmp(x, "nofalsepath") == 0)
-        return NO_FALSEPATH;
-    if (strcmp(x, "trsat") == 0)
-        return YES_TRSAT;
-    if (strcmp(x, "notrsat") == 0)
-        return NO_TRSAT;
-    if (strcmp(x, "exitpath") == 0)
-        return YES_EXITPATH;
-    if (strcmp(x, "noexitpath") == 0)
-        return NO_EXITPATH;
-    if (strcmp(x, "djinv") == 0)
-        return YES_DJINV;
-    if (strcmp(x, "nodjinv") == 0)
-        return NO_DJINV;
-    if (strcmp(x, "arrinv") == 0)
-        return YES_ARRINV;
-    if (strcmp(x, "noarrinv") == 0)
-        return NO_ARRINV;
-    if (strcmp(x, "noinst") == 0)
-        return NO_INSTANTIATION;
-    if (strcmp(x, "invcheck") == 0)
-        return INV_CHECK;
-    if (strcmp(x, "noinvcheck") == 0)
-        return NO_INV_CHECK;
-
-    return BULLSHIT;
-}
 void Print_Location();
 void collect_invariants(C_Polyhedron& cpoly, C_Polyhedron& invd) {
     /*
@@ -317,160 +229,7 @@ void collect_invariants(C_Polyhedron& cpoly, C_Polyhedron& invd) {
     return;
 }
 
-void collect_invariants_for_initial_by_eliminating(C_Polyhedron& cpoly,
-                                                   C_Polyhedron& invd) {
-    //
-    //  Collect invariants for initial
-    //
-    vector<Location*>::iterator vl;
-    int loclist_size = loclist->size();
-    invd = C_Polyhedron(fd->get_dimension(), UNIVERSE);
-    vl = loclist->begin();
 
-    //    Firstly, collect invariants for initial location by eliminating
-    //      for initial *vl, i.e. location,
-    //      use cpoly to update *vl->invariant and *vl->invariant updates invd.
-    // for (vl=loclist->begin(); vl!=loclist->end(); vl++)
-    (*vl)->extract_invariants_and_update_for_one_location_by_eliminating(cpoly,
-                                                                         invd);
-    /*
-    //  Recursive Propagation
-    //    Secondly, build the invariants from initial location by propagation
-    int propagation_flag[loclist_size]={0};
-    propagation_flag[0]=1;
-    int i = 0;
-    for ( vl = loclist->begin(); vl < loclist->end(); vl++ ){// propagate from
-    i-th location for (int j=0; j<loclist_size; j++){ if (propagation_flag[j] ==
-    0){// the location without invariants needs to propagate if (
-    !location_matrix[i][j].empty() ){// find the non-empty vector of
-    location_matrix cout<<endl<<"Location "<<(*loclist)[j]->get_name()<<" at
-    Propagation:";
-            //  prepare the consatraints
-            C_Polyhedron loc_i_inv = (*loclist)[i]->get_invariant();
-            int trans_index = location_matrix[i][j][0];
-            C_Polyhedron trans_relation =
-    (*trlist)[trans_index]->get_relation(); cout<<endl<<"From Location invariant
-    "<<(*loclist)[i]->get_name()<<endl<<"   "<<loc_i_inv; cout<<endl<<"Through
-    Transition relation "<<(*trlist)[trans_index]->get_name()<<": "<<endl<<"
-    "<<trans_relation;
-
-            //  Propagation
-            (*loclist)[j]->propagate_invariants_and_update_for_except_initial_by_propagation(loc_i_inv,
-    trans_relation);
-            //    Contains Test
-            (*loclist)[j]->contains_test(cpoly, loc_i_inv, trans_relation);
-
-            //  make flag for location has been added invariants
-            propagation_flag[j]=1;
-          }
-        }
-      }
-      i++;
-    }
-    */
-    return;
-}
-
-void collect_invariants_for_except_initial_by_propagation() {
-    //
-    //  Collect invariants for except initial
-    //
-    vector<Location*>::iterator vl;
-    int loclist_size = loclist->size();
-    cout << endl
-         << "> > > collect_invariants_for_except_initial_by_propagation()";
-
-    //    Secondly, build the invariants from initial location by propagation
-    int propagation_flag[loclist_size] = {0};
-    propagation_flag[0] = 1;
-    int i = 0;
-    for (vl = loclist->begin(); vl < loclist->end();
-         vl++) {  // propagate from i-th location
-        //  The "int i" is the index of loclist,
-        //  we just use vl = loclist->begin() to count for intuition
-        //  but actually use "int i" to count in following index
-        for (int j = 0; j < loclist_size; j++) {
-            if (propagation_flag[j] ==
-                0) {  // the location without invariants needs to propagate
-                if (!location_matrix[i][j]
-                         .empty()) {  // find the non-empty vector of
-                                      // location_matrix
-                    cout << endl
-                         << "Location " << (*loclist)[j]->get_name()
-                         << " at Propagation:";
-
-                    //  prepare the constraints for location invariant and
-                    //  transition relation
-                    C_Polyhedron loc_i_inv = (*loclist)[i]->get_invariant();
-                    for (vector<int>::iterator trans_index =
-                             location_matrix[i][j].begin();
-                         trans_index < location_matrix[i][j].end();
-                         trans_index++) {
-                        C_Polyhedron trans_relation =
-                            (*trlist)[*trans_index]->get_relation();
-                        cout << endl
-                             << "From Location invariant "
-                             << (*loclist)[i]->get_name() << endl
-                             << "   " << loc_i_inv;
-                        cout << endl
-                             << "Through Transition relation "
-                             << (*trlist)[*trans_index]->get_name() << ": "
-                             << endl
-                             << "   " << trans_relation;
-
-                        //  Propagation
-                        (*loclist)[j]
-                            ->propagate_invariants_and_update_for_except_initial_by_propagation(
-                                loc_i_inv, trans_relation);
-                        //    Contains Test
-                        //(*loclist)[j]->contains_test(cpoly, loc_i_inv,
-                        //trans_relation);
-                    }
-                    /*
-                    int trans_index = location_matrix[i][j][0];
-                    C_Polyhedron trans_relation =
-                    (*trlist)[trans_index]->get_relation(); cout<<endl<<"From
-                    Location invariant "<<(*loclist)[i]->get_name()<<endl<<"
-                    "<<loc_i_inv; cout<<endl<<"Through Transition relation
-                    "<<(*trlist)[trans_index]->get_name()<<": "<<endl<<"
-                    "<<trans_relation;
-
-                    //  Propagation
-                    (*loclist)[j]->propagate_invariants_and_update_for_except_initial_by_propagation(loc_i_inv,
-                    trans_relation);
-                    //    Contains Test
-                    //(*loclist)[j]->contains_test(cpoly, loc_i_inv,
-                    trans_relation);
-                    */
-
-                    //  make flag for location has been added invariants
-                    propagation_flag[j] = 1;
-                }
-            }
-        }
-        i++;
-    }
-
-    return;
-}
-
-void collect_invariants_for_initial_by_recursive_eliminating(
-    C_Polyhedron& cpoly,
-    C_Polyhedron& invd) {
-    /*
-     *  Collect invariants
-     */
-    vector<Location*>::iterator vl;
-    invd = C_Polyhedron(fd->get_dimension(), UNIVERSE);
-
-    //    Firstly, collect invariants for initial location by recursive
-    //    eliminating
-    vl = loclist->begin();
-    (*vl)->extract_invariants_and_update_for_initial_by_recursive_eliminating(
-        cpoly, invd);
-
-    return;
-}
 
 void collect_invariants_for_one_location_by_eliminating(int target_index,
                                                         C_Polyhedron& cpoly,
@@ -621,347 +380,6 @@ void dfs_traverse_recursive(int depth,
     return;
 }
 
-void dfs_traverse_recursive_for_initial_by_eliminating(int depth,
-                                                       vector<Clump>& vcl,
-                                                       C_Polyhedron& cpoly,
-                                                       C_Polyhedron& invd) {
-    if (invd.contains(cpoly)) {
-        bang_count++;
-        return;
-    }
-
-    if (depth == 0) {
-        weave_count++;
-        cout << endl << "/-----------------------------";
-        // Timer test_time_for_minimized;
-        collect_invariants_for_initial_by_eliminating(cpoly, invd);
-        cout << endl << "- Have Collected " << weave_count << " invariant(s)";
-        // test_time_for_minimized.stop();
-        // cout<<endl<<"- The collect_invariants's function Time Taken (0.01s) =
-        // "<<test_time_for_minimized.compute_time_elapsed()<<endl;
-        cout << endl << "\\-----------------------------" << endl;
-        //    prune_clumps(vcl);
-        return;
-    }
-
-    if (weave_timer.compute_time_elapsed() >= weave_time) {
-        cout << "Time is up!" << endl;
-        return;
-    }
-
-    vcl[depth - 1].clear();
-    while (vcl[depth - 1].has_next()) {
-        C_Polyhedron p(cpoly);
-        // Timer test_time_for_intersection;
-        p.intersection_assign(vcl[depth - 1].get_reference());
-        // test_time_for_intersection.stop();
-        // cout<<endl<<"- Intersection Time Taken (0.01s) =
-        // "<<test_time_for_intersection.compute_time_elapsed()<<endl;
-
-        dfs_traverse_recursive_for_initial_by_eliminating(depth - 1, vcl, p,
-                                                          invd);
-
-        vcl[depth - 1].next();
-    }
-    return;
-}
-
-void dfs_traverse_recursive_for_initial_by_recursive_eliminating(
-    int depth,
-    vector<Clump>& vcl,
-    C_Polyhedron& cpoly,
-    C_Polyhedron& invd) {
-    if (invd.contains(cpoly)) {
-        bang_count++;
-        return;
-    }
-
-    if (depth == 0) {
-        weave_count++;
-        cout << endl << "/-----------------------------";
-        Timer test_time_for_minimized;
-        collect_invariants_for_initial_by_recursive_eliminating(cpoly, invd);
-        test_time_for_minimized.stop();
-        cout << endl
-             << "- The collect_invariants's function Time Taken (0.01s) = "
-             << test_time_for_minimized.compute_time_elapsed() << endl;
-        cout << "\\-----------------------------" << endl;
-        //    prune_clumps(vcl);
-        return;
-    }
-
-    if (weave_timer.compute_time_elapsed() >= weave_time) {
-        cout << "Time is up!" << endl;
-        return;
-    }
-
-    vcl[depth - 1].clear();
-    while (vcl[depth - 1].has_next()) {
-        C_Polyhedron p(cpoly);
-        // Timer test_time_for_intersection;
-        p.intersection_assign(vcl[depth - 1].get_reference());
-        // test_time_for_intersection.stop();
-        // cout<<endl<<"- Intersection Time Taken (0.01s) =
-        // "<<test_time_for_intersection.compute_time_elapsed()<<endl;
-
-        dfs_traverse_recursive_for_initial_by_recursive_eliminating(
-            depth - 1, vcl, p, invd);
-
-        vcl[depth - 1].next();
-    }
-    return;
-}
-
-void dfs_traverse_recursive_for_binary_eliminating(int depth,
-                                                   vector<Clump>& vcl,
-                                                   C_Polyhedron& cpoly,
-                                                   C_Polyhedron& invd) {
-    // Timer test_time_for_contains;
-    int contains = invd.contains(cpoly);
-    // test_time_for_contains.stop();
-    // cout<<endl<<"- The contains function Time Taken (0.01s) =
-    // "<<test_time_for_contains.compute_time_elapsed();
-    // global_contains_time+=test_time_for_contains.compute_time_elapsed();
-    // cout<<endl<<"- The global_contains_time Time Taken (0.01s) =
-    // "<<global_contains_time;
-    if (contains) {
-        bang_count++;
-        return;
-    }
-
-    if (depth == 0) {
-        weave_count++;
-        cout << endl << "/-----------------------------";
-        // Timer test_time_for_minimized;
-        collect_invariants_by_binary_eliminating(cpoly, invd);
-        cout << endl << "- Have Collected " << weave_count << " invariant(s) ";
-        // test_time_for_minimized.stop();
-        // cout<<endl<<"- The collect_invariants's function Time Taken (0.01s) =
-        // "<<test_time_for_minimized.compute_time_elapsed()<<endl;
-        cout << endl << "\\-----------------------------" << endl;
-        //    prune_clumps(vcl);
-        return;
-    }
-
-    if (weave_timer.compute_time_elapsed() >= weave_time) {
-        cout << "Time is up!" << endl;
-        return;
-    }
-
-    vcl[depth - 1].clear();
-    while (vcl[depth - 1].has_next()) {
-        C_Polyhedron p(cpoly);
-        // Timer test_time_for_intersection;
-        p.intersection_assign(vcl[depth - 1].get_reference());
-        // test_time_for_intersection.stop();
-        // cout<<endl<<"- Intersection Time Taken (0.01s) =
-        // "<<test_time_for_intersection.compute_time_elapsed()<<endl;
-
-        dfs_traverse_recursive_for_binary_eliminating(depth - 1, vcl, p, invd);
-
-        vcl[depth - 1].next();
-    }
-    return;
-}
-
-void dfs_traverse_recursive_for_one_location_by_eliminating(
-    int target_index,
-    int depth,
-    Tree& tr,
-    C_Polyhedron& cpoly,
-    C_Polyhedron& invd) {
-    if (invd.contains(cpoly)) {
-        // tr.Print_Prune_Tree(depth,"Banged"); // print for debug and improve
-        // algorithm
-        bang_count++;
-        single_bang_count++;
-        return;
-    }
-
-    if (depth == 0) {
-        // backtrack_flag = true;
-        weave_count++;
-        single_weave_count++;
-        cout << endl << endl << "/-----------------------------";
-        tr.Print_Prune_Tree(depth,
-                            "Weaved");  // print for debug and improve algorithm
-        collect_timer.restart();
-        collect_invariants_for_one_location_by_eliminating(target_index, cpoly,
-                                                           invd);
-        cout << endl;
-        cout << endl << "- Have Collected " << weave_count << " invariant(s)";
-        collect_timer.stop();
-        cout << endl
-             << "- The collect_invariants Time Taken (0.01s) = "
-             << collect_timer.compute_time_elapsed();
-        collect_time = collect_time + collect_timer.compute_time_elapsed();
-        single_collect_time =
-            single_collect_time + collect_timer.compute_time_elapsed();
-        cout << endl << "\\-----------------------------" << endl;
-        prune_nodes_timer.restart();
-        // tr.prune_node_self_inspection(target_index,invd);
-        prune_nodes_timer.stop();
-        prune_nodes_time += prune_nodes_timer.compute_time_elapsed();
-        return;
-    }
-
-    if (total_timer.compute_time_elapsed() >= weave_time) {
-        cout << "Time is up!" << endl;
-        return;
-    }
-
-    tr.get_clump(depth - 1).clear();
-    while (tr.get_clump(depth - 1).has_next()) {
-        C_Polyhedron p(cpoly);
-        p.intersection_assign(tr.get_clump(depth - 1).get_reference());
-
-        dfs_traverse_recursive_for_one_location_by_eliminating(
-            target_index, depth - 1, tr, p, invd);
-
-        backtrack_timer.restart();  // Timer On
-        if (backtrack_flag == true) {
-            bool flag = invd.contains(cpoly);
-            if (flag) {
-                backtrack_success++;
-                cout << endl << "Pruned by backtracking in depth " << depth;
-                tr.get_clump(depth - 1).clear();
-                return;
-            } else {
-                if (backtrack_success >= 1) {
-                    backtrack_count++;
-                    backtrack_success = 0;
-                }
-                backtrack_flag = false;
-            }
-        }
-        backtrack_timer.stop();  // Timer Off
-        backtrack_time += backtrack_timer.compute_time_elapsed();
-
-        // For prune_node_self_inspection
-        if (depth - 1 < tr.get_first_conflict()) {
-            return;
-        } else if (depth - 1 == tr.get_first_conflict()) {
-            tr.clear_first_conflict();
-            backhere_flag = true;
-        }
-
-        if (backhere_flag == false) {
-            tr.get_clump(depth - 1).next();
-        } else {
-            backhere_flag = false;
-        }
-    }
-    return;
-}
-
-void dfs_traverse(vector<Clump>& vcl, C_Polyhedron& initp) {
-    // first find out the number of clumps
-    // a polyhedron containing the solutions contained to date
-    // initiate a dfs traversal.
-    // write an invariant extraction function at depth 0
-
-    C_Polyhedron invd(*trivial);
-    int ncl = 0;
-    vector<Clump>::iterator vi;
-    for (vi = vcl.begin(); vi < vcl.end(); vi++) {
-        ncl++;
-        (*vi).clear();
-    }
-
-    weave_timer.restart();
-
-    /***/
-    // modified and needed be deleted
-    // cout<<endl<<"test and set 'ncl'=? ";
-    // ncl=0;
-    // vector<Clump> test_vcl = vcl;
-    // test_vcl[0] = vcl[3];
-    /***/
-
-    dfs_traverse_recursive(ncl, vcl, initp, invd);
-}
-
-void dfs_traverse_for_initial_by_eliminating(vector<Clump>& vcl,
-                                             C_Polyhedron& initp) {
-    // Here is the function of "extract_invariant_by_eliminating()"
-    C_Polyhedron invd(*trivial);
-    int ncl = 0;
-    vector<Clump>::iterator vi;
-    for (vi = vcl.begin(); vi < vcl.end(); vi++) {
-        ncl++;
-        (*vi).clear();
-    }
-    weave_timer.restart();
-
-    dfs_traverse_recursive_for_initial_by_eliminating(ncl, vcl, initp, invd);
-}
-
-void dfs_traverse_for_initial_by_recursive_eliminating(vector<Clump>& vcl,
-                                                       C_Polyhedron& initp) {
-    // Here is the function of "extract_invariant_by_eliminating()"
-    C_Polyhedron invd(*trivial);
-    int ncl = 0;
-    vector<Clump>::iterator vi;
-    for (vi = vcl.begin(); vi < vcl.end(); vi++) {
-        ncl++;
-        (*vi).clear();
-    }
-    weave_timer.restart();
-
-    dfs_traverse_recursive_for_initial_by_recursive_eliminating(ncl, vcl, initp,
-                                                                invd);
-}
-
-void dfs_traverse_for_binary_eliminating(vector<Clump>& vcl,
-                                         C_Polyhedron& initp) {
-    // Here is the function of "extract_invariant_by_eliminating()"
-    C_Polyhedron invd(*trivial);
-    int ncl = 0;
-    vector<Clump>::iterator vi;
-    for (vi = vcl.begin(); vi < vcl.end(); vi++) {
-        ncl++;
-        (*vi).clear();
-    }
-    weave_timer.restart();
-
-    dfs_traverse_recursive_for_binary_eliminating(ncl, vcl, initp, invd);
-}
-
-void dfs_traverse_for_one_location_by_eliminating(int target_index,
-                                                  vector<Clump>& vcl,
-                                                  C_Polyhedron& initp) {
-    C_Polyhedron invd(*trivial);
-    Tree tr = Tree();  // empty tree
-    tr.set_target_index(target_index);
-    int ncl = 0;
-    vector<Clump>::iterator vi;
-    for (vi = vcl.begin(); vi < vcl.end(); vi++) {
-        ncl++;
-        (*vi).clear();
-    }
-
-    cout << endl
-         << endl
-         << "/ Start to solve Location "
-         << (*loclist)[target_index]->get_name();
-    if (tree_prior == "target_prior1") {
-        cout << endl << "/ Using target_prior1";
-        tr.Reorder_Target_Prior_1(vcl);
-    } else if (tree_prior == "target_prior2") {
-        cout << endl << "/ Using target_prior2";
-        tr.Reorder_Target_Prior_2(vcl);
-    } else if (tree_prior == "target_prior3") {
-        cout << endl << "/ Using target_prior3";
-        tr.Reorder_Target_Prior_3(vcl);
-    } else {
-        cout << endl << "Wrong Type: " << tree_prior;
-    }
-
-    // tr.prune_clumps_by_hierarchy_inclusion();
-
-    dfs_traverse_recursive_for_one_location_by_eliminating(target_index, ncl,
-                                                           tr, initp, invd);
-}
 
 void dfs_sequences_generation_traverse(
     vector<vector<vector<vector<int>>>>& target_sequences,
@@ -1000,7 +418,6 @@ void dfs_sequences_generation_traverse(
 
     tr.set_max_clump_count();
     // tr.prune_clumps_by_hierarchy_inclusion();
-    // dfs_traverse_recursive_for_one_location_by_eliminating(target_index,ncl,tr,initp,invd);
 
     cout << endl << "/ Generate Sequences";
     vector<vector<vector<int>>> sequences;
@@ -1077,8 +494,6 @@ void dfs_sequences_traverse_for_one_location_by_eliminating(
 
     tr.set_max_clump_count();
     // tr.prune_clumps_by_hierarchy_inclusion();
-    // dfs_traverse_recursive_for_one_location_by_eliminating(target_index,ncl,tr,initp,invd);
-
     // cout<<endl;
     cout << endl << "/ Read(Traverse) Sequences";
     tr.dfs_sequences_traverse(sequences, initp, invd);
@@ -1523,7 +938,6 @@ void Create_Adjacency_Matrix_for_Location_and_Transition() {
     }
 
     //  print the matrix
-    cout;
     cout << endl << "/----------------------------- ";
     cout << endl << "| Adjacency Matrix for Location and Transition: ";
     cout << endl << "----------------------------- ";
@@ -1838,49 +1252,6 @@ void print_status() {
     cout << "----------------------------------------------------" << endl;
 }
 
-void print_bake_off(InvariantMap const& invmap) {
-    bool disjoint;
-    int r2;
-
-    vector<Location*>::iterator vl;
-
-    for (vl = loclist->begin(); vl < loclist->end(); vl++) {
-        r2 = 0;
-        disjoint = true;
-
-        string const& what = (*vl)->get_name();
-        C_Polyhedron& loc_inv = (*vl)->invariant_reference();
-        C_Polyhedron const& other_inv = invmap(what);
-
-        cout << "Location :" << what << " ";
-
-        // Am I stronger
-        if (other_inv.contains(loc_inv)) {
-            r2++;  // I am one up
-            disjoint = false;
-        }
-        // Is the other_inv stronger?
-
-        if (loc_inv.contains(other_inv)) {
-            r2--;  // h79 is one up
-            disjoint = false;
-        }
-
-        if (disjoint) {
-            cout << "Disjoint" << endl;
-        } else if (r2 > 0) {
-            cout << " + " << endl;
-        } else if (r2 < 0) {
-            cout << " - " << endl;
-        } else if (r2 == 0) {
-            cout << " == " << endl;
-        } else {
-            // this is unreachable (or is it? :-)
-            cout << " <<Unknown Relation>>" << endl;
-        }
-    }
-}
-
 void check_invariant_ok() {
     cout << endl << "> > > In check_invariant_ok()";
     cerr << "Checking for invariant..." << endl;
@@ -1918,7 +1289,6 @@ void Scan_Input() {
 	Location* invariant_location =NULL;
     C_Polyhedron* new_poly = NULL;
     TransitionRelation* new_transition = NULL;
-	bool test=false;
     while (getline(cin, line)) {
         istringstream iss(line);
         if (line.length() == 0)
@@ -1965,7 +1335,6 @@ void Scan_Input() {
                 if (new_transition && new_poly) {
                     new_transition->set_relation(new_poly);
                 }
-				Location* rec;
                 return;
             }
             if (regex_match(line, match, loc_pattern)) {
@@ -1994,7 +1363,6 @@ void Scan_Input() {
                 }
             } else if (regex_match(line, match, trans_pattern) ||
                        regex_match(line, match, self_trans_pattern)) {
-				test=false;
                 stage = 2;
                 if (new_poly && new_location) {
                     new_location->set_polyhedron(new_poly);
@@ -2090,7 +1458,6 @@ void Scan_Input() {
                 Linear_Expression* right = new Linear_Expression();
                 int op = 0;
                 // 0 -> =; 1 -> <=;
-				bool empty=false;
                 while (it != end) {
                     string term = it->str();
                     if (regex_match(term, match, primed_coef_var_pattern)) {
@@ -2247,8 +1614,6 @@ void Scan_Input() {
                     it++;
                 }
                 Constraint* new_constraint;
-				Linear_Expression* new_le=new Linear_Expression();
-				// cout<<*le<<" "<<*right<<endl;
                 if (op == 2) {
                     new_constraint = new Constraint((*le) >= (*right));
                 } else if (op == 1) {
@@ -2257,10 +1622,6 @@ void Scan_Input() {
                     new_constraint = new Constraint((*le) == (*right));
                 }
                 new_poly->add_constraint(*new_constraint);
-				// if (test)
-				// 	new_constraint->ascii_dump();
-				// cout<<*new_constraint<<endl;
-				// cout<<"note here!!!!!!!!!!!!!!!"<<endl;
                 delete (le);
                 delete (right);
                 delete (new_constraint);
