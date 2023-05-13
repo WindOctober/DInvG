@@ -1,5 +1,6 @@
 
 #include <iostream>
+#include <regex>
 #include <string>
 #include <vector>
 #include "DualInvariantMap.h"
@@ -7,7 +8,6 @@
 #include "InvariantMap.h"
 #include "Location.h"
 #include "PolyUtils.h"
-#include<regex>
 #include "Propagation.h"
 #include "System.h"
 #include "Timer.h"
@@ -19,12 +19,22 @@ using namespace std;
 using namespace Parma_Polyhedra_Library;
 using namespace Parma_Polyhedra_Library::IO_Operators;
 bool gendrop;
+int debug;
+int debug_2;
+int debug_3;
 int num_context;
+bool print_tree;
 bool zero;
 bool one;
+bool falsepath;
+bool trsat;
+bool noexitpath;
+bool djinv;
+bool arrinv;
 int prop_steps;
 int weave_time;
 int total_time;
+bool ch79, bhrz03, dual;
 string projection;
 string tree_prior;
 string some_per_group;
@@ -40,6 +50,10 @@ C_Polyhedron *trivial, *dualp;
 #define MAX_ID_SIZE 100
 #endif
 
+#define DEBUG 1001
+#define DEBUG_2 1002
+#define DEBUG_3 1003
+#define NO_PRINT_TREE 1010
 #define ONECONTEXT 0
 #define GENDROP 1
 #define MANYCONTEXT 2
@@ -47,12 +61,9 @@ C_Polyhedron *trivial, *dualp;
 #define NEW_MANYCONTEXT 401
 #define NEW_2_MANYCONTEXT 402
 #define NEW_3_MANYCONTEXT 403
+#define NEWDFS 404
 #define NEWDFS_SEQUENCES 405
-#define NEWDFS_SEQ_PROPAGATION 404
-#define DEBUG 406
-#define DEBUG_2 407
-#define DEBUG_3 408
-#define NO_PRINT_TREE 409
+#define NEWDFS_SEQ_PROPAGATION 406
 #define NO_PROJECTION 410
 #define KOHLER_ELIMINATE_C 411
 #define FARKAS_ELIMINATE_C 412
@@ -65,36 +76,36 @@ C_Polyhedron *trivial, *dualp;
 #define TWO_PER_GROUP 432
 #define THREE_PER_GROUP 433
 #define FOUR_PER_GROUP 434
-#define ZERO_ONLY 5
-#define ONE_ONLY 6
-#define ZERO_ONE 7
+#define ZERO_ONLY 501
+#define ONE_ONLY 502
+#define ZERO_ONE 503
+#define YES_FALSEPATH 511
+#define NO_FALSEPATH 512
+#define YES_TRSAT 513
+#define NO_TRSAT 514
+#define YES_EXITPATH 521
+#define NO_EXITPATH 522
+#define YES_DJINV 601
+#define NO_DJINV 602
+#define YES_ARRINV 611
+#define NO_ARRINV 612
 #define NO_INSTANTIATION 8
-#define YES_FALSEPATH 9
-#define NO_FALSEPATH 10
-#define YES_TRSAT 11
-#define NO_TRSAT 12
-#define YES_EXITPATH 13
-#define NO_EXITPATH 14
-#define YES_DJINV 17
-#define NO_DJINV 18
-#define YES_ARRINV 19
-#define NO_ARRINV 20
-#define NO_DUAL 21
+#define NO_CH79 9
+#define NO_BHRZ03 10
+#define NO_DUAL 11
+#define YES_CH79 12
+#define YES_BHRZ03 13
+#define YES_DUAL 14
 #define INV_CHECK 15
 #define NO_INV_CHECK 16
 
 vector<int>** location_matrix;
-int location_count = 0;
 int global_binary_i = 0;
 long int global_contains_time = 0;
 vector<int> target_prior;
 
-vector<string> Vars;
-int max_prop_steps;
-vector<Location*> Locations;
-vector<TransitionRelation*> Transitions;
-
 char err_str[100];
+extern int linenum;
 int dimension;
 var_info *f, *fd, *fm;
 vector<Location*>* loclist;
@@ -122,8 +133,9 @@ vector<int> vector_single_dfs_traverse_time;
 vector<int> vector_single_dfs_sequences_generation_time;
 vector<int> vector_single_dfs_sequences_traverse_time;
 int single_collect_time;
+int* tt;
 C_Polyhedron* invd;
-Counter counter;
+
 bool inv_check;
 
 void collect_generators(vector<Context*>* children, Generator_System& g);
@@ -146,15 +158,7 @@ int clump_prune_count;
 int context_count;
 int merge_count;
 int bang_count_in_merge;
-
-int* tt;
-int debug, debug_2, debug_3;
-bool print_tree;
-bool falsepath;
-bool trsat;
-bool noexitpath;
-bool djinv;
-bool arrinv;
+Counter counter;
 bool search_location(char* w, Location** m);
 bool search_transition_relation(char* w, TransitionRelation** m);
 int find_variable(char* what);
@@ -163,6 +167,388 @@ void print_status();
 void print_bake_off(InvariantMap const& what);
 
 void check_invariant_ok();
+void Scan_Input() {
+    cout << endl << "- Parsing Input Doing...";
+
+    cout << endl << "Get Input Variable...\n";
+    smatch match;
+    string line;
+    int stage = -1;  // Variable Reading.
+    f = new var_info();
+    regex trans_pattern(R"((Transition|transition)\s+(\w+):\s*(\w+)\s*,\s*(\w+)\s*,\s*)");
+    regex self_trans_pattern(R"((Transition|transition)\s+(\w+)\s*:\s*(\w+)\s*,\s*)");
+    regex loc_pattern(R"((Location|location)\s+(\w+)\s*)");
+	regex invariant_pattern(R"((Invariant|invariant)\s+(\w+)\s*:?\s*)");
+    regex term_pattern(
+        R"(\s*\d+\s*\*\s*\w+\s*|\s*\d+\s*\*\s*'\w+\s*|\s*'\w+\s*|\s*\w+\s*|\s*\d+\s*|\s*|[+-]|(<=|=|>=))");
+    regex primed_coef_var_pattern(R"(\s*(\d+)\s*\*\s*'(\w+)\s*)");
+    regex coef_var_pattern(R"(\s*(\d+)\s*\*\s*(\w+)\s*)");
+    regex primed_pattern(R"(\s*'(\w+)\s*)");
+    regex var_pattern(R"(\s*(\w+)\s*)");
+    regex coef_pattern(R"(\s*(\d+)\s*)");
+    regex sign_pattern(R"(\s*([+-])\s*)");
+    regex equality_pattern(R"(\s*(<=|=|>=)\s*)");
+    regex empty_pattern(R"(\s*)");
+    Location* new_location = NULL;
+	Location* invariant_location =NULL;
+    C_Polyhedron* new_poly = NULL;
+    TransitionRelation* new_transition = NULL;
+	bool test=false;
+    while (getline(cin, line)) {
+        istringstream iss(line);
+        if (line.length() == 0)
+            continue;
+        string token;
+        if (stage == -1 || stage == 0) {
+            while (iss >> token) {
+                if (token == "variable" || token == "Variable") {
+                    stage = 0;
+                    continue;
+                } else if (stage == -1) {
+                    cout << "[warning] Must Start by variable or Varible."
+                         << endl;
+                    exit(1);
+                }
+                if (token == "[") {
+                    if (stage == -1) {
+                        cout << "[warning] Missing variable, program execution "
+                                "aborted."
+                             << endl;
+                        exit(1);
+                    } else {
+                        continue;
+                    }
+                }
+                if (token == "]") {
+                    if (stage == 0) {
+                        stage = 1;
+                        break;
+                    } else {
+                        cout << "[warning] Variable stage is ending, program "
+                                "execution aborted."
+                             << endl;
+                        exit(1);
+                    }
+                }
+                // cout<<token<<endl;
+                f->search_and_insert(token.c_str());
+            }
+            continue;
+        }
+        if (stage == 1 || stage == 2) {
+            if (line.find("end") != string::npos) {
+                if (new_transition && new_poly) {
+                    new_transition->set_relation(new_poly);
+                }
+                return;
+            }
+            if (regex_match(line, match, loc_pattern)) {
+                if (new_poly && new_location) {
+                    new_location->set_polyhedron(new_poly);
+                }
+                if (new_poly && new_transition) {
+                    new_transition->set_relation(new_poly);
+                }
+				if (new_poly && invariant_location){
+					invariant_location->set_invariant_polyhedron(new_poly);
+				}
+                new_poly = NULL;
+				new_location = NULL;
+				invariant_location=NULL;
+                new_transition = NULL;
+                string loc_name = match[2];
+                // cout<<loc_name<<" "<<loc_name.length()<<" "<<token<<endl;
+                if (!search_location((char*)loc_name.c_str(), &new_location)) {
+                    new_location =
+                        new Location(f->get_dimension(), f, fd, fm, loc_name);
+                    loclist->push_back(new_location);
+                } else {
+                    cerr << "[ERROR] Multi-defined Location." << endl;
+                    exit(1);
+                }
+            } else if (regex_match(line, match, trans_pattern) ||
+                       regex_match(line, match, self_trans_pattern)) {
+				test=false;
+                stage = 2;
+                if (new_poly && new_location) {
+                    new_location->set_polyhedron(new_poly);
+                }
+                if (new_poly && new_transition) {
+                    new_transition->set_relation(new_poly);
+                }
+				if (new_poly && invariant_location){
+					invariant_location->set_invariant_polyhedron(new_poly);
+				}
+                new_poly = NULL;
+				new_location = NULL;
+				invariant_location=NULL;
+                new_transition = NULL;
+                string transition_name = match[2];
+                string loc_name_start = match[3];
+				Location* loc_end;
+				Location* loc_start;
+				// cout<<endl;
+				if (!search_transition_relation((char*)transition_name.c_str(),
+                                                &new_transition)) {
+                    new_transition = new TransitionRelation(
+                        f->get_dimension(), f, fd, fm, transition_name);
+                    trlist->push_back(new_transition);
+                } else {
+                    cerr << "[ERROR] Multi-defined Transition." << endl;
+                    exit(1);
+                }
+                if (!search_location((char*)loc_name_start.c_str(),
+                                     &loc_start)) {
+                    cerr << "[ERROR] Transition use undefined location" << endl;
+                    exit(1);
+                }
+                if (regex_match(line, match, trans_pattern)) {
+                    string loc_name_end = match[4];
+                    if (!search_location((char*)loc_name_end.c_str(),
+                                         &loc_end)) {
+                        cerr << "[ERROR] Transition use undefined location"
+                             << endl;
+                        exit(1);
+                    }
+					new_transition->set_locs(loc_start, loc_end);
+                }
+				else{
+					new_transition->set_locs(loc_start, loc_start);
+				}
+				if (transition_name=="t1_1") test=true;
+                // cout<<transition_name<<" "<<loc_name_start<<"
+                // "<<loc_name_end<<endl;
+                
+                
+            } 
+			else if (regex_match(line, match, invariant_pattern)){
+				if (new_poly && new_location) {
+                    new_location->set_polyhedron(new_poly);
+                }
+                if (new_poly && new_transition) {
+					if (new_transition->get_name()=="t1_1"){
+						cout<<*new_poly<<endl;
+					}
+                    new_transition->set_relation(new_poly);
+                }
+				if (new_poly && invariant_location){
+					invariant_location->set_invariant_polyhedron(new_poly);
+				}
+                new_poly = NULL;
+				new_location = NULL;
+				invariant_location=NULL;
+                new_transition = NULL;
+                string loc_name = match[2];
+                // cout<<loc_name<<" "<<loc_name.length()<<" "<<token<<endl;
+                if (!search_location((char*)loc_name.c_str(), &invariant_location)) {
+                    cerr << "[ERROR] undefined Invariant Location." << endl;
+                    exit(1);
+                }
+			}
+			else {
+                if (!new_poly) {
+                    if (stage == 1)
+                        new_poly =
+                            new C_Polyhedron(f->get_dimension(), UNIVERSE);
+                    else
+                        new_poly =
+                            new C_Polyhedron(2 * f->get_dimension(), UNIVERSE);
+                }
+                sregex_iterator it(line.begin(), line.end(), term_pattern);
+                sregex_iterator end;
+                if (it == end) {
+                    cerr << "[ERROR] No Matched Pattern, please check your "
+                            "input."
+                         << endl;
+                    exit(1);
+                }
+                bool is_negative = false;
+                bool is_rhs = false;
+                Linear_Expression* le = new Linear_Expression();
+                Linear_Expression* right = new Linear_Expression();
+                int op = 0;
+                // 0 -> =; 1 -> <=;
+				bool empty=false;
+                while (it != end) {
+                    string term = it->str();
+                    if (regex_match(term, match, primed_coef_var_pattern)) {
+                        int coef = stoi(match[1]);
+                        if (is_negative)
+                            coef = -coef;
+                        string var = match[2];
+                        int index = f->search(var.c_str());
+                        if (index == VAR_NOT_FOUND) {
+                            cout << "[ERROR] Undefined variable " << var
+                                 << endl;
+                            exit(1);
+                        }
+                        Linear_Expression* res = new Linear_Expression(
+                            abs(coef) * Variable(index + f->get_dimension()));
+                        if (!is_rhs){
+							if (coef>0)
+								(*le) += (*res);
+							else
+								(*le) -= (*res);
+						}
+                        else{
+							if (coef>0)
+								(*right) += (*res);
+							else
+								(*right) -= (*res);
+						}
+                        delete (res);
+                    } else if (regex_match(term, match, coef_var_pattern)) {
+                        int coef = stoi(match[1]);
+                        if (is_negative)
+                            coef = -coef;
+                        string var = match[2];
+						// cout<<match[1]<<" "<<coef<<" "<<line<<endl;
+                        int index = f->search(var.c_str());
+                        if (index == VAR_NOT_FOUND) {
+                            cout << "[ERROR] Undefined variable " << var
+                                 << endl;
+                            exit(1);
+                        }
+                        Linear_Expression* res =
+                            new Linear_Expression(abs(coef) * Variable(index));
+                        if (!is_rhs){
+							if (coef>0)
+								(*le) += (*res);
+							else
+								(*le) -= (*res);
+						}
+                        else{
+							if (coef>0)
+								(*right) += (*res);
+							else
+								(*right) -= (*res);
+						}
+                        delete (res);
+                    } else if (regex_match(term, match, coef_pattern)) {
+                        int coef = stoi(match[1]);
+						// cout<<match[1]<<" "<<coef<<" "<<line<<endl;
+                        if (is_negative)
+                            coef = -coef;
+                        Linear_Expression* res = new Linear_Expression(abs(coef));
+                        if (!is_rhs){
+							if (coef>0)
+								(*le) += (*res);
+							else
+								(*le) -= (*res);
+						}
+                        else{
+							if (coef>0)
+								(*right) += (*res);
+							else
+								(*right) -= (*res);
+						}
+                        delete (res);
+                    } else if (regex_match(term, match, primed_pattern)) {
+                        int coef = 1;
+                        // cout<<line<<" "<<term<<endl;
+                        if (is_negative)
+                            coef = -coef;
+                        string var = match[1];
+
+                        int index = f->search(var.c_str());
+                        if (index == VAR_NOT_FOUND) {
+                            cout << "[ERROR] Undefined variable " << var
+                                 << endl;
+                            exit(1);
+                        }
+                        Linear_Expression* res = new Linear_Expression(
+                            abs(coef) * Variable(index + f->get_dimension()));
+                        if (!is_rhs){
+							if (coef>0)
+								(*le) += (*res);
+							else
+								(*le) -= (*res);
+						}
+                        else{
+							if (coef>0)
+								(*right) += (*res);
+							else
+								(*right) -= (*res);
+						}
+                        delete (res);
+                    } else if (regex_match(term, match, var_pattern)) {
+                        int coef = 1;
+                        // cout<<line<<" "<<term<<endl;
+                        if (is_negative)
+                            coef = -coef;
+                        string var = match[1];
+
+                        int index = f->search(var.c_str());
+                        if (index == VAR_NOT_FOUND) {
+                            cout << "[ERROR] Undefined variable " << var
+                                 << endl;
+                            exit(1);
+                        }
+                        Linear_Expression* res =
+                            new Linear_Expression(abs(coef) * Variable(index));
+                        if (!is_rhs){
+							if (coef>0)
+								(*le) += (*res);
+							else
+								(*le) -= (*res);
+						}
+                        else{
+							if (coef>0)
+								(*right) += (*res);
+							else
+								(*right) -= (*res);
+						}
+                        delete (res);
+                    } else if (regex_match(term, match, sign_pattern)) {
+                        if (match[1] == "-")
+                            is_negative = true;
+                        else
+                            is_negative = false;
+                    } else if (regex_match(term, match, equality_pattern)) {
+                        if (match[1] == "<=")
+                            op = 1;
+                        else if (match[1] == ">=")
+                            op = 2;
+                        else
+                            op = 0;
+                        is_rhs = true;
+						is_negative=false;
+                    } else if (regex_match(term, match, empty_pattern)) {
+                        it++;
+                        continue;
+                    } else {
+                        cerr << "[ERROR] No Matched Pattern, please check your "
+                                "input."
+                             << endl;
+                        exit(1);
+                    }
+                    it++;
+                }
+                Constraint* new_constraint;
+				Linear_Expression* new_le=new Linear_Expression();
+				// cout<<*le<<" "<<*right<<endl;
+                if (op == 2) {
+                    new_constraint = new Constraint((*le) >= (*right));
+                } else if (op == 1) {
+                    new_constraint = new Constraint((*le) <= (*right));
+                } else {
+                    new_constraint = new Constraint((*le) == (*right));
+                }
+                new_poly->add_constraint(*new_constraint);
+				// if (test)
+				// 	new_constraint->ascii_dump();
+				// cout<<*new_constraint<<endl;
+				// cout<<"note here!!!!!!!!!!!!!!!"<<endl;
+                delete (le);
+                delete (right);
+                delete (new_constraint);
+            }
+            continue;
+        }
+    }
+    dimension = f->get_dimension();
+    exit(0);
+}
 
 void do_some_propagation() {
     // try and fire each transition relation
@@ -179,16 +565,14 @@ void do_some_propagation() {
     }
 }
 
-Location* get_location(char* name) {
-    vector<Location*>::iterator vi;
-    string nstr(name);
-    for (vi = loclist->begin(); vi < loclist->end(); vi++) {
-        if ((*vi)->matches(nstr)) {
-            return *vi;
-        }
+int find_variable(char* what) {
+    int i = f->search(what);
+    if (i == VAR_NOT_FOUND) {
+        string x = string("Error:: Variable ") + what + string(" not found");
+        exit(1);
     }
-    fprintf(stderr, "Error: location %s not found\n", name);
-    exit(1);
+
+    return i;
 }
 
 bool search_location(char* name, Location** what) {
@@ -216,7 +600,6 @@ bool search_transition_relation(char* name, TransitionRelation** what) {
 
     return false;
 }
-
 int parse_cmd_line(char* x) {
     if (strcmp(x, "debug") == 0)
         return DEBUG;
@@ -226,6 +609,18 @@ int parse_cmd_line(char* x) {
         return DEBUG_3;
     if (strcmp(x, "no_print_tree") == 0)
         return NO_PRINT_TREE;
+    if (strcmp(x, "one") == 0)
+        return ONECONTEXT;
+    if (strcmp(x, "many") == 0)
+        return MANYCONTEXT;
+    if (strcmp(x, "new_many") == 0)
+        return NEW_MANYCONTEXT;
+    if (strcmp(x, "new_2_many") == 0)
+        return NEW_2_MANYCONTEXT;
+    if (strcmp(x, "new_3_many") == 0)
+        return NEW_3_MANYCONTEXT;
+    if (strcmp(x, "newdfs") == 0)
+        return NEWDFS;
     if (strcmp(x, "newdfs_sequences") == 0)
         return NEWDFS_SEQUENCES;
     if (strcmp(x, "newdfs_seq_propagation") == 0)
@@ -282,6 +677,18 @@ int parse_cmd_line(char* x) {
         return YES_ARRINV;
     if (strcmp(x, "noarrinv") == 0)
         return NO_ARRINV;
+    if (strcmp(x, "noinst") == 0)
+        return NO_INSTANTIATION;
+    if (strcmp(x, "noch79") == 0)
+        return NO_CH79;
+    if (strcmp(x, "nobhrz03") == 0)
+        return NO_BHRZ03;
+    if (strcmp(x, "dual") == 0)
+        return YES_DUAL;
+    if (strcmp(x, "ch79") == 0)
+        return YES_CH79;
+    if (strcmp(x, "bhrz03") == 0)
+        return YES_BHRZ03;
     if (strcmp(x, "nodual") == 0)
         return NO_DUAL;
     if (strcmp(x, "invcheck") == 0)
@@ -292,7 +699,6 @@ int parse_cmd_line(char* x) {
     return BULLSHIT;
 }
 void Print_Location();
-
 void collect_invariants(C_Polyhedron& cpoly, C_Polyhedron& invd) {
     /*
      *  Collect invariants
@@ -312,6 +718,161 @@ void collect_invariants(C_Polyhedron& cpoly, C_Polyhedron& invd) {
     return;
 }
 
+void collect_invariants_for_initial_by_eliminating(C_Polyhedron& cpoly,
+                                                   C_Polyhedron& invd) {
+    //
+    //  Collect invariants for initial
+    //
+    vector<Location*>::iterator vl;
+    int loclist_size = loclist->size();
+    invd = C_Polyhedron(fd->get_dimension(), UNIVERSE);
+    vl = loclist->begin();
+
+    //    Firstly, collect invariants for initial location by eliminating
+    //      for initial *vl, i.e. location,
+    //      use cpoly to update *vl->invariant and *vl->invariant updates invd.
+    // for (vl=loclist->begin(); vl!=loclist->end(); vl++)
+    (*vl)->extract_invariants_and_update_for_one_location_by_eliminating(cpoly,
+                                                                         invd);
+    /*
+    //  Recursive Propagation
+    //    Secondly, build the invariants from initial location by propagation
+    int propagation_flag[loclist_size]={0};
+    propagation_flag[0]=1;
+    int i = 0;
+    for ( vl = loclist->begin(); vl < loclist->end(); vl++ ){// propagate from
+    i-th location for (int j=0; j<loclist_size; j++){ if (propagation_flag[j] ==
+    0){// the location without invariants needs to propagate if (
+    !location_matrix[i][j].empty() ){// find the non-empty vector of
+    location_matrix cout<<endl<<"Location "<<(*loclist)[j]->get_name()<<" at
+    Propagation:";
+            //  prepare the consatraints
+            C_Polyhedron loc_i_inv = (*loclist)[i]->get_invariant();
+            int trans_index = location_matrix[i][j][0];
+            C_Polyhedron trans_relation =
+    (*trlist)[trans_index]->get_relation(); cout<<endl<<"From Location invariant
+    "<<(*loclist)[i]->get_name()<<endl<<"   "<<loc_i_inv; cout<<endl<<"Through
+    Transition relation "<<(*trlist)[trans_index]->get_name()<<": "<<endl<<"
+    "<<trans_relation;
+
+            //  Propagation
+            (*loclist)[j]->propagate_invariants_and_update_for_except_initial_by_propagation(loc_i_inv,
+    trans_relation);
+            //    Contains Test
+            (*loclist)[j]->contains_test(cpoly, loc_i_inv, trans_relation);
+
+            //  make flag for location has been added invariants
+            propagation_flag[j]=1;
+          }
+        }
+      }
+      i++;
+    }
+    */
+    return;
+}
+
+void collect_invariants_for_except_initial_by_propagation() {
+    //
+    //  Collect invariants for except initial
+    //
+    vector<Location*>::iterator vl;
+    int loclist_size = loclist->size();
+    cout << endl
+         << "> > > collect_invariants_for_except_initial_by_propagation()";
+
+    //    Secondly, build the invariants from initial location by propagation
+    int propagation_flag[loclist_size] = {0};
+    propagation_flag[0] = 1;
+    int i = 0;
+    for (vl = loclist->begin(); vl < loclist->end();
+         vl++) {  // propagate from i-th location
+        //  The "int i" is the index of loclist,
+        //  we just use vl = loclist->begin() to count for intuition
+        //  but actually use "int i" to count in following index
+        for (int j = 0; j < loclist_size; j++) {
+            if (propagation_flag[j] ==
+                0) {  // the location without invariants needs to propagate
+                if (!location_matrix[i][j]
+                         .empty()) {  // find the non-empty vector of
+                                      // location_matrix
+                    cout << endl
+                         << "Location " << (*loclist)[j]->get_name()
+                         << " at Propagation:";
+
+                    //  prepare the constraints for location invariant and
+                    //  transition relation
+                    C_Polyhedron loc_i_inv = (*loclist)[i]->get_invariant();
+                    for (vector<int>::iterator trans_index =
+                             location_matrix[i][j].begin();
+                         trans_index < location_matrix[i][j].end();
+                         trans_index++) {
+                        C_Polyhedron trans_relation =
+                            (*trlist)[*trans_index]->get_relation();
+                        cout << endl
+                             << "From Location invariant "
+                             << (*loclist)[i]->get_name() << endl
+                             << "   " << loc_i_inv;
+                        cout << endl
+                             << "Through Transition relation "
+                             << (*trlist)[*trans_index]->get_name() << ": "
+                             << endl
+                             << "   " << trans_relation;
+
+                        //  Propagation
+                        (*loclist)[j]
+                            ->propagate_invariants_and_update_for_except_initial_by_propagation(
+                                loc_i_inv, trans_relation);
+                        //    Contains Test
+                        //(*loclist)[j]->contains_test(cpoly, loc_i_inv,
+                        //trans_relation);
+                    }
+                    /*
+                    int trans_index = location_matrix[i][j][0];
+                    C_Polyhedron trans_relation =
+                    (*trlist)[trans_index]->get_relation(); cout<<endl<<"From
+                    Location invariant "<<(*loclist)[i]->get_name()<<endl<<"
+                    "<<loc_i_inv; cout<<endl<<"Through Transition relation
+                    "<<(*trlist)[trans_index]->get_name()<<": "<<endl<<"
+                    "<<trans_relation;
+
+                    //  Propagation
+                    (*loclist)[j]->propagate_invariants_and_update_for_except_initial_by_propagation(loc_i_inv,
+                    trans_relation);
+                    //    Contains Test
+                    //(*loclist)[j]->contains_test(cpoly, loc_i_inv,
+                    trans_relation);
+                    */
+
+                    //  make flag for location has been added invariants
+                    propagation_flag[j] = 1;
+                }
+            }
+        }
+        i++;
+    }
+
+    return;
+}
+
+void collect_invariants_for_initial_by_recursive_eliminating(
+    C_Polyhedron& cpoly,
+    C_Polyhedron& invd) {
+    /*
+     *  Collect invariants
+     */
+    vector<Location*>::iterator vl;
+    invd = C_Polyhedron(fd->get_dimension(), UNIVERSE);
+
+    //    Firstly, collect invariants for initial location by recursive
+    //    eliminating
+    vl = loclist->begin();
+    (*vl)->extract_invariants_and_update_for_initial_by_recursive_eliminating(
+        cpoly, invd);
+
+    return;
+}
+
 void collect_invariants_for_one_location_by_eliminating(int target_index,
                                                         C_Polyhedron& cpoly,
                                                         C_Polyhedron& invd) {
@@ -327,6 +888,480 @@ void collect_invariants_for_one_location_by_eliminating(int target_index,
                                                                         invd);
 
     return;
+}
+
+void binary_eliminating(C_Polyhedron& cpoly, C_Polyhedron& invd) {
+    // cout<<endl<<"7.get here?";
+    cout << endl
+         << "(int)(cpoly.space_dimension()) :"
+         << (int)(cpoly.space_dimension());
+    cout << endl
+         << "( (*loclist)[0]->get_dimension()+1 ) : "
+         << ((*loclist)[0]->get_dimension() + 1);
+    if ((int)(cpoly.space_dimension()) ==
+        ((*loclist)[0]->get_dimension() + 1)) {
+        // cout<<endl<<"8.get here?";
+        (*loclist)[global_binary_i]
+            ->extract_invariants_and_update_by_binary_eliminating(cpoly, invd);
+        global_binary_i++;
+        cout << endl << "global_binary_i : " << global_binary_i;
+        return;
+    }
+    // cout<<endl<<"9.get here?";
+
+    C_Polyhedron p_left = cpoly;
+    C_Polyhedron p_right = cpoly;
+    C_Polyhedron* cpoly_left =
+        new C_Polyhedron(cpoly.space_dimension(), UNIVERSE);
+    *cpoly_left = p_left;
+    C_Polyhedron* cpoly_right =
+        new C_Polyhedron(cpoly.space_dimension(), UNIVERSE);
+    //*cpoly_right = swap2_index_and_divide_from(cpoly,
+    //cpoly.space_dimension()/2);
+    *cpoly_right = p_right;
+    // cout<<endl<<"1.get here?";
+
+    int l = 0;
+    int m = cpoly.space_dimension() / 2;
+    int h = cpoly.space_dimension();
+    Project_by_Kohler(*cpoly_left, l, m);
+    Project_by_Kohler(*cpoly_right, m, h);
+    // cout<<endl<<"2.get here?";
+
+    binary_eliminating(*cpoly_left, invd);
+    // cout<<endl<<"3.get here?";
+    delete (cpoly_left);
+    // cout<<endl<<"4.get here?";
+    binary_eliminating(*cpoly_right, invd);
+    // cout<<endl<<"5.get here?";
+    delete (cpoly_right);
+    // cout<<endl<<"6.get here?";
+
+    return;
+}
+
+void collect_invariants_by_binary_eliminating(C_Polyhedron& cpoly,
+                                              C_Polyhedron& invd) {
+    /*
+     *  Collect invariants
+     */
+    vector<Location*>::iterator vl;
+    invd = C_Polyhedron(fd->get_dimension(), UNIVERSE);
+
+    //    Firstly, collect invariants for initial location by recursive
+    //    eliminating
+    // vl = loclist->begin();
+    //(*vl)->extract_invariants_and_update_for_initial_by_recursive_eliminating(cpoly,invd);
+
+    binary_eliminating(cpoly, invd);
+    global_binary_i = 0;
+
+    return;
+}
+
+void dfs_traverse_recursive(int depth,
+                            vector<Clump>& vcl,
+                            C_Polyhedron& cpoly,
+                            C_Polyhedron& invd) {
+    /*
+    cout<<endl;
+    cout<<endl<<"  "<<"depth "<<depth;
+    cout<<endl<<"  "<<"invd is ";
+    cout<<endl<<"    "<<invd;
+    cout<<endl<<"  "<<"cpoly is ";
+    cout<<endl<<"    "<<cpoly;
+    cout<<endl<<"  "<<"invd contains cpoly ? ";
+    */
+    // cout<<endl<<"depth:"<<depth<<", cpoly:";
+    // cout<<endl<<cpoly;
+
+    if (invd.contains(cpoly)) {
+        bang_count++;
+        // cout<<"banged";
+        return;
+    }
+
+    if (depth == 0) {
+        weave_count++;
+        cout << endl << "/-----------------------------";
+        collect_timer.restart();
+        collect_invariants(cpoly, invd);
+        cout << endl << "- Have Collected " << weave_count << " invariant(s) ";
+        collect_timer.stop();
+        cout << endl
+             << "- The collect_invariants Time Taken (0.01s) = "
+             << collect_timer.compute_time_elapsed() << endl;
+        collect_time = collect_time + collect_timer.compute_time_elapsed();
+        cout << endl << "\\-----------------------------" << endl;
+        //    prune_clumps(vcl);
+        return;
+    }
+
+    if (weave_timer.compute_time_elapsed() >= weave_time) {
+        cout << "Time is up!" << endl;
+        return;
+    }
+
+    vcl[depth - 1].clear();
+    while (vcl[depth - 1].has_next()) {
+        // cout<<endl<<"in while...next()";
+        // cout<<endl<<"depth:"<<depth<<", cpoly:";
+        // cout<<endl<<cpoly;
+        // cout<<endl<<"vcl["<<depth-1<<"].size():"<<vcl[depth-1].get_count();
+        C_Polyhedron p(cpoly);
+        // Timer test_time_for_intersection;
+        p.intersection_assign(vcl[depth - 1].get_reference());
+        // test_time_for_intersection.stop();
+        // cout<<endl<<"- Intersection Time Taken (0.01s) =
+        // "<<test_time_for_intersection.compute_time_elapsed()<<endl;
+
+        dfs_traverse_recursive(depth - 1, vcl, p, invd);
+
+        vcl[depth - 1].next();
+    }
+    return;
+}
+
+void dfs_traverse_recursive_for_initial_by_eliminating(int depth,
+                                                       vector<Clump>& vcl,
+                                                       C_Polyhedron& cpoly,
+                                                       C_Polyhedron& invd) {
+    if (invd.contains(cpoly)) {
+        bang_count++;
+        return;
+    }
+
+    if (depth == 0) {
+        weave_count++;
+        cout << endl << "/-----------------------------";
+        // Timer test_time_for_minimized;
+        collect_invariants_for_initial_by_eliminating(cpoly, invd);
+        cout << endl << "- Have Collected " << weave_count << " invariant(s)";
+        // test_time_for_minimized.stop();
+        // cout<<endl<<"- The collect_invariants's function Time Taken (0.01s) =
+        // "<<test_time_for_minimized.compute_time_elapsed()<<endl;
+        cout << endl << "\\-----------------------------" << endl;
+        //    prune_clumps(vcl);
+        return;
+    }
+
+    if (weave_timer.compute_time_elapsed() >= weave_time) {
+        cout << "Time is up!" << endl;
+        return;
+    }
+
+    vcl[depth - 1].clear();
+    while (vcl[depth - 1].has_next()) {
+        C_Polyhedron p(cpoly);
+        // Timer test_time_for_intersection;
+        p.intersection_assign(vcl[depth - 1].get_reference());
+        // test_time_for_intersection.stop();
+        // cout<<endl<<"- Intersection Time Taken (0.01s) =
+        // "<<test_time_for_intersection.compute_time_elapsed()<<endl;
+
+        dfs_traverse_recursive_for_initial_by_eliminating(depth - 1, vcl, p,
+                                                          invd);
+
+        vcl[depth - 1].next();
+    }
+    return;
+}
+
+void dfs_traverse_recursive_for_initial_by_recursive_eliminating(
+    int depth,
+    vector<Clump>& vcl,
+    C_Polyhedron& cpoly,
+    C_Polyhedron& invd) {
+    if (invd.contains(cpoly)) {
+        bang_count++;
+        return;
+    }
+
+    if (depth == 0) {
+        weave_count++;
+        cout << endl << "/-----------------------------";
+        Timer test_time_for_minimized;
+        collect_invariants_for_initial_by_recursive_eliminating(cpoly, invd);
+        test_time_for_minimized.stop();
+        cout << endl
+             << "- The collect_invariants's function Time Taken (0.01s) = "
+             << test_time_for_minimized.compute_time_elapsed() << endl;
+        cout << "\\-----------------------------" << endl;
+        //    prune_clumps(vcl);
+        return;
+    }
+
+    if (weave_timer.compute_time_elapsed() >= weave_time) {
+        cout << "Time is up!" << endl;
+        return;
+    }
+
+    vcl[depth - 1].clear();
+    while (vcl[depth - 1].has_next()) {
+        C_Polyhedron p(cpoly);
+        // Timer test_time_for_intersection;
+        p.intersection_assign(vcl[depth - 1].get_reference());
+        // test_time_for_intersection.stop();
+        // cout<<endl<<"- Intersection Time Taken (0.01s) =
+        // "<<test_time_for_intersection.compute_time_elapsed()<<endl;
+
+        dfs_traverse_recursive_for_initial_by_recursive_eliminating(
+            depth - 1, vcl, p, invd);
+
+        vcl[depth - 1].next();
+    }
+    return;
+}
+
+void dfs_traverse_recursive_for_binary_eliminating(int depth,
+                                                   vector<Clump>& vcl,
+                                                   C_Polyhedron& cpoly,
+                                                   C_Polyhedron& invd) {
+    // Timer test_time_for_contains;
+    int contains = invd.contains(cpoly);
+    // test_time_for_contains.stop();
+    // cout<<endl<<"- The contains function Time Taken (0.01s) =
+    // "<<test_time_for_contains.compute_time_elapsed();
+    // global_contains_time+=test_time_for_contains.compute_time_elapsed();
+    // cout<<endl<<"- The global_contains_time Time Taken (0.01s) =
+    // "<<global_contains_time;
+    if (contains) {
+        bang_count++;
+        return;
+    }
+
+    if (depth == 0) {
+        weave_count++;
+        cout << endl << "/-----------------------------";
+        // Timer test_time_for_minimized;
+        collect_invariants_by_binary_eliminating(cpoly, invd);
+        cout << endl << "- Have Collected " << weave_count << " invariant(s) ";
+        // test_time_for_minimized.stop();
+        // cout<<endl<<"- The collect_invariants's function Time Taken (0.01s) =
+        // "<<test_time_for_minimized.compute_time_elapsed()<<endl;
+        cout << endl << "\\-----------------------------" << endl;
+        //    prune_clumps(vcl);
+        return;
+    }
+
+    if (weave_timer.compute_time_elapsed() >= weave_time) {
+        cout << "Time is up!" << endl;
+        return;
+    }
+
+    vcl[depth - 1].clear();
+    while (vcl[depth - 1].has_next()) {
+        C_Polyhedron p(cpoly);
+        // Timer test_time_for_intersection;
+        p.intersection_assign(vcl[depth - 1].get_reference());
+        // test_time_for_intersection.stop();
+        // cout<<endl<<"- Intersection Time Taken (0.01s) =
+        // "<<test_time_for_intersection.compute_time_elapsed()<<endl;
+
+        dfs_traverse_recursive_for_binary_eliminating(depth - 1, vcl, p, invd);
+
+        vcl[depth - 1].next();
+    }
+    return;
+}
+
+void dfs_traverse_recursive_for_one_location_by_eliminating(
+    int target_index,
+    int depth,
+    Tree& tr,
+    C_Polyhedron& cpoly,
+    C_Polyhedron& invd) {
+    if (invd.contains(cpoly)) {
+        // tr.Print_Prune_Tree(depth,"Banged"); // print for debug and improve
+        // algorithm
+        bang_count++;
+        single_bang_count++;
+        return;
+    }
+
+    if (depth == 0) {
+        // backtrack_flag = true;
+        weave_count++;
+        single_weave_count++;
+        cout << endl << endl << "/-----------------------------";
+        tr.Print_Prune_Tree(depth,
+                            "Weaved");  // print for debug and improve algorithm
+        collect_timer.restart();
+        collect_invariants_for_one_location_by_eliminating(target_index, cpoly,
+                                                           invd);
+        cout << endl;
+        cout << endl << "- Have Collected " << weave_count << " invariant(s)";
+        collect_timer.stop();
+        cout << endl
+             << "- The collect_invariants Time Taken (0.01s) = "
+             << collect_timer.compute_time_elapsed();
+        collect_time = collect_time + collect_timer.compute_time_elapsed();
+        single_collect_time =
+            single_collect_time + collect_timer.compute_time_elapsed();
+        cout << endl << "\\-----------------------------" << endl;
+        prune_nodes_timer.restart();
+        // tr.prune_node_self_inspection(target_index,invd);
+        prune_nodes_timer.stop();
+        prune_nodes_time += prune_nodes_timer.compute_time_elapsed();
+        return;
+    }
+
+    if (total_timer.compute_time_elapsed() >= weave_time) {
+        cout << "Time is up!" << endl;
+        return;
+    }
+
+    tr.get_clump(depth - 1).clear();
+    while (tr.get_clump(depth - 1).has_next()) {
+        C_Polyhedron p(cpoly);
+        p.intersection_assign(tr.get_clump(depth - 1).get_reference());
+
+        dfs_traverse_recursive_for_one_location_by_eliminating(
+            target_index, depth - 1, tr, p, invd);
+
+        backtrack_timer.restart();  // Timer On
+        if (backtrack_flag == true) {
+            bool flag = invd.contains(cpoly);
+            if (flag) {
+                backtrack_success++;
+                cout << endl << "Pruned by backtracking in depth " << depth;
+                tr.get_clump(depth - 1).clear();
+                return;
+            } else {
+                if (backtrack_success >= 1) {
+                    backtrack_count++;
+                    backtrack_success = 0;
+                }
+                backtrack_flag = false;
+            }
+        }
+        backtrack_timer.stop();  // Timer Off
+        backtrack_time += backtrack_timer.compute_time_elapsed();
+
+        // For prune_node_self_inspection
+        if (depth - 1 < tr.get_first_conflict()) {
+            return;
+        } else if (depth - 1 == tr.get_first_conflict()) {
+            tr.clear_first_conflict();
+            backhere_flag = true;
+        }
+
+        if (backhere_flag == false) {
+            tr.get_clump(depth - 1).next();
+        } else {
+            backhere_flag = false;
+        }
+    }
+    return;
+}
+
+void dfs_traverse(vector<Clump>& vcl, C_Polyhedron& initp) {
+    // first find out the number of clumps
+    // a polyhedron containing the solutions contained to date
+    // initiate a dfs traversal.
+    // write an invariant extraction function at depth 0
+
+    C_Polyhedron invd(*trivial);
+    int ncl = 0;
+    vector<Clump>::iterator vi;
+    for (vi = vcl.begin(); vi < vcl.end(); vi++) {
+        ncl++;
+        (*vi).clear();
+    }
+
+    weave_timer.restart();
+
+    /***/
+    // modified and needed be deleted
+    // cout<<endl<<"test and set 'ncl'=? ";
+    // ncl=0;
+    // vector<Clump> test_vcl = vcl;
+    // test_vcl[0] = vcl[3];
+    /***/
+
+    dfs_traverse_recursive(ncl, vcl, initp, invd);
+}
+
+void dfs_traverse_for_initial_by_eliminating(vector<Clump>& vcl,
+                                             C_Polyhedron& initp) {
+    // Here is the function of "extract_invariant_by_eliminating()"
+    C_Polyhedron invd(*trivial);
+    int ncl = 0;
+    vector<Clump>::iterator vi;
+    for (vi = vcl.begin(); vi < vcl.end(); vi++) {
+        ncl++;
+        (*vi).clear();
+    }
+    weave_timer.restart();
+
+    dfs_traverse_recursive_for_initial_by_eliminating(ncl, vcl, initp, invd);
+}
+
+void dfs_traverse_for_initial_by_recursive_eliminating(vector<Clump>& vcl,
+                                                       C_Polyhedron& initp) {
+    // Here is the function of "extract_invariant_by_eliminating()"
+    C_Polyhedron invd(*trivial);
+    int ncl = 0;
+    vector<Clump>::iterator vi;
+    for (vi = vcl.begin(); vi < vcl.end(); vi++) {
+        ncl++;
+        (*vi).clear();
+    }
+    weave_timer.restart();
+
+    dfs_traverse_recursive_for_initial_by_recursive_eliminating(ncl, vcl, initp,
+                                                                invd);
+}
+
+void dfs_traverse_for_binary_eliminating(vector<Clump>& vcl,
+                                         C_Polyhedron& initp) {
+    // Here is the function of "extract_invariant_by_eliminating()"
+    C_Polyhedron invd(*trivial);
+    int ncl = 0;
+    vector<Clump>::iterator vi;
+    for (vi = vcl.begin(); vi < vcl.end(); vi++) {
+        ncl++;
+        (*vi).clear();
+    }
+    weave_timer.restart();
+
+    dfs_traverse_recursive_for_binary_eliminating(ncl, vcl, initp, invd);
+}
+
+void dfs_traverse_for_one_location_by_eliminating(int target_index,
+                                                  vector<Clump>& vcl,
+                                                  C_Polyhedron& initp) {
+    C_Polyhedron invd(*trivial);
+    Tree tr = Tree();  // empty tree
+    tr.set_target_index(target_index);
+    int ncl = 0;
+    vector<Clump>::iterator vi;
+    for (vi = vcl.begin(); vi < vcl.end(); vi++) {
+        ncl++;
+        (*vi).clear();
+    }
+
+    cout << endl
+         << endl
+         << "/ Start to solve Location "
+         << (*loclist)[target_index]->get_name();
+    if (tree_prior == "target_prior1") {
+        cout << endl << "/ Using target_prior1";
+        tr.Reorder_Target_Prior_1(vcl);
+    } else if (tree_prior == "target_prior2") {
+        cout << endl << "/ Using target_prior2";
+        tr.Reorder_Target_Prior_2(vcl);
+    } else if (tree_prior == "target_prior3") {
+        cout << endl << "/ Using target_prior3";
+        tr.Reorder_Target_Prior_3(vcl);
+    } else {
+        cout << endl << "Wrong Type: " << tree_prior;
+    }
+
+    // tr.prune_clumps_by_hierarchy_inclusion();
+
+    dfs_traverse_recursive_for_one_location_by_eliminating(target_index, ncl,
+                                                           tr, initp, invd);
 }
 
 void dfs_sequences_generation_traverse(
@@ -562,7 +1597,7 @@ void Initialize_before_Parser() {
     debug_2 = 0;
     debug_3 = 0;
     print_tree = true;
-    num_context = 1;
+    num_context = 8;
     projection = "kohler_improvement_eliminate_c";
     tree_prior = "target_prior2";
     some_per_group = "two_per_group";
@@ -571,12 +1606,15 @@ void Initialize_before_Parser() {
     zero = one = true;
     falsepath = true;
     trsat = true;
-    noexitpath = false;
-    djinv = false;
+    noexitpath = true;
+    djinv = true;
     arrinv = false;
     prop_steps = 2;
     weave_time = 360000;
     total_time = 360000;
+    ch79 = false;
+    bhrz03 = false;
+    dual = false;
     cout << "Done!" << endl;
 }
 
@@ -664,19 +1702,42 @@ void Print_Status_before_Solver() {
     cout << "| Strategy name : ";
     switch (num_context) {
         case 1:
-            cout << "newdfs_sequences" << endl;
+            cout << "one" << endl;
             break;
         case 2:
+            cout << "many" << endl;
+            break;
+        case 6:
+            cout << "newdfs" << endl;
+            break;
+        case 7:
+            cout << "newdfs_sequences" << endl;
+            break;
+        case 8:
             cout << "newdfs_seq_propagation" << endl;
             break;
         default:
-            cout << "Undefined Strategy" << endl;
+            cout << endl;
             break;
     }
 
-    cout << "| DFS Search method : " << tree_prior << endl;
-    cout << "| Sequences Divide method : " << some_per_group << endl;
-    cout << "| Projection method : " << projection << endl;
+    if (num_context == 6) {
+        cout << "| DFS Search method : " << tree_prior << endl;
+        cout << "| Projection method : " << projection << endl;
+    }
+
+    if (num_context == 7) {
+        cout << "| DFS Search method : " << tree_prior << endl;
+        cout << "| Sequences Divide method : " << some_per_group << endl;
+        cout << "| Projection method : " << projection << endl;
+    }
+
+    if (num_context == 8) {
+        cout << "| DFS Search method : " << tree_prior << endl;
+        cout << "| Sequences Divide method : " << some_per_group << endl;
+        cout << "| Projection method : " << projection << endl;
+    }
+
     cout << "| Local invariants to be generated : " << zero << endl;
     cout << "| Increasing invariants to be generated : " << one << endl;
     cout << "| Falsepath to be enabled : " << falsepath << endl;
@@ -877,9 +1938,10 @@ void Create_Adjacency_Matrix_for_Location_and_Transition() {
     }
 
     //  print the matrix
+    cout;
     cout << endl << "/----------------------------- ";
     cout << endl << "| Adjacency Matrix for Location and Transition: ";
-    cout << endl << "---------------------------- ";
+    cout << endl << "----------------------------- ";
     cout << endl << "| Input: " << trlist->size() << " transitions";
     cout << endl << "----------------------------- ";
     cout << endl << "| [#] is transition_index";
@@ -908,263 +1970,15 @@ void Clear_Location_Invariant() {
     }
 }
 
-void Initial_with_input() {
-    f = new var_info();
-    for (int i = 0; i < Vars.size(); i++) {
-        f->search_and_insert(Vars[i].c_str());
-    }
-    dimension = f->get_dimension();
-
-    prop_steps = max_prop_steps;
-    // Requires: Locations have set initial assertions, possible invariant
-    // assertions.
-    for (int i = 0; i < Locations.size(); i++) {
-        loclist->push_back(Locations[i]);
-    }
-    // Requires: Transitions have set locs, trans relations.
-    for (int i = 0; i < Transitions.size(); i++) {
-        trlist->push_back(Transitions[i]);
-    }
-    return;
-}
-
-void Scan_Input_2() {
-    cout << endl << "- Parsing Input Doing...";
-
-    cout << endl << "Get Input Variable...\n";
-    smatch match;
-    string line;
-    int stage=-1; //Variable Reading.
-    f=new var_info();
-    regex trans_pattern(R"(Transition\s+(\w+):\s*(\w+)\s*,\s*(\w+)\s*,)");
-    regex loc_pattern(R"(Location\s+(\w+)\s*)");
-    regex term_pattern(R"(\s*|[+-]|(<=|=)|\w+|\d+|\d+\s*\*\s*\w+)");
-    regex coef_var_pattern(R"((\d+)\s*\*\s*(\w+))");
-    regex var_pattern(R"((\w+)\s*)");
-    regex coef_pattern(R"((\d+)\s*)");
-    regex sign_pattern(R"(([+-])\s*)");
-    regex equality_pattern(R"((<=|=)\s*)");
-    regex empty_pattern(R"((\s*))");
-    Location *new_location=NULL;
-    C_Polyhedron* new_poly=NULL;
-    TransitionRelation* new_transition=NULL;
-    while(getline(cin,line)){\
-        istringstream iss(line);
-        if (line.length()==0) continue;
-        string token;
-        if (stage==-1 || stage==0){
-            while (iss>>token){
-                if (token=="variable" || token=="Variable"){
-                    stage=0;
-                    continue;
-                }
-                else if (stage==-1){
-                    cout<<"[warning] Must Start by variable or Varible."<<endl;
-                    exit(1);
-                }
-                if (token=="["){
-                    if (stage==-1){
-                        cout<<"[warning] Missing variable, program execution aborted."<<endl;
-                        exit(1);
-                    }
-                    else{
-                        continue;
-                    }
-                }
-                if (token=="]"){
-                    if (stage==0){
-                        stage=1;
-                        break;
-                    }
-                    else{
-                        cout<<"[warning] Variable stage is ending, program execution aborted."<<endl;
-                        exit(1);
-                    }
-                }
-                // cout<<token<<endl;
-                f->search_and_insert(token.c_str());
-            }
-            continue;
-        }
-        if (stage==1 || stage==2){
-            if (line.find("end")!=string::npos){
-                if (new_transition && new_poly){
-                    new_transition->set_relation(new_poly);
-                }
-                return;
-            }
-            if (regex_match(line,match,loc_pattern)) {
-                if (new_poly && new_location){
-                    new_location->set_polyhedron(new_poly);
-                }
-                new_poly=NULL;
-                new_location=NULL;
-                string loc_name = match[1];
-                cout<<loc_name<<" "<<loc_name.length()<<" "<<token<<endl;
-                if (!search_location((char*)loc_name.c_str(),&new_location)){
-                    new_location=new Location(f->get_dimension(),f,fd,fm,loc_name);
-                    loclist->push_back(new_location);
-                }
-                else{
-                    cerr<<"[ERROR] Multi-defined Location."<<endl;
-                    exit(1);
-                }
-            }
-            else if (regex_search(line,match,trans_pattern)){
-                stage=2;
-                if (new_poly && new_location){
-                    new_location->set_polyhedron(new_poly);
-                }
-                if (new_poly && new_transition){
-                    new_transition->set_relation(new_poly);
-                }
-                new_poly=NULL;
-                new_transition=NULL;
-                string transition_name=match[1];
-                string loc_name_start=match[2];
-                string loc_name_end=match[3];
-                Location* loc_start;
-                Location* loc_end;
-                if (!search_location((char *)loc_name_start.c_str(),&loc_start)){
-                    cerr<<"[ERROR] Transition use undefined location"<<endl;
-                    exit(1);
-                }
-                if (!search_location((char *)loc_name_end.c_str(),&loc_end)){
-                    cerr<<"[ERROR] Transition use undefined location"<<endl;
-                    exit(1);
-                }
-                if (!search_transition_relation((char*)transition_name.c_str(),&new_transition)){
-                    new_transition=new TransitionRelation(f->get_dimension(),f,fd,fm,transition_name);
-                    trlist->push_back(new_transition);
-                }
-                else{
-                    cerr<<"[ERROR] Multi-defined Transition."<<endl;
-                    exit(1);
-                }
-                new_transition->set_locs(loc_start,loc_end);
-            }
-            else{
-                if (!new_poly){
-                    if (stage==1)
-                        new_poly=new C_Polyhedron(f->get_dimension(),UNIVERSE);
-                    else
-                        new_poly=new C_Polyhedron(2*f->get_dimension(),UNIVERSE);
-                }
-                sregex_iterator it(line.begin(),line.end(),term_pattern);
-                sregex_iterator end;
-                if (it==end){
-                    cerr<<"[ERROR] No Matched Pattern, please check your input."<<endl;
-                    exit(1);
-                }
-                bool is_negative=false;
-                bool is_rhs=false;
-                Linear_Expression* le=new Linear_Expression();
-                Linear_Expression* right=new Linear_Expression();
-                int op=0;
-                //0 -> =; 1 -> <=;
-                while(it!=end){
-                    string term=it->str();
-                    // cout<<line<<" split "<<term<<endl;
-                    // if (regex_match(term,match,var_pattern)) cout<<match[1]<<endl;
-                    // else cout<<0<<endl;
-                    if (regex_match(term,match,coef_var_pattern)){
-                        int coef=stoi(match[1]);
-                        if (is_negative) coef=-coef;
-                        string var=match[2];
-                        int index=f->search(var.c_str());
-                        if (index==VAR_NOT_FOUND){
-                            cout<<"[ERROR] Undefined variable "<<var<<endl;
-                            exit(1);
-                        }
-                        if (stage==2 && var[0]=='\'')
-                            index+=f->get_dimension();
-                        Linear_Expression* res=new Linear_Expression(coef*Variable(index));
-                        if (!is_rhs)
-                            (*le)+=(*res);
-                        else
-                            (*right)+=(*res);
-                        delete(res);
-                    }
-                    else if (regex_match(term,match,coef_pattern)){
-                        int coef=stoi(match[0]);
-                        if (is_negative) coef=-coef;
-                        Linear_Expression* res=new Linear_Expression(coef);
-                        if (!is_rhs)
-                            (*le)+=(*res);
-                        else
-                            (*right)+=(*res);
-                        delete(res);
-                    }
-                    else if (regex_match(term,match,var_pattern)){
-                        int coef=1;
-                        cout<<line<<" "<<term<<endl;
-                        if (is_negative) coef=-coef;
-                        string var=match[0];
-                        
-                        int index=f->search(var.c_str());
-                        if (index==VAR_NOT_FOUND){
-                            cout<<"[ERROR] Undefined variable "<<var<<endl;
-                            exit(1);
-                        }
-                        if (stage==2 && var[0]=='\'')
-                            index+=f->get_dimension();
-                        Linear_Expression* res=new Linear_Expression(coef*Variable(index));
-                        if (!is_rhs)
-                            (*le)+=(*res);
-                        else
-                            (*right)+=(*res);
-                        delete(res);
-                    }
-                    else if (regex_match(term,match,sign_pattern)){
-                        if (match[0]=="-") is_negative=true;
-                        else is_negative=false;
-                    }
-                    else if (regex_match(term,match,equality_pattern)){
-                        if (match[0]=="<=") op=1;
-                        else if (match[0]==">=") op=2;
-                        else op=0;
-                        is_rhs=true;
-                    }
-                    else if (regex_match(term,match,empty_pattern)){
-                        it++;
-                        continue;
-                    }
-                    else{
-                        cerr<<"[ERROR] No Matched Pattern, please check your input."<<endl;
-                        exit(1);
-                    }
-                    it++;
-                }
-                Constraint* new_constraint;
-                if (op==2){
-                    new_constraint = new Constraint((*le) >= (*right));
-                }
-                else if (op==1){
-                    new_constraint = new Constraint((*le) <= (*right));
-                }
-                else{
-                    new_constraint = new Constraint((*le) == (*right));
-                }
-                new_poly->add_constraint(*new_constraint);
-            }
-            continue;
-        }
-    }
-    dimension=f->get_dimension();
-    exit(0);
-}
-
-int main() {
+int main(int argc, char* argv[]) {
     ios::sync_with_stdio(false);
     total_timer.restart();
     Initialize_before_Parser();
-    Scan_Input_2();
-    Initial_with_input();
+    Scan_Input();
     add_preloc_invariants_to_transitions();
     Print_Status_before_Solver();
     Print_Location_and_Transition();
     Create_Adjacency_Matrix_for_Location_and_Transition();
-
     global_system = new System(f, fd, fm);
     for (vector<Location*>::iterator vi = loclist->begin(); vi < loclist->end();
          vi++) {
@@ -1175,8 +1989,263 @@ int main() {
         global_system->add_transition((*vj));
     }
     global_system->compute_duals();
+    tt = new int[fm->get_dimension()];
 
     if (num_context == 1) {
+        //  Implementation for Convert_CNF_to_DNF_and_Print() function
+        //    due to num_context == 1,
+        //    i.e. intra-location / single-location
+
+        glc = global_system->get_context();
+        // Print_Location_and_Transition();
+        trivial = new C_Polyhedron(fd->get_dimension(), UNIVERSE);
+        for (vector<Location*>::iterator vi = loclist->begin();
+             vi < loclist->end(); vi++) {
+            (*vi)->add_to_trivial(trivial);
+        }
+        invd = new C_Polyhedron(*trivial);
+        cout << endl;
+        // cout<<"- The Convert_CNF_to_DNF_and_Print(): "<<endl;
+        // cout<<"- The Root Context: "<<endl<<(*glc)<<endl;
+        glc->Convert_CNF_to_DNF_and_Print(loclist, invd, weave_time, true);
+    }  // if (num_context == 1)
+    else if (num_context == 2) {
+        //  Implementation for Eliminate_c_through_inter_Location() function
+        //  compared with num_context == 3, here is no elimination.
+        //    due to num_context == 2,
+        //    i.e. inter-location / many-locations
+        //  output_file: **many**
+
+        //    dualize using a clump
+        int nd = fd->get_dimension();
+        //    obtain a polyhedron characterizing "trivial"
+        trivial = new C_Polyhedron(nd, UNIVERSE);
+        for (vector<Location*>::iterator vi = loclist->begin();
+             vi < loclist->end(); vi++) {
+            (*vi)->add_to_trivial(trivial);  // Later, use this "trivial" to
+                                             // build (initial) "invd"
+        }
+        //    now dualize each location
+        C_Polyhedron initp(nd,
+                           UNIVERSE);  // for the dualized initial conditions
+        for (vector<Location*>::iterator vi = loclist->begin();
+             vi < loclist->end(); vi++) {
+            (*vi)->make_context();
+            (*vi)->compute_dual_constraints(
+                initp);  // Later, use this "initp" to build (initial) "cpoly"
+        }
+
+        //    now dualize the transition systems and collect the "clumps"
+        vector<Clump> vcl;
+        for (vector<TransitionRelation*>::iterator vj = trlist->begin();
+             vj < trlist->end(); vj++) {
+            (*vj)->compute_consecution_constraints(vcl, initp);
+        }
+        for (vector<Location*>::iterator vi = loclist->begin();
+             vi < loclist->end(); vi++) {
+            (*vi)->add_clump(vcl);
+            //    this also should trigger the simplification of the context
+        }
+        dfs_traverse_timer.restart();
+        dfs_traverse(vcl, initp);
+        dfs_traverse_timer.stop();
+        dfs_traverse_time = dfs_traverse_timer.compute_time_elapsed();
+    }  //    else if (num_context == 2)
+    else if (num_context == 3) {
+        //  Implementation for Eliminate_c_through_inter_Location() function
+        //  compared with num_context == 2, here is elimination!
+        //    due to num_context == 3,
+        //    i.e. inter-location / many-locations
+        //  output_file: **new_many**
+
+        //    dualize using a clump
+        int nd = fd->get_dimension();
+        //    obtain a polyhedron characterizing "trivial"
+        trivial = new C_Polyhedron(nd, UNIVERSE);
+        for (vector<Location*>::iterator vi = loclist->begin();
+             vi < loclist->end(); vi++) {
+            (*vi)->add_to_trivial(trivial);
+        }
+        //    now dualize each location
+        C_Polyhedron initp(nd,
+                           UNIVERSE);  // for the dualized initial conditions
+        for (vector<Location*>::iterator vi = loclist->begin();
+             vi < loclist->end(); vi++) {
+            (*vi)->make_context();
+            (*vi)->compute_dual_constraints(initp);
+        }
+
+        //    now dualize the transition systems and collect the "clumps"
+        vector<Clump> vcl;
+        for (vector<TransitionRelation*>::iterator vj = trlist->begin();
+             vj < trlist->end(); vj++) {
+            (*vj)->compute_consecution_constraints(vcl, initp);
+        }
+        for (vector<Location*>::iterator vi = loclist->begin();
+             vi < loclist->end(); vi++) {
+            (*vi)->add_clump(vcl);
+            //    this also should trigger the simplification of the context
+        }
+
+        dfs_traverse_timer.restart();
+        dfs_traverse_for_initial_by_eliminating(vcl, initp);
+        collect_invariants_for_except_initial_by_propagation();
+        dfs_traverse_timer.stop();
+        dfs_traverse_time = dfs_traverse_timer.compute_time_elapsed();
+
+    }  //    else if (num_context == 3)
+    else if (num_context == 4) {
+        //  Implementation for Recursive_Eliminate_c_through_inter_Location()
+        //  function compared with num_context == 3, here is recursive
+        //  elimination!
+        //    due to num_context == 4,
+        //    i.e. inter-location / many-locations
+        //  output_file: **new_2_many**
+
+        //    dualize using a clump
+        int nd = fd->get_dimension();
+        //    obtain a polyhedron characterizing "trivial"
+        trivial = new C_Polyhedron(nd, UNIVERSE);
+        for (vector<Location*>::iterator vi = loclist->begin();
+             vi < loclist->end(); vi++) {
+            (*vi)->add_to_trivial(trivial);
+        }
+        //    now dualize each location
+        C_Polyhedron initp(nd,
+                           UNIVERSE);  // for the dualized initial conditions
+        for (vector<Location*>::iterator vi = loclist->begin();
+             vi < loclist->end(); vi++) {
+            (*vi)->make_context();
+            (*vi)->compute_dual_constraints(initp);
+        }
+
+        //    now dualize the transition systems and collect the "clumps"
+        vector<Clump> vcl;
+        for (vector<TransitionRelation*>::iterator vj = trlist->begin();
+             vj < trlist->end(); vj++) {
+            (*vj)->compute_consecution_constraints(vcl, initp);
+        }
+        for (vector<Location*>::iterator vi = loclist->begin();
+             vi < loclist->end(); vi++) {
+            (*vi)->add_clump(vcl);
+            //    this also should trigger the simplification of the context
+        }
+        //  Here is the function of "extract_invariant_by_eliminating()"
+        dfs_traverse_timer.restart();
+        dfs_traverse_for_initial_by_recursive_eliminating(vcl, initp);
+        dfs_traverse_timer.stop();
+        dfs_traverse_time = dfs_traverse_timer.compute_time_elapsed();
+
+    }  //    else if (num_context == 4)
+    else if (num_context == 5) {
+        //  Implementation for ...() function
+        //  compared with num_context == 4, here is recursive elimination!
+        //    due to num_context == 5,
+        //    i.e. inter-location / many-locations
+        //  output_file: **new_3_many**
+
+        //    dualize using a clump
+        int nd = fd->get_dimension();
+        //    obtain a polyhedron characterizing "trivial"
+        trivial = new C_Polyhedron(nd, UNIVERSE);
+        for (vector<Location*>::iterator vi = loclist->begin();
+             vi < loclist->end(); vi++) {
+            (*vi)->add_to_trivial(trivial);
+        }
+        //    now dualize each location
+        C_Polyhedron initp(nd,
+                           UNIVERSE);  // for the dualized initial conditions
+        for (vector<Location*>::iterator vi = loclist->begin();
+             vi < loclist->end(); vi++) {
+            (*vi)->make_context();
+            (*vi)->compute_dual_constraints(initp);
+        }
+
+        //    now dualize the transition systems and collect the "clumps"
+        vector<Clump> vcl;
+        for (vector<TransitionRelation*>::iterator vj = trlist->begin();
+             vj < trlist->end(); vj++) {
+            (*vj)->compute_consecution_constraints(vcl, initp);
+        }
+        for (vector<Location*>::iterator vi = loclist->begin();
+             vi < loclist->end(); vi++) {
+            (*vi)->add_clump(vcl);
+            //    this also should trigger the simplification of the context
+        }
+        //  Here is the function of "extract_invariant_by_eliminating()"
+        dfs_traverse_timer.restart();
+        dfs_traverse_for_binary_eliminating(vcl, initp);
+        dfs_traverse_timer.stop();
+        dfs_traverse_time = dfs_traverse_timer.compute_time_elapsed();
+
+    }  //    else if (num_context == 5)
+    else if (num_context == 6) {
+        //  Implementation for Eliminate_c_through_inter_Location() function
+        //  compared with num_context == 3, here is elimination!
+        //    due to num_context == 6,
+        //    i.e. inter-location / many-locations
+        //  output_file: **newdfs**
+
+        //    dualize using a clump
+        int nd = fd->get_dimension();
+        //    obtain a polyhedron characterizing "trivial"
+        trivial = new C_Polyhedron(nd, UNIVERSE);
+        for (vector<Location*>::iterator vi = loclist->begin();
+             vi < loclist->end(); vi++) {
+            (*vi)->add_to_trivial(trivial);
+        }
+        //    now dualize each location
+        C_Polyhedron initp(nd,
+                           UNIVERSE);  // for the dualized initial conditions
+        for (vector<Location*>::iterator vi = loclist->begin();
+             vi < loclist->end(); vi++) {
+            (*vi)->make_context();
+            (*vi)->compute_dual_constraints(initp);
+        }
+
+        //    now dualize the transition systems and collect the "clumps"
+        vector<Clump> vcl;
+        for (vector<TransitionRelation*>::iterator vj = trlist->begin();
+             vj < trlist->end(); vj++) {
+            (*vj)->compute_consecution_constraints(vcl, initp);
+            if (total_timer.compute_time_elapsed() >= weave_time) {
+                cout << "Time is up!" << endl;
+                break;
+            }
+        }
+        for (vector<Location*>::iterator vi = loclist->begin();
+             vi < loclist->end(); vi++) {
+            (*vi)->add_clump(vcl);
+            if (total_timer.compute_time_elapsed() >= weave_time) {
+                cout << "Time is up!" << endl;
+                break;
+            }
+            //    this also should trigger the simplification of the context
+        }
+
+        dfs_traverse_timer.restart();
+        for (int target_index = 0; target_index < loclist->size();
+             target_index++) {
+            single_weave_count = 0;
+            single_bang_count = 0;
+            single_collect_time = 0;
+            single_dfs_traverse_timer.restart();
+
+            dfs_traverse_for_one_location_by_eliminating(target_index, vcl,
+                                                         initp);
+
+            single_dfs_traverse_timer.stop();
+            vector_single_dfs_traverse_time.push_back(
+                single_dfs_traverse_timer.compute_time_elapsed());
+            vector_single_weave_count.push_back(single_weave_count);
+            vector_single_bang_count.push_back(single_bang_count);
+            vector_single_collect_time.push_back(single_collect_time);
+        }
+        dfs_traverse_timer.stop();
+        dfs_traverse_time = dfs_traverse_timer.compute_time_elapsed();
+
+    }  //    else if (num_context == 6)
+    else if (num_context == 7) {
         //  output_file: **newdfs_sequences**
 
         //  nd
@@ -1269,7 +2338,9 @@ int main() {
         }
         dfs_traverse_timer.stop();
         dfs_traverse_time = dfs_traverse_timer.compute_time_elapsed();
-    } else if (num_context == 2) {
+
+    }  //    else if (num_context == 7)
+    else if (num_context == 8) {
         //  output_file: **newdfs_seq_propagation**
         //  nd
         int nd = fd->get_dimension();
@@ -1394,7 +2465,8 @@ int main() {
         // ::First, compute other location except Initial & Exit-Location
         // ::Second, compute Exit-Location
         compute_invariants_by_propagation_with_farkas(vcl);
-    }
+
+    }  //    eocse if (num_context == 8)
     total_timer.stop();
     Print_Location();
     if (djinv) {
@@ -1404,27 +2476,10 @@ int main() {
         print_array_inv_before_program();
     }
     Print_Status_after_Solver();
-
-#ifndef TRACE
-    // only print exit-location
-    for (vector<Location*>::iterator vi = loclist->begin(); vi < loclist->end();
-         vi++) {
-        if ((*vi)->get_name() == EXIT_LOCATION) {
-            if ((*vi)->get_vp_inv_flag()) {
-                cout << "Location: " << (*vi)->get_name();
-                cout << endl;
-                nt_print_pure_clump((*vi)->get_vp_inv(), (*vi)->get_var_info());
-            } else {
-                cout << "Location: " << (*vi)->get_name();
-                nt_print_pure_polyhedron((*vi)->get_invariant(),
-                                         (*vi)->get_var_info());
-            }
-        }
-    }
-#endif
     if (inv_check) {
         check_invariant_ok();
     }
+
     return 0;
 }
 
@@ -1450,6 +2505,8 @@ void print_status() {
     cout << " Strategy ID #" << num_context << endl;
     cout << " # of initial propagation steps:" << prop_steps << endl;
     cout << " Weave Time allowed:" << weave_time << endl;
+    cout << " Cousot-Halbwachs to be performed:" << ch79 << endl;
+    cout << " BHRZ03 to be performed:" << bhrz03 << endl;
     cout << "----------------------------------------------------" << endl;
 }
 
@@ -1477,7 +2534,7 @@ void print_bake_off(InvariantMap const& invmap) {
         // Is the other_inv stronger?
 
         if (loc_inv.contains(other_inv)) {
-            r2--;
+            r2--;  // h79 is one up
             disjoint = false;
         }
 

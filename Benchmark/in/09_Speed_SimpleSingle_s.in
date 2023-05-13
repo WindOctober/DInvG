@@ -8,7 +8,7 @@ Location B1
 
 Location le 
 
-Transition B1_B1_1: B1,B1,
+Transition B1_B1_1: B1,
    x <= n - 1 
   'x <= 'n - 1 
   'x = x + 1 
@@ -16,7 +16,7 @@ Transition B1_B1_1: B1,B1,
   'x0 = x0 
   'n0 = n0 
 
-Transition B1_B1_2: B1,B1,
+Transition B1_B1_2: B1,
    x <= n - 1 
   'x <= 'n - 1 
   'x = x + 1 
