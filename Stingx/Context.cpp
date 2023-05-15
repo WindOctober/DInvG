@@ -46,123 +46,123 @@ extern int* tt;
 #define ZERO_ONE_FORBIDDEN 3
 #define ZERO_ONE_ALLOWED 4
 
-void Context::initialize(var_info* f, var_info* fd, var_info* fm) {
+void Context::initialize(var_info* info, var_info* dual_info, var_info* lambda_info) {
     context_count++;
-    this->f = f;
-    this->fd = fd;
-    this->fm = fm;
+    this->info = info;
+    this->dual_info = dual_info;
+    this->lambda_info = lambda_info;
 
-    // n= no. of primal dimensions
+    // vars_num= no. of primal dimensions
 
-    n = f->get_dimension();
+    vars_num = info->get_dimension();
 
-    // nd=no. of dual dimensions
+    // dual_num=no. of dual dimensions
 
-    nd = fd->get_dimension();
+    dual_num = dual_info->get_dimension();
 
-    r = fm->get_dimension();
+    r = lambda_info->get_dimension();
 
     factors = new vector<Expression>();
-    ms = new MatrixStore(nd, fd);
-    ps = new PolyStore(nd, fd);
-    ds = new DisequalityStore(r, fm);
+    equality_mat = new MatrixStore(dual_num, dual_info);
+    inequality_store = new PolyStore(dual_num, dual_info);
+    lambda_store = new DisequalityStore(r, lambda_info);
 
-    eqs = new vector<Expression>();
-    ineqs = new vector<Expression>();
+    eq_exprs = new vector<Expression>();
+    ineq_exprs = new vector<Expression>();
     incon = false;
 }
 
-void Context::initialize(var_info* f,
-                         var_info* fd,
-                         var_info* fm,
-                         MatrixStore* ms,
-                         PolyStore* ps,
-                         DisequalityStore* ds,
-                         vector<Expression>* eqs,
-                         vector<Expression>* ineqs) {
-    this->f = f;
-    this->fd = fd;
+void Context::initialize(var_info* info,
+                         var_info* dual_info,
+                         var_info* lambda_info,
+                         MatrixStore* equality_mat,
+                         PolyStore* inequality_store,
+                         DisequalityStore* lambda_store,
+                         vector<Expression>* eq_exprs,
+                         vector<Expression>* ineq_exprs) {
+    this->info = info;
+    this->dual_info = dual_info;
 
     context_count++;
-    this->fm = fm;
-    n = f->get_dimension();
-    nd = fd->get_dimension();
-    r = fm->get_dimension();
+    this->lambda_info = lambda_info;
+    vars_num = info->get_dimension();
+    dual_num = dual_info->get_dimension();
+    r = lambda_info->get_dimension();
 
-    this->ms = ms;
-    this->ps = ps;
-    this->ds = ds;
-    this->eqs = eqs;
-    this->ineqs = ineqs;
+    this->equality_mat = equality_mat;
+    this->inequality_store = inequality_store;
+    this->lambda_store = lambda_store;
+    this->eq_exprs = eq_exprs;
+    this->ineq_exprs = ineq_exprs;
 
     factors = new vector<Expression>();
     check_consistent();
 }
 
-Context::Context(var_info* f, var_info* fd, var_info* fm) {
-    initialize(f, fd, fm);
+Context::Context(var_info* info, var_info* dual_info, var_info* lambda_info) {
+    initialize(info, dual_info, lambda_info);
 }
 
-Context::Context(var_info* f,
-                 var_info* fd,
-                 var_info* fm,
-                 MatrixStore* ms,
-                 PolyStore* ps,
-                 DisequalityStore* ds,
-                 vector<Expression>* eqs,
-                 vector<Expression>* ineqs) {
-    initialize(f, fd, fm, ms, ps, ds, eqs, ineqs);
+Context::Context(var_info* info,
+                 var_info* dual_info,
+                 var_info* lambda_info,
+                 MatrixStore* equality_mat,
+                 PolyStore* inequality_store,
+                 DisequalityStore* lambda_store,
+                 vector<Expression>* eq_exprs,
+                 vector<Expression>* ineq_exprs) {
+    initialize(info, dual_info, lambda_info, equality_mat, inequality_store, lambda_store, eq_exprs, ineq_exprs);
 }
 
-Context::Context(var_info* f,
-                 var_info* fd,
-                 var_info* fm,
-                 MatrixStore* ms,
-                 PolyStore* ps,
-                 DisequalityStore* ds) {
-    eqs = new vector<Expression>();
-    ineqs = new vector<Expression>();
-    initialize(f, fd, fm, ms, ps, ds, eqs, ineqs);
+Context::Context(var_info* info,
+                 var_info* dual_info,
+                 var_info* lambda_info,
+                 MatrixStore* equality_mat,
+                 PolyStore* inequality_store,
+                 DisequalityStore* lambda_store) {
+    eq_exprs = new vector<Expression>();
+    ineq_exprs = new vector<Expression>();
+    initialize(info, dual_info, lambda_info, equality_mat, inequality_store, lambda_store, eq_exprs, ineq_exprs);
 }
 
 void Context::add_equality_expression(Expression l) {
-    eqs->push_back(l);
+    eq_exprs->push_back(l);
 }
 
 void Context::add_inequality_expression(Expression l) {
-    ineqs->push_back(l);
+    ineq_exprs->push_back(l);
 }
 
 void Context::add_to_matrix_store(SparseLinExpr l) {
-    ms->add_constraint(l);
+    equality_mat->add_constraint(l);
 }
 
 void Context::add_to_matrix_store(Linear_Expression lin) {
     int i;
-    SparseLinExpr l(nd, fd);
-    for (i = 0; i < nd; i++) {
+    SparseLinExpr l(dual_num, dual_info);
+    for (i = 0; i < dual_num; i++) {
         l.set_coefficient(i, handle_integers(lin.coefficient(Variable(i))));
     }
 
-    l.set_coefficient(nd, handle_integers(lin.inhomogeneous_term()));
-    ms->add_constraint(l);
+    l.set_coefficient(dual_num, handle_integers(lin.inhomogeneous_term()));
+    equality_mat->add_constraint(l);
 }
 
 void Context::add_to_poly_store(SparseLinExpr l) {
-    ps->add_constraint(l, TYPE_GEQ);
+    inequality_store->add_constraint(l, TYPE_GEQ);
 }
 
 void Context::add_to_poly_store(Constraint cc) {
     int i;
-    ps->add_constraint(cc);
+    inequality_store->add_constraint(cc);
     if (cc.is_equality()) {
-        SparseLinExpr l(nd, fd);
-        for (i = 0; i < nd; i++) {
+        SparseLinExpr l(dual_num, dual_info);
+        for (i = 0; i < dual_num; i++) {
             l.set_coefficient(i, handle_integers(cc.coefficient(Variable(i))));
         }
 
-        l.set_coefficient(nd, handle_integers(cc.inhomogeneous_term()));
-        ms->add_constraint(l);
+        l.set_coefficient(dual_num, handle_integers(cc.inhomogeneous_term()));
+        equality_mat->add_constraint(l);
     }
 
     return;
@@ -173,15 +173,15 @@ void Context::add_linear_equality(SparseLinExpr l) {
 }
 
 void Context::add_transform(LinTransform l) {
-    vector<Expression>::iterator vi;
-    for (vi = eqs->begin(); vi < eqs->end(); vi++)
-        (*vi).transform(l);
+    vector<Expression>::iterator it;
+    for (it = eq_exprs->begin(); it < eq_exprs->end(); it++)
+        (*it).transform(l);
 
-    for (vi = ineqs->begin(); vi < ineqs->end(); vi++)
-        (*vi).transform(l);
+    for (it = ineq_exprs->begin(); it < ineq_exprs->end(); it++)
+        (*it).transform(l);
 
     // now add the transform into the disequality store
-    ds->add_transform(l);
+    lambda_store->add_transform(l);
     return;
 }
 
@@ -191,33 +191,33 @@ void Context::add_linear_inequality(SparseLinExpr l) {
 
 void Context::add_transform_inequality(LinTransform l) {
     // Just add the transform as an expression into the disequality store
-    ds->add_transform_inequality(l);
+    lambda_store->add_transform_inequality(l);
     return;
 }
 
 Context* Context::clone() const {
-    // Some references like f,fd,fm, invariant should be passed on
-    // ms,ps,ds,eqs,ineqs should be cloned so that they are not rewritten
-    MatrixStore* ms1 = ms->clone();
-    PolyStore* ps1 = ps->clone();
-    DisequalityStore* ds1 = ds->clone();
+    // Some references like info,dual_info,lambda_info, invariant should be passed on
+    // equality_mat,inequality_store,lambda_store,eq_exprs,ineq_exprs should be cloned so that they are not rewritten
+    MatrixStore* ms1 = equality_mat->clone();
+    PolyStore* ps1 = inequality_store->clone();
+    DisequalityStore* ds1 = lambda_store->clone();
     vector<Expression>*eqs1 = new vector<Expression>(),
     *ineqs1 = new vector<Expression>();
 
-    vector<Expression>::iterator vi;
+    vector<Expression>::iterator it;
 
-    for (vi = eqs->begin(); vi < eqs->end(); vi++)
-        eqs1->push_back(Expression(*vi));
+    for (it = eq_exprs->begin(); it < eq_exprs->end(); it++)
+        eqs1->push_back(Expression(*it));
 
-    for (vi = ineqs->begin(); vi < ineqs->end(); vi++)
-        ineqs1->push_back(Expression(*vi));
+    for (it = ineq_exprs->begin(); it < ineq_exprs->end(); it++)
+        ineqs1->push_back(Expression(*it));
 
-    return new Context(f, fd, fm, ms1, ps1, ds1, eqs1, ineqs1);
+    return new Context(info, dual_info, lambda_info, ms1, ps1, ds1, eqs1, ineqs1);
 }
 
 void Context::check_consistent() {
     incon =
-        !ms->is_consistent() || !ps->is_consistent() || !ds->is_consistent();
+        !equality_mat->is_consistent() || !inequality_store->is_consistent() || !lambda_store->is_consistent();
 }
 
 bool Context::is_consistent() {
@@ -234,7 +234,7 @@ bool Context::is_leaf(){
 
 
 void Context::update_invariant(){
-   ps->add_linear_store(m);
+   inequality_store->add_linear_store(m);
 
 }
 
@@ -243,26 +243,26 @@ void Context::update_invariant(){
 void Context::print(ostream& in) const {
     in << "----------------------------- " << endl;
     in << "- The matrix store:" << endl;
-    in << *ms;
+    in << *equality_mat;
     in << endl;
 
     in << "- The polyhedral store:" << endl;
-    in << *ps;
+    in << *inequality_store;
     in << endl;
 
     in << "- The disequality store:" << endl;
-    in << *ds;
+    in << *lambda_store;
     in << endl;
 
     in << "- The equality expression store:" << endl;
-    vector<Expression>::iterator vi;
-    for (vi = eqs->begin(); vi < eqs->end(); vi++)
-        in << (*vi) << " == 0" << endl;
+    vector<Expression>::iterator it;
+    for (it = eq_exprs->begin(); it < eq_exprs->end(); it++)
+        in << (*it) << " == 0" << endl;
     in << endl;
 
     in << "- The inequality expression store:" << endl;
-    for (vi = ineqs->begin(); vi < ineqs->end(); vi++)
-        in << (*vi) << " >= 0" << endl;
+    for (it = ineq_exprs->begin(); it < ineq_exprs->end(); it++)
+        in << (*it) << " >= 0" << endl;
 
     in << "----------------------------- " << endl;
     return;
@@ -274,37 +274,37 @@ ostream& operator<<(ostream& in, Context const& c) {
 }
 
 void Context::remove_trivial_inequalities() {
-    // remove trivial expressions from ineqs
-    vector<Expression>::iterator vi;
-    vi = ineqs->begin();
+    // remove trivial expressions from ineq_exprs
+    vector<Expression>::iterator it;
+    it = ineq_exprs->begin();
     // until we get to a non-trivial beginning expression
-    while (vi < ineqs->end() && (*vi).is_zero()) {
-        ineqs->erase(ineqs->begin());
-        vi = ineqs->begin();
+    while (it < ineq_exprs->end() && (*it).is_zero()) {
+        ineq_exprs->erase(ineq_exprs->begin());
+        it = ineq_exprs->begin();
     }
 
-    for (; vi < ineqs->end(); vi++) {
-        if ((*vi).is_zero()) {
-            ineqs->erase(vi);
-            vi--;
+    for (; it < ineq_exprs->end(); it++) {
+        if ((*it).is_zero()) {
+            ineq_exprs->erase(it);
+            it--;
         }
     }
 }
 
 void Context::remove_trivial_equalities() {
-    // remove the trivial expressions from the vectors eqs
-    vector<Expression>::iterator vi;
-    vi = eqs->begin();
+    // remove the trivial expressions from the vectors eq_exprs
+    vector<Expression>::iterator it;
+    it = eq_exprs->begin();
     // until we get to a non-trivial beginning expression
-    while (vi < eqs->end() && (*vi).is_zero()) {
-        eqs->erase(eqs->begin());
-        vi = eqs->begin();
+    while (it < eq_exprs->end() && (*it).is_zero()) {
+        eq_exprs->erase(eq_exprs->begin());
+        it = eq_exprs->begin();
     }
 
-    for (; vi < eqs->end(); vi++) {
-        if ((*vi).is_zero()) {
-            eqs->erase(vi);
-            vi--;
+    for (; it < eq_exprs->end(); it++) {
+        if ((*it).is_zero()) {
+            eq_exprs->erase(it);
+            it--;
         }
     }
 }
@@ -315,48 +315,48 @@ void Context::remove_trivial() {
 }
 
 bool Context::move_constraints_equalities() {
-    // Check eqs for constraints that are linear equalities or linear transforms
+    // Check eq_exprs for constraints that are linear equalities or linear transforms
     // and In case a linear equality is obtained then transfer it to the
     // equality and inequality stores In case a linear transform is obtained,
     // then apply the transform on all the expressions and
     //   Add it to the disequality store
-    // return true if some action occured and false otherwise
-    vector<Expression>::iterator vi;
-    bool some = false;
-    for (vi = eqs->begin(); vi < eqs->end(); vi++) {
-        if ((*vi).is_pure_a()) {
-            add_linear_equality((*vi).convert_linear());
-            some = true;
-        } else if ((*vi).is_pure_b()) {
-            add_transform((*vi).convert_transform());
-            some = true;
+    // return true if flag action occured and false otherwise
+    vector<Expression>::iterator it;
+    bool flag = false;
+    for (it = eq_exprs->begin(); it < eq_exprs->end(); it++) {
+        if ((*it).is_pure_a()) {
+            add_linear_equality((*it).convert_linear());
+            flag = true;
+        } else if ((*it).is_pure_b()) {
+            add_transform((*it).convert_transform());
+            flag = true;
         }
     }
 
-    return some;
+    return flag;
 }
 
 bool Context::move_constraints_inequalities() {
-    // check ineqs for constraints that are linear inequalities
-    vector<Expression>::iterator vi;
-    bool some = false;
-    for (vi = ineqs->begin(); vi < ineqs->end(); vi++) {
-        if ((*vi).is_pure_a()) {
-            add_linear_inequality((*vi).convert_linear());
-            ineqs->erase(vi);
-            vi--;
-            some = true;
+    // check ineq_exprs for constraints that are linear inequalities
+    vector<Expression>::iterator it;
+    bool flag = false;
+    for (it = ineq_exprs->begin(); it < ineq_exprs->end(); it++) {
+        if ((*it).is_pure_a()) {
+            add_linear_inequality((*it).convert_linear());
+            ineq_exprs->erase(it);
+            it--;
+            flag = true;
             continue;
-        } else if ((*vi).is_pure_b()) {
-            add_transform_inequality((*vi).convert_transform());
-            ineqs->erase(vi);
-            vi--;
-            some = true;
+        } else if ((*it).is_pure_b()) {
+            add_transform_inequality((*it).convert_transform());
+            ineq_exprs->erase(it);
+            it--;
+            flag = true;
             continue;
         }
     }
 
-    return some;
+    return flag;
 }
 
 bool Context::move_constraints() {
@@ -368,27 +368,27 @@ bool Context::move_constraints() {
 }
 
 void Context::reconcile_stores() {
-    ps->add_linear_store(*ms);
-    ps->extract_linear_part(*ms);
+    inequality_store->add_linear_store(*equality_mat);
+    inequality_store->extract_linear_part(*equality_mat);
 
     return;
 }
 
 void Context::simplify_equalities() {
     // simplify each equality and inequality expression against the matrix store
-    vector<Expression>::iterator vi;
-    for (vi = eqs->begin(); vi < eqs->end(); vi++) {
-        (*vi).simplify(*ms);
+    vector<Expression>::iterator it;
+    for (it = eq_exprs->begin(); it < eq_exprs->end(); it++) {
+        (*it).simplify(*equality_mat);
     }
 }
 
 void Context::simplify_inequalities() {
-    vector<Expression>::iterator vi;
-    for (vi = ineqs->begin(); vi < ineqs->end(); vi++) {
-        (*vi).simplify(*ms);
+    vector<Expression>::iterator it;
+    for (it = ineq_exprs->begin(); it < ineq_exprs->end(); it++) {
+        (*it).simplify(*equality_mat);
     }
 
-    // Are there some rules that can be used to simplify the expressions using
+    // Are there flag rules that can be used to simplify the expressions using
     // the polyhedral store?
     // -- TO BE REFINED SUBSEQUENTLY--
 }
@@ -402,9 +402,9 @@ void Context::simplify() {
 }
 
 void Context::simplify_repeat() {
-    bool some = true;
-    while (some) {
-        some = move_constraints();
+    bool flag = true;
+    while (flag) {
+        flag = move_constraints();
         simplify();
         remove_trivial();
     }
@@ -415,11 +415,11 @@ void Context::simplify_repeat() {
 bool Context::factor_occurs_equalities(LinTransform& t) {
     // check if the factor given by LinTransform already occurs
     // if so then increment the "count" of the expression
-    vector<Expression>::iterator vi;
+    vector<Expression>::iterator it;
 
-    for (vi = factors->begin(); vi < factors->end(); vi++) {
-        if ((*vi).get_transform_factor() == t) {
-            (*vi).add_count();
+    for (it = factors->begin(); it < factors->end(); it++) {
+        if ((*it).get_transform_factor() == t) {
+            (*it).add_count();
             return true;
         }
     }
@@ -428,33 +428,32 @@ bool Context::factor_occurs_equalities(LinTransform& t) {
 }
 
 bool Context::collect_factors_equalities() {
-    // Run factorize on all the expressions in eqs and then
+    // Run factorize on all the expressions in eq_exprs and then
     // Collect all the expressions that are factored into a single
     // vector factors
 
-    bool some = false;
+    bool flag = false;
 
-    vector<Expression>::iterator vi;
     LinTransform temp;
 
-    // First erase factors completely
-    factors->erase(factors->begin(), factors->end());
+    factors->clear();
 
-    for (vi = eqs->begin(); vi < eqs->end(); vi++) {
-        if ((*vi).factorize()) {
-            temp = (*vi).get_transform_factor();
+    for (auto it = eq_exprs->begin(); it < eq_exprs->end(); it++) {
+        if ((*it).factorize()) {
+            temp = (*it).get_transform_factor();
             if (!is_viable_equalities(temp)) {
-                (*vi).drop_transform(temp);
-            } else {
+                (*it).drop_transform(temp);
+            } 
+            else {
                 if (!factor_occurs_equalities(temp)) {
-                    (*vi).reset_count();
-                    factors->push_back(*vi);
-                    some = true;
+                    (*it).reset_count();
+                    factors->push_back(*it);
+                    flag = true;
                 }
             }
         }
     }
-    return some;
+    return flag;
 }
 
 Expression& Context::choose_maximal_factor_equalities() {
@@ -472,56 +471,56 @@ Expression& Context::choose_maximal_factor_equalities() {
         breakfn();
     }
 
-    vector<Expression>::iterator vi, vj;
+    vector<Expression>::iterator it, vj;
     vj = factors->begin();
-    vi = factors->begin() + 1;
+    it = factors->begin() + 1;
 
-    while (vi < factors->end()) {
-        if ((*vi).get_count() > (*vj).get_count()) {
-            vj = vi;
+    while (it < factors->end()) {
+        if ((*it).get_count() > (*vj).get_count()) {
+            vj = it;
         }
-        vi++;
+        it++;
     }
     return (*vj);
 }
 
 bool Context::is_viable_equalities(LinTransform& lt) {
     // check if split on lt==0 is allowed by the disequality constraint store
-    return ds->check_status_equalities(lt);
+    return lambda_store->check_status_equalities(lt);
 }
 
 bool Context::split_on_factor_equalities(LinTransform& lt) {
-    vector<Expression>::iterator vi;
+    vector<Expression>::iterator it;
     bool split = false;
     if (!is_viable_equalities(lt)) {
         // Then each expression that has lt as a factor should drop it
-        for (vi = eqs->begin(); vi < eqs->end(); vi++)
-            (*vi).drop_transform(lt);
+        for (it = eq_exprs->begin(); it < eq_exprs->end(); it++)
+            (*it).drop_transform(lt);
         simplify_repeat();
     } else {
         split = true;
-        DisequalityStore* ds1 = ds->clone();
+        DisequalityStore* ds1 = lambda_store->clone();
         child1 = new Context(
-            f, fd, fm, ms->clone(), ps->clone(),
+            info, dual_info, lambda_info, equality_mat->clone(), inequality_store->clone(),
             ds1);  // create a new context by cloning the appropriate stores
         // cout<<endl<<"- 1. Print Child Context: "<<endl<<(*child1)<<endl;
 
         // Now add each expression to the appropriate child context
         // child1 will take in lt==0
         // this context  will take in lt <> 0
-        for (vi = eqs->begin(); vi < eqs->end(); vi++) {
-            if ((*vi).transform_matches(lt)) {
-                this->add_to_matrix_store((*vi).get_linear_factor());
-                eqs->erase(vi);
-                vi--;
+        for (it = eq_exprs->begin(); it < eq_exprs->end(); it++) {
+            if ((*it).transform_matches(lt)) {
+                this->add_to_matrix_store((*it).get_linear_factor());
+                eq_exprs->erase(it);
+                it--;
             } else {
-                child1->add_equality_expression(Expression((*vi)));
+                child1->add_equality_expression(Expression((*it)));
             }
         }
         // cout<<endl<<"- 2. Print Child Context: "<<endl<<(*child1)<<endl;
 
-        for (vi = ineqs->begin(); vi < ineqs->end(); vi++) {
-            child1->add_inequality_expression(Expression((*vi)));
+        for (it = ineq_exprs->begin(); it < ineq_exprs->end(); it++) {
+            child1->add_inequality_expression(Expression((*it)));
         }
         // cout<<endl<<"- 3. Print Child Context: "<<endl<<(*child1)<<endl;
 
@@ -529,7 +528,7 @@ bool Context::split_on_factor_equalities(LinTransform& lt) {
         // cout<<endl<<"- 4. Print Child Context: "<<endl<<(*child1)<<endl;
 
         // KEY: Modify the "Father Context" to be the second child!
-        ds->add_transform_negated(lt);
+        lambda_store->add_transform_negated(lt);
 
         child1->simplify_repeat();
         // cout<<endl<<"- 5. Print Child Context: "<<endl<<(*child1)<<endl;
@@ -546,7 +545,7 @@ void Context::print_children(ostream& os) {
 
 bool Context::is_linear_context() {
     simplify_repeat();
-    if (eqs->empty() && ineqs->empty())
+    if (eq_exprs->empty() && ineq_exprs->empty())
         return true;
 
     return false;
@@ -562,7 +561,7 @@ int Context::factorizing_strategy_equalities() {
     bool split = false;
     bool has_factors = true;
 
-    Expression e = choose_maximal_factor_equalities();
+    Expression expr = choose_maximal_factor_equalities();
 
     /*
     //Test to print factor
@@ -570,15 +569,15 @@ int Context::factorizing_strategy_equalities() {
     cout<<"Transform factor is: "<<e.get_transform_factor()<<endl;
     */
 
-    split = split_on_factor_equalities(e.get_transform_factor());
+    split = split_on_factor_equalities(expr.get_transform_factor());
 
     if (split) {
         return 2;
     } else {
         while (has_factors && !split) {
             has_factors = collect_factors_equalities();
-            e = choose_maximal_factor_equalities();
-            split = split_on_factor_equalities(e.get_transform_factor());
+            expr = choose_maximal_factor_equalities();
+            split = split_on_factor_equalities(expr.get_transform_factor());
         }
     }
 
@@ -592,7 +591,7 @@ void Context::recursive_strategy(System& s, C_Polyhedron* dualp) {
     int i = 1;
 
     while (i > 0) {
-        if (ps->contained(dualp)) {
+        if (inequality_store->contained(dualp)) {
             prune_count++;
             return;
         }
@@ -637,7 +636,7 @@ void Context::recursive_strategy(vector<Location*>* loclist,
     }
 
     while (i > 0) {
-        if (ps->contained(dualp)) {
+        if (inequality_store->contained(dualp)) {
             prune_count++;
             return;
         }
@@ -663,7 +662,7 @@ void Context::Convert_CNF_to_DNF_and_Print(vector<Location*>* loclist,
         return;
     }
     while (i > 0) {
-        if (ps->contained(dualp)) {
+        if (inequality_store->contained(dualp)) {
             prune_count++;
             return;
         }
@@ -681,10 +680,10 @@ void Context::Convert_CNF_to_DNF_and_Print(vector<Location*>* loclist,
     }
 }
 
-void Context::recursive_strategy(Clump& vp) {
+void Context::recursive_strategy(Clump& clump) {
     int i = 1;
     while (i > 0) {
-        if (vp.contains(ps->get_poly_reference())) {
+        if (clump.contains(inequality_store->get_poly_reference())) {
             prune_count++;
             return;
         }
@@ -692,11 +691,10 @@ void Context::recursive_strategy(Clump& vp) {
         if (i > 0) {
             // cout<<endl<<"- The Left Child Context: "<<endl; print(cout);
             // cout<<endl<<"- The Right Child Context: "<<endl<<(*child1)<<endl;
-            child1->recursive_strategy(vp);
+            child1->recursive_strategy(clump);
             delete (child1);
         } else {
-            split_01_strategy(
-                vp);  // contains process "vp.insert(ps->get_poly_reference())";
+            split_01_strategy(clump);  // contains process "clump.insert(inequality_store->get_poly_reference())";
             return;
         }
     }
@@ -705,7 +703,7 @@ void Context::recursive_strategy(Clump& vp) {
 /*
 void Context::recursive_strategy(vector<Context *>* children){
    // Can I be split?
-   if (ps->is_trivial())
+   if (inequality_store->is_trivial())
       return;
 
    int i= factorizing_strategy_equalities();
@@ -724,16 +722,16 @@ void Context::get_multiplier_counts() {
     for (i = 0; i < r; i++)
         tt[i] = 0;
 
-    vector<Expression>::iterator vi;
-    if (eqs->empty() && ineqs->empty())
+    vector<Expression>::iterator it;
+    if (eq_exprs->empty() && ineq_exprs->empty())
         return;
 
-    for (vi = eqs->begin(); vi < eqs->end(); vi++) {
-        (*vi).count_multipliers(tt);
+    for (it = eq_exprs->begin(); it < eq_exprs->end(); it++) {
+        (*it).count_multipliers(tt);
     }
 
-    for (vi = ineqs->begin(); vi < ineqs->end(); vi++) {
-        (*vi).count_multipliers(tt);
+    for (it = ineq_exprs->begin(); it < ineq_exprs->end(); it++) {
+        (*it).count_multipliers(tt);
     }
 
     return;
@@ -742,12 +740,12 @@ void Context::get_multiplier_counts() {
 int Context::get_multiplier_status() {
     int i;
     // find out about each multiplier
-    if ((eqs->empty() && ineqs->empty()) || (!zero && !one)) {
+    if ((eq_exprs->empty() && ineq_exprs->empty()) || (!zero && !one)) {
         return NO_UNRESOLVED_MULTIPLIER;
     }
 
     bool zero_possible, one_possible;
-    LinTransform lt(r, fm);
+    LinTransform lt(r, lambda_info);
 
     // now check  on each multiplier on how many unresolved instances are there
     get_multiplier_counts();
@@ -808,16 +806,16 @@ int Context::choose_unresolved_multiplier() {
     for (i = 0; i < r; i++)
         tt[i] = 0;
 
-    vector<Expression>::iterator vi;
-    if (eqs->empty() && ineqs->empty())
+    vector<Expression>::iterator it;
+    if (eq_exprs->empty() && ineq_exprs->empty())
         return NO_UNRESOLVED_MULTIPLIER;
 
-    for (vi = eqs->begin(); vi < eqs->end(); vi++) {
-        (*vi).count_multipliers(tt);
+    for (it = eq_exprs->begin(); it < eq_exprs->end(); it++) {
+        (*it).count_multipliers(tt);
     }
 
-    for (vi = ineqs->begin(); vi < ineqs->end(); vi++) {
-        (*vi).count_multipliers(tt);
+    for (it = ineq_exprs->begin(); it < ineq_exprs->end(); it++) {
+        (*it).count_multipliers(tt);
     }
 
     int ret = NO_UNRESOLVED_MULTIPLIER, max = 0;
@@ -844,7 +842,7 @@ with 0 and 1
 
 
    // choose 0/1 values for the multiplier and expand
-   LinTransform lt(r,fm);
+   LinTransform lt(r,lambda_info);
    lt[index]=1; // \mu{index}=0
 
    Context * child1, *child2;
@@ -883,7 +881,7 @@ void Context::terminal_strategy(System& s, C_Polyhedron* dualp) {
 
     if (index == NO_UNRESOLVED_MULTIPLIER) {
         // now add the invariants and update dualp
-        s.add_invariants_and_update(ps->get_poly_reference(), (*dualp));
+        s.add_invariants_and_update(inequality_store->get_poly_reference(), (*dualp));
         return;  // nothing to be done
     }
 
@@ -901,7 +899,7 @@ void Context::terminal_strategy(System& s, C_Polyhedron* dualp) {
     return;
 }
 
-void Context::split_01_strategy(Clump& vp) {
+void Context::split_01_strategy(Clump& clump) {
     // choose an unresolved multiplier and create two children by instantiating
     // with 0 and 1 as long as these instantiations are allowed
 
@@ -909,13 +907,13 @@ void Context::split_01_strategy(Clump& vp) {
     int i;
     if (index == NO_UNRESOLVED_MULTIPLIER) {
         // now add the invariants and update dualp
-        vp.insert(ps->get_poly_reference());
+        clump.insert(inequality_store->get_poly_reference());
         return;  // nothing to be done
     }
 
     // now go though all the multipliers for which zero or one is forbidden and
     // apply the remaining choose 0/1 values for the multiplier and expand
-    LinTransform lt(r, fm);
+    LinTransform lt(r, lambda_info);
     Context* child1;
 
     for (i = 0; i < r; i++) {
@@ -944,7 +942,7 @@ void Context::split_01_strategy(Clump& vp) {
     simplify_repeat();
     index = get_multiplier_status();
     if (index == NO_UNRESOLVED_MULTIPLIER) {
-        vp.insert(ps->get_poly_reference());
+        clump.insert(inequality_store->get_poly_reference());
         return;  // nothing to be done
     }
     // now split on the remaining cases
@@ -955,7 +953,7 @@ void Context::split_01_strategy(Clump& vp) {
             child1 = this->clone();
             child1->add_transform(lt);
             child1->simplify_repeat();
-            child1->recursive_strategy(vp);
+            child1->recursive_strategy(clump);
             delete (child1);
 
             lt[i] = 1;
@@ -963,7 +961,7 @@ void Context::split_01_strategy(Clump& vp) {
             child1 = this->clone();
             child1->add_transform(lt);
             child1->simplify_repeat();
-            child1->recursive_strategy(vp);
+            child1->recursive_strategy(clump);
             delete (child1);
 
             break;
@@ -981,7 +979,7 @@ void Context::convert_to_polyhedron(C_Polyhedron & result, index ){
    // with just those dimensions that index is involved with
    //
 
-   PRECONDITION( result.space_dimension()== (unsigned) 2 * nd);
+   PRECONDITION( result.space_dimension()== (unsigned) 2 * dual_num);
 
    // first gather all the variables that the index variable relates
    // then gather all the constraints that the index variable has
@@ -1008,10 +1006,10 @@ void Context::split_01_strategy(vector<Location*>* loclist,
     int i;
     if (index == NO_UNRESOLVED_MULTIPLIER) {
         // now add the invariants and update dualp
-        (*dualp) = C_Polyhedron(nd, UNIVERSE);
-        vector<Location*>::iterator vi;
-        for (vi = loclist->begin(); vi < loclist->end(); vi++) {
-            (*vi)->extract_invariants_and_update(ps->get_poly_reference(),
+        (*dualp) = C_Polyhedron(dual_num, UNIVERSE);
+        vector<Location*>::iterator it;
+        for (it = loclist->begin(); it < loclist->end(); it++) {
+            (*it)->extract_invariants_and_update(inequality_store->get_poly_reference(),
                                                  *dualp);
         }
         return;  // nothing to be done
@@ -1019,7 +1017,7 @@ void Context::split_01_strategy(vector<Location*>* loclist,
 
     // now go though all the multipliers for which zero or one is forbidden and
     // apply the remaining choose 0/1 values for the multiplier and expand
-    LinTransform lt(r, fm);
+    LinTransform lt(r, lambda_info);
     Context* child1;
 
     for (i = 0; i < r; i++) {
@@ -1049,10 +1047,10 @@ void Context::split_01_strategy(vector<Location*>* loclist,
     index = get_multiplier_status();
     if (index == NO_UNRESOLVED_MULTIPLIER) {
         // now add the invariants and update dualp
-        (*dualp) = C_Polyhedron(nd, UNIVERSE);
-        vector<Location*>::iterator vi;
-        for (vi = loclist->begin(); vi < loclist->end(); vi++) {
-            (*vi)->extract_invariants_and_update(ps->get_poly_reference(),
+        (*dualp) = C_Polyhedron(dual_num, UNIVERSE);
+        vector<Location*>::iterator it;
+        for (it = loclist->begin(); it < loclist->end(); it++) {
+            (*it)->extract_invariants_and_update(inequality_store->get_poly_reference(),
                                                  *dualp);
         }
         return;  // nothing to be done
@@ -1093,26 +1091,26 @@ void Context::collect_generators(Generator_System& g) {
     } else {
         // Now just collect the generators into Generator_System from the
         // polynomial store
-        ps->collect_generators(g);
+        inequality_store->collect_generators(g);
     }
 }
 
 // Old version, StInG compiling under PPL 0.9 (05/03/2006)
 /*
 void Context::validate_generators(Generator_System & g){
-   Generator_System g1=ps->minimized_generators(); // obtain the minimized
-generators from the polystore Generator_System::const_iterator vi;
+   Generator_System g1=inequality_store->minimized_generators(); // obtain the minimized
+generators from the polystore Generator_System::const_iterator it;
 
-   for(vi=g1.begin();vi!=g1.end();vi++){
-      if (((*vi).is_point()|| (*vi).is_ray()) && is_valid_generator((*vi))){
-         g.insert(*vi);
+   for(it=g1.begin();it!=g1.end();it++){
+      if (((*it).is_point()|| (*it).is_ray()) && is_valid_generator((*it))){
+         g.insert(*it);
       }
-      if ((*vi).is_line()){
-         if (is_valid_generator(ray(Linear_Expression(*vi))))
-            g.insert(ray(Linear_Expression(*vi)));
+      if ((*it).is_line()){
+         if (is_valid_generator(ray(Linear_Expression(*it))))
+            g.insert(ray(Linear_Expression(*it)));
 
-         if (is_valid_generator(ray(-Linear_Expression(*vi))))
-            g.insert(ray(-Linear_Expression(*vi)));
+         if (is_valid_generator(ray(-Linear_Expression(*it))))
+            g.insert(ray(-Linear_Expression(*it)));
       }
    }
 }
@@ -1124,21 +1122,21 @@ generators from the polystore Generator_System::const_iterator vi;
 // ***
 void Context::validate_generators(Generator_System& g) {
     Generator_System g1 =
-        ps->minimized_generators();  // obtain the minimized generators from the
+        inequality_store->minimized_generators();  // obtain the minimized generators from the
                                      // polystore
-    Generator_System::const_iterator vi;
+    Generator_System::const_iterator it;
 
-    for (vi = g1.begin(); vi != g1.end(); vi++) {
-        if (((*vi).is_point() || (*vi).is_ray()) && is_valid_generator((*vi))) {
-            g.insert(*vi);
+    for (it = g1.begin(); it != g1.end(); it++) {
+        if (((*it).is_point() || (*it).is_ray()) && is_valid_generator((*it))) {
+            g.insert(*it);
         }
-        if ((*vi).is_line()) {
-            // Convert generator (*vi is of line type) to Linear_Expression (no
+        if ((*it).is_line()) {
+            // Convert generator (*it is of line type) to Linear_Expression (no
             // sign for line), then convert Linear_Expression to ray (signed
             // with ray)
             Linear_Expression e;
-            for (dimension_type i = (*vi).space_dimension(); i-- > 0;) {
-                e += (*vi).coefficient(Variable(i)) * Variable(i);
+            for (dimension_type i = (*it).space_dimension(); i-- > 0;) {
+                e += (*it).coefficient(Variable(i)) * Variable(i);
             }
 
             if (is_valid_generator(ray(e)))
@@ -1152,20 +1150,20 @@ void Context::validate_generators(Generator_System& g) {
 
 bool Context::is_valid_generator(Generator const& g) {
     // check if the generator g is valid by
-    // 1. replacing all the eqs and ineqs by transforms
+    // 1. replacing all the eq_exprs and ineq_exprs by transforms
     // 2. Insert them into a clone of the disequality store
     // 3. check the final disequality store for consistency
 
-    DisequalityStore* ds1 = ds->clone();  // clone the disequality store
+    DisequalityStore* ds1 = lambda_store->clone();  // clone the disequality store
 
-    vector<Expression>::iterator vi;
-    for (vi = eqs->begin(); vi < eqs->end(); vi++) {
-        SparseLinExpr p((*vi).to_transform(g));
+    vector<Expression>::iterator it;
+    for (it = eq_exprs->begin(); it < eq_exprs->end(); it++) {
+        SparseLinExpr p((*it).to_transform(g));
         ds1->add_constraint(p, TYPE_EQ);
     }
 
-    for (vi = ineqs->begin(); vi < ineqs->end(); vi++) {
-        SparseLinExpr p((*vi).to_transform(g));
+    for (it = ineq_exprs->begin(); it < ineq_exprs->end(); it++) {
+        SparseLinExpr p((*it).to_transform(g));
         ds1->add_constraint(p, TYPE_GEQ);
     }
 
@@ -1187,42 +1185,42 @@ bool Context::is_valid_generator(Generator const& g) {
 }
 
 Context::~Context() {
-    delete (ms);
-    delete (ps);
-    delete (ds);
-    delete (eqs);
-    delete (ineqs);
+    delete (equality_mat);
+    delete (inequality_store);
+    delete (lambda_store);
+    delete (eq_exprs);
+    delete (ineq_exprs);
     delete (factors);
 }
 
 void Context::obtain_primal_polyhedron(int left, C_Polyhedron& result) {
-    PRECONDITION((result.space_dimension() == (unsigned)n),
+    PRECONDITION((result.space_dimension() == (unsigned)vars_num),
                  " Polyhedron of wrong space dimension passed");
 
-    PRECONDITION((left >= 0 && left + n + 1 <= nd),
+    PRECONDITION((left >= 0 && left + vars_num + 1 <= dual_num),
                  " Asked to primalize out of range");
 
-    // assume that result's space dimension is =n
+    // assume that result's space dimension is =vars_num
 
     // obtain the generators of the polystore polyhedron
     reconcile_stores();
-    C_Polyhedron const& pp = ps->get_nnc_poly_reference();
+    C_Polyhedron const& pp = inequality_store->get_nnc_poly_reference();
     Generator_System gs = pp.generators();
     // now make them into constraints
-    Generator_System::const_iterator vi;
+    Generator_System::const_iterator it;
 
     Linear_Expression ll;
     int i, j;
-    for (vi = gs.begin(); vi != gs.end(); ++vi) {
+    for (it = gs.begin(); it != gs.end(); ++it) {
         ll *= 0;  // reset the linexpr
-        for (i = 0; i < n; ++i) {
-            j = handle_integers((*vi).coefficient(Variable(left + i)));
+        for (i = 0; i < vars_num; ++i) {
+            j = handle_integers((*it).coefficient(Variable(left + i)));
             ll += j * Variable(i);
         }
 
-        ll += handle_integers((*vi).coefficient(Variable(left + n)));
+        ll += handle_integers((*it).coefficient(Variable(left + vars_num)));
 
-        if ((*vi).is_line())
+        if ((*it).is_line())
             // ppl-v0.9
             // result.add_constraint_and_minimize(ll==0);
             // ppl-v1.2 (not certainly)
@@ -1241,13 +1239,13 @@ bool Context::is_multiplier_present(int index) {
     PRECONDITION((index >= 0 && index < r),
                  " Context::is_multiplier_present() --- Index out of range");
 
-    vector<Expression>::iterator vi;
-    for (vi = eqs->begin(); vi < eqs->end(); ++vi) {
-        if ((*vi).is_multiplier_present(index))
+    vector<Expression>::iterator it;
+    for (it = eq_exprs->begin(); it < eq_exprs->end(); ++it) {
+        if ((*it).is_multiplier_present(index))
             return true;
     }
-    for (vi = ineqs->begin(); vi < ineqs->end(); ++vi) {
-        if ((*vi).is_multiplier_present(index))
+    for (it = ineq_exprs->begin(); it < ineq_exprs->end(); ++it) {
+        if ((*it).is_multiplier_present(index))
             return true;
     }
     return false;
@@ -1261,13 +1259,13 @@ bool Context::obtain_transition_relation(int mult_index,
     //
     //
     // secondly all the constraints involving the multiplier should lie in the
-    // range [left.. left+n] or else this will not work
+    // range [left.. left+vars_num] or else this will not work
     //
 
-    PRECONDITION((result.space_dimension() == (unsigned)(2 * n)),
+    PRECONDITION((result.space_dimension() == (unsigned)(2 * vars_num)),
                  " result polyhedron not of the correct space dimension");
 
-    PRECONDITION((left >= 0 && left + n + 1 <= nd),
+    PRECONDITION((left >= 0 && left + vars_num + 1 <= dual_num),
                  " Context::obtain_transtion_relation -- left1 out of range");
 
     //
@@ -1275,14 +1273,14 @@ bool Context::obtain_transition_relation(int mult_index,
     // also check if the polyhedron satisfies the constraints above
     //
 
-    C_Polyhedron temp(2 * n + 2, UNIVERSE);
+    C_Polyhedron temp(2 * vars_num + 2, UNIVERSE);
     Linear_Expression ll;
 
-    // vector<Expression>::iterator vi;
+    // vector<Expression>::iterator it;
 
     // first handle the equalities
 
-    bool res1 = to_constraints_(mult_index, left, temp, eqs, false);
+    bool res1 = to_constraints_(mult_index, left, temp, eq_exprs, false);
 
     if (!res1) {
         // something went wrong
@@ -1291,7 +1289,7 @@ bool Context::obtain_transition_relation(int mult_index,
 
     // inequalities
 
-    res1 = to_constraints_(mult_index, left, temp, ineqs, true);
+    res1 = to_constraints_(mult_index, left, temp, ineq_exprs, true);
 
     if (!res1) {
         return false;
@@ -1311,18 +1309,18 @@ bool Context::obtain_transition_relation(int mult_index,
 
     for (vgs = gs.begin(); vgs != gs.end(); ++vgs) {
         ll *= 0;
-        for (i = 0; i < n; i++) {
+        for (i = 0; i < vars_num; i++) {
             j = -handle_integers((*vgs).coefficient(Variable(i)));
             ll += j * Variable(i);
         }
 
-        j = -handle_integers((*vgs).coefficient(Variable(n)));
+        j = -handle_integers((*vgs).coefficient(Variable(vars_num)));
         ll += j;
-        for (i = 0; i < n; i++) {
-            j = handle_integers((*vgs).coefficient(Variable(n + 1 + i)));
-            ll += j * Variable(n + i);
+        for (i = 0; i < vars_num; i++) {
+            j = handle_integers((*vgs).coefficient(Variable(vars_num + 1 + i)));
+            ll += j * Variable(vars_num + i);
         }
-        j = handle_integers((*vgs).coefficient(Variable(2 * n + 1)));
+        j = handle_integers((*vgs).coefficient(Variable(2 * vars_num + 1)));
         ll += j;
 
         if ((*vgs).is_line())
@@ -1345,51 +1343,51 @@ bool Context::to_constraints_(int index,
                               C_Polyhedron& result,
                               vector<Expression>* what,
                               bool ineq) {
-    vector<Expression>::iterator vi;
+    vector<Expression>::iterator it;
     Linear_Expression ll;
     int i, j;
 
-    for (vi = what->begin(); vi < what->end(); ++vi) {
-        // first check that all the constraints (*vi) has
+    for (it = what->begin(); it < what->end(); ++it) {
+        // first check that all the constraints (*it) has
         // index as its multiplier
 
-        if ((*vi).is_multiplier_present(index) == false)
+        if ((*it).is_multiplier_present(index) == false)
             continue;
 
-        (*vi).adjust();
+        (*it).adjust();
 
         // it does.. so obtain the LinExpr corresponding to it
-        SparseLinExpr mc = (*vi)(index);
+        SparseLinExpr mc = (*it)(index);
         for (i = 0; i < left; ++i)
             if (mc(i) != 0)
                 return false;
 
-        for (i = left + n + 1; i < nd; ++i)
+        for (i = left + vars_num + 1; i < dual_num; ++i)
             if (mc(i) != 0)
                 return false;
 
         // now obtain fill in the constraints for muc
-        for (i = 0; i <= n; ++i) {
+        for (i = 0; i <= vars_num; ++i) {
             j = mc(i + left).num();
 
             ll += j * Variable(i);
         }
 
-        mc = (*vi)(r);
+        mc = (*it)(r);
 
         for (i = 0; i < left; ++i)
             if (mc(i) != 0)
                 return false;
 
-        for (i = left + n + 1; i < nd; ++i)
+        for (i = left + vars_num + 1; i < dual_num; ++i)
             if (mc(i) != 0)
                 return false;
 
         // now obtain fill in the constraints for c
-        for (i = 0; i <= n; ++i) {
+        for (i = 0; i <= vars_num; ++i) {
             j = mc(i + left).num();
 
-            ll += j * Variable(i + n + 1);
+            ll += j * Variable(i + vars_num + 1);
         }
         if (ineq)
             result.add_constraint(ll >= 0);

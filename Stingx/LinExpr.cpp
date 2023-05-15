@@ -32,10 +32,10 @@
 #include "var-info.h"
 using namespace std;
 
-void LinExpr::initialize(int n, var_info* f) {
+void LinExpr::initialize(int n, var_info* info) {
     // initialize
     this->n = n;
-    this->f = f;
+    this->info = info;
     lin.resize(n + 1, Rational(0, 0));
     count = 1;
     return;
@@ -79,12 +79,12 @@ LinExpr::LinExpr() {
     n = 0;
 }
 
-LinExpr::LinExpr(int n, var_info* f) {
-    initialize(n, f);
+LinExpr::LinExpr(int n, var_info* info) {
+    initialize(n, info);
 }
 
-void LinExpr::init_set(int n, var_info* f) {
-    initialize(n, f);
+void LinExpr::init_set(int n, var_info* info) {
+    initialize(n, info);
 }
 
 inline Rational& LinExpr::operator[](int i) {
@@ -96,7 +96,7 @@ Rational LinExpr::operator()(int i) const {
 }
 
 LinExpr LinExpr::operator+(LinExpr const& p1) const {
-    LinExpr tmp(n, f);
+    LinExpr tmp(n, info);
     for (int i = 0; i < n + 1; i++)
         tmp[i] = lin[i] + p1(i);
     return tmp;  // A reference to tmp.lin will be copied.. so this is not all
@@ -111,7 +111,7 @@ LinExpr& LinExpr::operator+=(LinExpr const& p1) {
 }
 
 LinExpr LinExpr::operator-(LinExpr const& p1) const {
-    LinExpr tmp(n, f);
+    LinExpr tmp(n, info);
     for (int i = 0; i < n + 1; i++)
         tmp[i] = lin[i] - p1(i);
     return tmp;  // A reference to tmp.lin will be copied.. so this is not all
@@ -146,8 +146,8 @@ LinExpr& LinExpr::operator=(LinExpr const& p1) {
 
 LinExpr operator*(int j, LinExpr const& p1) {
     int n = p1.get_dim();
-    var_info* f = p1.get_info();
-    LinExpr tmp(n, f);
+    var_info* info = p1.get_info();
+    LinExpr tmp(n, info);
     for (int i = 0; i < n + 1; i++)
         tmp[i] = p1(i) * j;
     return tmp;  // A reference to tmp.lin will be copied.. so this is not all
@@ -156,8 +156,8 @@ LinExpr operator*(int j, LinExpr const& p1) {
 
 LinExpr operator*(LinExpr const& p1, Rational const& i) {
     int n = p1.get_dim();
-    var_info* f = p1.get_info();
-    LinExpr tmp(n, f);
+    var_info* info = p1.get_info();
+    LinExpr tmp(n, info);
     for (int j = 0; j < n + 1; j++)
         tmp[j] = i * p1(j);
     return tmp;  // A reference to tmp.lin will be copied.. so this is not all
@@ -166,8 +166,8 @@ LinExpr operator*(LinExpr const& p1, Rational const& i) {
 
 LinExpr operator*(Rational const& i, LinExpr const& p1) {
     int n = p1.get_dim();
-    var_info* f = p1.get_info();
-    LinExpr tmp(n, f);
+    var_info* info = p1.get_info();
+    LinExpr tmp(n, info);
     for (int j = 0; j < n + 1; j++)
         tmp[j] = i * p1(j);
     return tmp;
@@ -204,12 +204,12 @@ void LinExpr::print(ostream& os) const {
             continue;
         if (!sp) {
             sp = true;
-            os << lin[j] << " * " << f->get_name(j) << " ";
+            os << lin[j] << " * " << info->get_name(j) << " ";
         } else {
             if (!(lin[j] < 0))
                 os << " + ";
 
-            os << lin[j] << " * " << f->get_name(j) << " ";
+            os << lin[j] << " * " << info->get_name(j) << " ";
         }
     }
     if (lin[n] == 0)
@@ -226,7 +226,7 @@ void LinExpr::print(ostream& os) const {
 void LinExpr::print_in_arrinv() const {
     int j;
     bool sp = false;
-    f->to_array_invariant();
+    info->to_array_invariant();
 
     if (is_constant() && lin[n] == 0) {
         cout << "0";
@@ -238,12 +238,12 @@ void LinExpr::print_in_arrinv() const {
             continue;
         if (!sp) {
             sp = true;
-            cout << lin[j] << " * " << f->get_arr_name(j) << " ";
+            cout << lin[j] << " * " << info->get_arr_name(j) << " ";
         } else {
             if (!(lin[j] < 0))
                 cout << "+";
 
-            cout << lin[j] << " * " << f->get_arr_name(j) << " ";
+            cout << lin[j] << " * " << info->get_arr_name(j) << " ";
         }
     }
     if (lin[n] == 0)
@@ -266,7 +266,7 @@ int LinExpr::get_dim() const {
     return n;
 }
 var_info* LinExpr::get_info() const {
-    return f;
+    return info;
 }
 
 int LinExpr::get_denominator_lcm() const {

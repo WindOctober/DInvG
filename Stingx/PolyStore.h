@@ -54,15 +54,15 @@ class PolyStore {
     C_Polyhedron *p, *trivial_poly;
 
     // printing information
-    var_info* f;
+    var_info* info;
     // vector<Variable *> * v;
-    int n;  // The dimensions
+    int vars_num;  // The dimensions
 
-    void initialize(int n, var_info* f);
+    void initialize(int vars_num, var_info* info);
     void make_trivial_polyhedron();
 
    public:
-    PolyStore(int n, var_info* f);
+    PolyStore(int vars_num, var_info* info);
     ~PolyStore();
 
     // add constraints
@@ -98,6 +98,6 @@ class PolyStore {
     Generator_System minimized_generators();
 };
 
-ostream& operator<<(ostream& f, PolyStore const& p);
+ostream& operator<<(ostream& info, PolyStore const& p);
 
 #endif

@@ -42,7 +42,7 @@ using namespace std;
 class LinTransform : public LinExpr {
    public:
     LinTransform();
-    LinTransform(int n, var_info* fn);
+    LinTransform(int n, var_info* linear_var_info);
     int get_base() const;
     bool is_trivial() const;
     bool is_inconsistent() const;

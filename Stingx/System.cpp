@@ -23,12 +23,12 @@
 
 #include "myassertions.h"
 
-System::System(var_info* f, var_info* fd, var_info* fr)
-    : f_(f),
-      fd_(fd),
+System::System(var_info* info, var_info* dual_info, var_info* fr)
+    : f_(info),
+      fd_(dual_info),
       fr_(fr),
-      n_(f->get_dimension()),
-      nd_(fd->get_dimension()),
+      n_(info->get_dimension()),
+      nd_(dual_info->get_dimension()),
       r_(fr->get_dimension()),
       context_computed_(false) {}
 

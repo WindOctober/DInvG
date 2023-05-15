@@ -54,9 +54,9 @@ var_info::var_info() {
     v = new vector<char*>();
 }
 /*
-var_info::var_info( var_info f){
-   v=f.get_vector();
-   dimension=f.get_dimension();
+var_info::var_info( var_info info){
+   v=info.get_vector();
+   dimension=info.get_dimension();
 }
 
 */
@@ -245,7 +245,7 @@ void var_info::resize_to(int what, const char* prefix) {
     return;
 }
 
-ostream& operator<<(ostream& out, var_info* const f) {
-    f->print(out);
+ostream& operator<<(ostream& out, var_info* const info) {
+    info->print(out);
     return out;
 }

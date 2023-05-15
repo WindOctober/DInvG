@@ -21,40 +21,40 @@
 
 #include "DisequalityStore.h"
 
-void DisequalityStore::initialize(int n, var_info* f) {
+void DisequalityStore::initialize(int vars_num, var_info* info) {
     //
     // initialize the store.
-    // with n dimensions and var-info f
+    // with vars_num dimensions and var-info info
     // Question to self: why on earth could this not have been written in the
     // constructor itself. Learnt costly lesson :-)
     //
 
-    this->n = n;
-    this->f = f;
+    this->vars_num = vars_num;
+    this->info = info;
     vp = new vector<Linear_Expression>();
-    ineqs = new C_Polyhedron(n, UNIVERSE);
+    ineq_exprs = new C_Polyhedron(vars_num, UNIVERSE);
 
     // Automatically set all the variables to be positive
     // This is not part of the general semantics for this class
     // but this is useful anyway.
 
     int i;
-    for (i = 0; i < n; i++)
-        ineqs->add_constraint(Variable(i) >= 0);
+    for (i = 0; i < vars_num; i++)
+        ineq_exprs->add_constraint(Variable(i) >= 0);
 
     // initial store is consistent
     incon = false;
 }
 
-DisequalityStore::DisequalityStore(int n, var_info* f) {
-    initialize(n, f);
+DisequalityStore::DisequalityStore(int vars_num, var_info* info) {
+    initialize(vars_num, info);
 }
 
 void DisequalityStore::check_consistent() {
     if (incon)
         return;
-    // first check if ineqs is non-empty
-    if (ineqs->is_empty()) {
+    // first check if ineq_exprs is non-empty
+    if (ineq_exprs->is_empty()) {
         // set inconsistent flag
         incon = true;
         // Npthing more to be done
@@ -70,8 +70,8 @@ void DisequalityStore::check_consistent() {
     // iterate through vp
 
     for (vi = vp->begin(); vi != vp->end(); ++vi) {
-        // What is the relation between the ineqs and (*vi)==0
-        rel = ineqs->relation_with((*vi) == 0);
+        // What is the relation between the ineq_exprs and (*vi)==0
+        rel = ineq_exprs->relation_with((*vi) == 0);
 
         if (rel == rel1) {
             // subsumed?
@@ -84,8 +84,8 @@ void DisequalityStore::check_consistent() {
 
 bool DisequalityStore::check_consistent(C_Polyhedron& t) {
     // just do the same as in check_consistent()..
-    // two changes.. 1. do not set ineqs
-    //               2. do not use ineqs member
+    // two changes.. 1. do not set ineq_exprs
+    //               2. do not use ineq_exprs member
     //  Post comment== I could have factored check_consistent() into this. I
     //  suck
 
@@ -98,7 +98,7 @@ bool DisequalityStore::check_consistent(C_Polyhedron& t) {
     vector<Linear_Expression>::iterator vi = vp->begin();
 
     for (vi = vp->begin(); vi != vp->end(); ++vi) {
-        // What is the relation between the ineqs and (*vi)==0
+        // What is the relation between the ineq_exprs and (*vi)==0
         rel = t.relation_with((*vi) == 0);
 
         if (rel == rel1) {
@@ -122,7 +122,7 @@ void DisequalityStore::add_constraint(SparseLinExpr const& p, int ineq_type) {
     if (ineq_type == TYPE_DIS) {
         vp->push_back(p.to_lin_expression());
     } else {
-        ineqs->add_constraint(p.get_constraint(ineq_type));
+        ineq_exprs->add_constraint(p.get_constraint(ineq_type));
     }
 
     // check if the whole new mess is consistent
@@ -136,11 +136,11 @@ bool DisequalityStore::is_consistent() const {
 }
 
 int DisequalityStore::get_dimension() const {
-    return n;
+    return vars_num;
 }
 
 const var_info* DisequalityStore::get_var_info() const {
-    return f;
+    return info;
 }
 
 void DisequalityStore::print_constraints(ostream& in) const {
@@ -151,11 +151,11 @@ void DisequalityStore::print_constraints(ostream& in) const {
 
 #ifdef __DEBUG__D_
         in << "Test Message--" << endl;
-        print_polyhedron(in, *ineqs, f);
+        print_polyhedron(in, *ineq_exprs, info);
         vector<Linear_Expression>::iterator vi;
 
         for (vi = vp->begin(); vi < vp->end(); vi++) {
-            print_lin_expression(in, (*vi), f);
+            print_lin_expression(in, (*vi), info);
             in << " <> 0" << endl;
         }
         in << "Test message ends" << endl;
@@ -167,13 +167,13 @@ void DisequalityStore::print_constraints(ostream& in) const {
 
     // print the polyhedron
 
-    print_polyhedron(in, *ineqs, f);
+    print_polyhedron(in, *ineq_exprs, info);
 
     vector<Linear_Expression>::iterator vi;
     // print the disequalities
     for (vi = vp->begin(); vi < vp->end(); vi++) {
         in << "├ ";
-        print_lin_expression(in, (*vi), f);
+        print_lin_expression(in, (*vi), info);
         in << " <> 0" << endl;
     }
     // done
@@ -184,7 +184,7 @@ void DisequalityStore::print_constraints(ostream& in) const {
 bool DisequalityStore::add_transform(LinTransform const& l) {
     // add l==0 after changing l to a linear expression a la PPL
     Linear_Expression l1 = l.to_lin_expression();
-    ineqs->add_constraint(l1 == 0);
+    ineq_exprs->add_constraint(l1 == 0);
     check_consistent();
     return incon;
 }
@@ -193,7 +193,7 @@ bool DisequalityStore::add_transform_inequality(LinTransform const& l) {
     // a la PPL
     Linear_Expression l1 = l.to_lin_expression();
     // add l>=0
-    ineqs->add_constraint(l1 >= 0);
+    ineq_exprs->add_constraint(l1 >= 0);
     check_consistent();
     return incon;
 }
@@ -207,19 +207,19 @@ bool DisequalityStore::add_transform_negated(LinTransform const& l) {
     return incon;
 }
 
-ostream& operator<<(ostream& in, DisequalityStore const& ds) {
+ostream& operator<<(ostream& in, DisequalityStore const& lambda_store) {
     // print
-    ds.print_constraints(in);
+    lambda_store.print_constraints(in);
     return in;
 }
 
 DisequalityStore* DisequalityStore::clone() const {
     // clone the disequality store
     // create a new one
-    DisequalityStore* ret = new DisequalityStore(n, f);
-    // force set inequalities to ineqs (by cloning ineqs)
+    DisequalityStore* ret = new DisequalityStore(vars_num, info);
+    // force set inequalities to ineq_exprs (by cloning ineq_exprs)
 
-    ret->set_inequalities(ineqs);
+    ret->set_inequalities(ineq_exprs);
     // clone vp and force set
     ret->set_disequalities(vp);
 
@@ -241,7 +241,7 @@ void DisequalityStore::set_inequalities(C_Polyhedron const* p) {
 
     // add the constraints one by one
     for (vi = cs.begin(); vi != cs.end(); vi++)
-        ineqs->add_constraint(*vi);
+        ineq_exprs->add_constraint(*vi);
 
     // unnecessary actually.. but will do it anyways
     check_consistent();
@@ -273,9 +273,9 @@ bool DisequalityStore::check_status_equalities(LinTransform& lt) {
     // check if adding lt==0 will create inconsistencies
     // First add lt==0 to the polyhedron and then check consistency
 
-    // create a polyhedron t with ineqs /\ l1 ==0
+    // create a polyhedron t with ineq_exprs /\ l1 ==0
 
-    C_Polyhedron t(*ineqs);
+    C_Polyhedron t(*ineq_exprs);
 
     Linear_Expression l1 = lt.to_lin_expression();
     t.add_constraint(l1 == 0);

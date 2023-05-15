@@ -55,8 +55,8 @@ class SparseLinExpr {
     //
     // Each operation is going to be costlier. Here are the members
     //  1. n_ is the number of variables (This could be varied dynamically).
-    //  2. m_ is the map that maps a coefficient i to a rational.
-    //     Semantics: If m_(i) is not found, then zero should be returned
+    //  2. map_ration is the map that maps a coefficient i to a rational.
+    //     Semantics: If map_ration(i) is not found, then zero should be returned
     //  3. f_ is a var_info that has the printing information for the variables
     //  4. count  (Added for the sake of maintaining consistency with an older
     //  implementation).
@@ -66,13 +66,13 @@ class SparseLinExpr {
 
     var_info* f_;
 
-    IRMap m_;
+    IRMap map_ration;
 
     int count_;
     bool info_set_;
     void clear_out();
 
-    void initialize(int n, var_info* f);  // will call off the use of this.
+    void initialize(int n, var_info* info);  // will call off the use of this.
 
     bool _class_invariant_check() const;
 
@@ -81,11 +81,11 @@ class SparseLinExpr {
    public:
     SparseLinExpr();
 
-    SparseLinExpr(int n, var_info* f);
+    SparseLinExpr(int n, var_info* info);
 
     SparseLinExpr(LinExpr const& ll);
 
-    void init_set(int n, var_info* f) { initialize(n, f); }
+    void init_set(int n, var_info* info) { initialize(n, info); }
 
     void add_coefficient(int index, Rational const& what);
 
@@ -142,13 +142,13 @@ class SparseLinExpr {
     int get_dim() const { return n_; }
     var_info* get_info() const { return f_; }
 
-    IRMap const& get_map() const { return m_; }
+    IRMap const& get_map() const { return map_ration; }
 
     // is the expression a constant? Is it a zero?
     // could require a search on the entire expression
 
     bool is_constant() const;
-    bool is_zero() const { return (m_.size() == 0); }
+    bool is_zero() const { return (map_ration.size() == 0); }
 
     // These are meant for factorizing out the common factors
     int get_denominator_lcm() const;
@@ -191,7 +191,7 @@ class SparseLinExpr {
             exit(1);
         }
 
-        return (*(m_.rbegin())).first;
+        return (*(map_ration.rbegin())).first;
     }
 
     // functions for setting/getting flags

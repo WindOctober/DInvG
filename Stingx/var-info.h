@@ -45,7 +45,7 @@ class var_info {
    public:
     var_info();
     virtual ~var_info() {}
-    var_info(var_info const* f);
+    var_info(var_info const* info);
 
     var_info(var_info* fr,
              vector<int>
@@ -83,6 +83,6 @@ class var_info {
 };
 
 // a simple check
-ostream& operator<<(ostream& out, var_info* const f);
+ostream& operator<<(ostream& out, var_info* const info);
 
 #endif

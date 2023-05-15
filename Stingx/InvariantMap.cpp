@@ -26,7 +26,7 @@
 
 bool InvariantMap::entry_exists(string const& what) const {
     // check using STL routine
-    return (m_.find(what) != m_.end());
+    return (map_ration.find(what) != map_ration.end());
 }
 
 void InvariantMap::add_value_to_map(string const& what,
@@ -39,11 +39,11 @@ void InvariantMap::add_value_to_map(string const& what,
                      << what << " Already exists in the map" << endl);
 
     // now add it
-    m_.insert(StringPolyPair(what, poly));
+    map_ration.insert(StringPolyPair(what, poly));
 }
 
-InvariantMap::InvariantMap(var_info* f, vector<Location*> const& vloc)
-    : f_(f), n_(f->get_dimension()), nloc_(vloc.size()), vloc_(vloc) {
+InvariantMap::InvariantMap(var_info* info, vector<Location*> const& vloc)
+    : f_(info), n_(info->get_dimension()), nloc_(vloc.size()), vloc_(vloc) {
     // now construct the string map
     vector<Location*>::const_iterator vi;
 
@@ -69,8 +69,8 @@ C_Polyhedron& InvariantMap::operator[](Location const* l) {
 }
 
 C_Polyhedron& InvariantMap::operator[](string const& what) {
-    StringPolyMap::iterator vi = m_.find(what);
-    PRECONDITION((vi != m_.end()),
+    StringPolyMap::iterator vi = map_ration.find(what);
+    PRECONDITION((vi != map_ration.end()),
                  "InvariantMap::operator[] --> entry does not exist");
 
     return (*vi).second;
@@ -86,9 +86,9 @@ C_Polyhedron const& InvariantMap::operator()(Location const* l) const {
 }
 
 C_Polyhedron const& InvariantMap::operator()(string const& what) const {
-    StringPolyMap::const_iterator vi = m_.find(what);
+    StringPolyMap::const_iterator vi = map_ration.find(what);
 
-    PRECONDITION((vi != m_.end()),
+    PRECONDITION((vi != map_ration.end()),
                  "InvariantMap::operator() --> entry does not exist");
 
     return (*vi).second;
@@ -151,7 +151,7 @@ void InvariantMap::assign(InvariantMap const& im) {
 void InvariantMap::print(ostream& out) const {
     StringPolyMap::const_iterator vi;
 
-    for (vi = m_.begin(); vi != m_.end(); ++vi) {
+    for (vi = map_ration.begin(); vi != map_ration.end(); ++vi) {
         string const& what = (*vi).first;
         C_Polyhedron const& poly = (*vi).second;
 
@@ -167,7 +167,7 @@ void InvariantMap::print(ostream& out) const {
 bool InvariantMap::equals(InvariantMap const& im) const {
     StringPolyMap::const_iterator vi;
 
-    for (vi = m_.begin(); vi != m_.end(); ++vi) {
+    for (vi = map_ration.begin(); vi != map_ration.end(); ++vi) {
         string const& what = (*vi).first;
         C_Polyhedron const& poly1 = (*vi).second;
         C_Polyhedron const& poly2 = im(what);

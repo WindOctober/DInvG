@@ -26,8 +26,8 @@
 #include "LinExpr.h"
 #include "Rational.h"
 
-LinTransform::LinTransform(int n, var_info* fn) {
-    initialize(n, fn);
+LinTransform::LinTransform(int n, var_info* linear_var_info) {
+    initialize(n, linear_var_info);
 }
 
 LinTransform::LinTransform() {
