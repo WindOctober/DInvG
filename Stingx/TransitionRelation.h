@@ -52,12 +52,12 @@ extern int get_index_of_location(string loc_name);
 
 class TransitionRelation {
    private:
-    int n;
-    var_info *f, *fd, *fm,
-        *fp;  // fm is the var_info for non-linear multipliers
+    int vars_num;
+    var_info *info, *dual_info, *lambda_info,
+        *fp;  // lambda_info is the var_info for non-linear multipliers
     Location *preloc, *postloc;
     // the actual transition relation as a 2n dimensional polyhedron
-    C_Polyhedron* rel;
+    C_Polyhedron* trans_poly;
 
     // structure of the transition relation
     // the structure in rel has been factored into , guard, update and preserved
@@ -67,40 +67,40 @@ class TransitionRelation {
 
     //
 
-    int mult_left, mult_right, nc;  // the range multipliers in its dual and the
+    int mult_left, mult_right, constraints_num;  // the range multipliers in its dual and the
                                     // number of constraint variables
-    int index;  // The index of the non-linear multiplier in fm
+    int index;  // The index of the non-linear multiplier in lambda_info
 
     string name;
 
     int fired;
-    void initialize(int n,
-                    var_info* f,
-                    var_info* fd,
-                    var_info* fm,
+    void initialize(int vars_num,
+                    var_info* info,
+                    var_info* dual_info,
+                    var_info* lambda_info,
                     Location* preloc,
                     Location* postloc,
                     C_Polyhedron* rel,
                     string name);
-    void initialize(int n,
-                    var_info* f,
-                    var_info* fd,
-                    var_info* fm,
+    void initialize(int vars_num,
+                    var_info* info,
+                    var_info* dual_info,
+                    var_info* lambda_info,
                     string name);
 
-    void initialize_without_populating(int n,
-                                       var_info* f,
-                                       var_info* fd,
-                                       var_info* fm,
+    void initialize_without_populating(int vars_num,
+                                       var_info* info,
+                                       var_info* dual_info,
+                                       var_info* lambda_info,
                                        Location* preloc,
                                        Location* postloc,
                                        C_Polyhedron* rel,
                                        string name,
                                        int index);
-    void initialize_without_populating(int n,
-                                       var_info* f,
-                                       var_info* fd,
-                                       var_info* fm,
+    void initialize_without_populating(int vars_num,
+                                       var_info* info,
+                                       var_info* dual_info,
+                                       var_info* lambda_info,
                                        string name,
                                        int index);
 
@@ -112,35 +112,35 @@ class TransitionRelation {
     void dualize_standard(C_Polyhedron& result) const;
 
    public:
-    TransitionRelation(int n,
-                       var_info* f,
-                       var_info* fd,
-                       var_info* fm,
+    TransitionRelation(int vars_num,
+                       var_info* info,
+                       var_info* dual_info,
+                       var_info* lambda_info,
                        Location* preloc,
                        Location* postloc,
                        C_Polyhedron* rel,
                        string name);
 
-    TransitionRelation(int n,
-                       var_info* f,
-                       var_info* fd,
-                       var_info* fm,
+    TransitionRelation(int vars_num,
+                       var_info* info,
+                       var_info* dual_info,
+                       var_info* lambda_info,
                        string name);
 
-    TransitionRelation(int n,
-                       var_info* f,
-                       var_info* fd,
-                       var_info* fm,
+    TransitionRelation(int vars_num,
+                       var_info* info,
+                       var_info* dual_info,
+                       var_info* lambda_info,
                        Location* preloc,
                        Location* postloc,
                        C_Polyhedron* rel,
                        string name,
                        int index);
 
-    TransitionRelation(int n,
-                       var_info* f,
-                       var_info* fd,
-                       var_info* fm,
+    TransitionRelation(int vars_num,
+                       var_info* info,
+                       var_info* dual_info,
+                       var_info* lambda_info,
                        string name,
                        int index);
 
@@ -173,7 +173,7 @@ class TransitionRelation {
     int get_range_right() const;
 
     int get_mult_index() const { return index; }
-    bool matches(string& f) const;
+    bool matches(string& info) const;
     const string& get_name() const;
 
     const string& get_preloc_name() const;

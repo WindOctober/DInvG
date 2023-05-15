@@ -31,24 +31,24 @@ extern string projection;
 extern int debug_2;
 extern int debug_3;
 
-void Location::initialize(int n,
-                          var_info* f,
-                          var_info* fd,
-                          var_info* fm,
+void Location::initialize(int vars_num,
+                          var_info* info,
+                          var_info* dual_info,
+                          var_info* lambda_info,
                           C_Polyhedron* p,
                           string name) {
-    this->n = n;
-    this->f = f;
-    this->fd = fd;
-    this->fm = fm;
-    this->p = p;
-    this->name = name;
-    this->loc_inv = new C_Polyhedron(n, UNIVERSE);
-    this->d_cl = new Clump(
-        fd, name, "Location");  // disabled path; added by Hongming, at Shanghai
+    this->vars_num = vars_num;
+    this->info = info;
+    this->dual_info = dual_info;
+    this->lambda_info = lambda_info;
+    this->poly = p;
+    this->loc_name = name;
+    this->loc_inv = new C_Polyhedron(vars_num, UNIVERSE);
+    this->disabled_clump = new Clump(
+        dual_info, name, "Location");  // disabled path; added by Hongming, at Shanghai
                                 // Jiao Tong University, 2022/09/20
     populate_coefficients();
-    invariant = new C_Polyhedron(n, UNIVERSE);
+    invariant = new C_Polyhedron(vars_num, UNIVERSE);
     context_made = false;
     propagation_flag = false;
     ppging_flag = false;
@@ -56,25 +56,25 @@ void Location::initialize(int n,
     vp_inv_flag = false;
 }
 
-void Location::initialize_without_populating(int n,
-                                             var_info* f,
-                                             var_info* fd,
-                                             var_info* fm,
+void Location::initialize_without_populating(int vars_num,
+                                             var_info* info,
+                                             var_info* dual_info,
+                                             var_info* lambda_info,
                                              C_Polyhedron* p,
                                              string name,
                                              int left) {
-    this->n = n;
-    this->f = f;
-    this->fd = fd;
-    this->fm = fm;
-    this->p = p;
-    this->name = name;
-    this->loc_inv = new C_Polyhedron(n, UNIVERSE);
-    this->d_cl = new Clump(
-        fd, name, "Location");  // disabled path; added by Hongming, at Shanghai
+    this->vars_num = vars_num;
+    this->info = info;
+    this->dual_info = dual_info;
+    this->lambda_info = lambda_info;
+    this->poly = p;
+    this->loc_name = name;
+    this->loc_inv = new C_Polyhedron(vars_num, UNIVERSE);
+    this->disabled_clump = new Clump(
+        dual_info, name, "Location");  // disabled path; added by Hongming, at Shanghai
                                 // Jiao Tong University, 2022/09/20
     l = left;
-    invariant = new C_Polyhedron(n, UNIVERSE);
+    invariant = new C_Polyhedron(vars_num, UNIVERSE);
     context_made = false;
     propagation_flag = false;
     ppging_flag = false;
@@ -83,163 +83,156 @@ void Location::initialize_without_populating(int n,
 }
 
 Context* Location::get_context() {
-    return c;
+    return context;
 }
 
 void Location::make_context() {
-    c = new Context(f, fd, fm);
+    context = new Context(info, dual_info, lambda_info);
     context_made = true;
 }
 
-Location::Location(int n,
-                   var_info* f,
-                   var_info* fd,
-                   var_info* fm,
+Location::Location(int vars_num,
+                   var_info* info,
+                   var_info* dual_info,
+                   var_info* lambda_info,
                    C_Polyhedron* p,
                    string name) {
-    initialize(n, f, fd, fm, p, name);
-    polyset = true;
+    initialize(vars_num, info, dual_info, lambda_info, p, name);
+    init_poly = true;
 }
 
-Location::Location(int n,
-                   var_info* f,
-                   var_info* fd,
-                   var_info* fm,
+Location::Location(int vars_num,
+                   var_info* info,
+                   var_info* dual_info,
+                   var_info* lambda_info,
                    string name) {
-    C_Polyhedron* init = new C_Polyhedron(n, UNIVERSE);
-    initialize(n, f, fd, fm, init, name);
-    polyset = false;
+    C_Polyhedron* init = new C_Polyhedron(vars_num, UNIVERSE);
+    initialize(vars_num, info, dual_info, lambda_info, init, name);
+    init_poly = false;
 }
 
-Location::Location(int n,
-                   var_info* f,
-                   var_info* fd,
-                   var_info* fm,
+Location::Location(int vars_num,
+                   var_info* info,
+                   var_info* dual_info,
+                   var_info* lambda_info,
                    string name,
                    int left) {
-    C_Polyhedron* init = new C_Polyhedron(n, UNIVERSE);
-    initialize_without_populating(n, f, fd, fm, init, name, left);
-    polyset = false;
+    C_Polyhedron* init = new C_Polyhedron(vars_num, UNIVERSE);
+    initialize_without_populating(vars_num, info, dual_info, lambda_info, init, name, left);
+    init_poly = false;
 }
 
-Location::Location(int n,
-                   var_info* f,
-                   var_info* fd,
-                   var_info* fm,
+Location::Location(int vars_num,
+                   var_info* info,
+                   var_info* dual_info,
+                   var_info* lambda_info,
                    C_Polyhedron* p,
                    string name,
                    int left) {
-    initialize_without_populating(n, f, fd, fm, p, name, left);
+    initialize_without_populating(vars_num, info, dual_info, lambda_info, p, name, left);
 
-    polyset = true;
+    init_poly = true;
 }
 
 void Location::set_polyhedron(C_Polyhedron* q) {
-    if (!polyset) {
-        p->intersection_assign(*q);
-        polyset = true;
+    if (!init_poly) {
+        poly->intersection_assign(*q);
+        init_poly = true;
     } else {
         // p->poly_hull_assign_and_minimize(*q);
-        p->poly_hull_assign(*q);
+        poly->poly_hull_assign(*q);
     }
 }
 
 void Location::set_initial(C_Polyhedron& q) {
-    if (!polyset) {
-        p->intersection_assign(q);
-        polyset = true;
+    if (!init_poly) {
+        poly->intersection_assign(q);
+        init_poly = true;
     } else {
-        p->poly_hull_assign(q);
+        poly->poly_hull_assign(q);
     }
 }
 
 C_Polyhedron* Location::get_initial() {
-    return p;
+    return poly;
 }
 
 bool Location::has_initial() {
-    return polyset;
+    return init_poly;
 }
 
 int Location::get_dimension() const {
-    return n;
+    return vars_num;
 }
 
 const var_info* Location::get_var_info() const {
-    return f;
+    return info;
 }
 const var_info* Location::get_dual_var_info() const {
-    return fd;
+    return dual_info;
 }
 int Location::get_range_left() const {
     return l;
 }
 
-void Location::add_clump(vector<Clump>& vcl) {
+void Location::add_clump(vector<Clump>& clumps) {
     // *** new-empty without disabled-path
-    // Clump cl(fd, name, "Location");
+    // Clump cl(dual_info, name, "Location");
     // ***
     // *** with disabled-path
     Clump cl = get_d_cl_reference();
     // ***
     cout << endl
-         << "> > > Location::" << name << " already has clump with "
+         << "> > > Location::" << loc_name << " already has clump with "
          << cl.get_count() << " Polyhedra...";
-    // if (debug_2) {
-    //     cout << endl << "- cl.print_clump(): ";
-    //     cl.print_vector_of_poly();
-    // }
-    // cout<<"- The Root Context: "<<endl<<(*c)<<endl;
-    c->recursive_strategy(cl);
+
+    context->recursive_strategy(cl);
     cout << endl
-         << "> > > Location::" << name << " altogether pushing back clump with "
+         << "> > > Location::" << loc_name << " altogether pushing back clump with "
          << cl.get_count() << " Polyhedra...";
-    if (debug_2) {
-        cout << endl << "- cl.print_clump(): ";
-        cl.print_vector_of_poly();
-    }
-    vcl.push_back(cl);
+
+    clumps.push_back(cl);
     cout << "done";
 }
 
 bool Location::matches(string nam) const {
-    return (name == nam);
+    return (loc_name == nam);
 }
 
 void Location::populate_coefficients() {
-    l = fd->get_dimension();
+    l = dual_info->get_dimension();
     int i;
     string dvi;
-    for (i = 0; i < n; i++) {
+    for (i = 0; i < vars_num; i++) {
         // dual_variable_i will be called c + location_name + i
-        dvi = "c_" + name + "_" + int_to_str(i);
-        fd->insert(dvi.c_str());
+        dvi = "c_" + loc_name + "_" + int_to_str(i);
+        dual_info->insert(dvi.c_str());
     }
-    dvi = "d_" + name;
-    fd->insert(dvi.c_str());
+    dvi = "d_" + loc_name;
+    dual_info->insert(dvi.c_str());
 }
 
 string const& Location::get_name() const {
-    return name;
+    return loc_name;
 }
 
 ostream& operator<<(ostream& in, Location const& l) {
     // details of the location should go in here
-    int n = l.get_dimension();
+    int vars_num = l.get_dimension();
 
-    const var_info* f = l.get_var_info();
+    const var_info* info = l.get_var_info();
     string name = l.get_name();
     // The rest to be completed later
     in << endl;
     in << "Location: " << name << endl;
-    in << "# of variables: " << n << endl;
-    in << "「 l: " << l.get_range_left() << ", n: " << n
-       << ", nd: " << l.get_dual_var_info()->get_dimension() << " 」" << endl;
+    in << "# of variables: " << vars_num << endl;
+    in << "「 l: " << l.get_range_left() << ", vars_num: " << vars_num
+       << ", dual_num: " << l.get_dual_var_info()->get_dimension() << " 」" << endl;
     
     if (l.initial_poly_set()) {
         in << "Initial Condition: [[ " << endl;
         in << "| " << endl;
-        print_polyhedron(in, l.get_poly_reference(), f);
+        print_polyhedron(in, l.get_poly_reference(), info);
         in << "| " << endl;
         in << "]]" << endl;
     } else {
@@ -249,12 +242,12 @@ ostream& operator<<(ostream& in, Location const& l) {
     if (name == EXIT_LOCATION && l.get_vp_inv_flag()) {
         in << "Disjunctive Invariant: [[ " << endl;
         in << "  " << endl;
-        print_clump(in, l.get_vp_inv(), f);
+        print_clump(in, l.get_vp_inv(), info);
         in << "  " << endl;
     } else {
         in << "Invariant: [[ " << endl;
         in << "| " << endl;
-        print_polyhedron(in, l.get_invariant(), f);
+        print_polyhedron(in, l.get_invariant(), info);
         in << "| " << endl;
     }
     in << "]]" << endl;
@@ -263,7 +256,7 @@ ostream& operator<<(ostream& in, Location const& l) {
 }
 
 void Location::compute_dual_constraints() {
-    compute_dual_constraints(*c);
+    compute_dual_constraints(*context);
 }
 void Location::compute_dual_constraints(Context& cc) {
     // Inefficient solution for the time being
@@ -272,34 +265,34 @@ void Location::compute_dual_constraints(Context& cc) {
     // Later expunge the multipliers
     // use >= as the default constraint state.
     // First obtain the number of constraints
-    if (!polyset)
+    if (!init_poly)
         return;
-    Constraint_System cs = p->minimized_constraints();
+    Constraint_System cs = poly->minimized_constraints();
     Constraint_System::const_iterator vi;
 
     C_Polyhedron* result;
 
-    int i, j, nc, nd;
+    int i, j, nc, dual_num;
 
     // count the number of multiplier variables required
     nc = 0;
     for (vi = cs.begin(); vi != cs.end(); ++vi)
         nc++;
 
-    nd = fd->get_dimension();
+    dual_num = dual_info->get_dimension();
 
     result = new C_Polyhedron(
-        nd + nc,
-        UNIVERSE);  // create a universe polyhedron of nd +nc dimensions
+        dual_num + nc,
+        UNIVERSE);  // create a universe polyhedron of dual_num +nc dimensions
     Linear_Expression lin(0);
 
     // Now build the constraints
-    for (i = 0; i < n; i++) {
+    for (i = 0; i < vars_num; i++) {
         lin = Linear_Expression(0);
         lin = lin - Variable(l + i);  // add -c_i to the constraint
         j = 0;
         for (vi = cs.begin(); vi != cs.end(); ++vi) {
-            lin = lin + (*vi).coefficient(Variable(i)) * Variable(nd + j);
+            lin = lin + (*vi).coefficient(Variable(i)) * Variable(dual_num + j);
             j++;
         }
         result->add_constraint(lin ==
@@ -308,10 +301,10 @@ void Location::compute_dual_constraints(Context& cc) {
 
     // Now the constraints on the constant
     lin = Linear_Expression(0);
-    lin = lin - Variable(l + n);  // add -d to the constraint
+    lin = lin - Variable(l + vars_num);  // add -d to the constraint
     j = 0;
     for (vi = cs.begin(); vi != cs.end(); ++vi) {
-        lin = lin + (*vi).inhomogeneous_term() * Variable(nd + j);
+        lin = lin + (*vi).inhomogeneous_term() * Variable(dual_num + j);
         j++;
     }
 
@@ -322,7 +315,7 @@ void Location::compute_dual_constraints(Context& cc) {
     j = 0;
     for (vi = cs.begin(); vi != cs.end(); ++vi) {
         if ((*vi).type() == Constraint::NONSTRICT_INEQUALITY) {
-            result->add_constraint(Variable(nd + j) >= 0);
+            result->add_constraint(Variable(dual_num + j) >= 0);
         } else if ((*vi).type() == Constraint::STRICT_INEQUALITY) {
             cerr
                 << "Location::compute_dual_constraints -- Warning: Encountered "
@@ -331,7 +324,7 @@ void Location::compute_dual_constraints(Context& cc) {
             cerr << "                " << (*vi) << endl;
 
             result->add_constraint(
-                Variable(nd + j) >=
+                Variable(dual_num + j) >=
                 0);  // Just handle it as any other inequality
         }
 
@@ -341,10 +334,10 @@ void Location::compute_dual_constraints(Context& cc) {
     // Now those are all the constraints.
 
 #ifdef __DEBUG__D_
-    print_polyhedron(cout, *result, fd);
+    print_polyhedron(cout, *result, dual_info);
 #endif
     result->remove_higher_space_dimensions(
-        nd);  // Remove the excess dimensions to obtain a new Polyhedron
+        dual_num);  // Remove the excess dimensions to obtain a new Polyhedron
 
     cs = result->minimized_constraints();
     for (vi = cs.begin(); vi != cs.end(); vi++) {
@@ -363,62 +356,52 @@ void Location::compute_dual_constraints(C_Polyhedron& initp) {
 
     cout << endl;
     cout << endl
-         << "> > > Location::compute_dual_constraints(), Location: " << name
+         << "> > > Location::compute_dual_constraints(), Location: " << loc_name
          << "'s Initialization";
 
     // nothing to be done if polyhedra not set
-    if (p->is_empty()) {
+    if (poly->is_empty()) {
         // the pointer p should be initialized with "new Polyhedron"
         //    the p->is_empty() means that p hasn't initialized yet.
-        cout << endl << "< < < Initial-Value is empty in Location::" << name;
+        cout << endl << "< < < Initial-Value is empty in Location::" << loc_name;
     } else {
         cout << endl << "- Initial-Value is not empty: ";
-        cout << endl << "  " << *p;
+        cout << endl << "  " << *poly;
     }
-    if (!polyset) {
-        cout << endl << "< < < ( !polyset ) in Location::" << name;
+    if (!init_poly) {
+        cout << endl << "< < < ( !polyset ) in Location::" << loc_name;
         return;
     }
-    if (p->is_empty()) {
+    if (poly->is_empty()) {
         return;
     }
-    Constraint_System cs = p->minimized_constraints();
-    Constraint_System::const_iterator vi;
-    int i, j, nc, nd;
+    Constraint_System cs = poly->minimized_constraints();
+    int i, j, nc, dual_num;
     // count the number of multiplier variables required
     nc = 0;
-    for (vi = cs.begin(); vi != cs.end(); ++vi)
+    for (auto vi = cs.begin(); vi != cs.end(); ++vi)
         nc++;
-    nd = fd->get_dimension();
-    if (debug_2) {
-        cout << endl << "------------------------------";
-        cout << endl << "- input_cs: " << endl << "  " << cs;
-    }
-
-    C_Polyhedron result(
-        nd + nc,
-        UNIVERSE);  // create a universe polyhedron of nd +nc dimensions
+    dual_num = dual_info->get_dimension();
+    C_Polyhedron result(dual_num + nc, UNIVERSE);
     Linear_Expression lin(0);
 
-    // Now build the constraints
-    for (i = 0; i < n; i++) {
+    for (i = 0; i < vars_num; i++) {
         lin = Linear_Expression(0);
         lin = lin - Variable(l + i);  // add -c_i to the constraint
         j = 0;
-        for (vi = cs.begin(); vi != cs.end(); ++vi) {
-            lin = lin + (*vi).coefficient(Variable(i)) * Variable(nd + j);
+        for (auto vi = cs.begin(); vi != cs.end(); ++vi) {
+            lin = lin + (*vi).coefficient(Variable(i)) * Variable(dual_num + j);
             j++;
         }
-        result.add_constraint(lin ==
-                              0);  // Add the constraint lin==0 to the result
+        result.add_constraint(lin == 0);  // Add the constraint lin==0 to the result
     }
 
     // Now the constraints on the constant
     lin = Linear_Expression(0);
-    lin = lin - Variable(l + n);  // add -d to the constraint
+    lin = lin - Variable(l + vars_num);  // add -d to the constraint
     j = 0;
-    for (vi = cs.begin(); vi != cs.end(); ++vi) {
-        lin = lin + (*vi).inhomogeneous_term() * Variable(nd + j);
+    for (auto vi = cs.begin(); vi != cs.end(); ++vi) {
+        lin = lin + (*vi).inhomogeneous_term() * Variable(dual_num + j);
         j++;
     }
 
@@ -427,73 +410,54 @@ void Location::compute_dual_constraints(C_Polyhedron& initp) {
     // Now the constraints on the multipliers
 
     j = 0;
-    for (vi = cs.begin(); vi != cs.end(); ++vi) {
+    for (auto vi = cs.begin(); vi != cs.end(); ++vi) {
         if ((*vi).type() == Constraint::NONSTRICT_INEQUALITY) {
-            result.add_constraint(Variable(nd + j) >= 0);
-        } else if ((*vi).type() == Constraint::STRICT_INEQUALITY) {
+            result.add_constraint(Variable(dual_num + j) >= 0);
+        } 
+        else if ((*vi).type() == Constraint::STRICT_INEQUALITY) {
             cerr
                 << "Location::compute_dual_constraints -- Warning: Encountered "
                    "Strict Inequality"
                 << endl;
             cerr << "                " << (*vi) << endl;
-            result.add_constraint(Variable(nd + j) >=
-                                  0);  // Just handle it as any other inequality
+            result.add_constraint(Variable(dual_num + j) >= 0);  // Just handle it as any other inequality
         }
         j++;
     }
 
     // Now those are all the constraints.
-
-#ifdef __DEBUG__D_
-    print_polyhedron(cout, result, fd);
-#endif
-
-    if (debug_2) {
-        cout << endl << "------------------------------";
-        cout << endl
-             << "- Farkas_Initialization_Poly (before projection): " << endl
-             << "  " << result.minimized_constraints();
-    }
-    // contains_test(result, nd);
-    // Timer test_time_for_remove_higher_space_dimensions;
+    // contains_test(result, dual_num);
     //  * * *
     //  Old method for eliminate lambda
-    result.remove_higher_space_dimensions(
-        nd);  // Remove the excess dimensions to obtain a new Polyhedron
+
+    result.remove_higher_space_dimensions(dual_num);  // Remove the excess dimensions to obtain a new Polyhedron
     // * * *
     // * * *
     // New method for eliminate lambda: Farkas' Lemma 2.5a, Ax<=b
-    // eliminate_by_Farkas(result, nd);
+    // eliminate_by_Farkas(result, dual_num);
     // * * *
     // test_time_for_remove_higher_space_dimensions.stop();
     // cout<<endl<<"- The remove_higher_space_dimensions(in location) Time
     // Taken is :
     // "<<test_time_for_remove_higher_space_dimensions.compute_time_elapsed()<<endl;
-    if (debug_2) {
-        cout << endl << "------------------------------";
-        cout << endl
-             << "- Farkas_Initialization_Poly (after projection): " << endl
-             << "  " << result.minimized_constraints();
-    }
-
     // now add result
     if (context_made) {
         cs = result.minimized_constraints();
-        for (vi = cs.begin(); vi != cs.end(); ++vi) {
-            c->add_to_poly_store((*vi));
+        for (auto vi = cs.begin(); vi != cs.end(); ++vi) {
+            context->add_to_poly_store((*vi));
         }
     }
 
     initp.intersection_assign(result);
 
     cout << endl
-         << "< < < Location::compute_dual_constraints(), Location: " << name
+         << "< < < Location::compute_dual_constraints(), Location: " << loc_name
          << "'s Initialization";
     return;
 }
 
 void Location::initialize_invariant() {
-    invariant = new C_Polyhedron(n, UNIVERSE);
+    invariant = new C_Polyhedron(vars_num, UNIVERSE);
 }
 
 void Location::extract_invariant_from_generator(Generator const& g) {
@@ -524,12 +488,12 @@ void Location::extract_invariant_from_generator(Generator const& g) {
     Linear_Expression lin1;
     int c;
     bool flag = true;
-    for (int i = 0; i < n; i++) {
+    for (int i = 0; i < vars_num; i++) {
         if (!handle_integers(lin.coefficient(Variable(l + i)), c))
             flag = false;
         lin1 += c * Variable(i);
     }
-    if (!handle_integers(lin.coefficient(Variable(l + n)), c))
+    if (!handle_integers(lin.coefficient(Variable(l + vars_num)), c))
         flag = false;
     lin1 += c;
 
@@ -537,8 +501,8 @@ void Location::extract_invariant_from_generator(Generator const& g) {
         cout << endl
              << "- Location.invariant(before adding lin1): " << endl
              << "  " << (*invariant);
-        cout << endl << "- lin1: " << name << " => " << endl << "  ";
-        print_pure_lin_expression(lin1, f);
+        cout << endl << "- lin1: " << loc_name << " => " << endl << "  ";
+        print_pure_lin_expression(lin1, info);
     }
     if (g.is_point() || g.is_ray()) {
         if (debug_2) {
@@ -611,14 +575,14 @@ void Location::solve_invariant_from_generator(Generator const& g) {
     Linear_Expression lin1;
     int c;
     bool flag = true;
-    for (int i = 0; i < n; i++) {
+    for (int i = 0; i < vars_num; i++) {
         if (!handle_integers(lin.coefficient(Variable(i)),
                              c)) {  // l+i turn to i
             flag = false;
         }
         lin1 += c * Variable(i);
     }
-    if (!handle_integers(lin.coefficient(Variable(n)), c)) {  // l+n turn to n
+    if (!handle_integers(lin.coefficient(Variable(vars_num)), c)) {  // l+vars_num turn to vars_num
         flag = false;
     }
     lin1 += c;
@@ -627,8 +591,8 @@ void Location::solve_invariant_from_generator(Generator const& g) {
         cout << endl
              << "- Location.invariant(before adding lin1): " << endl
              << "  " << (*invariant);
-        cout << endl << "- lin1: " << name << " => " << endl << "  ";
-        print_pure_lin_expression(lin1, f);
+        cout << endl << "- lin1: " << loc_name << " => " << endl << "  ";
+        print_pure_lin_expression(lin1, info);
     }
     if (g.is_point() || g.is_ray()) {
         if (debug_2) {
@@ -674,8 +638,8 @@ void Location::solve_invariant_from_generator(Generator const& g) {
 
 void Location::extract_invariant_from_generator(Generator_System const& gs) {
     Generator_System::const_iterator vi = gs.begin();
-    // int nd = fd->get_dimension();
-    // cout<<endl<<"  「 "<<name<<", l: "<<l<<", n: "<<n<<", nd: "<<nd<<" 」";
+    // int dual_num = dual_info->get_dimension();
+    // cout<<endl<<"  「 "<<name<<", l: "<<l<<", vars_num: "<<vars_num<<", dual_num: "<<dual_num<<" 」";
     for (; vi != gs.end(); vi++) {
         // cout<<"  "<<(*vi)<<" : ";
         extract_invariant_from_generator(*vi);
@@ -695,7 +659,7 @@ void Location::solve_invariant_from_generator(Generator_System const& gs) {
 
 void Location::extract_invariant_for_one_location_by_eliminating(
     Constraint_System const& pre_cs) {
-    if ((int)(pre_cs.space_dimension()) == (n + 1)) {
+    if ((int)(pre_cs.space_dimension()) == (vars_num + 1)) {
         C_Polyhedron Result(pre_cs);
         if (debug_2) {
             cout << endl << "------------------------------";
@@ -714,25 +678,25 @@ void Location::extract_invariant_for_one_location_by_eliminating(
     //    "extract_invariant_for_one_location_by_eliminating()" It is similar to
     //    the code in 'Farkas' part.
 
-    // int i, j, nc, nd;
-    // nd = fd->get_dimension();
+    // int i, j, nc, dual_num;
+    // dual_num = dual_info->get_dimension();
 
     C_Polyhedron ph(pre_cs);
     // cout<<endl;
     // cout<<endl<<"In extract_invariant_for_one_location_by_eliminating(), 「
-    // "<<name<<", l: "<<l<<", n: "<<n<<", nd: "<<nd<<" 」"; contains_test(ph,
-    // n+1);
+    // "<<name<<", l: "<<l<<", vars_num: "<<vars_num<<", dual_num: "<<dual_num<<" 」"; contains_test(ph,
+    // vars_num+1);
     //  * * *
     //  New method, eliminate Ax<=b by remove_higher_space_dimension
-    // ph.remove_higher_space_dimensions(n+1);
+    // ph.remove_higher_space_dimensions(vars_num+1);
     //  * * *
     //  New method, eliminate Ax<=b by Farkas
-    // Project_by_Farkas(ph, l, l+(n+1));
+    // Project_by_Farkas(ph, l, l+(vars_num+1));
     //  * * *
     //  New method, eliminate Ax<=b by Kohler
-    // Project_by_Kohler(ph, l, l+(n+1) );
+    // Project_by_Kohler(ph, l, l+(vars_num+1) );
     //  * * *
-    Project(ph, l, l + (n + 1));
+    Project(ph, l, l + (vars_num + 1));
     // cout<<endl<<"After eliminate by Projection, the poly is "<<endl<<"
     // "<<ph;
 
@@ -767,11 +731,11 @@ void Location::propagate_invariants_for_except_initial_by_propagation(
              << "* C_Polyhedron.space_dimension: " << ph.space_dimension();
     }
     cout << endl << "* After intersection " << endl << "  " << ph;
-    result = swap_index_and_divide_from(ph, n);
+    result = swap_index_and_divide_from(ph, vars_num);
     if (debug_2) {
         cout << endl << "* After swap " << endl << "  " << result;
     }
-    result.remove_higher_space_dimensions(n);
+    result.remove_higher_space_dimensions(vars_num);
     if (debug_2) {
         cout << endl << "* After remove higher " << endl << "  " << result;
     }
@@ -785,13 +749,13 @@ void Location::propagate_invariants_for_except_initial_by_propagation(
     Linear_Expression lin_inv(0);
     */
     cout << endl
-         << "* Propagated Invariant at " << name << endl
+         << "* Propagated Invariant at " << loc_name << endl
          << "  " << *invariant;
 }
 
 void Location::extract_invariant_for_initial_by_recursive_eliminating(
     Constraint_System const& pre_cs) {
-    if ((int)(pre_cs.space_dimension()) == (n + 1)) {
+    if ((int)(pre_cs.space_dimension()) == (vars_num + 1)) {
         C_Polyhedron Result(pre_cs);
         solve_invariant_from_generator(Result.minimized_generators());
         return;
@@ -801,13 +765,13 @@ void Location::extract_invariant_for_initial_by_recursive_eliminating(
     //    "extract_invariant_for_initial_by_recursive_eliminating()" It is
     //    similar to the code in 'Farkas' part.
 
-    int i, j, nc, nd;
-    nd = fd->get_dimension();
+    int i, j, nc, dual_num;
+    dual_num = dual_info->get_dimension();
     Constraint_System::const_iterator vi;
     Generator_System::const_iterator vj;
     cout << endl
          << "In extract_invariant_for_initial_by_recursive_eliminating(), 「 "
-         << name << ", l: " << l << ", n: " << n << ", nd: " << nd << " 」"
+         << loc_name << ", l: " << l << ", vars_num: " << vars_num << ", dual_num: " << dual_num << " 」"
          << endl;
     cout << "- - Currently, the number of variables in Ax<=b is : "
          << pre_cs.space_dimension();
@@ -830,7 +794,7 @@ void Location::extract_invariant_for_initial_by_recursive_eliminating(
     //    2.Now build the constraints for y^T*A=0,
     //    here, 'A' only contains a set of coefficient of C in last location.
     for (i = 0; i < static_cast<int>(cs.space_dimension()); i++) {
-        if (static_cast<int>(cs.space_dimension()) - (n + 1) <=
+        if (static_cast<int>(cs.space_dimension()) - (vars_num + 1) <=
             i) {  // only select the coefficient about the last set of location
             lin = Linear_Expression(0);
             j = 0;
@@ -877,7 +841,7 @@ void Location::extract_invariant_for_initial_by_recursive_eliminating(
          << "「 " << test_cs.space_dimension() << " 」";
     cout << endl
          << "* * * The number of variables to be eliminated in 'A': "
-         << (n + 1);
+         << (vars_num + 1);
 
     //    5.After we get y^T*A=0, then transfer from the generator of y^T to
     //    values of y^T
@@ -885,7 +849,7 @@ void Location::extract_invariant_for_initial_by_recursive_eliminating(
     // "<<result1.generators(); cout<<endl<<"- - - 6. y^T 's
     // minimized_generators() is "<<endl<<" "<<result1.minimized_generators();
     Generator_System gs = result1.minimized_generators();
-    C_Polyhedron result2(cs.space_dimension() - (n + 1),
+    C_Polyhedron result2(cs.space_dimension() - (vars_num + 1),
                          UNIVERSE);  // Store y^T*b>=0
     for (vj = gs.begin(); vj != gs.end(); vj++) {
         Generator g = (*vj);
@@ -905,7 +869,7 @@ void Location::extract_invariant_for_initial_by_recursive_eliminating(
         j = 0;
         for (vi = cs.begin(); vi != cs.end(); ++vi) {
             for (i = 0; i < static_cast<int>(cs.space_dimension()); i++) {
-                if (i < static_cast<int>(cs.space_dimension()) - (n + 1)) {
+                if (i < static_cast<int>(cs.space_dimension()) - (vars_num + 1)) {
                     lin1 = lin1 + y[j] * (*vi).coefficient(Variable(l + i)) *
                                       Variable(i);  // second l+i turn to i
                 }
@@ -949,16 +913,14 @@ void Location::extract_invariant_for_initial_by_recursive_eliminating(
 }
 
 void Location::add_to_trivial(C_Polyhedron* trivial) {
-    // add c_l=0
-    for (int i = 0; i < n; i++)
-        // trivial->add_constraint_and_minimize(Variable(l+i)==0);
+    for (int i = 0; i < vars_num; i++)
         trivial->add_constraint(Variable(l + i) == 0);
     return;
 }
 
 void Location::add_to_trivial(C_Polyhedron& trivial) {
     // add c_l=0
-    for (int i = 0; i < n; i++)
+    for (int i = 0; i < vars_num; i++)
         // trivial.add_constraint_and_minimize(Variable(l+i)==0);
         trivial.add_constraint(Variable(l + i) == 0);
     return;
@@ -966,9 +928,9 @@ void Location::add_to_trivial(C_Polyhedron& trivial) {
 
 void Location::extract_invariants_and_update(C_Polyhedron& pp,
                                              C_Polyhedron& dualp) {
-    cout << endl << "For location: " << name;
+    cout << endl << "For location: " << loc_name;
     cout << endl
-         << "「 l: " << l << ", n: " << n << ", nd: " << fd->get_dimension()
+         << "「 l: " << l << ", vars_num: " << vars_num << ", dual_num: " << dual_info->get_dimension()
          << " 」";
     extract_invariant_from_generator(pp.minimized_generators());
     update_dual_constraints(dualp);
@@ -981,9 +943,9 @@ void Location::extract_invariants_and_update_for_one_location_by_eliminating(
     // extract_invariants_and_update_for_one_location_by_eliminating()";
     // cout<<endl<<"- Before
     // extract_invariant_for_one_location_by_eliminating()"; cout<<endl;
-    int nd = fd->get_dimension();
-    cout << endl << "For location: " << name;
-    cout << endl << "「 l: " << l << ", n: " << n << ", nd: " << nd << " 」";
+    int dual_num = dual_info->get_dimension();
+    cout << endl << "For location: " << loc_name;
+    cout << endl << "「 l: " << l << ", vars_num: " << vars_num << ", dual_num: " << dual_num << " 」";
     // cout<<endl<<"C_Polyhedron & pp is "<<endl<<"    "<<pp;
     if (projection == "no_projection") {
         cout << endl << "Do not use projection";
@@ -1008,7 +970,7 @@ void Location::
     propagate_invariants_and_update_for_except_initial_by_propagation(
         C_Polyhedron& preloc_inv,
         C_Polyhedron& trans_rel /*, C_Polyhedron & dualp*/) {
-    cout << endl << "= Doing Propagation at Location " << name;
+    cout << endl << "= Doing Propagation at Location " << loc_name;
     cout << endl << "= Location invariant " << endl << "  " << preloc_inv;
     cout << endl << "= Transition relation " << endl << "  " << trans_rel;
     propagate_invariants_for_except_initial_by_propagation(preloc_inv,
@@ -1023,7 +985,7 @@ void Location::contains_test(C_Polyhedron& pp,
     C_Polyhedron inv_extracted(invariant->space_dimension(), UNIVERSE);
     Generator_System gs = pp.minimized_generators();
     Generator_System::const_iterator vi = gs.begin();
-    // cout<<endl<<"l: "<<l<<", n: "<<n<<endl;
+    // cout<<endl<<"l: "<<l<<", vars_num: "<<vars_num<<endl;
     for (; vi != gs.end(); vi++) {
         // cout<<(*vi)<<endl;
         Generator g = *vi;
@@ -1036,16 +998,16 @@ void Location::contains_test(C_Polyhedron& pp,
         Linear_Expression lin1;
         int c;
         bool flag = true;
-        for (int i = 0; i < n; i++) {
+        for (int i = 0; i < vars_num; i++) {
             if (!handle_integers(lin.coefficient(Variable(l + i)), c))
                 flag = false;
             lin1 += c * Variable(i);
         }
-        if (!handle_integers(lin.coefficient(Variable(l + n)), c))
+        if (!handle_integers(lin.coefficient(Variable(l + vars_num)), c))
             flag = false;
         lin1 += c;
         // cout<<name<<" => ";
-        // print_lin_expression(cout,lin1,f);
+        // print_lin_expression(cout,lin1,info);
         if (g.is_point() || g.is_ray()) {
             if (flag) {
                 // invariant->add_constraint_and_minimize(lin1>=0);
@@ -1072,15 +1034,15 @@ void Location::contains_test(C_Polyhedron& pp,
     C_Polyhedron result(ph.space_dimension(), UNIVERSE);
     Linear_Expression lin2(0);
     Constraint_System::const_iterator vi2;
-    // cout<<endl<<"n: "<<n;
+    // cout<<endl<<"vars_num: "<<vars_num;
     for (vi2 = cs.begin(); vi2 != cs.end(); vi2++) {
         lin2 = Linear_Expression(0);
         for (int i = 0; i < static_cast<int>(ph.space_dimension()); i++) {
-            if (i < n) {
-                lin2 = lin2 + (*vi2).coefficient(Variable(n + i)) * Variable(i);
+            if (i < vars_num) {
+                lin2 = lin2 + (*vi2).coefficient(Variable(vars_num + i)) * Variable(i);
             }
-            if (n <= i) {
-                lin2 = lin2 + (*vi2).coefficient(Variable(i - n)) * Variable(i);
+            if (vars_num <= i) {
+                lin2 = lin2 + (*vi2).coefficient(Variable(i - vars_num)) * Variable(i);
             }
         }
         lin2 = lin2 + (*vi2).inhomogeneous_term();
@@ -1093,7 +1055,7 @@ void Location::contains_test(C_Polyhedron& pp,
         }
     }
     // cout<<endl<<"After swap "<<endl<<"  "<<result;
-    result.remove_higher_space_dimensions(n);
+    result.remove_higher_space_dimensions(vars_num);
     // cout<<endl<<"After remove higher "<<endl<<"  "<<result;
     inv_propagated.add_constraints(result.minimized_constraints());
     /*
@@ -1139,27 +1101,27 @@ void Location::update_dual_constraints(C_Polyhedron& dualp) {
     Constraint_System::const_iterator vi;
     C_Polyhedron* result;
 
-    int i, j, nc, nd;
+    int i, j, nc, dual_num;
 
     // count the number of multiplier variables required
     nc = 0;
     for (vi = cs.begin(); vi != cs.end(); ++vi)
         nc++;
 
-    nd = fd->get_dimension();
+    dual_num = dual_info->get_dimension();
 
     result = new C_Polyhedron(
-        nd + nc,
-        UNIVERSE);  // create a universe polyhedron of nd +nc dimensions
+        dual_num + nc,
+        UNIVERSE);  // create a universe polyhedron of dual_num +nc dimensions
     Linear_Expression lin(0);
 
     // Now build the constraints
-    for (i = 0; i < n; i++) {
+    for (i = 0; i < vars_num; i++) {
         lin = Linear_Expression(0);
         lin = lin - Variable(l + i);  // add -c_i to the constraint
         j = 0;
         for (vi = cs.begin(); vi != cs.end(); ++vi) {
-            lin = lin + (*vi).coefficient(Variable(i)) * Variable(nd + j);
+            lin = lin + (*vi).coefficient(Variable(i)) * Variable(dual_num + j);
             j++;
         }
         result->add_constraint(lin ==
@@ -1168,10 +1130,10 @@ void Location::update_dual_constraints(C_Polyhedron& dualp) {
 
     // Now the constraints on the constant
     lin = Linear_Expression(0);
-    lin = lin - Variable(l + n);  // add -d to the constraint
+    lin = lin - Variable(l + vars_num);  // add -d to the constraint
     j = 0;
     for (vi = cs.begin(); vi != cs.end(); ++vi) {
-        lin = lin + (*vi).inhomogeneous_term() * Variable(nd + j);
+        lin = lin + (*vi).inhomogeneous_term() * Variable(dual_num + j);
         j++;
     }
     result->add_constraint(lin <= 0);
@@ -1181,7 +1143,7 @@ void Location::update_dual_constraints(C_Polyhedron& dualp) {
     j = 0;
     for (vi = cs.begin(); vi != cs.end(); ++vi) {
         if ((*vi).type() == Constraint::NONSTRICT_INEQUALITY) {
-            result->add_constraint(Variable(nd + j) >= 0);
+            result->add_constraint(Variable(dual_num + j) >= 0);
         } else if ((*vi).type() == Constraint::STRICT_INEQUALITY) {
             cerr
                 << "Location::compute_dual_constraints -- Warning: Encountered "
@@ -1190,22 +1152,22 @@ void Location::update_dual_constraints(C_Polyhedron& dualp) {
             cerr << "                " << (*vi) << endl;
 
             result->add_constraint(
-                Variable(nd + j) >=
+                Variable(dual_num + j) >=
                 0);  // Just handle it as any other inequality
         }
         j++;
     }
     // Now those are all the constraints.
 
-    // contains_test(*result, nd);
+    // contains_test(*result, dual_num);
     //  * * *
     //  Old method
     result->remove_higher_space_dimensions(
-        nd);  // Remove the excess dimensions to obtain a new Polyhedron
+        dual_num);  // Remove the excess dimensions to obtain a new Polyhedron
     // * * *
     // * * *
     // New method
-    // eliminate_by_Farkas(*result, nd);
+    // eliminate_by_Farkas(*result, dual_num);
     // * * *
 
     dualp.intersection_assign(*result);

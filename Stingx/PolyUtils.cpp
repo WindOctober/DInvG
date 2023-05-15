@@ -25,17 +25,17 @@
 #include "Macro.h"
 #include "myassertions.h"
 
-void print_generators(ostream& out, Generator_System const& gg, var_info* f) {
+void print_generators(ostream& out, Generator_System const& gg, var_info* info) {
     Generator_System::const_iterator vi = gg.begin();
     int n = (*vi).space_dimension();
 
-    int nf = f->get_dimension();
+    int nf = info->get_dimension();
 
     PRECONDITION((nf >= n), "var-info not informative enough to print");
 
     int i;
     int j;
-    LinExpr l(n, f);
+    LinExpr l(n, info);
     bool flag;
     for (vi = gg.begin(); vi != gg.end(); ++vi) {
         flag = true;
@@ -65,7 +65,7 @@ void print_generators(ostream& out, Generator_System const& gg, var_info* f) {
 
 ostream& print_polyhedron(ostream& in,
                           C_Polyhedron const& np,
-                          const var_info* f) {
+                          const var_info* info) {
     if (np.is_universe()) {
         in << "├ ";
         in << " True" << endl;
@@ -78,20 +78,20 @@ ostream& print_polyhedron(ostream& in,
         return in;
     }
 
-    // Assume that f->dimension < the dimension of the polyhedron and that
-    // f names the first f->dimension() dimensions of the polyhedron
+    // Assume that info->dimension < the dimension of the polyhedron and that
+    // info names the first info->dimension() dimensions of the polyhedron
     // The remaining will just receive some fake name, say "__A"-->"__Z"
-    int n = np.space_dimension(), nf = f->get_dimension(), i;
+    int n = np.space_dimension(), nf = info->get_dimension(), i;
     var_info* f2;
     char a[4] = {'_', '_', 'A', '\0'};
     if (nf >= n) {
         f2 = new var_info();
         for (i = 0; i < n; i++)
-            f2->insert(f->get_name(i));
+            f2->insert(info->get_name(i));
     } else {
         f2 = new var_info();
         for (i = 0; i < nf; i++)
-            f2->insert(f->get_name(i));
+            f2->insert(info->get_name(i));
         for (i = nf; i < n; i++) {
             a[2] = 'A' + i - nf;
             f2->insert(a);
@@ -139,7 +139,7 @@ ostream& print_polyhedron(ostream& in,
     return in;
 }
 
-void print_pure_polyhedron(C_Polyhedron const& np, const var_info* f) {
+void print_pure_polyhedron(C_Polyhedron const& np, const var_info* info) {
     if (np.is_universe()) {
         cout << endl << "True";
         return;
@@ -150,20 +150,20 @@ void print_pure_polyhedron(C_Polyhedron const& np, const var_info* f) {
         return;
     }
 
-    // Assume that f->dimension < the dimension of the polyhedron and that
-    // f names the first f->dimension() dimensions of the polyhedron
+    // Assume that info->dimension < the dimension of the polyhedron and that
+    // info names the first info->dimension() dimensions of the polyhedron
     // The remaining will just receive some fake name, say "__A"-->"__Z"
-    int n = np.space_dimension(), nf = f->get_dimension(), i;
+    int n = np.space_dimension(), nf = info->get_dimension(), i;
     var_info* f2;
     char a[4] = {'_', '_', 'A', '\0'};
     if (nf >= n) {
         f2 = new var_info();
         for (i = 0; i < n; i++)
-            f2->insert(f->get_name(i));
+            f2->insert(info->get_name(i));
     } else {
         f2 = new var_info();
         for (i = 0; i < nf; i++)
-            f2->insert(f->get_name(i));
+            f2->insert(info->get_name(i));
         for (i = nf; i < n; i++) {
             a[2] = 'A' + i - nf;
             f2->insert(a);
@@ -209,7 +209,7 @@ void print_pure_polyhedron(C_Polyhedron const& np, const var_info* f) {
 }
 
 void print_pure_polyhedron_for_arrayinv(C_Polyhedron const& np,
-                                        const var_info* f) {
+                                        const var_info* info) {
     if (np.is_universe()) {
         cout << endl << "True";
         return;
@@ -220,20 +220,20 @@ void print_pure_polyhedron_for_arrayinv(C_Polyhedron const& np,
         return;
     }
 
-    // Assume that f->dimension < the dimension of the polyhedron and that
-    // f names the first f->dimension() dimensions of the polyhedron
+    // Assume that info->dimension < the dimension of the polyhedron and that
+    // info names the first info->dimension() dimensions of the polyhedron
     // The remaining will just receive some fake name, say "__A"-->"__Z"
-    int n = np.space_dimension(), nf = f->get_dimension(), i;
+    int n = np.space_dimension(), nf = info->get_dimension(), i;
     var_info* f2;
     char a[4] = {'_', '_', 'A', '\0'};
     if (nf >= n) {
         f2 = new var_info();
         for (i = 0; i < n; i++)
-            f2->insert(f->get_name(i));
+            f2->insert(info->get_name(i));
     } else {
         f2 = new var_info();
         for (i = 0; i < nf; i++)
-            f2->insert(f->get_name(i));
+            f2->insert(info->get_name(i));
         for (i = nf; i < n; i++) {
             a[2] = 'A' + i - nf;
             f2->insert(a);
@@ -278,7 +278,7 @@ void print_pure_polyhedron_for_arrayinv(C_Polyhedron const& np,
     delete (f2);
 }
 
-void nt_print_pure_polyhedron(C_Polyhedron const& np, const var_info* f) {
+void nt_print_pure_polyhedron(C_Polyhedron const& np, const var_info* info) {
     // print without trace-cout
 
     if (np.is_universe()) {
@@ -291,20 +291,20 @@ void nt_print_pure_polyhedron(C_Polyhedron const& np, const var_info* f) {
         return;
     }
 
-    // Assume that f->dimension < the dimension of the polyhedron and that
-    // f names the first f->dimension() dimensions of the polyhedron
+    // Assume that info->dimension < the dimension of the polyhedron and that
+    // info names the first info->dimension() dimensions of the polyhedron
     // The remaining will just receive some fake name, say "__A"-->"__Z"
-    int n = np.space_dimension(), nf = f->get_dimension(), i;
+    int n = np.space_dimension(), nf = info->get_dimension(), i;
     var_info* f2;
     char a[4] = {'_', '_', 'A', '\0'};
     if (nf >= n) {
         f2 = new var_info();
         for (i = 0; i < n; i++)
-            f2->insert(f->get_name(i));
+            f2->insert(info->get_name(i));
     } else {
         f2 = new var_info();
         for (i = 0; i < nf; i++)
-            f2->insert(f->get_name(i));
+            f2->insert(info->get_name(i));
         for (i = nf; i < n; i++) {
             a[2] = 'A' + i - nf;
             f2->insert(a);
@@ -349,21 +349,21 @@ void nt_print_pure_polyhedron(C_Polyhedron const& np, const var_info* f) {
     delete (f2);
 }
 
-ostream& print_clump(ostream& in, Clump const& cl, const var_info* f) {
-    // Assume that f->dimension < the dimension of the polyhedron and that
-    // f names the first f->dimension() dimensions of the polyhedron
+ostream& print_clump(ostream& in, Clump const& cl, const var_info* info) {
+    // Assume that info->dimension < the dimension of the polyhedron and that
+    // info names the first info->dimension() dimensions of the polyhedron
     // The remaining will just receive some fake name, say "__A"-->"__Z"
-    int n = cl.space_dimension(), nf = f->get_dimension(), i;
+    int n = cl.space_dimension(), nf = info->get_dimension(), i;
     var_info* f2;
     char a[4] = {'_', '_', 'A', '\0'};
     if (nf >= n) {
         f2 = new var_info();
         for (i = 0; i < n; i++)
-            f2->insert(f->get_name(i));
+            f2->insert(info->get_name(i));
     } else {
         f2 = new var_info();
         for (i = 0; i < nf; i++)
-            f2->insert(f->get_name(i));
+            f2->insert(info->get_name(i));
         for (i = nf; i < n; i++) {
             a[2] = 'A' + i - nf;
             f2->insert(a);
@@ -410,21 +410,21 @@ ostream& print_clump(ostream& in, Clump const& cl, const var_info* f) {
     return in;
 }
 
-void nt_print_pure_clump(Clump const& cl, const var_info* f) {
-    // Assume that f->dimension < the dimension of the polyhedron and that
-    // f names the first f->dimension() dimensions of the polyhedron
+void nt_print_pure_clump(Clump const& cl, const var_info* info) {
+    // Assume that info->dimension < the dimension of the polyhedron and that
+    // info names the first info->dimension() dimensions of the polyhedron
     // The remaining will just receive some fake name, say "__A"-->"__Z"
-    int n = cl.space_dimension(), nf = f->get_dimension(), i;
+    int n = cl.space_dimension(), nf = info->get_dimension(), i;
     var_info* f2;
     char a[4] = {'_', '_', 'A', '\0'};
     if (nf >= n) {
         f2 = new var_info();
         for (i = 0; i < n; i++)
-            f2->insert(f->get_name(i));
+            f2->insert(info->get_name(i));
     } else {
         f2 = new var_info();
         for (i = 0; i < nf; i++)
-            f2->insert(f->get_name(i));
+            f2->insert(info->get_name(i));
         for (i = nf; i < n; i++) {
             a[2] = 'A' + i - nf;
             f2->insert(a);
@@ -479,7 +479,6 @@ bool handle_integers(Coefficient const& t, int& res) {
              << endl;
         ret = false;
     }
-
     res = (int)t.get_si();
 
     return ret;
@@ -498,19 +497,19 @@ int handle_integers(Coefficient const& t) {
 
 ostream& print_lin_expression(ostream& in,
                               Linear_Expression const& lp,
-                              const var_info* f) {
-    // print the linear expression lp using var_info f
-    int n = lp.space_dimension(), nf = f->get_dimension(), i;
+                              const var_info* info) {
+    // print the linear expression lp using var_info info
+    int n = lp.space_dimension(), nf = info->get_dimension(), i;
     var_info* f2;
     char a[4] = {'_', '_', 'A', '\0'};
     if (nf >= n) {
         f2 = new var_info();
         for (i = 0; i < n; i++)
-            f2->insert(f->get_name(i));
+            f2->insert(info->get_name(i));
     } else {
         f2 = new var_info();
         for (i = 0; i < nf; i++)
-            f2->insert(f->get_name(i));
+            f2->insert(info->get_name(i));
         for (i = nf; i < n; i++) {
             a[2] = 'A' + i - nf;
             f2->insert(a);
@@ -538,19 +537,19 @@ ostream& print_lin_expression(ostream& in,
     return in;
 }
 
-void print_pure_lin_expression(Linear_Expression const& lp, const var_info* f) {
-    // print the linear expression lp using var_info f
-    int n = lp.space_dimension(), nf = f->get_dimension(), i;
+void print_pure_lin_expression(Linear_Expression const& lp, const var_info* info) {
+    // print the linear expression lp using var_info info
+    int n = lp.space_dimension(), nf = info->get_dimension(), i;
     var_info* f2;
     char a[4] = {'_', '_', 'A', '\0'};
     if (nf >= n) {
         f2 = new var_info();
         for (i = 0; i < n; i++)
-            f2->insert(f->get_name(i));
+            f2->insert(info->get_name(i));
     } else {
         f2 = new var_info();
         for (i = 0; i < nf; i++)
-            f2->insert(f->get_name(i));
+            f2->insert(info->get_name(i));
         for (i = nf; i < n; i++) {
             a[2] = 'A' + i - nf;
             f2->insert(a);
@@ -578,8 +577,8 @@ void print_pure_lin_expression(Linear_Expression const& lp, const var_info* f) {
     return;
 }
 
-ostream& print_constraint(ostream& in, Constraint const& cc, var_info* f) {
-    unsigned n = f->get_dimension();
+ostream& print_constraint(ostream& in, Constraint const& cc, var_info* info) {
+    unsigned n = info->get_dimension();
     unsigned i;
     if (cc.space_dimension() > n) {
         in << "Space dimension exceeds var_info dimension in ostream & "
@@ -587,7 +586,7 @@ ostream& print_constraint(ostream& in, Constraint const& cc, var_info* f) {
            << endl;
         return in;
     }
-    LinExpr l(n, f);
+    LinExpr l(n, info);
     bool flag = true;
     int j;
     for (i = 0; i < n; i++) {

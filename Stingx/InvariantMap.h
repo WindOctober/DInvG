@@ -57,13 +57,13 @@ class InvariantMap {
      *   n_: dimensions
      *  nloc_ : # of locations
      *  vloc_: vector of location references
-     *  m_ : the actual map
+     *  map_ration : the actual map
      */
     var_info* f_;
     int n_;
     int nloc_;
     vector<Location*> const& vloc_;
-    StringPolyMap m_;
+    StringPolyMap map_ration;
 
     // is there a location with name
     bool entry_exists(string const& name) const;
@@ -77,7 +77,7 @@ class InvariantMap {
     // will compute the initial map
     // set each locations poly to its initial condition.
 
-    InvariantMap(var_info* f, vector<Location*> const& vloc);
+    InvariantMap(var_info* info, vector<Location*> const& vloc);
 
     // accessors by location pointer and name
     C_Polyhedron& operator[](Location const* l);
@@ -93,9 +93,9 @@ class InvariantMap {
 
     int get_num_locations() const { return nloc_; }
 
-    StringPolyMap const& get_map_reference() const { return m_; }
+    StringPolyMap const& get_map_reference() const { return map_ration; }
 
-    StringPolyMap& get_map_reference() { return m_; }
+    StringPolyMap& get_map_reference() { return map_ration; }
 
     // widen this wrt im CH79
     void H79_widening_assign(InvariantMap const& im);

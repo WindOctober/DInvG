@@ -48,26 +48,26 @@ class LinExpr {
      *   n = dimension
      *  lin = array (later vector) of coefficient.
      *         n+1 coefficients. lin[n] is the constant term.
-     *  f = printing info.
+     *  info = printing info.
      * count = An auxilliary flag for counting occurrences, used by Context.cc
      */
 
     int n;
     vector<Rational> lin;
-    var_info* f;
+    var_info* info;
     int count;
 
-    void initialize(int n, var_info* f);
+    void initialize(int n, var_info* info);
     // set to zero.. preserving the dimensionality.
     void clear_out();
 
    public:
     LinExpr();
-    LinExpr(int n, var_info* f);
+    LinExpr(int n, var_info* info);
     LinExpr(LinExpr const& ll);
 
     // A public way of calling initialize. I suck
-    void init_set(int n, var_info* f);
+    void init_set(int n, var_info* info);
 
     // LinExpr(int n); // Can be added later if required
 
@@ -95,7 +95,7 @@ class LinExpr {
     // check if two linexprs have the same print info.
     // Post-comments : What is the big deal anyway.
     bool check_variable_compatibility(var_info const* f1) const {
-        return (f1 == f);
+        return (f1 == info);
     }
 
     // access the ith coefficient

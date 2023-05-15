@@ -65,34 +65,34 @@ class Context {
     //    4. A set of expressions that are implicitly ==0
     //    5. A set of expressions that are implicitly >= 0
 
-    MatrixStore* ms;
-    PolyStore* ps;
-    DisequalityStore* ds;
-    vector<Expression>*eqs, *ineqs, *factors;
+    MatrixStore* equality_mat;
+    PolyStore* inequality_store;
+    DisequalityStore* lambda_store;
+    vector<Expression> *eq_exprs, *ineq_exprs, *factors;
 
     Context* child1;
-    var_info *f, *fd, *fm;
+    var_info *info, *dual_info, *lambda_info;
 
-    int n, nd,
+    int vars_num, dual_num,
         r;  // No. of dimensions, dual dimensions, multipliers respectively
 
-    void initialize(var_info* f, var_info* fd, var_info* fm);
-    void initialize(var_info* f,
-                    var_info* fd,
-                    var_info* fm,
-                    MatrixStore* ms,
-                    PolyStore* ps,
-                    DisequalityStore* ds,
-                    vector<Expression>* eqs,
-                    vector<Expression>* ineqs);
+    void initialize(var_info* info, var_info* dual_info, var_info* lambda_info);
+    void initialize(var_info* info,
+                    var_info* dual_info,
+                    var_info* lambda_info,
+                    MatrixStore* equality_mat,
+                    PolyStore* inequality_store,
+                    DisequalityStore* lambda_store,
+                    vector<Expression>* eq_exprs,
+                    vector<Expression>* ineq_exprs);
 
     void recursive_strategy(vector<Location*>* loclist,
-                            C_Polyhedron* dualp,
+                            C_Polyhedron* dual_poly,
                             int wtime,
                             bool cutoff,
                             Timer& one_timer);
     void Convert_CNF_to_DNF_and_Print(vector<Location*>* loclist,
-                                      C_Polyhedron* dualp,
+                                      C_Polyhedron* dual_poly,
                                       int wtime,
                                       bool cutoff,
                                       Timer& one_timer);
@@ -101,7 +101,7 @@ class Context {
 
    public:
     // added by Hongming
-    PolyStore* Get_PolyStore() { return (ps); }
+    PolyStore* Get_PolyStore() { return (inequality_store); }
 
     // Operations include
     //    1. Creation and Organization of the context
@@ -114,21 +114,21 @@ class Context {
 
     //       1.7 Forming an invariant from a consistent leaf node
 
-    Context(var_info* f, var_info* fd, var_info* fm);
-    Context(var_info* f,
-            var_info* fd,
-            var_info* fm,
-            MatrixStore* ms,
-            PolyStore* ps,
-            DisequalityStore* ds,
-            vector<Expression>* eqs,
-            vector<Expression>* ineqs);
-    Context(var_info* f,
-            var_info* fd,
-            var_info* fm,
-            MatrixStore* ms,
-            PolyStore* ps,
-            DisequalityStore* ds);
+    Context(var_info* info, var_info* dual_info, var_info* lambda_info);
+    Context(var_info* info,
+            var_info* dual_info,
+            var_info* lambda_info,
+            MatrixStore* equality_mat,
+            PolyStore* inequality_store,
+            DisequalityStore* lambda_store,
+            vector<Expression>* eq_exprs,
+            vector<Expression>* ineq_exprs);
+    Context(var_info* info,
+            var_info* dual_info,
+            var_info* lambda_info,
+            MatrixStore* equality_mat,
+            PolyStore* inequality_store,
+            DisequalityStore* lambda_store);
 
     ~Context();
 
@@ -170,7 +170,7 @@ class Context {
     void
     remove_trivial_inequalities();  // remove trivial inequalities in the store
     void remove_trivial();          // call this instead to remove the trivial
-                                    // expressions in the stores eqs and ineqs
+                                    // expressions in the stores eq_exprs and ineq_exprs
 
     // Move linear expressions into the stores
 
@@ -242,14 +242,14 @@ class Context {
     bool is_simplifiable_context();
     // Check if the context is simplifiable
 
-    void recursive_strategy(System& s, C_Polyhedron* dualp);
+    void recursive_strategy(System& s, C_Polyhedron* dual_poly);
 
     void recursive_strategy(vector<Location*>* loclist,
-                            C_Polyhedron* dualp,
+                            C_Polyhedron* dual_poly,
                             int wtime = 1000,
                             bool cutoff = true);
     void Convert_CNF_to_DNF_and_Print(vector<Location*>* loclist,
-                                      C_Polyhedron* dualp,
+                                      C_Polyhedron* dual_poly,
                                       int wtime = 1000,
                                       bool cutoff = true);
     // A recursive strategy function
@@ -257,7 +257,7 @@ class Context {
     void recursive_strategy(Clump& clist);
     // A recursive strategy function
 
-    void terminal_strategy(System& s, C_Polyhedron* dualp);
+    void terminal_strategy(System& s, C_Polyhedron* dual_poly);
     void collect_generators(Generator_System& g);
 
     void validate_generators(
@@ -269,7 +269,7 @@ class Context {
     int get_multiplier_status();
 
     void split_01_strategy(vector<Location*>* loclist,
-                           C_Polyhedron* dualp,
+                           C_Polyhedron* dual_poly,
                            int wtime,
                            bool timed,
                            Timer& one_timer);
@@ -295,7 +295,7 @@ class Context {
 
     // collect constraints involving multiplier index in the result
     // as long as those constraints involve only variables from
-    // left.. left+n
+    // left.. left+vars_num
 
     bool to_constraints_(int index,
                          int left,

@@ -46,7 +46,7 @@
 using namespace std;
 
 class Expression {
-    // n = no. of lin variables
+    // linear_vars_num = no. of lin variables
     // r = no. of non-linear variables
     // Operations include
     //     1. Construct
@@ -63,10 +63,10 @@ class Expression {
     //     6. Simplify an against a constraint store
 
    private:
-    int n, r;           // the number of linear and multiplier variables resp.
-    var_info *fn, *fr;  // Mostly for printing purposes
+    int linear_vars_num, r;           // the number of linear and multiplier variables resp.
+    var_info *linear_var_info, *fr;  // Mostly for printing purposes
 
-    vector<SparseLinExpr> l;  // An r+1 dimension array of linear expressions
+    vector<SparseLinExpr> lin_expr;  // An r+1 dimension array of linear expressions
 
     SparseLinExpr lin_fact;  // The linear factor
     LinTransform tr_fact;    // the transform factor
@@ -74,12 +74,12 @@ class Expression {
     bool factored;
     int count;
 
-    void initialize(int n, int r, var_info* fn, var_info* fr);
+    void initialize(int linear_vars_num, int r, var_info* linear_var_info, var_info* fr);
 
     void zero_out();
 
    public:
-    Expression(int n, int r, var_info* fn, var_info* fr);
+    Expression(int linear_vars_num, int r, var_info* linear_var_info, var_info* fr);
     ~Expression();
     Expression(Expression const& e);
     Expression(Expression* e1, Expression* e2);

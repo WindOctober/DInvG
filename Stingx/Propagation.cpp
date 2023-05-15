@@ -92,7 +92,7 @@ void propagate_invariants(C_Polyhedron& preloc_inv,
     //
     Constraint_System cs_preloc_inv = preloc_inv.minimized_constraints();
     C_Polyhedron ph = trans_relation;
-    int n = (*loclist)[postloc_index]->get_dimension();
+    int vars_num = (*loclist)[postloc_index]->get_dimension();
     C_Polyhedron result;
 
     // following could be replaced by other projection-method or matrix-method
@@ -110,11 +110,11 @@ void propagate_invariants(C_Polyhedron& preloc_inv,
              << "* C_Polyhedron.space_dimension: " << ph.space_dimension();
     }
     cout << endl << "* After intersection " << endl << "  " << ph;
-    result = swap_index_and_divide_from(ph, n);
+    result = swap_index_and_divide_from(ph, vars_num);
     if (debug_2) {
         cout << endl << "* After swap " << endl << "  " << result;
     }
-    result.remove_higher_space_dimensions(n);
+    result.remove_higher_space_dimensions(vars_num);
     if (debug_2) {
         cout << endl << "* After remove higher " << endl << "  " << result;
     }
@@ -144,7 +144,7 @@ void propagation_invariants(C_Polyhedron& preloc_inv,
     //
     Constraint_System cs_preloc_inv = preloc_inv.minimized_constraints();
     C_Polyhedron ph = trans_relation;
-    int n = (*loclist)[postloc_index]->get_dimension();
+    int vars_num = (*loclist)[postloc_index]->get_dimension();
     C_Polyhedron result;
 
     // following could be replaced by other projection-method or matrix-method
@@ -162,11 +162,11 @@ void propagation_invariants(C_Polyhedron& preloc_inv,
              << "* C_Polyhedron.space_dimension: " << ph.space_dimension();
     }
     cout << endl << "* After intersection " << endl << "  " << ph;
-    result = swap_index_and_divide_from(ph, n);
+    result = swap_index_and_divide_from(ph, vars_num);
     if (debug_2) {
         cout << endl << "* After swap " << endl << "  " << result;
     }
-    result.remove_higher_space_dimensions(n);
+    result.remove_higher_space_dimensions(vars_num);
     if (debug_2) {
         cout << endl << "* After remove higher " << endl << "  " << result;
     }
@@ -190,7 +190,7 @@ void propagate_from_inv_to_initval(C_Polyhedron& preloc_inv,
     //
     Constraint_System cs_preloc_inv = preloc_inv.minimized_constraints();
     C_Polyhedron ph = trans_relation;
-    int n = (*loclist)[postloc_index]->get_dimension();
+    int vars_num = (*loclist)[postloc_index]->get_dimension();
     C_Polyhedron result;
 
     // following could be replaced by other projection-method or matrix-method
@@ -208,11 +208,11 @@ void propagate_from_inv_to_initval(C_Polyhedron& preloc_inv,
              << "* C_Polyhedron.space_dimension: " << ph.space_dimension();
     }
     cout << endl << "* After intersection " << endl << "  " << ph;
-    result = swap_index_and_divide_from(ph, n);
+    result = swap_index_and_divide_from(ph, vars_num);
     if (debug_2) {
         cout << endl << "* After swap " << endl << "  " << result;
     }
-    result.remove_higher_space_dimensions(n);
+    result.remove_higher_space_dimensions(vars_num);
     if (debug_2) {
         cout << endl << "* After remove higher " << endl << "  " << result;
     }
@@ -282,7 +282,7 @@ C_Polyhedron propagation_from_inv_to_inv_by_transition(int trans_index) {
     //  Propagation
     Constraint_System cs_preloc_inv = preloc_inv.minimized_constraints();
     C_Polyhedron result = trans_relation;
-    int n = (*loclist)[postloc_index]->get_dimension();
+    int vars_num = (*loclist)[postloc_index]->get_dimension();
     // following could be replaced by other projection-method or matrix-method
     result.add_constraints(cs_preloc_inv);
     if (debug_3)
@@ -290,11 +290,11 @@ C_Polyhedron propagation_from_inv_to_inv_by_transition(int trans_index) {
              << "* C_Polyhedron.space_dimension: " << result.space_dimension();
     cout << endl << "* After intersection " << endl << "  " << result;
 
-    result = swap_index_and_divide_from(result, n);
+    result = swap_index_and_divide_from(result, vars_num);
     if (debug_2)
         cout << endl << "* After swap " << endl << "  " << result;
 
-    result.remove_higher_space_dimensions(n);
+    result.remove_higher_space_dimensions(vars_num);
     if (debug_2)
         cout << endl << "* After remove higher " << endl << "  " << result;
 

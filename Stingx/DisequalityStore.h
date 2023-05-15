@@ -56,28 +56,28 @@ class DisequalityStore {
     /*
      * Class Members:
      *    vp = a vector of disequalities.
-     *    ineqs = the inequalities
-     *    n = dimensionality
-     *    f= information for printing
+     *    ineq_exprs = the inequalities
+     *    vars_num = dimensionality
+     *    info= information for printing
      *   incon = flag signifying inconsistent
      */
 
     vector<Linear_Expression>*
         vp;  // The vector of linear expressions  treated as disequalities
 
-    C_Polyhedron* ineqs;  // The inequalities of the system
+    C_Polyhedron* ineq_exprs;  // The inequalities of the system
 
-    int n;        // the dimensionality  of the system
-    var_info* f;  // The information about variables
+    int vars_num;        // the dimensionality  of the system
+    var_info* info;  // The information about variables
 
     bool incon;
 
-    void initialize(int n, var_info* f);
+    void initialize(int vars_num, var_info* info);
     // check for consistency
     void check_consistent();
 
    public:
-    DisequalityStore(int n, var_info* f);
+    DisequalityStore(int vars_num, var_info* info);
     ~DisequalityStore();
 
     // add a constraint
@@ -124,6 +124,6 @@ class DisequalityStore {
     DisequalityStore* clone() const;
 };
 
-ostream& operator<<(ostream& in, DisequalityStore const& ds);
+ostream& operator<<(ostream& in, DisequalityStore const& lambda_store);
 
 #endif

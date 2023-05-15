@@ -30,23 +30,23 @@
 #include "Rational.h"
 #include "SparseLinExpr.h"
 
-void ExpressionStore::initialize(int n, int r, var_info* fn, var_info* fr) {
-    this->n = n;
+void ExpressionStore::initialize(int vars_num, int r, var_info* linear_var_info, var_info* fr) {
+    this->vars_num = vars_num;
     this->r = r;
-    this->fn = fn;
+    this->linear_var_info = linear_var_info;
     this->fr = fr;
 
     le_list = new vector<SparseLinExpr>();
     lt_list = new vector<LinTransform>();
     /*
-    m.init_set(n,fn);
+    m.init_set(vars_num,linear_var_info);
     split_seq=new vector<LinTransform>();
     vl = new vector<Expression>();
     */
 }
 
-ExpressionStore::ExpressionStore(int n, int r, var_info* fn, var_info* fr) {
-    initialize(n, r, fn, fr);
+ExpressionStore::ExpressionStore(int vars_num, int r, var_info* linear_var_info, var_info* fr) {
+    initialize(vars_num, r, linear_var_info, fr);
 }
 
 bool ExpressionStore::add_expression(Expression& exp) {
@@ -119,12 +119,12 @@ bool ExpressionStore::is_consistent(){
 */
 
 void ExpressionStore::simplify(MatrixStore const& m) {
-    //   bool f=true;
+    //   bool info=true;
     vector<Expression>::iterator vi;
     SparseLinExpr ll;
-    LinTransform lt(n, fn);
+    LinTransform lt(vars_num, linear_var_info);
 
-    //   while (f){
+    //   while (info){
 
     remove_trivial();
 
@@ -136,13 +136,13 @@ void ExpressionStore::simplify(MatrixStore const& m) {
     /* This can only be done for equality stores
        for (vi=vl->begin();vi <vl->end();vi++){
        if ((*vi).is_pure_a()){
-       f=true;
+       info=true;
 
        ll=(*vi).convert_linear();
        cout<<"Adding Lin Exp"<< ll<<endl;
        add_linear_expression(ll);
        } else if ((*vi).is_pure_b()){
-       f=true;
+       info=true;
        lt=(*vi).convert_transform();
        add_transform(lt);
        cout<<"Adding Linear Transform "<<lt<<endl;
@@ -237,8 +237,8 @@ bool ExpressionStore::collect_factors() {
 
 /*
 void ExpressionStore::set_store(MatrixStore &mat){
-   for (int i=0;i<n;i++)
-      for (int j=0;j<n+1;j++)
+   for (int i=0;i<vars_num;i++)
+      for (int j=0;j<vars_num+1;j++)
          m(i,j)=mat(i,j);
 
    return;
@@ -261,8 +261,8 @@ store 2
 
    ExpressionStore * child1, * child2;
 
-   child1=new ExpressionStore(n,r,fn,fr);
-   child2=new ExpressionStore(n,r,fn,fr); // Initialize the children
+   child1=new ExpressionStore(vars_num,r,linear_var_info,fr);
+   child2=new ExpressionStore(vars_num,r,linear_var_info,fr); // Initialize the children
 
    vector<Expression>::iterator vi;
    bool some=false;
@@ -316,7 +316,7 @@ store 2
 
    ExpressionStore * child1;
 
-   child1=new ExpressionStore(n,r,fn,fr);
+   child1=new ExpressionStore(vars_num,r,linear_var_info,fr);
 
 
    vector<Expression>::iterator vi;

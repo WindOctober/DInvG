@@ -50,12 +50,12 @@ using namespace Parma_Polyhedra_Library::IO_Operators;
 
 class Location {
    private:
-    int n;                  // the number of variables in the location
-    var_info *f, *fd, *fm;  // the primal and dual var-infos
-    bool polyset=false;           // has the initial condition been set
-    string name;            // name
-    Context* c;             // the solver for intra-location transitions
-    C_Polyhedron* p;        // the initial condition
+    int vars_num;                  // the number of variables in the location
+    var_info *info, *dual_info, *lambda_info;  // the primal and dual var-infos
+    bool init_poly=false;           // has the initial condition been set
+    string loc_name;            // name
+    Context* context;             // the solver for intra-location transitions
+    C_Polyhedron* poly;        // the initial condition
     // If there is none, then initialized to false
 
     // the final invariant that I will compute for the location
@@ -74,29 +74,28 @@ class Location {
     // A pre-assigned invariant that i will use to strengthen transitions.
     C_Polyhedron* loc_inv;
 
-    // added by Hongming, 2022/09/19, Shanghai Jiao Tong University
     // A vector of polyhedra stores the disabled-path condition
-    Clump* d_cl;
+    Clump* disabled_clump;
 
     // has context been made
     bool context_made;
 
     // the left-most index of the coefficient variable.. the coefficients for
-    // the parametric invariants for the location span the range [l.. l+n]
+    // the parametric invariants for the location span the range [l.. l+vars_num]
     int l;
 
     // Initialize and form parametric coefficients for the invariant
-    void initialize(int n,
-                    var_info* f,
-                    var_info* fd,
-                    var_info* fm,
+    void initialize(int vars_num,
+                    var_info* info,
+                    var_info* dual_info,
+                    var_info* lambda_info,
                     C_Polyhedron* p,
                     string name);
     // Initialize but do not form new coefficients
-    void initialize_without_populating(int n,
-                                       var_info* f,
-                                       var_info* fd,
-                                       var_info* fm,
+    void initialize_without_populating(int vars_num,
+                                       var_info* info,
+                                       var_info* dual_info,
+                                       var_info* lambda_info,
                                        C_Polyhedron* p,
                                        string name,
                                        int left);
@@ -111,28 +110,28 @@ class Location {
     bool ppged_flag;
 
    public:
-    Location(int n,
-             var_info* f,
-             var_info* fd,
-             var_info* fm,
+    Location(int vars_num,
+             var_info* info,
+             var_info* dual_info,
+             var_info* lambda_info,
              C_Polyhedron* p,
              string name);
 
-    Location(int n, var_info* f, var_info* fd, var_info* fm, string name);
+    Location(int vars_num, var_info* info, var_info* dual_info, var_info* lambda_info, string name);
 
     // A location with preset var-infos and a given starting point
 
-    Location(int n,
-             var_info* f,
-             var_info* fd,
-             var_info* fm,
+    Location(int vars_num,
+             var_info* info,
+             var_info* dual_info,
+             var_info* lambda_info,
              string name,
              int left);
 
-    Location(int n,
-             var_info* f,
-             var_info* fd,
-             var_info* fm,
+    Location(int vars_num,
+             var_info* info,
+             var_info* dual_info,
+             var_info* lambda_info,
              C_Polyhedron* p,
              string name,
              int left);
@@ -141,7 +140,6 @@ class Location {
     void set_polyhedron(C_Polyhedron* q);
     // set the initial-value polyhedron from q to this
     void set_initial(C_Polyhedron& q);
-    // has the inital been set
     bool has_initial();
 
     void add_clump(vector<Clump>& vcl);
@@ -159,8 +157,8 @@ class Location {
     bool matches(string name) const;
 
     C_Polyhedron const& get_poly_reference() const {
-        if (polyset)
-            return (*p);
+        if (init_poly)
+            return (*poly);
         cerr << " asked reference when poly is not set " << endl;
         abort();
     }
@@ -188,15 +186,15 @@ class Location {
 
     Context* get_context();
 
-    bool initial_poly_set() const { return polyset; }
+    bool initial_poly_set() const { return init_poly; }
 
     void force_polyset() {
         cerr << " Encountered a call to Location::force_poly_set()" << endl;
         abort();
-        polyset = true;
+        init_poly = true;
     }
 
-    C_Polyhedron& get_non_const_poly_reference() { return *p; }
+    C_Polyhedron& get_non_const_poly_reference() { return *poly; }
 
     void set_invariant_polyhedron(C_Polyhedron* what) {
         loc_inv->intersection_assign((*what));
@@ -204,11 +202,8 @@ class Location {
 
     C_Polyhedron const& inv_poly_reference() const { return (*loc_inv); }
 
-    // added by Hongming, at Shanghai Jiao Tong University, 2022/09/20
-    Clump* get_d_cl() { return d_cl; }
-    Clump const& get_d_cl_reference() const { return (*d_cl); }
-
-    // added by Hongming, at Shanghai Jiao Tong University, 2022/10/11
+    Clump* get_d_cl() { return disabled_clump; }
+    Clump const& get_d_cl_reference() const { return (*disabled_clump); }
 
     // return the propagation_flag, which records whether this location has been
     // propagated in bfslist

@@ -43,9 +43,9 @@ using namespace Parma_Polyhedra_Library::IO_Operators;
 class Clump {
    private:
     /*
-     * nd = num of dual dimensions (depends on what mode the
+     * dual_num = num of dual dimensions (depends on what mode the
      *                              analyzer is operated in )
-     * fd = var_info for dual -- standard pointer for printing purposes
+     * dual_info = var_info for dual -- standard pointer for printing purposes
      *                            that should not be touched
      * vp = vector of polyhedra
      *
@@ -55,9 +55,9 @@ class Clump {
      *
      */
 
-    int nd;
-    var_info* fd;
-    vector<C_Polyhedron> vp;
+    int dual_num;
+    var_info* dual_info;
+    vector<C_Polyhedron> poly_clump;
     int gli;
 
     string name;
@@ -66,15 +66,15 @@ class Clump {
     // added by Hongming - 2022/10/21
     void initialize();
     // Sriram - Aug 2004 - Old Code: PWC.
-    void initialize(var_info* fd);
+    void initialize(var_info* dual_info);
     // added by Hongming - Sept 2021
-    void initialize(var_info* fd, string name, string category);
+    void initialize(var_info* dual_info, string name, string category);
 
    public:
     // added by Hongming
     int get_gli();
     int size();
-    int space_dimension() const { return vp[0].space_dimension(); }
+    int space_dimension() const { return poly_clump[0].space_dimension(); }
 
     // added by Hongming
     void print_vector_of_poly();
@@ -84,8 +84,8 @@ class Clump {
     void replace_vp(vector<C_Polyhedron> new_vp);
 
     Clump();
-    Clump(var_info* fd);
-    Clump(var_info* fd, string name, string category);
+    Clump(var_info* dual_info);
+    Clump(var_info* dual_info, string name, string category);
 
     int get_count();
 
@@ -120,7 +120,7 @@ inline int Clump::get_gli() {
     return gli;
 }
 inline int Clump::size() {
-    return vp.size();
+    return poly_clump.size();
 }
 
 inline const string& Clump::get_name() const {
@@ -132,7 +132,7 @@ inline const string& Clump::get_category() const {
 }
 
 inline const vector<C_Polyhedron>& Clump::get_vp() const {
-    return vp;
+    return poly_clump;
 }
 
 inline void Clump::clear() {
@@ -140,7 +140,7 @@ inline void Clump::clear() {
 }
 
 inline bool Clump::has_next() {
-    return (vp.size() > 0) && (gli < (int)vp.size());
+    return (poly_clump.size() > 0) && (gli < (int)poly_clump.size());
 }
 
 inline C_Polyhedron& Clump::get_reference() {
@@ -149,10 +149,10 @@ inline C_Polyhedron& Clump::get_reference() {
         // I suck.
         cerr << " Sloppy programming pays off.. Invariants could be lost!!"
              << endl;
-        return vp[0];
+        return poly_clump[0];
     }
 
-    return vp[gli];
+    return poly_clump[gli];
 }
 
 inline C_Polyhedron& Clump::get_reference(int index) {
@@ -161,10 +161,10 @@ inline C_Polyhedron& Clump::get_reference(int index) {
         // I suck.
         cerr << " Sloppy programming pays off.. Invariants could be lost!!"
              << endl;
-        return vp[0];
+        return poly_clump[0];
     }
 
-    return vp[index];
+    return poly_clump[index];
 }
 
 inline void Clump::next() {

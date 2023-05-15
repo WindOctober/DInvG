@@ -57,59 +57,33 @@ long gcd(long a, long b) {
     if (b < 0)
         b = -b;
 
-    if (a == 1 || a == 0 || a == b)
-        return a;
-
-    if (b == 1 || b == 0)
-        return b;
-
-    long y1 = a, y2 = b, y3 = b, y4 = 0;
-
-    while (y1 != y2) {
-        while (y1 > y2) {
-            y1 -= y2;
-            y4 += y3;
-        }
-        while (y2 > y1) {
-            y2 -= y1;
-            y3 += y4;
-        }
+    while (b != 0) {
+        long temp = b;
+        b = a % b;
+        a = temp;
     }
 
-    return y1;
+    return a;
 }
 
 int lcm(int a, int b) {
+    if (a == 0 || b == 0)
+        return 0;
+
     if (a < 0)
         a = -a;
 
     if (b < 0)
         b = -b;
 
-    if (a == 0 || b == 0)
-        return 0;
+    int gcd = a;
 
-    if (a == 1 || a == b)
-        return b;
+    while (gcd % b != 0)
+        gcd += a;
 
-    if (b == 1 || b == 0)
-        return a;
-
-    int y1 = a, y2 = b, y3 = b, y4 = 0;
-
-    while (y1 != y2) {
-        while (y1 > y2) {
-            y1 -= y2;
-            y4 += y3;
-        }
-        while (y2 > y1) {
-            y2 -= y1;
-            y3 += y4;
-        }
-    }
-
-    return y3 + y4;
+    return gcd;
 }
+
 
 /*
 WORD listify(int * t, int n){
