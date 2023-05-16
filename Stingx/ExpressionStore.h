@@ -81,8 +81,6 @@ class ExpressionStore {
 
     bool add_expression(Expression& exp);
 
-    // void add_linear_expression(LinExpr  exp);
-
     void add_transform(LinTransform lt);
 
     void remove_trivial();
