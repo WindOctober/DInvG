@@ -24,45 +24,6 @@
 #include "LinExpr.h"
 #include "Macro.h"
 #include "myassertions.h"
-
-void print_generators(ostream& out, Generator_System const& gg, var_info* info) {
-    Generator_System::const_iterator vi = gg.begin();
-    int n = (*vi).space_dimension();
-
-    int nf = info->get_dimension();
-
-    PRECONDITION((nf >= n), "var-info not informative enough to print");
-
-    int i;
-    int j;
-    LinExpr l(n, info);
-    bool flag;
-    for (vi = gg.begin(); vi != gg.end(); ++vi) {
-        flag = true;
-
-        for (i = 0; i < n; i++) {
-            if (!handle_integers((*vi).coefficient(Variable(i)), j))
-                flag = false;
-            l[i] = j;
-        }
-        l[n] = 0;
-        if (flag) {
-            out << l;
-
-            if ((*vi).type() == Generator::RAY)
-                out << "  = Ray " << endl;
-            else if ((*vi).type() == Generator::LINE)
-                out << " =LINE" << endl;
-            else if ((*vi).type() == Generator::POINT)
-                out << " = POINT" << endl;
-            else
-                out << "= CLOSURE_POINT" << endl;
-        }
-    }
-
-    return;
-}
-
 ostream& print_polyhedron(ostream& in,
                           C_Polyhedron const& np,
                           const var_info* info) {
@@ -278,77 +239,6 @@ void print_pure_polyhedron_for_arrayinv(C_Polyhedron const& np,
     delete (f2);
 }
 
-void nt_print_pure_polyhedron(C_Polyhedron const& np, const var_info* info) {
-    // print without trace-cout
-
-    if (np.is_universe()) {
-        cout << endl << "True";
-        return;
-    }
-
-    if (np.is_empty()) {
-        cout << endl << "False";
-        return;
-    }
-
-    // Assume that info->dimension < the dimension of the polyhedron and that
-    // info names the first info->dimension() dimensions of the polyhedron
-    // The remaining will just receive some fake name, say "__A"-->"__Z"
-    int n = np.space_dimension(), nf = info->get_dimension(), i;
-    var_info* f2;
-    char a[4] = {'_', '_', 'A', '\0'};
-    if (nf >= n) {
-        f2 = new var_info();
-        for (i = 0; i < n; i++)
-            f2->insert(info->get_name(i));
-    } else {
-        f2 = new var_info();
-        for (i = 0; i < nf; i++)
-            f2->insert(info->get_name(i));
-        for (i = nf; i < n; i++) {
-            a[2] = 'A' + i - nf;
-            f2->insert(a);
-        }
-    }
-    bool flag = true;
-    int j;
-
-    LinExpr l(n, f2);
-
-    Constraint_System const& cs = np.minimized_constraints();
-
-    Constraint_System::const_iterator vi;
-
-    for (vi = cs.begin(); vi != cs.end(); ++vi) {
-        flag = true;
-
-        for (i = 0; i < n; i++) {
-            if (!handle_integers((*vi).coefficient(Variable(i)), j))
-                flag = false;
-
-            l[i] = j;
-        }
-
-        if (!handle_integers((*vi).inhomogeneous_term(), j))
-            flag = false;
-
-        l[n] = j;
-
-        if (flag) {
-            cout << endl << l;
-
-            if ((*vi).type() == Constraint::EQUALITY)
-                cout << " = 0 ";
-            else if ((*vi).type() == Constraint::NONSTRICT_INEQUALITY)
-                cout << " >= 0";
-            else
-                cout << " > 0";
-        }
-    }
-
-    delete (f2);
-}
-
 ostream& print_clump(ostream& in, Clump const& cl, const var_info* info) {
     // Assume that info->dimension < the dimension of the polyhedron and that
     // info names the first info->dimension() dimensions of the polyhedron
@@ -410,65 +300,6 @@ ostream& print_clump(ostream& in, Clump const& cl, const var_info* info) {
     return in;
 }
 
-void nt_print_pure_clump(Clump const& cl, const var_info* info) {
-    // Assume that info->dimension < the dimension of the polyhedron and that
-    // info names the first info->dimension() dimensions of the polyhedron
-    // The remaining will just receive some fake name, say "__A"-->"__Z"
-    int n = cl.space_dimension(), nf = info->get_dimension(), i;
-    var_info* f2;
-    char a[4] = {'_', '_', 'A', '\0'};
-    if (nf >= n) {
-        f2 = new var_info();
-        for (i = 0; i < n; i++)
-            f2->insert(info->get_name(i));
-    } else {
-        f2 = new var_info();
-        for (i = 0; i < nf; i++)
-            f2->insert(info->get_name(i));
-        for (i = nf; i < n; i++) {
-            a[2] = 'A' + i - nf;
-            f2->insert(a);
-        }
-    }
-    bool flag = true;
-    int j;
-    LinExpr l(n, f2);
-    Constraint_System::const_iterator vi;
-    vector<C_Polyhedron>::iterator vpit;
-    vector<C_Polyhedron> cl_vp = cl.get_vp();
-
-    for (vpit = cl_vp.begin(); vpit != cl_vp.end(); vpit++) {
-        if (vpit != cl_vp.begin()) {
-            cout << endl;
-            cout << "\\/" << endl;
-            cout << endl;
-        }
-        Constraint_System const& cs = vpit->minimized_constraints();
-        for (vi = cs.begin(); vi != cs.end(); ++vi) {
-            flag = true;
-            for (i = 0; i < n; i++) {
-                if (!handle_integers((*vi).coefficient(Variable(i)), j))
-                    flag = false;
-                l[i] = j;
-            }
-            if (!handle_integers((*vi).inhomogeneous_term(), j))
-                flag = false;
-            l[n] = j;
-            if (flag) {
-                cout << "";
-                cout << l;
-                if ((*vi).type() == Constraint::EQUALITY)
-                    cout << " = 0 " << endl;
-                else if ((*vi).type() == Constraint::NONSTRICT_INEQUALITY)
-                    cout << " >= 0" << endl;
-                else
-                    cout << " > 0" << endl;
-            }
-        }
-    }
-
-    delete (f2);
-}
 
 bool handle_integers(Coefficient const& t, int& res) {
     bool ret = true;
@@ -577,41 +408,6 @@ void print_pure_lin_expression(Linear_Expression const& lp, const var_info* info
     return;
 }
 
-ostream& print_constraint(ostream& in, Constraint const& cc, var_info* info) {
-    unsigned n = info->get_dimension();
-    unsigned i;
-    if (cc.space_dimension() > n) {
-        in << "Space dimension exceeds var_info dimension in ostream & "
-              "print_constraint(ostream &.....)"
-           << endl;
-        return in;
-    }
-    LinExpr l(n, info);
-    bool flag = true;
-    int j;
-    for (i = 0; i < n; i++) {
-        if (!handle_integers(cc.coefficient(Variable(i)), j))
-            flag = false;
-        l[i] = j;
-    }
-
-    if (!handle_integers(cc.inhomogeneous_term(), j))
-        flag = false;
-
-    l[n] = j;
-
-    if (flag) {
-        in << l;
-
-        if (cc.type() == Constraint::EQUALITY)
-            in << "  = 0 " << endl;
-        else if (cc.type() == Constraint::NONSTRICT_INEQUALITY)
-            in << " >= 0" << endl;
-        else
-            in << " > 0" << endl;
-    }
-    return in;
-}
 
 void dualize(C_Polyhedron const& p, C_Polyhedron& result) {
     int n = p.space_dimension();
@@ -727,98 +523,7 @@ void test_and_add_generator(int n,
     }
 }
 
-void H79_narrow(C_Polyhedron& result, C_Polyhedron const& what) {
-    //
-    // take all the generators of the what and
-    // reaffirm them
-    //
 
-    if (what.is_universe())
-        return;
-
-    int n = result.space_dimension();
-    int i;
-
-    C_Polyhedron ret(n, UNIVERSE);
-
-    for (i = 0; i < n; ++i)
-        ret.add_constraint(Variable(i) == 0);
-
-    Generator_System gs = what.generators();
-
-    Generator_System::const_iterator vi;
-
-    for (vi = gs.begin(); vi != gs.end(); ++vi) {
-        if (!(*vi).is_line()) {
-            test_and_add_generator(n, (*vi), result, ret);
-        } else {
-            Linear_Expression lin(0);
-            for (i = 0; i < n; ++i)
-                lin += (*vi).coefficient(Variable(i)) * Variable(i);
-
-            test_and_add_generator(n, ray(lin), result, ret);
-            test_and_add_generator(n, ray(0 - lin), result, ret);
-        }
-    }
-
-    result = ret;
-}
-
-void H79_narrow(C_Polyhedron& result,
-                C_Polyhedron const& what,
-                vector<Generator>& frames) {
-    //
-    // take all the generators of the what and
-    // reaffirm them
-    //
-
-    if (what.is_universe())
-        return;
-
-    int n = result.space_dimension();
-    int i;
-
-    C_Polyhedron ret(n, UNIVERSE);
-
-    for (i = 0; i < n; ++i)
-        ret.add_constraint(Variable(i) == 0);
-
-    Generator_System gs = what.generators();
-
-    Generator_System::const_iterator vi;
-
-    for (vi = gs.begin(); vi != gs.end(); ++vi) {
-        if (!(*vi).is_line()) {
-            test_and_add_generator(n, (*vi), result, ret);
-        } else {
-            Linear_Expression lin(0);
-            for (i = 0; i < n; ++i)
-                lin += (*vi).coefficient(Variable(i)) * Variable(i);
-
-            test_and_add_generator(n, ray(lin), result, ret);
-            test_and_add_generator(n, ray(0 - lin), result, ret);
-        }
-    }
-
-    // now for each member of frames check if it is common to both result and
-    // what, if so, add it to ret.
-
-    vector<Generator>::iterator vj;
-
-    for (vj = frames.begin(); vj != frames.end(); ++vj) {
-        if (ret.relation_with((*vj)) == Poly_Gen_Relation::subsumes())
-            continue;
-
-        if (result.relation_with((*vj)) == Poly_Gen_Relation::subsumes())
-            ret.add_generator((*vj));
-        else {
-            vj = frames.erase(vj);
-            --vj;
-        }
-    }
-
-    result = ret;
-}
 
 void set_up_affine_transform(int n,
                              Constraint const& cc,
