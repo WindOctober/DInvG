@@ -46,8 +46,8 @@
 using namespace std;
 
 class Expression {
-    // linear_vars_num = no. of lin variables
-    // r = no. of non-linear variables
+    // dual_num = no. of lin variables
+    // lambda_num = no. of non-linear variables
     // Operations include
     //     1. Construct
     //        1.1 Add two expressions
@@ -62,11 +62,11 @@ class Expression {
     //         5.2 factorize inside Saclib and re-interpret the results
     //     6. Simplify an against a constraint store
 
-   private:
-    int linear_vars_num, r;           // the number of linear and multiplier variables resp.
-    var_info *linear_var_info, *fr;  // Mostly for printing purposes
+private:
+    int dual_num, lambda_num;           // the number of linear and multiplier variables resp.
+    var_info *dual_info, *lambda_info;  // Mostly for printing purposes
 
-    vector<SparseLinExpr> lin_expr;  // An r+1 dimension array of linear expressions
+    vector<SparseLinExpr> lin_expr;  // An lambda_num+1 dimension array of linear expressions
 
     SparseLinExpr lin_fact;  // The linear factor
     LinTransform tr_fact;    // the transform factor
@@ -74,12 +74,12 @@ class Expression {
     bool factored;
     int count;
 
-    void initialize(int linear_vars_num, int r, var_info* linear_var_info, var_info* fr);
+    void initialize(int dual_num, int lambda_num, var_info* dual_info, var_info* lambda_info);
 
     void zero_out();
 
    public:
-    Expression(int linear_vars_num, int r, var_info* linear_var_info, var_info* fr);
+    Expression(int dual_num, int lambda_num, var_info* dual_info, var_info* lambda_info);
     ~Expression();
     Expression(Expression const& e);
     Expression(Expression* e1, Expression* e2);

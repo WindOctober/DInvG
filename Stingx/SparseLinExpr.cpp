@@ -374,30 +374,6 @@ bool SparseLinExpr::operator==(SparseLinExpr const& t) const {
     return (map_ration == mp);  // That should do it?
 }
 
-/*
- * Rational & SparseLinExpr::operator[] (int index){
- *
- *  //
- *  // This is dangerous..
- *  // Playing around with it may cause
- *  // the class to violate an invariant.
- *  //
- *
- *  PRECONDITION( (0 <= index && index < n_+1), \
- *                "SparseLinExpr::operator[] --> reference attempt out of
- * range"<<index );
- *
- *  PRECONDITION ( (false), \
- *               " Using SparseLinExpr::operator[]. Please use
- * set_coefficient/add_coefficient instead" );
- *
- *
- *
- *  return map_ration[index];
- *
- * }
- */
-
 Rational SparseLinExpr::operator()(int index) const {
     return get_coefficient(index);
 }
@@ -542,75 +518,6 @@ void SparseLinExpr::print(ostream& out) const {
     }
 }
 
-void SparseLinExpr::add_to_lin_expression(Linear_Expression& ll,
-                                          int scale_fact,
-                                          int offset) const {
-    // nothing to be done if I am zero
-    if (is_zero())
-        return;
-    // first obtain a scale factor to convert each coefficient to an integer
-    Rational factor(get_denominator_lcm(), get_numerator_gcd());
-
-    // now iterate through the expression
-    IRMap::const_iterator vi = map_ration.begin();
-    int i, j;
-    Rational r;
-    for (; vi != map_ration.end(); ++vi) {
-        i = (*vi).first;
-        r = (*vi).second * factor;
-
-        INVARIANT(r.is_integer(),
-                  " SparseLinEspr::add_to_lin_expression --> gcd "
-                  "and lcm functions in SparseLinExpr seem buggy ");
-
-        // obtain the appropriate coefficient by adding the scale factor
-        j = r.num() * scale_fact;
-        ll += j * Variable(i + offset);
-    }
-    // done
-    return;
-}
-
-void SparseLinExpr::occurring_variables(set<int>& what, int k) const {
-    IRMap::const_iterator vi;
-    for (vi = map_ration.begin(); vi != map_ration.end(); ++vi) {
-        if ((*vi).first >= k)
-            what.insert((*vi).first);
-    }
-    return;
-}
-
-void SparseLinExpr::add_variables_in_front(int n1) {
-    PRECONDITION((n1 >= 0),
-                 "Asked to remove variables in the guise of adding variables");
-
-    make_unprintable();  // 'coz I do not have a valid var-info anymore
-    n_ += n1;
-    IRMap m1;
-    IRMap::iterator vi;
-    int i;
-    Rational r;
-    for (vi = map_ration.begin(); vi != map_ration.end(); ++vi) {
-        i = (*vi).first;
-        r = (*vi).second;
-        m1[i + n1] = r;  // add
-    }
-    map_ration.erase(map_ration.begin(), map_ration.end());
-    map_ration = m1;  // do an assignment
-}
-
-void SparseLinExpr::add_variables_in_back(int n1) {
-    PRECONDITION((n1 >= 0),
-                 "Asked to remove variables in the guise of adding variables");
-
-    if (f_->get_dimension() < n_ + n1) {
-        make_unprintable();
-    }
-
-    n_ += n1;
-    // that is it
-}
-
 Rational SparseLinExpr::evaluate(Generator const& g) const {
     IRMap::const_iterator vi;
     Rational rt(0, 1), c;
@@ -689,11 +596,6 @@ Constraint SparseLinExpr::get_constraint(int ineq_type) const {
     return l == 0;  // by default
 }
 
-void SparseLinExpr::replace_var_info_with(var_info* ninfo) {
-    PRECONDITION(ninfo->get_dimension() >= n_, " Insufficient Dimensions ");
-
-    f_ = ninfo;
-}
 
 SparseLinExpr operator*(SparseLinExpr const& p1, int i) {
     SparseLinExpr p(p1);
@@ -701,22 +603,3 @@ SparseLinExpr operator*(SparseLinExpr const& p1, int i) {
     return p;
 }
 
-Rational SparseLinExpr::dot_product(SparseLinExpr const& what) const {
-    // I will for the time being not check any pre/post-conditions.
-    int m = what.get_dim();
-
-    Rational c;
-
-    IRMap::const_iterator vi;
-
-    for (vi = map_ration.begin(); vi != map_ration.end(); ++vi) {
-        int i = vi->first;
-        Rational const& r1 = vi->second;
-
-        if (i <= m + 1) {
-            c += r1 * what(i);
-        }
-    }
-
-    return c;
-}

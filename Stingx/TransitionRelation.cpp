@@ -21,6 +21,7 @@
 
 #include "TransitionRelation.h"
 
+#include <assert.h>
 #include "Elimination.h"
 #include "Macro.h"
 #include "PolyUtils.h"
@@ -171,7 +172,8 @@ bool TransitionRelation::add_preservation_relation(Constraint const& cc) {
 
     for (int i = 0; i < vars_num; ++i) {
         flag &= handle_integers(cc.coefficient(Variable(i)), coef);
-        flag &= handle_integers(cc.coefficient(Variable(i + vars_num)), primed_coef);
+        flag &= handle_integers(cc.coefficient(Variable(i + vars_num)),
+                                primed_coef);
         if (!flag)
             return false;
         if (coef == 0 && primed_coef == 0)
@@ -192,12 +194,12 @@ bool TransitionRelation::add_preservation_relation(Constraint const& cc) {
 }
 
 bool TransitionRelation::split_relation() {
-    Constraint_System cs = trans_poly->minimized_constraints();
+    Constraint_System constraints = trans_poly->minimized_constraints();
 
-    for (auto vi = cs.begin(); vi != cs.end(); ++vi) {
-        if (add_guard((*vi)) || add_preservation_relation((*vi)))
+    for (auto it = constraints.begin(); it != constraints.end(); ++it) {
+        if (add_guard((*it)) || add_preservation_relation((*it)))
             continue;
-        update->add_constraint((*vi));
+        update->add_constraint((*it));
     }
 
     return true;
@@ -226,12 +228,13 @@ void TransitionRelation::compute_post_new(const C_Polyhedron* p,
     q.add_space_dimensions_and_embed(vars_num);
 
     // now transform q for each preserved relation
-    set<int>::iterator vi;
+    set<int>::iterator it;
 
-    for (vi = preserved.begin(); vi != preserved.end(); ++vi) {
-        Linear_Expression ll = Variable((*vi));
-        q.affine_image(Variable((*vi) + vars_num), ll);  // transforming
-                                                  // each preserved relation
+    for (it = preserved.begin(); it != preserved.end(); ++it) {
+        Linear_Expression ll = Variable((*it));
+        q.affine_image(Variable((*it) + vars_num),
+                       ll);  // transforming
+                             // each preserved relation
     }
 
     q.intersection_assign((*update));
@@ -251,17 +254,17 @@ void TransitionRelation::set_locs(Location* preloc, Location* postloc) {
 }
 void TransitionRelation::set_relation(C_Polyhedron* rel) {
     this->trans_poly = rel;
-    compute_nc();
+    compute_constraints_num();
     split_relation();
 }
 
-void TransitionRelation::compute_nc() {
-    Constraint_System cs = trans_poly->minimized_constraints();
-    Constraint_System::const_iterator vi;
+void TransitionRelation::compute_constraints_num() {
+    Constraint_System constraints = trans_poly->minimized_constraints();
+    Constraint_System::const_iterator it;
     string str;
     constraints_num = 0;
 
-    for (vi = cs.begin(); vi != cs.end(); ++vi)
+    for (it = constraints.begin(); it != constraints.end(); ++it)
         constraints_num++;
 }
 
@@ -281,7 +284,8 @@ TransitionRelation::TransitionRelation(int vars_num,
                                        Location* postloc,
                                        C_Polyhedron* rel,
                                        string name) {
-    initialize(vars_num, info, dual_info, lambda_info, preloc, postloc, rel, name);
+    initialize(vars_num, info, dual_info, lambda_info, preloc, postloc, rel,
+               name);
 }
 
 TransitionRelation::TransitionRelation(int vars_num,
@@ -290,7 +294,8 @@ TransitionRelation::TransitionRelation(int vars_num,
                                        var_info* lambda_info,
                                        string name,
                                        int index) {
-    initialize_without_populating(vars_num, info, dual_info, lambda_info, name, index);
+    initialize_without_populating(vars_num, info, dual_info, lambda_info, name,
+                                  index);
 }
 
 TransitionRelation::TransitionRelation(int vars_num,
@@ -302,8 +307,8 @@ TransitionRelation::TransitionRelation(int vars_num,
                                        C_Polyhedron* rel,
                                        string name,
                                        int index) {
-    initialize_without_populating(vars_num, info, dual_info, lambda_info, preloc, postloc, rel, name,
-                                  index);
+    initialize_without_populating(vars_num, info, dual_info, lambda_info,
+                                  preloc, postloc, rel, name, index);
 }
 
 void TransitionRelation::strengthen(const C_Polyhedron* p) {
@@ -314,7 +319,7 @@ void TransitionRelation::strengthen(const C_Polyhedron* p) {
     trans_poly->intersection_assign(*q);
     delete (q);
 
-    compute_nc();
+    compute_constraints_num();
     split_relation();
 }
 
@@ -368,10 +373,11 @@ void TransitionRelation::compute_consecution_constraints(Context& context) {
     if (legal_trans) {
         int lambda_num = lambda_info->get_dimension();
         int dual_num = dual_info->get_dimension();
-        Constraint_System cs = trans_poly->minimized_constraints();
+        Constraint_System constraints = trans_poly->minimized_constraints();
         Constraint_System cs_dis;
         Constraint_System::const_iterator it;
-        int l1 = preloc->get_range_left(), l2 = postloc->get_range_left();
+        int pre_lindex = preloc->get_range_left(),
+            post_lindex = postloc->get_range_left();
         int i, j;
         C_Polyhedron enable_poly(2 * vars_num + 2 + constraints_num, UNIVERSE);
         C_Polyhedron disable_poly(2 * vars_num + 2 + constraints_num, UNIVERSE);
@@ -380,99 +386,94 @@ void TransitionRelation::compute_consecution_constraints(Context& context) {
 
         // (1) first the constraints on the unprimed variables
         for (i = 0; i < vars_num; i++) {
-            expr = Variable(i);  // place holder for \mu * c_i
+            expr = Variable(i);  //\mu=1 to eliminate the secondary constraint.
             j = 0;
-            for (it = cs.begin(); it != cs.end(); it++) {
-                expr += handle_integers((*it).coefficient(Variable(i))) * Variable(primed_offset + j);  // coefficient for \lambda_j
+            for (it = constraints.begin(); it != constraints.end(); it++) {
+                expr +=
+                    handle_integers((*it).coefficient(Variable(i))) *
+                    Variable(primed_offset + j);  // coefficient for \lambda_j
                 j++;
             }
             enable_poly.add_constraint(expr == 0);
-            disable_poly.add_constraint( expr == 0);
-
+            disable_poly.add_constraint(expr == 0);
         }
 
         // (2) constraints on the primed variable
         for (i = 0; i < vars_num; i++) {
             expr = -1 * Variable(offset + i);  // - c_postloc_i
             j = 0;
-            for (it = cs.begin(); it != cs.end(); it++) {
-                expr += handle_integers((*it).coefficient(Variable(vars_num + i))) *
-                      Variable(primed_offset + j);
+            for (it = constraints.begin(); it != constraints.end(); it++) {
+                expr +=
+                    handle_integers((*it).coefficient(Variable(vars_num + i))) *
+                    Variable(primed_offset + j);
                 j++;
             }
 
             enable_poly.add_constraint(expr == 0);
         }
+
         for (i = 0; i < vars_num; i++) {
             expr = Linear_Expression(0);
             j = 0;
-            for (it = cs.begin(); it != cs.end(); it++) {
-                expr += handle_integers((*it).coefficient(Variable(vars_num + i))) *
-                      Variable(primed_offset + j);
+            for (it = constraints.begin(); it != constraints.end(); it++) {
+                expr +=
+                    handle_integers((*it).coefficient(Variable(vars_num + i))) *
+                    Variable(primed_offset + j);
                 j++;
             }
-            // polyd.add_constraint_and_minimize(ll==0);
             disable_poly.add_constraint(expr == 0);
         }
 
         // (3) Constraints on the constant variable
         expr = Variable(vars_num);
         j = 0;
-        for (it = cs.begin(); it != cs.end(); it++) {
+        for (it = constraints.begin(); it != constraints.end(); it++) {
             expr += handle_integers((*it).inhomogeneous_term()) *
-                  Variable(primed_offset + j);
+                    Variable(primed_offset + j);
             j++;
         }
-        disable_poly.add_constraint( expr <= -1);
+        disable_poly.add_constraint(expr <= -1);
         expr -= Variable(offset + vars_num);
         enable_poly.add_constraint(expr <= 0);
 
         // (4) Now for the positivity constraint (or \lambda >= 0 or \forall
         // \lambda)
         j = 0;
-        for (it = cs.begin(); it != cs.end(); ++it) {
+        for (it = constraints.begin(); it != constraints.end(); ++it) {
             if ((*it).type() == Constraint::NONSTRICT_INEQUALITY) {
                 enable_poly.add_constraint(Variable(primed_offset + j) >= 0);
-                disable_poly.add_constraint(Variable(primed_offset + j) >= 0);  
-            } 
-            else if ((*it).type() == Constraint::STRICT_INEQUALITY) {
+                disable_poly.add_constraint(Variable(primed_offset + j) >= 0);
+            } else if ((*it).type() == Constraint::STRICT_INEQUALITY) {
                 cerr << "Location::compute_dual_constraints -- Warning: "
                         "Encountered "
                         "Strict Inequality"
                      << endl;
                 cerr << "                " << (*it) << endl;
                 enable_poly.add_constraint(Variable(primed_offset + j) > 0);
-                disable_poly.add_constraint(Variable(primed_offset + j) > 0); 
+                disable_poly.add_constraint(Variable(primed_offset + j) > 0);
             }
             j++;
         }
 
-        // contains_test(polyd, 2*vars_num+2);
-        //  * * *
-        //  Old method for eliminate lambda
         enable_poly.remove_higher_space_dimensions(2 * vars_num + 2);
         disable_poly.remove_higher_space_dimensions(2 * vars_num + 2);
-        // * * *
-        // * * *
-        // New method for eliminate lambda: Farkas' Lemma 2.5a, Ax<=b
-        // eliminate_by_Farkas(polyd, 2*vars_num+2);
-        // * * *
 
         // now populate the context
-        cs = enable_poly.minimized_constraints();
+        constraints = enable_poly.minimized_constraints();
         cs_dis = disable_poly.minimized_constraints();
 
         Expression e(dual_num, lambda_num, dual_info, lambda_info);
         C_Polyhedron pdis1(dual_num, UNIVERSE);
         LinExpr ll1(dual_num, dual_info);
-        for (it = cs.begin(); it != cs.end(); ++it) {
+        for (it = constraints.begin(); it != constraints.end(); ++it) {
             for (i = 0; i <= vars_num; i++)
                 e[index].set_coefficient(
-                    l1 + i, handle_integers((*it).coefficient(Variable(i))));
+                    pre_lindex + i,
+                    handle_integers((*it).coefficient(Variable(i))));
 
             for (i = 0; i <= vars_num; i++)
                 e[lambda_num].set_coefficient(
-                    l2 + i,
+                    post_lindex + i,
                     handle_integers((*it).coefficient(Variable(offset + i))));
 
             if ((*it).is_inequality())
@@ -487,7 +488,7 @@ void TransitionRelation::compute_consecution_constraints(Context& context) {
             for (it = cs_dis.begin(); it != cs_dis.end(); ++it) {
                 ll1 *= 0;
                 for (i = 0; i <= vars_num; i++)
-                    ll1[l1 + i] =
+                    ll1[pre_lindex + i] =
                         handle_integers((*it).coefficient(Variable(i)));
 
                 ll1[dual_num] = handle_integers((*it).inhomogeneous_term());
@@ -515,7 +516,7 @@ void TransitionRelation::compute_consecution_01(vector<Clump>& clumps) {
          << "> > > (inter transition) In compute_consecution_01(), "
             "TransitionRelation : "
          << name;
-    Clump cl(dual_info, name, "Transition");
+    Clump clump(dual_info, name, "Transition");
     bool compute_this_trans = true;
     cout << endl << "Current transition has poly as follows: ";
     cout << endl << "  " << *trans_poly;
@@ -537,270 +538,174 @@ void TransitionRelation::compute_consecution_01(vector<Clump>& clumps) {
     cout << endl << "  Compute this transition: " << compute_this_trans;
 
     if (compute_this_trans) {
-        Constraint_System cs, cs_dis;
-        Constraint_System::const_iterator vi;
+        Constraint_System constraints, cs_dis;
+        Constraint_System::const_iterator it;
         int dual_num = dual_info->get_dimension();
-        cs = trans_poly->minimized_constraints();
-        int l1 = preloc->get_range_left(), l2 = postloc->get_range_left();
+        constraints = trans_poly->minimized_constraints();
+        int pre_lindex = preloc->get_range_left(),
+            post_lindex = postloc->get_range_left();
         int i, j;
-        C_Polyhedron polyd(2 * vars_num + 2 + constraints_num, UNIVERSE);
-        C_Polyhedron polyd_dis(2 * vars_num + 2 + constraints_num, UNIVERSE);
-        int offset1 = vars_num + 1, offset2 = 2 * vars_num + 2;
-        Linear_Expression ll(0);
-        if (debug_3) {
-            cout << endl << "------------------------------";
-            cout << endl << "- dual_num: " << dual_num;
-            cout << endl << "- vars_num: " << vars_num;
-            cout << endl << "- l1: " << l1;
-            cout << endl << "- l2: " << l2;
-            cout << endl << "- offset1: " << offset1;
-            cout << endl << "- offset2: " << offset2;
-        }
+        C_Polyhedron enable_poly(2 * vars_num + 2 + constraints_num, UNIVERSE);
+        C_Polyhedron disable_poly(2 * vars_num + 2 + constraints_num, UNIVERSE);
+        int offset = vars_num + 1, primed_offset = 2 * vars_num + 2;
+        Linear_Expression expr(0);
 
         // (1) first the constraints on the unprimed variables
         for (i = 0; i < vars_num; i++) {
-            ll = Variable(i);  // place holder for \mu * c_i
+            expr = Variable(i);  // place holder for \mu * c_i
             j = 0;
-            for (vi = cs.begin(); vi != cs.end(); vi++) {
-                ll += handle_integers((*vi).coefficient(Variable(i))) *
-                      Variable(offset2 + j);  // coefficient for \lambda_j
+            for (it = constraints.begin(); it != constraints.end(); it++) {
+                expr +=
+                    handle_integers((*it).coefficient(Variable(i))) *
+                    Variable(primed_offset + j);  // coefficient for \lambda_j
                 j++;
             }
-            // polyd.add_constraint_and_minimize(ll==0);
-            polyd.add_constraint(ll == 0);
-            polyd_dis.add_constraint(
-                ll == 0);  // disabled path; added by Hongming, at
-                           // Shanghai Jiao Tong University, 2022/09/13
+            enable_poly.add_constraint(expr == 0);
+            disable_poly.add_constraint(expr == 0);
         }
 
         // (2) constraints on the primed variable
         for (i = 0; i < vars_num; i++) {
-            ll = -1 * Variable(offset1 + i);  // - c_postloc_i
+            expr = -1 * Variable(offset + i);  // - c_postloc_i
             j = 0;
-            for (vi = cs.begin(); vi != cs.end(); vi++) {
-                ll += handle_integers((*vi).coefficient(Variable(vars_num + i))) *
-                      Variable(offset2 + j);  // coefficient for \lambda_j
+            for (it = constraints.begin(); it != constraints.end(); it++) {
+                expr +=
+                    handle_integers((*it).coefficient(Variable(vars_num + i))) *
+                    Variable(primed_offset + j);
                 j++;
             }
-            // polyd.add_constraint_and_minimize(ll==0);
-            polyd.add_constraint(ll == 0);
+            enable_poly.add_constraint(expr == 0);
         }
         for (i = 0; i < vars_num; i++) {
-            // disabled path; added by Hongming, at Shanghai Jiao Tong
-            // University, 2022/09/13
-            ll = Linear_Expression(0);
+            expr = Linear_Expression(0);
             j = 0;
-            for (vi = cs.begin(); vi != cs.end(); vi++) {
-                ll += handle_integers((*vi).coefficient(Variable(vars_num + i))) *
-                      Variable(offset2 + j);  // coefficient for \lambda_j
+            for (it = constraints.begin(); it != constraints.end(); it++) {
+                expr +=
+                    handle_integers((*it).coefficient(Variable(vars_num + i))) *
+                    Variable(primed_offset + j);  // coefficient for \lambda_j
                 j++;
             }
-            // polyd.add_constraint_and_minimize(ll==0);
-            polyd_dis.add_constraint(ll == 0);
+            disable_poly.add_constraint(expr == 0);
         }
-        
+
         // (3) Constraints on the constant variable
-        ll = -Variable(vars_num);  // -M * d_preloc
+        expr = Variable(vars_num);
         j = 0;
-        for (vi = cs.begin(); vi != cs.end(); vi++) {
-            ll += -handle_integers((*vi).inhomogeneous_term()) *
-                  Variable(offset2 + j);  // -coefficient for \lambda_j
+        for (it = constraints.begin(); it != constraints.end(); it++) {
+            expr += handle_integers((*it).inhomogeneous_term()) *
+                    Variable(primed_offset + j);
             j++;
         }
-        polyd_dis.add_constraint(
-            ll >= 1);  // disabled path; added by Hongming, at
-                       // Shanghai Jiao Tong University, 2022/09/13
-        ll += Variable(offset1 + vars_num);  // + d_postloc
-        // polyd.add_constraint_and_minimize(ll>=0);
-        polyd.add_constraint(ll >= 0);
+        disable_poly.add_constraint(expr <= -1);
+        expr -= Variable(offset + vars_num);
+        enable_poly.add_constraint(expr <= 0);
 
         // (4) Now for the positivity constraint (or \lambda >= 0 or \forall
         // \lambda)
         j = 0;
-        for (vi = cs.begin(); vi != cs.end(); ++vi) {
-            if ((*vi).type() == Constraint::NONSTRICT_INEQUALITY) {
-                // polyd.add_constraint_and_minimize(Variable(offset2+j)>=0);
-                polyd.add_constraint(Variable(offset2 + j) >= 0);
-                polyd_dis.add_constraint(
-                    Variable(offset2 + j) >=
-                    0);  // disabled path; added by Hongming, at Shanghai Jiao
-                         // Tong University, 2022/09/13
-            } else if ((*vi).type() == Constraint::STRICT_INEQUALITY) {
+        for (it = constraints.begin(); it != constraints.end(); ++it) {
+            if ((*it).type() == Constraint::NONSTRICT_INEQUALITY) {
+                enable_poly.add_constraint(Variable(primed_offset + j) >= 0);
+                disable_poly.add_constraint(Variable(primed_offset + j) >= 0);
+            } else if ((*it).type() == Constraint::STRICT_INEQUALITY) {
                 cerr << "Location::compute_dual_constraints -- Warning: "
                         "Encountered "
                         "Strict Inequality"
                      << endl;
-                cerr << "                " << (*vi) << endl;
-                // polyd.add_constraint_and_minimize(Variable(offset2+j)>0);
-                polyd.add_constraint(Variable(offset2 + j) > 0);
-                polyd_dis.add_constraint(
-                    Variable(offset2 + j) >
-                    0);  // disabled path; added by Hongming, at Shanghai Jiao
-                         // Tong University, 2022/09/13
+                cerr << "                " << (*it) << endl;
+                enable_poly.add_constraint(Variable(primed_offset + j) > 0);
+                disable_poly.add_constraint(Variable(primed_offset + j) > 0);
             }
             j++;
         }
 
-        if (debug_2) {
-            cout << endl << "------------------------------";
-            cout << endl
-                 << "- polyd_dis(with \\lambda): " << endl
-                 << "  " << polyd_dis;
-        }
-        // contains_test(polyd, 2*vars_num+2);
-        // Timer test_time_for_remove_higher_space_dimensions;
-        //  * * *
-        //  Old method for eliminate lambda
-        polyd.remove_higher_space_dimensions(2 * vars_num + 2);
-        polyd_dis.remove_higher_space_dimensions(2 * vars_num + 2);
-        // * * *
-        // * * *
-        // New method for eliminate lambda: Farkas' Lemma 2.5a, Ax<=b
-        // eliminate_by_Farkas(polyd, 2*vars_num+2);
-        // eliminate_by_Farkas(polyd_dis, 2*vars_num+2);
-        // * * *
-        // test_time_for_remove_higher_space_dimensions.stop();
-        // cout<<endl<<"- The remove_higher_space_dimensions(in inter location)
-        // Time Taken is :
-        // "<<test_time_for_remove_higher_space_dimensions.compute_time_elapsed()<<endl;
-
+        enable_poly.remove_higher_space_dimensions(2 * vars_num + 2);
+        disable_poly.remove_higher_space_dimensions(2 * vars_num + 2);
 
         // now create two input polyhedra
-        cs = polyd.minimized_constraints();
-        cs_dis =
-            polyd_dis.minimized_constraints();  // disabled path; added by
-                                                // Hongming, at Shanghai Jiao
-                                                // Tong University, 2022/09/13
-        if (debug_2) {
-            cout << endl
-                 << "- cs_dis(projected away \\lambda): " << endl
-                 << "  " << cs_dis;
-        }
-        C_Polyhedron p0(dual_num, UNIVERSE), p1(dual_num, UNIVERSE), pdis0(dual_num, UNIVERSE),
-            pdis1(dual_num, UNIVERSE);
-        // Expression e(dual_num,r,dual_info,lambda_info);
-        LinExpr ll1(dual_num, dual_info);
+        constraints = enable_poly.minimized_constraints();
+        cs_dis = disable_poly.minimized_constraints();
+        LinExpr template_expr(dual_num, dual_info);
+
         if (one) {
-            // mu=1
-            for (vi = cs.begin(); vi != cs.end(); ++vi) {
-                for (i = 0; i <= vars_num; i++)
-                    ll1[l1 + i] =
-                        handle_integers((*vi).coefficient(Variable(i)));
-                for (i = 0; i <= vars_num; i++)
-                    ll1[l2 + i] = handle_integers(
-                        (*vi).coefficient(Variable(offset1 + i)));
-                if ((*vi).is_inequality())
-                    // p1.add_constraint_and_minimize((ll1.to_lin_expression())
-                    // >= 0);
-                    p1.add_constraint((ll1.to_lin_expression()) >= 0);
-                else if ((*vi).is_equality())
-                    // p1.add_constraint_and_minimize((ll1.to_lin_expression())
-                    // == 0);
-                    p1.add_constraint((ll1.to_lin_expression()) == 0);
+            C_Polyhedron polyhedron(dual_num, UNIVERSE);
+            for (it = constraints.begin(); it != constraints.end(); ++it) {
+                for (i = 0; i <= vars_num; i++) {
+                    template_expr[pre_lindex + i] =
+                        handle_integers((*it).coefficient(Variable(i)));
+                    template_expr[post_lindex + i] = handle_integers(
+                        (*it).coefficient(Variable(offset + i)));
+                }
+                if ((*it).is_inequality())
+                    polyhedron.add_constraint(
+                        (template_expr.to_lin_expression()) >= 0);
+                else if ((*it).is_equality())
+                    polyhedron.add_constraint(
+                        (template_expr.to_lin_expression()) == 0);
             }
-            cl.insert(p1);
-            if (debug_2) {
-                cout << endl << "------------------------------";
-                cout << endl
-                     << "- p1(mu=1 in enabled path): " << endl
-                     << "  " << p1;
-            }
+            clump.insert(polyhedron);
         }
         cout << endl
-             << "  pushing back clump with " << cl.get_count()
+             << "  pushing back clump with " << clump.get_count()
              << " Polyhedra...";
         if (zero) {
-            // mu=0
-            ll1 *= 0;
-            for (vi = cs.begin(); vi != cs.end(); ++vi) {
+            C_Polyhedron polyhedron(dual_num, UNIVERSE);
+            template_expr *= 0;
+            for (it = constraints.begin(); it != constraints.end(); ++it) {
                 for (i = 0; i <= vars_num; i++)
-                    ll1[l2 + i] = handle_integers(
-                        (*vi).coefficient(Variable(offset1 + i)));
-                if ((*vi).is_inequality())
-                    // p0.add_constraint_and_minimize((ll1.to_lin_expression())
-                    // >= 0);
-                    p0.add_constraint((ll1.to_lin_expression()) >= 0);
-                else if ((*vi).is_equality())
-                    // p0.add_constraint_and_minimize((ll1.to_lin_expression())
-                    // == 0);
-                    p0.add_constraint((ll1.to_lin_expression()) == 0);
+                    template_expr[post_lindex + i] = handle_integers(
+                        (*it).coefficient(Variable(offset + i)));
+                if ((*it).is_inequality())
+                    polyhedron.add_constraint(
+                        (template_expr.to_lin_expression()) >= 0);
+                else if ((*it).is_equality())
+                    polyhedron.add_constraint(
+                        (template_expr.to_lin_expression()) == 0);
             }
-            cl.insert(p0);
+            clump.insert(polyhedron);
         }
         cout << endl
-             << "  pushing back clump with " << cl.get_count()
+             << "  pushing back clump with " << clump.get_count()
              << " Polyhedra...";
         if (falsepath) {
+            C_Polyhedron polyhedron(dual_num, UNIVERSE);
             // mu=1 in disabled path
-            ll1 *= 0;
-            for (vi = cs_dis.begin(); vi != cs_dis.end(); ++vi) {
-                ll1 *= 0;
-                if (debug_2) {
-                    cout << endl
-                         << "- vi=cs_dis.begin()~end(): " << endl
-                         << "  " << (*vi);
+            template_expr *= 0;
+            for (it = cs_dis.begin(); it != cs_dis.end(); ++it) {
+                template_expr *= 0;
+                for (i = 0; i <= vars_num; i++){
+                    template_expr[pre_lindex + i] =
+                        handle_integers((*it).coefficient(Variable(i)));
+                    template_expr[post_lindex + i] = handle_integers(
+                        (*it).coefficient(Variable(offset + i)));
                 }
-                for (i = 0; i <= vars_num; i++)
-                    ll1[l1 + i] =
-                        handle_integers((*vi).coefficient(Variable(i)));
-                for (i = 0; i <= vars_num; i++)
-                    ll1[l2 + i] = handle_integers(
-                        (*vi).coefficient(Variable(offset1 + i)));
-                ll1[dual_num] = handle_integers((*vi).inhomogeneous_term());
-                if ((*vi).is_inequality())
-                    pdis1.add_constraint((ll1.to_lin_expression()) >= 0);
-                else if ((*vi).is_equality())
-                    pdis1.add_constraint((ll1.to_lin_expression()) == 0);
-                if (debug_2) {
-                    cout << endl << "  ll1: " << endl << "  " << ll1;
-                    if ((*vi).is_inequality()) {
-                        cout << " >= 0 ";
-                    } else if ((*vi).is_equality()) {
-                        cout << " == 0 ";
-                    }
-                }
+                template_expr[dual_num] =
+                    handle_integers((*it).inhomogeneous_term());
+                if ((*it).is_inequality())
+                    polyhedron.add_constraint(
+                        (template_expr.to_lin_expression()) >= 0);
+                else if ((*it).is_equality())
+                    polyhedron.add_constraint(
+                        (template_expr.to_lin_expression()) == 0);
             }
-            cl.insert(pdis1);
-            if (debug_2) {
-                cout << endl
-                     << "- pdis1(mu=1 in disabled path): " << endl
-                     << "  " << pdis1;
-            }
+            clump.insert(polyhedron);
         }
         cout << endl
-             << "  pushing back clump with " << cl.get_count()
+             << "  pushing back clump with " << clump.get_count()
              << " Polyhedra (in falsepath)...";
-        /* "mu=0 in disabled path" is trivial
-        if (1){
-        // mu=0 in disabled path
-           ll1*=0;
-           for (vi=cs_dis.begin();vi!=cs_dis.end();++vi){
-              for(i=0;i<=vars_num;i++)
-                 ll1[l2+i]=handle_integers((*vi).coefficient(Variable(offset1+i)));
-              if ((*vi).is_inequality())
-                 pdis0.add_constraint((ll1.to_lin_expression()) >= 0);
-              else if ((*vi).is_equality())
-                 pdis0.add_constraint((ll1.to_lin_expression()) == 0);
-           }
-           cl.insert(pdis0);
-        }
-        cout<<endl<<" pushing back clump with "<<cl.get_count()<<"
-        Polyhedra...";
-        */
     }
     cout << endl
          << "< < < Inter-Transition::" << name << " pushing back clump with "
-         << cl.get_count() << " Polyhedra...";
-    if (cl.get_count() != 0) {
-        clumps.push_back(cl);
+         << clump.get_count() << " Polyhedra...";
+    if (clump.get_count() != 0) {
+        clumps.push_back(clump);
     }
     cout << "done";
 
     return;
 }
 
-void TransitionRelation::compute_consecution_constraints(vector<Clump>& vcl,
-                                                         C_Polyhedron& init_poly) {
+void TransitionRelation::compute_consecution_constraints(vector<Clump>& vcl) {
     // First make up a context and add the initiation constraints to it
     if (preloc->get_name() != postloc->get_name()) {
         compute_consecution_01(vcl);
@@ -910,21 +815,22 @@ void TransitionRelation::add_preloc_invariant() {
     guard->intersection_assign(temp);
     temp.add_space_dimensions_and_embed(vars_num);
     trans_poly->intersection_assign(temp);
-    compute_nc();
+    compute_constraints_num();
     return;
 }
 
 void TransitionRelation::dualize_standard(C_Polyhedron& result) const {
     result = C_Polyhedron(2 * vars_num + 2 + constraints_num, UNIVERSE);
-    Constraint_System cs = trans_poly->minimized_constraints();
-    Constraint_System::const_iterator vi;
+    Constraint_System constraints = trans_poly->minimized_constraints();
+    Constraint_System::const_iterator it;
     bool flag = true;
     int i;
     int j, k;
 
     //
     // dualize & build the constraints
-    // \rho \models c_1 x_1 + ... + c_{vars_num+2} x_1' + .. + c_{2n+1} x_n' + c_{vars_num+1}
+    // \rho \models c_1 x_1 + ... + c_{vars_num+2} x_1' + .. + c_{2n+1} x_n' +
+    // c_{vars_num+1}
     // + c_{2n+2} >=0
     //
 
@@ -932,8 +838,9 @@ void TransitionRelation::dualize_standard(C_Polyhedron& result) const {
         Linear_Expression ll;
         ll += -1 * Variable(i);
         flag = true;
-        for (k = 0, vi = cs.begin(); vi != cs.end(); ++k, ++vi) {
-            flag &= handle_integers((*vi).coefficient(Variable(i)), j);
+        for (k = 0, it = constraints.begin(); it != constraints.end();
+             ++k, ++it) {
+            flag &= handle_integers((*it).coefficient(Variable(i)), j);
             ll += j * Variable(2 * vars_num + 2 + k);
         }
         INVARIANT(flag,
@@ -946,8 +853,9 @@ void TransitionRelation::dualize_standard(C_Polyhedron& result) const {
         Linear_Expression ll;
         ll += -1 * Variable(i);
         flag = true;
-        for (k = 0, vi = cs.begin(); vi != cs.end(); ++k, ++vi) {
-            flag &= handle_integers((*vi).coefficient(Variable(i - 1)), j);
+        for (k = 0, it = constraints.begin(); it != constraints.end();
+             ++k, ++it) {
+            flag &= handle_integers((*it).coefficient(Variable(i - 1)), j);
             ll += j * Variable(2 * vars_num + 2 + k);
         }
         INVARIANT(flag,
@@ -960,8 +868,8 @@ void TransitionRelation::dualize_standard(C_Polyhedron& result) const {
     Linear_Expression ll1;
     ll1 = -1 * Variable(vars_num) - Variable(2 * vars_num + 1);
     flag = true;
-    for (k = 0, vi = cs.begin(); vi != cs.end(); ++k, ++vi) {
-        flag &= handle_integers((*vi).inhomogeneous_term(), j);
+    for (k = 0, it = constraints.begin(); it != constraints.end(); ++k, ++it) {
+        flag &= handle_integers((*it).inhomogeneous_term(), j);
         ll1 += j * Variable(2 * vars_num + 2 + k);
     }
     INVARIANT(flag, " Fatal overflow in TransitionRelation::dualize_standard ");
@@ -969,10 +877,10 @@ void TransitionRelation::dualize_standard(C_Polyhedron& result) const {
     result.add_constraint(ll1 <= 0);
 
     // now add the constraints on the multipliers
-    for (k = 0, vi = cs.begin(); vi != cs.end(); ++vi, ++k) {
-        if ((*vi).is_equality())
+    for (k = 0, it = constraints.begin(); it != constraints.end(); ++it, ++k) {
+        if ((*it).is_equality())
             continue;
-        if ((*vi).is_nonstrict_inequality())
+        if ((*it).is_nonstrict_inequality())
             result.add_constraint(Variable(2 * vars_num + 2 + k) >= 0);
         else
             result.add_constraint(Variable(2 * vars_num + 2 + k) > 0);

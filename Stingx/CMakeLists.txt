@@ -23,7 +23,6 @@ set(SRC_FILES
     PolyUtils.cpp
     Rational.cpp
     SparseLinExpr.cpp
-    SparseLinTransform.cpp
     System.cpp
     Timer.cpp
     TransitionRelation.cpp

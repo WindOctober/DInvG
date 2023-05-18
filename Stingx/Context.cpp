@@ -60,12 +60,12 @@ void Context::initialize(var_info* info, var_info* dual_info, var_info* lambda_i
 
     dual_num = dual_info->get_dimension();
 
-    r = lambda_info->get_dimension();
+    lambda_num = lambda_info->get_dimension();
 
     factors = new vector<Expression>();
     equality_mat = new MatrixStore(dual_num, dual_info);
     inequality_store = new PolyStore(dual_num, dual_info);
-    lambda_store = new DisequalityStore(r, lambda_info);
+    lambda_store = new DisequalityStore(lambda_num, lambda_info);
 
     eq_exprs = new vector<Expression>();
     ineq_exprs = new vector<Expression>();
@@ -87,7 +87,7 @@ void Context::initialize(var_info* info,
     this->lambda_info = lambda_info;
     vars_num = info->get_dimension();
     dual_num = dual_info->get_dimension();
-    r = lambda_info->get_dimension();
+    lambda_num = lambda_info->get_dimension();
 
     this->equality_mat = equality_mat;
     this->inequality_store = inequality_store;
@@ -551,11 +551,11 @@ bool Context::is_linear_context() {
     return false;
 }
 
-int Context::factorizing_strategy_equalities() {
+bool Context::factorizing_strategy_equalities() {
     // A cover function that calls split, chooses a maximum factor and splits
 
     if (!collect_factors_equalities())  // No factors found. Nothing to do
-        return 0;
+        return false;
 
     // Now find maximum factor
     bool split = false;
@@ -681,14 +681,14 @@ void Context::Convert_CNF_to_DNF_and_Print(vector<Location*>* loclist,
 }
 
 void Context::recursive_strategy(Clump& clump) {
-    int i = 1;
-    while (i > 0) {
+    bool flag = true;
+    while (flag) {
         if (clump.contains(inequality_store->get_poly_reference())) {
             prune_count++;
             return;
         }
-        i = factorizing_strategy_equalities();
-        if (i > 0) {
+        flag = factorizing_strategy_equalities();
+        if (flag) {
             // cout<<endl<<"- The Left Child Context: "<<endl; print(cout);
             // cout<<endl<<"- The Right Child Context: "<<endl<<(*child1)<<endl;
             child1->recursive_strategy(clump);
@@ -719,7 +719,7 @@ void Context::recursive_strategy(vector<Context *>* children){
 void Context::get_multiplier_counts() {
     int i;
 
-    for (i = 0; i < r; i++)
+    for (i = 0; i < lambda_num; i++)
         tt[i] = 0;
 
     vector<Expression>::iterator it;
@@ -745,17 +745,17 @@ int Context::get_multiplier_status() {
     }
 
     bool zero_possible, one_possible;
-    LinTransform lt(r, lambda_info);
+    LinTransform lt(lambda_num, lambda_info);
 
     // now check  on each multiplier on how many unresolved instances are there
     get_multiplier_counts();
 
-    for (i = 0; i < r; i++) {
+    for (i = 0; i < lambda_num; i++) {
         if (tt[i] == 0) {
             tt[i] = MULTIPLIER_RESOLVED;
         } else {
             lt[i] = 1;
-            lt[r] = 0;
+            lt[lambda_num] = 0;
 
             // now test if zero and one are available
 
@@ -773,7 +773,7 @@ int Context::get_multiplier_status() {
 
             if (one) {  // Am I allowed a one instantiation
                 // check if \mu-1 =0 is viable
-                lt[r] = -1;
+                lt[lambda_num] = -1;
                 if (is_viable_equalities(lt))
                     one_possible = true;
             }
@@ -790,7 +790,7 @@ int Context::get_multiplier_status() {
                     tt[i] = ZERO_ONE_FORBIDDEN;
             }
             lt[i] = 0;
-            lt[r] = 0;
+            lt[lambda_num] = 0;
         }
     }
 
@@ -803,7 +803,7 @@ int Context::choose_unresolved_multiplier() {
 
     int i;
 
-    for (i = 0; i < r; i++)
+    for (i = 0; i < lambda_num; i++)
         tt[i] = 0;
 
     vector<Expression>::iterator it;
@@ -820,7 +820,7 @@ int Context::choose_unresolved_multiplier() {
 
     int ret = NO_UNRESOLVED_MULTIPLIER, max = 0;
 
-    for (i = 0; i < r; i++) {
+    for (i = 0; i < lambda_num; i++) {
         if (tt[i] > max) {
             ret = i;
             max = tt[i];
@@ -842,7 +842,7 @@ with 0 and 1
 
 
    // choose 0/1 values for the multiplier and expand
-   LinTransform lt(r,lambda_info);
+   LinTransform lt(lambda_num,lambda_info);
    lt[index]=1; // \mu{index}=0
 
    Context * child1, *child2;
@@ -855,7 +855,7 @@ with 0 and 1
 
    }
 
-   lt[r]=Rational(-1,1);
+   lt[lambda_num]=Rational(-1,1);
    if (is_viable_equalities(lt)){
       child2=this->clone();
       child2->add_transform(lt);
@@ -913,19 +913,19 @@ void Context::split_01_strategy(Clump& clump) {
 
     // now go though all the multipliers for which zero or one is forbidden and
     // apply the remaining choose 0/1 values for the multiplier and expand
-    LinTransform lt(r, lambda_info);
+    LinTransform lt(lambda_num, lambda_info);
     Context* child1;
 
-    for (i = 0; i < r; i++) {
+    for (i = 0; i < lambda_num; i++) {
         switch (tt[i]) {
             case ZERO_ONE_FORBIDDEN:
                 continue;
             case ZERO_FORBIDDEN:
                 lt[i] = 1;
-                lt[r] = -1;
+                lt[lambda_num] = -1;
                 add_transform(lt);
                 lt[i] = 0;
-                lt[r] = 0;
+                lt[lambda_num] = 0;
 
                 break;
 
@@ -946,10 +946,10 @@ void Context::split_01_strategy(Clump& clump) {
         return;  // nothing to be done
     }
     // now split on the remaining cases
-    for (i = 0; i < r; i++) {
+    for (i = 0; i < lambda_num; i++) {
         if (tt[i] == ZERO_ONE_ALLOWED) {
             lt[i] = 1;
-            lt[r] = 0;
+            lt[lambda_num] = 0;
             child1 = this->clone();
             child1->add_transform(lt);
             child1->simplify_repeat();
@@ -957,7 +957,7 @@ void Context::split_01_strategy(Clump& clump) {
             delete (child1);
 
             lt[i] = 1;
-            lt[r] = Rational(-1, 1);
+            lt[lambda_num] = Rational(-1, 1);
             child1 = this->clone();
             child1->add_transform(lt);
             child1->simplify_repeat();
@@ -1017,19 +1017,19 @@ void Context::split_01_strategy(vector<Location*>* loclist,
 
     // now go though all the multipliers for which zero or one is forbidden and
     // apply the remaining choose 0/1 values for the multiplier and expand
-    LinTransform lt(r, lambda_info);
+    LinTransform lt(lambda_num, lambda_info);
     Context* child1;
 
-    for (i = 0; i < r; i++) {
+    for (i = 0; i < lambda_num; i++) {
         switch (tt[i]) {
             case ZERO_ONE_FORBIDDEN:
                 continue;
             case ZERO_FORBIDDEN:
                 lt[i] = 1;
-                lt[r] = -1;
+                lt[lambda_num] = -1;
                 add_transform(lt);
                 lt[i] = 0;
-                lt[r] = 0;
+                lt[lambda_num] = 0;
 
                 break;
 
@@ -1056,7 +1056,7 @@ void Context::split_01_strategy(vector<Location*>* loclist,
         return;  // nothing to be done
     }
     // now split on the remaining cases
-    for (i = 0; i < r; i++) {
+    for (i = 0; i < lambda_num; i++) {
         if (tt[i] == ZERO_ONE_ALLOWED) {
             lt[i] = 1;
             child1 = this->clone();
@@ -1066,7 +1066,7 @@ void Context::split_01_strategy(vector<Location*>* loclist,
             delete (child1);
 
             lt[i] = 1;
-            lt[r] = Rational(-1, 1);
+            lt[lambda_num] = Rational(-1, 1);
 
             child1 = this->clone();
             child1->add_transform(lt);
@@ -1236,7 +1236,7 @@ void Context::obtain_primal_polyhedron(int left, C_Polyhedron& result) {
 }
 
 bool Context::is_multiplier_present(int index) {
-    PRECONDITION((index >= 0 && index < r),
+    PRECONDITION((index >= 0 && index < lambda_num),
                  " Context::is_multiplier_present() --- Index out of range");
 
     vector<Expression>::iterator it;
@@ -1373,7 +1373,7 @@ bool Context::to_constraints_(int index,
             ll += j * Variable(i);
         }
 
-        mc = (*it)(r);
+        mc = (*it)(lambda_num);
 
         for (i = 0; i < left; ++i)
             if (mc(i) != 0)

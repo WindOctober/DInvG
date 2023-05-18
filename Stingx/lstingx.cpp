@@ -158,7 +158,6 @@ void print_status();
 void check_invariant_ok();
 void Scan_Input();
 
-
 void do_some_propagation() {
     // try and fire each transition relation
 
@@ -214,22 +213,20 @@ void collect_invariants(C_Polyhedron& cpoly, C_Polyhedron& invd) {
     /*
      *  Collect invariants
      */
-    vector<Location*>::iterator vl;
+    vector<Location*>::iterator it;
     invd = C_Polyhedron(dual_info->get_dimension(), UNIVERSE);
-    vl = loclist->begin();
+    it = loclist->begin();
     // cout<<endl<<"- In collect_invariants(), cpoly is : "<<endl<<"
     // "<<cpoly<<endl; Generator_System mgs = cpoly.minimized_generators();
-    for (vl = loclist->begin(); vl < loclist->end(); vl++) {
-        (*vl)->extract_invariants_and_update(cpoly, invd);
-        //(*vl)->extract_invariant_from_generator(mgs);
-        //(*vl)->update_dual_constraints(invd);
+    for (it = loclist->begin(); it < loclist->end(); it++) {
+        (*it)->extract_invariants_and_update(cpoly, invd);
+        //(*it)->extract_invariant_from_generator(mgs);
+        //(*it)->update_dual_constraints(invd);
         // cout<<endl<<"5.";
         // Print_Location();
     }
     return;
 }
-
-
 
 void collect_invariants_for_one_location_by_eliminating(int index,
                                                         C_Polyhedron& cpoly,
@@ -239,8 +236,8 @@ void collect_invariants_for_one_location_by_eliminating(int index,
     //
     invd = C_Polyhedron(dual_info->get_dimension(), UNIVERSE);
     //    Firstly, collect invariants for initial location by eliminating
-    //      for initial *vl, i.e. location,
-    //      use cpoly to update *vl->invariant and *vl->invariant updates invd.
+    //      for initial *it, i.e. location,
+    //      use cpoly to update *it->invariant and *it->invariant updates invd.
     (*loclist)[index]
         ->extract_invariants_and_update_for_one_location_by_eliminating(cpoly,
                                                                         invd);
@@ -249,7 +246,7 @@ void collect_invariants_for_one_location_by_eliminating(int index,
 }
 
 void binary_eliminating(C_Polyhedron& cpoly, C_Polyhedron& invd) {
-    // cout<<endl<<"7.get here?";
+    // cout<<endl<<"1.get here?";
     cout << endl
          << "(int)(cpoly.space_dimension()) :"
          << (int)(cpoly.space_dimension());
@@ -258,7 +255,7 @@ void binary_eliminating(C_Polyhedron& cpoly, C_Polyhedron& invd) {
          << ((*loclist)[0]->get_dimension() + 1);
     if ((int)(cpoly.space_dimension()) ==
         ((*loclist)[0]->get_dimension() + 1)) {
-        // cout<<endl<<"8.get here?";
+        // cout<<endl<<"2.get here?";
         (*loclist)[global_binary_i]
             ->extract_invariants_and_update_by_binary_eliminating(cpoly, invd);
         global_binary_i++;
@@ -275,7 +272,7 @@ void binary_eliminating(C_Polyhedron& cpoly, C_Polyhedron& invd) {
     C_Polyhedron* cpoly_right =
         new C_Polyhedron(cpoly.space_dimension(), UNIVERSE);
     //*cpoly_right = swap2_index_and_divide_from(cpoly,
-    //cpoly.space_dimension()/2);
+    // cpoly.space_dimension()/2);
     *cpoly_right = p_right;
     // cout<<endl<<"1.get here?";
 
@@ -303,7 +300,7 @@ void collect_invariants_by_binary_eliminating(C_Polyhedron& cpoly,
     /*
      *  Collect invariants
      */
-    vector<Location*>::iterator vl;
+    vector<Location*>::iterator it;
     invd = C_Polyhedron(dual_info->get_dimension(), UNIVERSE);
 
     binary_eliminating(cpoly, invd);
@@ -316,7 +313,6 @@ void dfs_traverse_recursive(int depth,
                             vector<Clump>& vcl,
                             C_Polyhedron& cpoly,
                             C_Polyhedron& invd) {
-
     if (invd.contains(cpoly)) {
         bang_count++;
         return;
@@ -363,26 +359,23 @@ void dfs_traverse_recursive(int depth,
     return;
 }
 
-
 void dfs_sequences_generation_traverse(
     vector<vector<vector<vector<int>>>>& target_sequences,
     int index,
     vector<Clump>& vcl,
     C_Polyhedron& init_poly) {
-    // C_Polyhedron invd(*trivial);
-    Tree tr = Tree();  // empty tree
+
+    Tree tr = Tree();
     tr.set_target_index(index);
-    // int ncl=0;
-    vector<Clump>::iterator it;
-    for (it = vcl.begin(); it < vcl.end(); it++) {
-        // ncl++;
+
+
+    for (auto it = vcl.begin(); it < vcl.end(); it++) {
         (*it).clear();
     }
 
     cout << endl
          << endl
-         << "/ Start to solve Location "
-         << (*loclist)[index]->get_name();
+         << "/ Start to solve Location " << (*loclist)[index]->get_name();
     if (tree_prior == "no_prior") {
         cout << endl << "/ Using no_prior";
         tr.Original_Prior(vcl);
@@ -400,7 +393,6 @@ void dfs_sequences_generation_traverse(
     }
 
     tr.set_max_clump_count();
-    // tr.prune_clumps_by_hierarchy_inclusion();
 
     cout << endl << "/ Generate Sequences";
     vector<vector<vector<int>>> sequences;
@@ -423,8 +415,7 @@ void dfs_sequences_generation_traverse_for_one_location_from_intra(
 
     cout << endl
          << endl
-         << "/ Start to solve Location "
-         << (*loclist)[index]->get_name();
+         << "/ Start to solve Location " << (*loclist)[index]->get_name();
     // extract only-one-vcl which is intra-transition about this location
     tr.extract_vcl_for_one_location_about_intra(vcl);
 
@@ -457,8 +448,7 @@ void dfs_sequences_traverse_for_one_location_by_eliminating(
 
     cout << endl
          << endl
-         << "/ Start to solve Location "
-         << (*loclist)[index]->get_name();
+         << "/ Start to solve Location " << (*loclist)[index]->get_name();
     if (tree_prior == "no_prior") {
         cout << endl << "/ Using no_prior";
         tr.Original_Prior(vcl);
@@ -497,8 +487,7 @@ void dfs_sequences_traverse_for_one_location_from_intra_by_eliminating(
 
     cout << endl
          << endl
-         << "/ Start to solve Location "
-         << (*loclist)[index]->get_name();
+         << "/ Start to solve Location " << (*loclist)[index]->get_name();
     // extract only-one-vcl which is intra-transition about this location
     tr.extract_vcl_for_one_location_about_intra(vcl);
 
@@ -549,12 +538,6 @@ void collect_invariants_for_one_location_from_intra(vector<Clump>& vcl,
     /*
      * Read Sequences
      */
-    if (debug_3) {
-        cout << endl;
-        cout << endl
-             << "- id (Read Sequences): " << lid
-             << ", Location::" << (*loclist)[lid]->get_name();
-    }
     single_weave_count = 0;
     single_collect_time = 0;
     single_post_prune_bang_count = 0;
@@ -594,7 +577,7 @@ void Initialize_before_Parser() {
     debug_2 = 0;
     debug_3 = 0;
     print_tree = true;
-    num_context = 8;
+    num_context = 2;
     projection = "kohler_improvement_eliminate_c";
     tree_prior = "target_prior2";
     some_per_group = "two_per_group";
@@ -695,10 +678,10 @@ void Print_Status_before_Solver() {
     cout << "| Strategy ID # " << num_context << endl;
     cout << "| Strategy name : ";
     switch (num_context) {
-        case 7:
+        case 1:
             cout << "newdfs_sequences" << endl;
             break;
-        case 8:
+        case 2:
             cout << "newdfs_seq_propagation" << endl;
             break;
         default:
@@ -706,14 +689,13 @@ void Print_Status_before_Solver() {
             break;
     }
 
-
-    if (num_context == 7) {
+    if (num_context == 1) {
         cout << "| DFS Search method : " << tree_prior << endl;
         cout << "| Sequences Divide method : " << some_per_group << endl;
         cout << "| Projection method : " << projection << endl;
     }
 
-    if (num_context == 8) {
+    if (num_context == 2) {
         cout << "| DFS Search method : " << tree_prior << endl;
         cout << "| Sequences Divide method : " << some_per_group << endl;
         cout << "| Projection method : " << projection << endl;
@@ -810,7 +792,7 @@ int get_index_of_location(string loc_name) {
         }
         i++;
     }
-	return -1;
+    return -1;
 }
 
 int get_index_of_transition(string name) {
@@ -822,7 +804,7 @@ int get_index_of_transition(string name) {
         }
         i++;
     }
-	return -1;
+    return -1;
 }
 
 // return the transition-index which is start from this pre-location-index
@@ -900,7 +882,8 @@ void Create_Adjacency_Matrix_for_Location_and_Transition() {
         if (trsat) {
             if (!(*it)->get_relation().is_empty()) {
                 location_matrix[get_index_of_location((*it)->get_preloc_name())]
-                               [get_index_of_location((*it)->get_postloc_name())]
+                               [get_index_of_location(
+                                    (*it)->get_postloc_name())]
                                    .push_back(j);
                 j1++;
             }
@@ -938,11 +921,10 @@ void Create_Adjacency_Matrix_for_Location_and_Transition() {
 }
 
 void Clear_Location_Invariant() {
-    for (vector<Location*>::iterator vl = loclist->begin(); vl < loclist->end();
-         vl++) {
+    for (auto it = loclist->begin(); it < loclist->end(); it++) {
         cout << endl
-             << "- Location " << (*vl)->get_name() << ": initialize invariant";
-        (*vl)->initialize_invariant();
+             << "- Location " << (*it)->get_name() << ": initialize invariant";
+        (*it)->initialize_invariant();
     }
 }
 
@@ -950,25 +932,24 @@ int main() {
     ios::sync_with_stdio(false);
     total_timer.restart();
     Initialize_before_Parser();
-    
+
     Scan_Input();
     add_preloc_invariants_to_transitions();
 
     Print_Status_before_Solver();
     Print_Location_and_Transition();
-    
+
     Create_Adjacency_Matrix_for_Location_and_Transition();
     global_system = new System(info, dual_info, lambda_info);
-    
-    for (auto it = loclist->begin(); it < loclist->end();
-         it++) {
+
+    for (auto it = loclist->begin(); it < loclist->end(); it++) {
         global_system->add_location((*it));
     }
     for (auto it = trlist->begin(); it < trlist->end(); it++) {
         global_system->add_transition((*it));
     }
     tt = new int[lambda_info->get_dimension()];
-    if (num_context == 7) {
+    if (num_context == 1) {
         //  output_file: **newdfs_sequences**
         //  dual_num
         int dual_num = dual_info->get_dimension();
@@ -984,9 +965,10 @@ int main() {
             (*it)->compute_dual_constraints(init_poly);
         }
         //  vcl
+        
         vector<Clump> clumps;
         for (auto it = trlist->begin(); it < trlist->end(); it++) {
-            (*it)->compute_consecution_constraints(clumps, init_poly);
+            (*it)->compute_consecution_constraints(clumps);
             if (total_timer.compute_time_elapsed() >= time_limit) {
                 cout << "Time is up!" << endl;
                 break;
@@ -998,7 +980,6 @@ int main() {
                 cout << "Time is up!" << endl;
                 break;
             }
-            //    this also should trigger the simplification of the context
         }
 
         /*
@@ -1018,8 +999,8 @@ int main() {
             counter.set_location_index_and_init_depth(index, clumps.size());
             single_dfs_sequences_generation_timer.restart();
 
-            dfs_sequences_generation_traverse(target_sequences, index,
-                                              clumps, init_poly);
+            dfs_sequences_generation_traverse(target_sequences, index, clumps,
+                                              init_poly);
 
             single_dfs_sequences_generation_timer.stop();
             vector_single_dfs_sequences_generation_time.push_back(
@@ -1028,8 +1009,7 @@ int main() {
                 single_pre_prune_bang_count);
         }
         // Clear_Location_Invariant();
-        for (int index = 0; index < loclist->size();
-             index++) {
+        for (int index = 0; index < loclist->size(); index++) {
             if (total_timer.compute_time_elapsed() >= total_time) {
                 cout << endl << "Time is up!";
                 break;
@@ -1040,8 +1020,7 @@ int main() {
             single_post_prune_bang_count = 0;
             single_dfs_sequences_traverse_timer.restart();
 
-            vector<vector<vector<int>>> sequences =
-                target_sequences[index];
+            vector<vector<vector<int>>> sequences = target_sequences[index];
             dfs_sequences_traverse_for_one_location_by_eliminating(
                 sequences, index, clumps, init_poly);
 
@@ -1056,8 +1035,7 @@ int main() {
         dfs_traverse_timer.stop();
         dfs_traverse_time = dfs_traverse_timer.compute_time_elapsed();
 
-    } 
-    else if (num_context == 8) {
+    } else if (num_context == 2) {
         //  output_file: **newdfs_seq_propagation**
         //  dual_num
         int dual_num = dual_info->get_dimension();
@@ -1072,22 +1050,21 @@ int main() {
             (*it)->make_context();
             (*it)->compute_dual_constraints(init_poly);
         }
-
         vector<Clump> clumps;
         for (auto it = trlist->begin(); it < trlist->end(); it++) {
-            (*it)->compute_consecution_constraints(clumps, init_poly);
+            (*it)->compute_consecution_constraints(clumps);
             if (total_timer.compute_time_elapsed() >= time_limit) {
                 cout << "Time is up!" << endl;
                 break;
             }
         }
+
         for (auto it = loclist->begin(); it < loclist->end(); it++) {
             (*it)->add_clump(clumps);
             if (total_timer.compute_time_elapsed() >= time_limit) {
                 cout << "Time is up!" << endl;
                 break;
             }
-
         }
 
         /*
@@ -1111,35 +1088,32 @@ int main() {
                      << (*loclist)[index]->get_name();
                 vector<vector<vector<int>>> empty_sequences;
                 target_sequences.push_back(empty_sequences);
-            } 
-            else {
-                dfs_sequences_generation_traverse(target_sequences,
-                                                  index, clumps, init_poly);
+            } else {
+                dfs_sequences_generation_traverse(target_sequences, index,
+                                                  clumps, init_poly);
             }
 
             single_dfs_sequences_generation_timer.stop();
             vector_single_dfs_sequences_generation_time.push_back(
                 single_dfs_sequences_generation_timer.compute_time_elapsed());
-            vector_single_pre_prune_bang_count.push_back(single_pre_prune_bang_count);
+            vector_single_pre_prune_bang_count.push_back(
+                single_pre_prune_bang_count);
         }
         // Read Sequences
-        for (int index = 0; index < loclist->size();
-             index++) {
+        for (int index = 0; index < loclist->size(); index++) {
             single_weave_count = 0;
             single_collect_time = 0;
             single_post_prune_bang_count = 0;
             single_dfs_sequences_traverse_timer.restart();
 
             // only compute invariants at initial location
-            bool init_poly_flag =
-                (*loclist)[index]->initial_poly_set();
+            bool init_poly_flag = (*loclist)[index]->initial_poly_set();
             if (!init_poly_flag) {
                 cout << endl
                      << "- ( !init_poly_flag ) in Location::"
                      << (*loclist)[index]->get_name();
             } else {
-                vector<vector<vector<int>>> sequences =
-                    target_sequences[index];
+                vector<vector<vector<int>>> sequences = target_sequences[index];
                 dfs_sequences_traverse_for_one_location_by_eliminating(
                     sequences, index, clumps, init_poly);
             }
@@ -1166,8 +1140,7 @@ int main() {
         // ::First, compute other location except Initial & Exit-Location
         // ::Second, compute Exit-Location
         compute_invariants_by_propagation_with_farkas(clumps);
-
-    }  //    eocse if (num_context == 8)
+    }
     total_timer.stop();
     Print_Location();
     if (djinv) {
@@ -1228,10 +1201,12 @@ void Scan_Input() {
     string line;
     int stage = -1;  // Variable Reading.
     info = new var_info();
-    regex trans_pattern(R"((Transition|transition)\s+(\w+):\s*(\w+)\s*,\s*(\w+)\s*,\s*)");
-    regex self_trans_pattern(R"((Transition|transition)\s+(\w+)\s*:\s*(\w+)\s*,\s*)");
+    regex trans_pattern(
+        R"((Transition|transition)\s+(\w+):\s*(\w+)\s*,\s*(\w+)\s*,\s*)");
+    regex self_trans_pattern(
+        R"((Transition|transition)\s+(\w+)\s*:\s*(\w+)\s*,\s*)");
     regex loc_pattern(R"((Location|location)\s+(\w+)\s*)");
-	regex invariant_pattern(R"((Invariant|invariant)\s+(\w+)\s*:?\s*)");
+    regex invariant_pattern(R"((Invariant|invariant)\s+(\w+)\s*:?\s*)");
     regex term_pattern(
         R"(\s*\d+\s*\*\s*\w+\s*|\s*\d+\s*\*\s*'\w+\s*|\s*'\w+\s*|\s*\w+\s*|\s*\d+\s*|\s*|[+-]|(<=|=|>=))");
     regex primed_coef_var_pattern(R"(\s*(\d+)\s*\*\s*'(\w+)\s*)");
@@ -1243,7 +1218,7 @@ void Scan_Input() {
     regex equality_pattern(R"(\s*(<=|=|>=)\s*)");
     regex empty_pattern(R"(\s*)");
     Location* new_location = NULL;
-	Location* invariant_location =NULL;
+    Location* invariant_location = NULL;
     C_Polyhedron* new_poly = NULL;
     TransitionRelation* new_transition = NULL;
     while (getline(cin, line)) {
@@ -1301,18 +1276,19 @@ void Scan_Input() {
                 if (new_poly && new_transition) {
                     new_transition->set_relation(new_poly);
                 }
-				if (new_poly && invariant_location){
-					invariant_location->set_invariant_polyhedron(new_poly);
-				}
+                if (new_poly && invariant_location) {
+                    invariant_location->set_invariant_polyhedron(new_poly);
+                }
                 new_poly = NULL;
-				new_location = NULL;
-				invariant_location=NULL;
+                new_location = NULL;
+                invariant_location = NULL;
                 new_transition = NULL;
                 string loc_name = match[2];
                 // cout<<loc_name<<" "<<loc_name.length()<<" "<<token<<endl;
                 if (!search_location((char*)loc_name.c_str(), &new_location)) {
                     new_location =
-                        new Location(info->get_dimension(), info, dual_info, lambda_info, loc_name);
+                        new Location(info->get_dimension(), info, dual_info,
+                                     lambda_info, loc_name);
                     loclist->push_back(new_location);
                 } else {
                     cerr << "[ERROR] Multi-defined Location." << endl;
@@ -1327,22 +1303,23 @@ void Scan_Input() {
                 if (new_poly && new_transition) {
                     new_transition->set_relation(new_poly);
                 }
-				if (new_poly && invariant_location){
-					invariant_location->set_invariant_polyhedron(new_poly);
-				}
+                if (new_poly && invariant_location) {
+                    invariant_location->set_invariant_polyhedron(new_poly);
+                }
                 new_poly = NULL;
-				new_location = NULL;
-				invariant_location=NULL;
+                new_location = NULL;
+                invariant_location = NULL;
                 new_transition = NULL;
                 string transition_name = match[2];
                 string loc_name_start = match[3];
-				Location* loc_end;
-				Location* loc_start;
-				// cout<<endl;
-				if (!search_transition_relation((char*)transition_name.c_str(),
+                Location* loc_end;
+                Location* loc_start;
+                // cout<<endl;
+                if (!search_transition_relation((char*)transition_name.c_str(),
                                                 &new_transition)) {
                     new_transition = new TransitionRelation(
-                        info->get_dimension(), info, dual_info, lambda_info, transition_name);
+                        info->get_dimension(), info, dual_info, lambda_info,
+                        transition_name);
                     trlist->push_back(new_transition);
                 } else {
                     cerr << "[ERROR] Multi-defined Transition." << endl;
@@ -1361,45 +1338,42 @@ void Scan_Input() {
                              << endl;
                         exit(1);
                     }
-					new_transition->set_locs(loc_start, loc_end);
+                    new_transition->set_locs(loc_start, loc_end);
+                } else {
+                    new_transition->set_locs(loc_start, loc_start);
                 }
-				else{
-					new_transition->set_locs(loc_start, loc_start);
-				}
                 // cout<<transition_name<<" "<<loc_name_start<<"
                 // "<<loc_name_end<<endl;
-                
-                
-            } 
-			else if (regex_match(line, match, invariant_pattern)){
-				if (new_poly && new_location) {
+
+            } else if (regex_match(line, match, invariant_pattern)) {
+                if (new_poly && new_location) {
                     new_location->set_polyhedron(new_poly);
                 }
                 if (new_poly && new_transition) {
                     new_transition->set_relation(new_poly);
                 }
-				if (new_poly && invariant_location){
-					invariant_location->set_invariant_polyhedron(new_poly);
-				}
+                if (new_poly && invariant_location) {
+                    invariant_location->set_invariant_polyhedron(new_poly);
+                }
                 new_poly = NULL;
-				new_location = NULL;
-				invariant_location=NULL;
+                new_location = NULL;
+                invariant_location = NULL;
                 new_transition = NULL;
                 string loc_name = match[2];
                 // cout<<loc_name<<" "<<loc_name.length()<<" "<<token<<endl;
-                if (!search_location((char*)loc_name.c_str(), &invariant_location)) {
+                if (!search_location((char*)loc_name.c_str(),
+                                     &invariant_location)) {
                     cerr << "[ERROR] undefined Invariant Location." << endl;
                     exit(1);
                 }
-			}
-			else {
+            } else {
                 if (!new_poly) {
                     if (stage == 1)
                         new_poly =
                             new C_Polyhedron(info->get_dimension(), UNIVERSE);
                     else
-                        new_poly =
-                            new C_Polyhedron(2 * info->get_dimension(), UNIVERSE);
+                        new_poly = new C_Polyhedron(2 * info->get_dimension(),
+                                                    UNIVERSE);
                 }
                 sregex_iterator it(line.begin(), line.end(), term_pattern);
                 sregex_iterator end;
@@ -1429,26 +1403,26 @@ void Scan_Input() {
                             exit(1);
                         }
                         Linear_Expression* res = new Linear_Expression(
-                            abs(coef) * Variable(index + info->get_dimension()));
-                        if (!is_rhs){
-							if (coef>0)
-								(*le) += (*res);
-							else
-								(*le) -= (*res);
-						}
-                        else{
-							if (coef>0)
-								(*right) += (*res);
-							else
-								(*right) -= (*res);
-						}
+                            abs(coef) *
+                            Variable(index + info->get_dimension()));
+                        if (!is_rhs) {
+                            if (coef > 0)
+                                (*le) += (*res);
+                            else
+                                (*le) -= (*res);
+                        } else {
+                            if (coef > 0)
+                                (*right) += (*res);
+                            else
+                                (*right) -= (*res);
+                        }
                         delete (res);
                     } else if (regex_match(term, match, coef_var_pattern)) {
                         int coef = stoi(match[1]);
                         if (is_negative)
                             coef = -coef;
                         string var = match[2];
-						// cout<<match[1]<<" "<<coef<<" "<<line<<endl;
+                        // cout<<match[1]<<" "<<coef<<" "<<line<<endl;
                         int index = info->search(var.c_str());
                         if (index == VAR_NOT_FOUND) {
                             cout << "[ERROR] Undefined variable " << var
@@ -1457,37 +1431,36 @@ void Scan_Input() {
                         }
                         Linear_Expression* res =
                             new Linear_Expression(abs(coef) * Variable(index));
-                        if (!is_rhs){
-							if (coef>0)
-								(*le) += (*res);
-							else
-								(*le) -= (*res);
-						}
-                        else{
-							if (coef>0)
-								(*right) += (*res);
-							else
-								(*right) -= (*res);
-						}
+                        if (!is_rhs) {
+                            if (coef > 0)
+                                (*le) += (*res);
+                            else
+                                (*le) -= (*res);
+                        } else {
+                            if (coef > 0)
+                                (*right) += (*res);
+                            else
+                                (*right) -= (*res);
+                        }
                         delete (res);
                     } else if (regex_match(term, match, coef_pattern)) {
                         int coef = stoi(match[1]);
-						// cout<<match[1]<<" "<<coef<<" "<<line<<endl;
+                        // cout<<match[1]<<" "<<coef<<" "<<line<<endl;
                         if (is_negative)
                             coef = -coef;
-                        Linear_Expression* res = new Linear_Expression(abs(coef));
-                        if (!is_rhs){
-							if (coef>0)
-								(*le) += (*res);
-							else
-								(*le) -= (*res);
-						}
-                        else{
-							if (coef>0)
-								(*right) += (*res);
-							else
-								(*right) -= (*res);
-						}
+                        Linear_Expression* res =
+                            new Linear_Expression(abs(coef));
+                        if (!is_rhs) {
+                            if (coef > 0)
+                                (*le) += (*res);
+                            else
+                                (*le) -= (*res);
+                        } else {
+                            if (coef > 0)
+                                (*right) += (*res);
+                            else
+                                (*right) -= (*res);
+                        }
                         delete (res);
                     } else if (regex_match(term, match, primed_pattern)) {
                         int coef = 1;
@@ -1503,19 +1476,19 @@ void Scan_Input() {
                             exit(1);
                         }
                         Linear_Expression* res = new Linear_Expression(
-                            abs(coef) * Variable(index + info->get_dimension()));
-                        if (!is_rhs){
-							if (coef>0)
-								(*le) += (*res);
-							else
-								(*le) -= (*res);
-						}
-                        else{
-							if (coef>0)
-								(*right) += (*res);
-							else
-								(*right) -= (*res);
-						}
+                            abs(coef) *
+                            Variable(index + info->get_dimension()));
+                        if (!is_rhs) {
+                            if (coef > 0)
+                                (*le) += (*res);
+                            else
+                                (*le) -= (*res);
+                        } else {
+                            if (coef > 0)
+                                (*right) += (*res);
+                            else
+                                (*right) -= (*res);
+                        }
                         delete (res);
                     } else if (regex_match(term, match, var_pattern)) {
                         int coef = 1;
@@ -1532,18 +1505,17 @@ void Scan_Input() {
                         }
                         Linear_Expression* res =
                             new Linear_Expression(abs(coef) * Variable(index));
-                        if (!is_rhs){
-							if (coef>0)
-								(*le) += (*res);
-							else
-								(*le) -= (*res);
-						}
-                        else{
-							if (coef>0)
-								(*right) += (*res);
-							else
-								(*right) -= (*res);
-						}
+                        if (!is_rhs) {
+                            if (coef > 0)
+                                (*le) += (*res);
+                            else
+                                (*le) -= (*res);
+                        } else {
+                            if (coef > 0)
+                                (*right) += (*res);
+                            else
+                                (*right) -= (*res);
+                        }
                         delete (res);
                     } else if (regex_match(term, match, sign_pattern)) {
                         if (match[1] == "-")
@@ -1558,7 +1530,7 @@ void Scan_Input() {
                         else
                             op = 0;
                         is_rhs = true;
-						is_negative=false;
+                        is_negative = false;
                     } else if (regex_match(term, match, empty_pattern)) {
                         it++;
                         continue;

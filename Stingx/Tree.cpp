@@ -1432,82 +1432,12 @@ void Tree::Merge_recursive2(vector<vector<vector<int>>> two_sub_sequences,
     }
     return;
 }
-/*
-void Tree::Merge_recursive(vector<vector<vector<int>>> two_sub_sequences,
-vector<vector<int>> & merged_sub_sequences, int i, vector<int> sequence,
-C_Polyhedron initp, Clump & invd_vp, int hb, int lb){ if (i ==
-two_sub_sequences.size() - 1){ read_and_collect_a_sequence(merged_sub_sequences,
-sequence, initp, invd_vp, hb, lb); return;
-    }
-    int j=0;
-    while (j < two_sub_sequences[i+1].size()){
-        vector<int> s = sequence;
-        s.insert(s.end(), two_sub_sequences[i+1][j].begin(),
-two_sub_sequences[i+1][j].end()); Merge_recursive(two_sub_sequences,
-merged_sub_sequences, i+1, s, initp, invd_vp, hb, lb); j++;
-    }
-    return;
-}
-*/
-/*
-void Tree::read_and_collect_a_sequence(vector<vector<int>> &
-merged_sub_sequences, vector<int> sequence, C_Polyhedron cpoly, Clump & invd_vp,
-int hb, int lb){
-    //cout<<endl<<"> > > Tree::read_and_collect_a_sequence()";
-    //cout<<endl<<"sequence.size(): "<<sequence.size();
-    //cout<<endl<<"hb - lb + 1: "<<hb - lb + 1;
-    if (sequence.size() == hb - lb + 1){
-        C_Polyhedron p(cpoly);
-        int dth, i=0, j;
-        for (dth = hb; dth >= lb; dth--){
-            j = sequence[i];
-            p.intersection_assign(get_clump(dth).get_reference(j));
-            if (invd_vp.contains(p)){
-                Print_Prune_Sequence_Tree(sequence, dth, hb, lb, "Banged");
-                bang_count++;
-                single_pre_prune_bang_count++;
-                return;
-            }
-            i++;
-            if (dth == lb){
-                cout<<endl;
-                cout<<endl<<"/-----------------------------";
-                Print_Prune_Sequence_Tree(sequence, dth, hb, lb,"Weaved");
-                collect_invariant_polys(p, invd_vp);
-                merged_sub_sequences.push_back(sequence);
-                cout<<endl<<"\\-----------------------------";
-                cout<<endl;
-                return;
-            }
-        }
-    }
-    else {
-        cout<<endl<<"Sequence Length Error";
-    }
-    //cout<<endl<<"< < < Tree::read_and_collect_a_sequence()";
-}
-*/
 vector<vector<int>> Tree::dfs_sub_sequences_traverse_based_on_StInG(
     int hb,
     int lb,
     C_Polyhedron& initp) {
     cout << endl << "> > > Tree::dfs_sub_sequences_traverse_based_on_StInG()";
     vector<vector<int>> sub_sequences;
-
-    // Test for writing sequences
-    /*
-    cout<<endl<<"hb:"<<hb<<",lb:"<<lb;
-    vector<int> s;
-    int i=0,dth;
-    for (dth=hb; dth>=lb; dth--){
-        s.push_back(7);
-        cout<<endl<<"s["<<i<<"]:"<<s[i];
-        i++;
-    }
-    cout<<endl<<"size of s:"<<s.size();
-    sub_sequences.push_back(s);
-    */
-
     C_Polyhedron invd(*trivial);
     int depth = hb + 1;
     dfs_sub_sequences_traverse_recursive_based_on_StInG(sub_sequences, hb, lb,
@@ -1522,22 +1452,6 @@ vector<vector<int>> Tree::dfs_sub_sequences_traverse(int hb,
                                                      C_Polyhedron& initp) {
     cout << endl << "> > > Tree::dfs_sub_sequences_traverse()";
     vector<vector<int>> sub_sequences;
-
-    // Test for writing sequences
-    /*
-    cout<<endl<<"hb:"<<hb<<",lb:"<<lb;
-    vector<int> s;
-    int i=0,dth;
-    for (dth=hb; dth>=lb; dth--){
-        s.push_back(7);
-        cout<<endl<<"s["<<i<<"]:"<<s[i];
-        i++;
-    }
-    cout<<endl<<"size of s:"<<s.size();
-    sub_sequences.push_back(s);
-    */
-
-    // C_Polyhedron invd(*trivial);
     Clump invd_vp(dual_info);
     int depth = hb + 1;
     dfs_sub_sequences_traverse_recursive(sub_sequences, hb, lb, depth, initp,
@@ -1556,15 +1470,8 @@ void Tree::dfs_sub_sequences_traverse_recursive_based_on_StInG(
     int depth,
     C_Polyhedron& cpoly,
     C_Polyhedron& invd) {
-    // cout<<endl<<"> > >
-    // Tree::dfs_sub_sequences_traverse_recursive_based_on_StInG()";
-
-    // cout<<endl<<"depth:"<<depth<<", cpoly:";
-    // cout<<endl<<cpoly;
 
     if (invd.contains(cpoly)) {
-        // cout<<endl<<"invd:"<<endl<<invd;
-        // cout<<endl<<"cpoly:"<<endl<<cpoly;
         Print_Prune_Tree(depth, hb, lb,
                          "Banged");  // print for debug and improve algorithm
         bang_count++;
@@ -1587,9 +1494,6 @@ void Tree::dfs_sub_sequences_traverse_recursive_based_on_StInG(
 
     get_clump(depth - 1).clear();
     while (get_clump(depth - 1).has_next()) {
-        // cout<<endl<<"in while...next()";
-        // cout<<endl<<"depth:"<<depth<<", cpoly:";
-        // cout<<endl<<cpoly;
         C_Polyhedron p(cpoly);
         p.intersection_assign(get_clump(depth - 1).get_reference());
         dfs_sub_sequences_traverse_recursive_based_on_StInG(
@@ -1610,9 +1514,6 @@ void Tree::dfs_sub_sequences_traverse_recursive_based_on_StInG(
         }
         get_clump(depth - 1).next();
     }
-
-    // cout<<endl<<"< < <
-    // Tree::dfs_sub_sequences_traverse_recursive_based_on_StInG()";
     return;
 }
 
@@ -1623,10 +1524,6 @@ void Tree::dfs_sub_sequences_traverse_recursive(
     int depth,
     C_Polyhedron& cpoly,
     Clump& invd_vp) {
-    // cout<<endl<<"> > > Tree::dfs_sub_sequences_traverse_recursive()";
-
-    // cout<<endl<<"depth:"<<depth<<", cpoly:";
-    // cout<<endl<<cpoly;
     if (total_timer.compute_time_elapsed() >= total_time) {
         cout << endl << "Time is up!";
         return;
@@ -1636,9 +1533,6 @@ void Tree::dfs_sub_sequences_traverse_recursive(
         bang_count++;
         single_pre_prune_bang_count++;
         counter.set_pre_pbc_at_location_and_depth(get_target_index(), depth);
-
-        // cout<<endl<<"invd:"<<endl<<invd;
-        // cout<<endl<<"cpoly:"<<endl<<cpoly;
         if (print_tree) {
             Print_Prune_Tree(
                 depth, hb, lb,
@@ -1648,23 +1542,14 @@ void Tree::dfs_sub_sequences_traverse_recursive(
     }
 
     if (depth == lb) {
-        // backtrack_flag = true;
-        // cout<<endl;
-        // cout<<endl<<"/-----------------------------";
         if (print_tree) {
             Print_Prune_Tree(depth, hb, lb, "Weaved");
         }
         collect_timer.restart();
-        // collect_invariant_polys(cpoly,invd_vp);
-        // collect_sub_sequences(sub_sequences,hb,lb);
         collect_invariant_polys_and_sub_sequences(invd_vp, sub_sequences, cpoly,
                                                   hb, lb);
         collect_timer.stop();
-        // cout<<endl<<"- The collect_invariant_polys_and_sub_sequences Time
-        // Taken (0.01s) = "<<collect_timer.compute_time_elapsed();
-        // cout<<endl<<"4."; Print_Location();
-        // cout<<endl<<"\\-----------------------------";
-        // cout<<endl;
+
         return;
     }
 
@@ -1784,125 +1669,19 @@ void Tree::collect_invariant_polys_and_sub_sequences(
     }
     sub_sequences.push_back(sequence);
 
-    // cout<<endl<<"< < < Tree::collect_invariant_polys_and_sub_sequences()";
     return;
 }
 
-/*
-void Tree::collect_invariant_polys_and_sub_sequences(Clump &
-invd_vp,vector<vector<int>> & sub_sequences,C_Polyhedron & cpoly,int hb,int lb){
-    //cout<<endl<<"> > > Tree::collect_invariant_polys_and_sub_sequences()";
-
-    vector<int> s;
-    int dth;
-    for (dth=hb; dth>=lb; dth--){
-        s.push_back(get_clump(dth).get_gli());
-    }
-    cout<<endl<<"- s.size():"<<s.size();
-    cout<<endl<<"  s:";
-    for (int i=0; i<s.size(); i++){
-        cout<<s[i];
-    }
-
-    vector<C_Polyhedron> vp;
-    vector<C_Polyhedron>::iterator vi;
-    vector<vector<int>>::iterator vj;
-    vp = invd_vp.get_vp();
-
-    for (vi=vp.begin(),vj=sub_sequences.begin();vi<vp.end();++vi,++vj){
-        if ((*vi).contains(cpoly)){
-            cout<<endl<<"Wrong Type: (*vi).contains(cpoly)";
-            return;
-        }
-        else if (cpoly.contains(*vi)){
-            //cout<<endl<<"cpoly.contains(*vi)";
-            vi=vp.erase(vi);
-            vi--;
-            vj=sub_sequences.erase(vj);
-            vj--;
-        }
-    }
-
-    vp.push_back(cpoly);
-    invd_vp.replace_vp(vp);
-    sub_sequences.push_back(s);
-    cout<<endl<<"  invd_vp.size():"<<invd_vp.get_count();
-
-    //cout<<endl<<"< < < Tree::collect_invariant_polys_and_sub_sequences()";
-    return;
-}
-
-void Tree::collect_invariant_polys_and_sub_sequences(Clump &
-invd_vp,vector<vector<int>> & sub_sequences,C_Polyhedron & cpoly,vector<int> &
-sequence){
-    //cout<<endl<<"> > > Tree::collect_invariant_polys_and_sub_sequences()";
-
-    cout<<endl<<"- sequence.size():"<<sequence.size();
-    cout<<endl<<"  sequence:";
-    for (int i=0; i<sequence.size(); i++){
-        cout<<sequence[i];
-    }
-
-    vector<C_Polyhedron> vp;
-    vector<C_Polyhedron>::iterator vi;
-    vector<vector<int>>::iterator vj;
-    vp = invd_vp.get_vp();
-
-    for (vi=vp.begin(),vj=sub_sequences.begin();vi<vp.end();++vi,++vj){
-        if ((*vi).contains(cpoly)){
-            cout<<endl<<"Wrong Type: (*vi).contains(cpoly)";
-            return;
-        }
-        else if (cpoly.contains(*vi)){
-            //cout<<endl<<"cpoly.contains(*vi)";
-            vi=vp.erase(vi);
-            vi--;
-            vj=sub_sequences.erase(vj);
-            vj--;
-        }
-    }
-
-    vp.push_back(cpoly);
-    invd_vp.replace_vp(vp);
-    sub_sequences.push_back(sequence);
-    cout<<endl<<"  invd_vp.size():"<<invd_vp.get_count();
-
-    //cout<<endl<<"< < < Tree::collect_invariant_polys_and_sub_sequences()";
-    return;
-}
-*/
 void Tree::dfs_sequences_traverse(vector<vector<vector<int>>> sequences,
                                   C_Polyhedron& initp,
                                   C_Polyhedron& invd) {
     cout << endl << "> > > Tree::dfs_sequences_traverse()";
-
-    // Test for reading sequences
-    /*
-    cout<<endl<<"- sequences.size():"<<sequences.size();
-    for (int i=0; i<sequences.size(); i++){
-        cout<<endl<<"- - sequence["<<i<<"].size():"<<sequences[i].size();
-
-        for (int j=0; j<sequences[i].size(); j++){
-            cout<<endl<<"- - -
-    sequences["<<i<<"]["<<j<<"].size():"<<sequences[i][j].size();
-
-            for (int k=0; k<sequences[i][j].size(); k++){
-                cout<<endl<<"
-    sequences["<<i<<"]["<<j<<"]["<<k<<"]:"<<sequences[i][j][k];
-            }
-        }
-    }
-    */
 
     int start = -1;
     vector<int> sequence;
     int depth = vcl.size() - 1;
     dfs_sequences_traverse_recursive2(sequence, sequences, start, depth, initp,
                                       invd);
-    //  Old dfs_sequences_traverse_recursive
-    // vector<int> sequence;
-    // dfs_sequences_traverse_recursive(sequence, sequences, start, initp,
-    // invd);
 
     cout << endl << "< < < Tree::dfs_sequences_traverse()";
 }
@@ -2033,75 +1812,3 @@ bool Tree::has_the_same_sequences_from_the_left(vector<int> banged_s,
     }
     return true;
 }
-/*
-void Tree::dfs_sequences_traverse_recursive(vector<int> & sequence,
-vector<vector<vector<int>>> sequences, int i, C_Polyhedron & initp, C_Polyhedron
-& invd){
-    //cout<<endl<<"> > > Tree::dfs_sequences_traverse_recursive()";
-
-    if (i == sequences.size()-1){
-        cout<<endl;
-        cout<<endl<<"sequence:";
-        for (int k=0; k<sequence.size(); k++){
-            cout<<sequence[k];
-        }
-        read_a_sequence(sequence, initp, invd);
-        return;
-    }
-    int j=0;
-    while (j<sequences[i+1].size()){
-        vector<int> s = sequence;
-        s.insert(s.end(), sequences[i+1][j].begin(), sequences[i+1][j].end());
-        dfs_sequences_traverse_recursive(s, sequences, i+1, initp, invd);
-        j++;
-    }
-
-    //cout<<endl<<"< < < Tree::dfs_sequences_traverse_recursive()";
-    return;
-}
-*/
-/*
-void Tree::read_a_sequence(vector<int> sequence, C_Polyhedron & cpoly,
-C_Polyhedron & invd){
-    //cout<<endl<<"> > > Tree::read_a_sequence()";
-
-    //C_Polyhedron invd(*trivial);
-    if (sequence.size() == size()){
-        C_Polyhedron p(cpoly);
-        int dth, i=0;
-        for (dth=sequence.size()-1;dth>=0;dth--){
-            int j=sequence[i];
-            p.intersection_assign(get_clump(dth).get_reference(j));
-            if (invd.contains(p)){
-                Print_Prune_Sequence_Tree(sequence, dth,"Banged");
-                bang_count++;
-                single_post_prune_bang_count++;
-                return;
-            }
-            i++;
-
-            if (dth == 0){
-                weave_count++;
-                single_weave_count++;
-
-                cout<<endl<<"/-----------------------------";
-                Print_Prune_Sequence_Tree(sequence, dth, "Weaved");
-                collect_timer.restart();
-                collect_invariants_for_one_location_by_eliminating(target_index,
-p, invd); cout<<endl; cout<<endl<<"- Have Collected "<<weave_count<<"
-invariant(s)"; collect_timer.stop(); cout<<endl<<"- The collect_invariants Time
-Taken (0.01s) = "<<collect_timer.compute_time_elapsed(); collect_time =
-collect_time + collect_timer.compute_time_elapsed(); single_collect_time =
-single_collect_time + collect_timer.compute_time_elapsed();
-                cout<<endl<<"\\-----------------------------"<<endl;
-                return;
-            }
-        }
-    }
-    else{
-        cout<<endl<<"Sequence Length Error!";
-    }
-
-    //cout<<endl<<"< < < Tree::read_a_sequence()";
-}
-*/
