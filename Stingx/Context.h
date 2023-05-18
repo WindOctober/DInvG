@@ -74,7 +74,7 @@ class Context {
     var_info *info, *dual_info, *lambda_info;
 
     int vars_num, dual_num,
-        r;  // No. of dimensions, dual dimensions, multipliers respectively
+        lambda_num;  // No. of dimensions, dual dimensions, multipliers respectively
 
     void initialize(var_info* info, var_info* dual_info, var_info* lambda_info);
     void initialize(var_info* info,
@@ -223,7 +223,7 @@ class Context {
     bool split_on_factor_equalities(
         LinTransform& lt);  // Split into two children contexts if possible
 
-    int factorizing_strategy_equalities();  // a cover function to split.
+    bool factorizing_strategy_equalities();  // a cover function to split.
                                             // Returns the number of children
                                             // created  0.. or 2.
 

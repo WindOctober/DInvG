@@ -52,7 +52,7 @@ class Location {
    private:
     int vars_num;                  // the number of variables in the location
     var_info *info, *dual_info, *lambda_info;  // the primal and dual var-infos
-    bool init_poly=false;           // has the initial condition been set
+    bool init_flag=false;           // has the initial condition been set
     string loc_name;            // name
     Context* context;             // the solver for intra-location transitions
     C_Polyhedron* poly;        // the initial condition
@@ -82,7 +82,7 @@ class Location {
 
     // the left-most index of the coefficient variable.. the coefficients for
     // the parametric invariants for the location span the range [l.. l+vars_num]
-    int l;
+    int left_index;
 
     // Initialize and form parametric coefficients for the invariant
     void initialize(int vars_num,
@@ -157,7 +157,7 @@ class Location {
     bool matches(string name) const;
 
     C_Polyhedron const& get_poly_reference() const {
-        if (init_poly)
+        if (init_flag)
             return (*poly);
         cerr << " asked reference when poly is not set " << endl;
         abort();
@@ -186,12 +186,12 @@ class Location {
 
     Context* get_context();
 
-    bool initial_poly_set() const { return init_poly; }
+    bool initial_poly_set() const { return init_flag; }
 
     void force_polyset() {
         cerr << " Encountered a call to Location::force_poly_set()" << endl;
         abort();
-        init_poly = true;
+        init_flag = true;
     }
 
     C_Polyhedron& get_non_const_poly_reference() { return *poly; }

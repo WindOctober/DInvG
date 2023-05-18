@@ -47,7 +47,7 @@ class Clump {
      *                              analyzer is operated in )
      * dual_info = var_info for dual -- standard pointer for printing purposes
      *                            that should not be touched
-     * vp = vector of polyhedra
+     * poly_clump = vector of polyhedra
      *
      * gli = a pointer to some position in vp.. some sort of a poor
      *        man's iterator. In a future version, this will be made into a

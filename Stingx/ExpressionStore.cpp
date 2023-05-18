@@ -30,23 +30,23 @@
 #include "Rational.h"
 #include "SparseLinExpr.h"
 
-void ExpressionStore::initialize(int vars_num, int r, var_info* linear_var_info, var_info* fr) {
+void ExpressionStore::initialize(int vars_num, int lambda_num, var_info* dual_info, var_info* lambda_info) {
     this->vars_num = vars_num;
-    this->r = r;
-    this->linear_var_info = linear_var_info;
-    this->fr = fr;
+    this->lambda_num = lambda_num;
+    this->dual_info = dual_info;
+    this->lambda_info = lambda_info;
 
     le_list = new vector<SparseLinExpr>();
     lt_list = new vector<LinTransform>();
     /*
-    m.init_set(vars_num,linear_var_info);
+    m.init_set(vars_num,dual_info);
     split_seq=new vector<LinTransform>();
     vl = new vector<Expression>();
     */
 }
 
-ExpressionStore::ExpressionStore(int vars_num, int r, var_info* linear_var_info, var_info* fr) {
-    initialize(vars_num, r, linear_var_info, fr);
+ExpressionStore::ExpressionStore(int vars_num, int lambda_num, var_info* dual_info, var_info* lambda_info) {
+    initialize(vars_num, lambda_num, dual_info, lambda_info);
 }
 
 bool ExpressionStore::add_expression(Expression& exp) {
@@ -122,7 +122,7 @@ void ExpressionStore::simplify(MatrixStore const& m) {
     //   bool info=true;
     vector<Expression>::iterator vi;
     SparseLinExpr ll;
-    LinTransform lt(vars_num, linear_var_info);
+    LinTransform lt(vars_num, dual_info);
 
     //   while (info){
 
@@ -234,183 +234,3 @@ bool ExpressionStore::collect_factors() {
 
     return some;
 }
-
-/*
-void ExpressionStore::set_store(MatrixStore &mat){
-   for (int i=0;i<vars_num;i++)
-      for (int j=0;j<vars_num+1;j++)
-         m(i,j)=mat(i,j);
-
-   return;
-}
-
-
-
-void ExpressionStore::split_on_transform( LinTransform const & lt){
-   // Split on a linear transform
-   // create two children expression stores and then
-   // browse through all the expressions
-   // If the expression does not factorize
-   //            then add it to both the stores
-   // else if the transformation factor is incompatible
-   //            then add it to both the stores
-   // else
-   //            add the transform factor to store1 and the linear factor to
-store 2
-   // simplify the resulting expressions and push them into the children
-
-   ExpressionStore * child1, * child2;
-
-   child1=new ExpressionStore(vars_num,r,linear_var_info,fr);
-   child2=new ExpressionStore(vars_num,r,linear_var_info,fr); // Initialize the children
-
-   vector<Expression>::iterator vi;
-   bool some=false;
-
-   child1->set_store(m);
-   child2->set_store(m);
-
-   for (vi=vl->begin();vi < vl->end();vi++){
-      if ((*vi).factorize() && (*vi).get_transform_factor()==lt) {
-         cout<<"Split: adding "<<(*vi).get_linear_factor()<<endl;
-         child2->add_linear_expression((*vi).get_linear_factor());
-         some=true;
-      } else {
-         child1->add_expression(*vi);
-         child2->add_expression(*vi);
-      }
-   }
-
-   child1->set_split_seq(split_seq);
-
-   child2->set_split_seq(split_seq);
-   child2->add_to_split(lt);
-
-   if (some)
-      child1->add_transform(lt);
-
-   children->push_back(child1);
-   children->push_back(child2);
-   cout<<"Split # 1"<<endl;
-   cout<<(*child1)<<endl;
-
-   cout<<"Split # 2"<<endl;
-   cout<<(*child2)<<endl;
-
-
-}
-
-void ExpressionStore::split_on_transform_already_split( LinTransform const &
-lt){
-   // Split on a linear transform
-   // create two children expression stores and then
-   // browse through all the expressions
-   // If the expression does not factorize
-   //            then add it to both the stores
-   // else if the transformation factor is incompatible
-   //            then add it to both the stores
-   // else
-   //            add the transform factor to store1 and the linear factor to
-store 2
-   // simplify the resulting expressions and push them into the children
-
-   ExpressionStore * child1;
-
-   child1=new ExpressionStore(vars_num,r,linear_var_info,fr);
-
-
-   vector<Expression>::iterator vi;
-   bool some=false;
-
-   child1->set_store(m);
-
-
-   for (vi=vl->begin();vi < vl->end();vi++){
-      if ((*vi).factorize() && (*vi).get_transform_factor()==lt) {
-         child1->add_linear_expression((*vi).get_linear_factor());
-         some=true;
-      } else {
-         child1->add_expression(*vi);
-      }
-   }
-
-   child1->set_split_seq(split_seq);
-
-
-
-   children->push_back(child1);
-
-   cout<<"Split # 1"<<endl;
-   cout<<(*child1)<<endl;
-
-
-
-}
-
-
-void ExpressionStore::strategize(){
-
-   children=new vector<ExpressionStore*>();
-
-   simplify();
-
-   if (!collect_factors()){
-      cerr<<"Leaf Node:"<<endl<<"---------------------------------"<<endl;
-      cerr<<*this<<endl;
-      cerr<<"-----------------------------------"<<endl;
-      return;
-   }
-   // find the most frequent linear transform.
-
-   cout<<"-----------------------------------------------"<<endl;
-   cout<<"Splitting:  "<<*this<<endl;
-   cout<<"-----------------------------------------------"<<endl;
-
-   int max=0;
-   vector<LinTransform>::iterator vi,vj;
-   vector<ExpressionStore *>::iterator vc;
-
-   vj=lt_list->begin();
-
-   for(vi=lt_list->begin();vi < lt_list->end(); vi++){
-      if ((*vi).get_count() >= max){
-         max= (*vi).get_count();
-         vj=vi;
-      }
-   }
-
-   cout<<"Detected Maximum  "<< (*vj)<<endl;
-   if (!already_split(*vj)) {
-      split_on_transform(*vj);
-   } else {
-      split_on_transform_already_split(*vj);
-   }
-
-   for (vc=children->begin();vc < children->end(); vc++)
-      (*vc)->strategize();
-
-
-}
-
-void ExpressionStore::set_split_seq(vector<LinTransform>* split){
-   vector<LinTransform>::iterator vi;
-   for (vi=split->begin();vi < split->end();vi++)
-      split_seq->push_back(*vi);
-}
-
-void ExpressionStore::add_to_split(LinTransform const & lt){
-   split_seq->push_back(lt);
-}
-
-bool ExpressionStore::already_split (LinTransform const & lt){
-   vector<LinTransform>::iterator vi;
-   for (vi=split_seq->begin();vi < split_seq->end();vi++)
-      if ((*vi)==lt)
-         return true;
-
-   return false;
-
-}
-
-
-*/

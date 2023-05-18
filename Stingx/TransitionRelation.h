@@ -147,7 +147,7 @@ class TransitionRelation {
     void set_locs(Location* preloc, Location* postloc);
     void set_relation(C_Polyhedron* rel);
 
-    void compute_nc();
+    void compute_constraints_num();
 
     void strengthen(const C_Polyhedron* p);
 
@@ -159,8 +159,7 @@ class TransitionRelation {
 
     void compute_consecution_constraints(Context& c);
 
-    void compute_consecution_constraints(vector<Clump>& vcl,
-                                         C_Polyhedron& initp);
+    void compute_consecution_constraints(vector<Clump>& vcl);
 
     void compute_consecution_01(vector<Clump>& vcl);
 

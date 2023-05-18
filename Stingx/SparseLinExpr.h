@@ -177,51 +177,12 @@ class SparseLinExpr {
     // convert this into a lin expression, scale that by scale_fact and offset
     // the variables by adding offset. Add the result to ll
 
-    void add_to_lin_expression(Linear_Expression& ll,
-                               int scale_fact = 1,
-                               int offset = 0) const;
-
     void print(ostream& os) const;
-
-    int obtain_largest_coefficient() const {
-        if (is_zero()) {
-            cerr << "Fatal Error in SparseLinExpr::obtain_largest_coefficient"
-                 << endl
-                 << "called on a zero expression" << endl;
-            exit(1);
-        }
-
-        return (*(map_ration.rbegin())).first;
-    }
-
-    // functions for setting/getting flags
-    bool get_flag() const { return flag_; }
-
-    bool set_flag(bool what) {
-        bool t = flag_;
-        flag_ = what;
-        return t;
-    }
-
-    // variables of index >= k that occur in the linear expression
-    // should be added to the set what
-    void occurring_variables(set<int>& what, int k = 0) const;
-
-    void add_variables_in_front(
-        int n1);  // add n1 variables to the front of the expression
-
-    void add_variables_in_back(
-        int n1);  // add n1 variables to the back of the expression
 
     void make_unprintable() { info_set_ = false; }
 
     bool is_printable() const { return info_set_; }
 
-    // replace the old var-info with the new varinfo
-
-    void replace_var_info_with(var_info* ninfo);
-
-    Rational dot_product(SparseLinExpr const& what) const;
 };
 
 ostream& operator<<(
