@@ -928,6 +928,7 @@ void Clear_Location_Invariant() {
     }
 }
 
+
 int main() {
     ios::sync_with_stdio(false);
     total_timer.restart();

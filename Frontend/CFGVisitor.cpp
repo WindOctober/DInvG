@@ -1,4 +1,5 @@
 #include "CFGVisitor.hpp"
+#include"TransitionSystem.hpp"
 #include <iostream>
 #include <memory>
 
@@ -21,103 +22,112 @@ void CFGVisitor::Terminate_errors(enum ErrorType Errors)
     case ErrorType::VarDeclUnFoundError:
         errs() << "CFGVisitor::Terminate_errors VarDeclUnFoundError";
         return;
+    case ErrorType::CalleeUnFoundError:
+        errs() << "CFGVisitor::Terminate_errors CalleeUnFoundError";
+        return;
     }
     errs() << "CFGVisitor::Terminate_errors UnknownError";
     return;
 }
-void CFGVisitor::DealWithVarDecl(const VarDecl *stmt)
+void CFGVisitor::DealWithVarDecl(VarDecl *stmt,int left,int right)
 {
+    VariableInfo var;
     if (stmt == NULL)
         Terminate_errors(ErrorType::VarDeclUnFoundError);
     // Deal with pointer, pure numeric, arrays.
     QualType stmt_type = stmt->getType();
     string var_name = stmt->getName();
-
     if (stmt_type->isArrayType())
     {
 
-        return;
     }
-    if (stmt_type->isPointerType())
+    else if (stmt_type->isPointerType())
     {
         QualType pointer_type = stmt_type->getPointeeType();
         if (pointer_type->isFloatingType())
             Terminate_errors(ErrorType::FloatVarError);
-
-        return;
     }
-    if (stmt_type->isIntegerType())
+    else if (stmt_type->isIntegerType())
     {
-        outs() << stmt_type.getAsString() << "\n";
-        outs() << var_name << "\n";
-        const Expr *init = stmt->getInit();
-
-        return;
+        var.alterVar(var_name,stmt->getInit(),stmt_type);
     }
-    if (stmt_type->isFloatingType())
+    else if (stmt_type->isFloatingType())
         Terminate_errors(ErrorType::FloatVarError);
+    Transystem.add_vars(var,left,right);
 }
 
-void CFGVisitor::DealWithFunctionDecl(const FunctionDecl *stmt)
+void CFGVisitor::DealWithFunctionDecl(FunctionDecl *stmt,int left,int right)
 {
+    
 }
-void CFGVisitor::DealWithStmt(const Stmt *stmt)
+void CFGVisitor::DealWithStmt(Stmt *stmt,int left,int right)
 {
     // Deal with the whole Stmt in code. (which usually means the complete statement in one line.)
-    // string stmt_type=stmt->getStmtClassName();
-    // string stmt_str;
-    // raw_string_ostream ostream(stmt_str);
-    // stmt->printPretty(ostream,nullptr,pp);
-    // ostream.flush();
-    // outs()<<stmt_str<<"\n";
-    if (isa<IfStmt>(stmt)){
+    
+    // TODO: Before Into loop -> get precondition from Vars vector.
+    // TODO: Deal with assignment statement in code.
+    // TODO: Deal with If statement in code.
+    // TODO: Deal with For loop in code.
+    if (isa<IfStmt>(stmt))
+    {
 
     }
-    else if (isa<WhileStmt>(stmt)){
-        
+    else if (isa<WhileStmt>(stmt))
+    {
+        WhileStmt* whileStmt = dyn_cast<WhileStmt>(stmt);
+        Expr* loop_condition=whileStmt->getCond();
+        Stmt* while_body=whileStmt->getBody();
+        Transystem.In_Loop(loop_condition);
+        if (CompoundStmt *compound = dyn_cast<CompoundStmt>(while_body))
+        {
+            for (auto stmt : compound->body())
+            {
+                PrintStmtInfo(stmt);
+                DealWithStmt(stmt,0,Transystem.get_Canonical_count()-1);
+            }
+        }
     }
     else if (isa<DeclStmt>(stmt))
     {
-        const DeclStmt *declStmt = dyn_cast<DeclStmt>(stmt);
-        for (const auto *decl : declStmt->decls())
+        DeclStmt *declStmt = dyn_cast<DeclStmt>(stmt);
+        if (Transystem.get_Canonical_count()==0){
+            Transystem.init_Canonical(1);
+        }
+        for (auto *decl : declStmt->decls())
         {
             if (isa<VarDecl>(decl))
             {
-                DealWithVarDecl(dyn_cast<VarDecl>(decl));
+                DealWithVarDecl(dyn_cast<VarDecl>(decl),0,Transystem.get_Canonical_count()-1);
             }
             else if (isa<FunctionDecl>(decl))
             {
-                DealWithFunctionDecl(dyn_cast<FunctionDecl>(decl));
-            }
-            else if (isa<FieldDecl>(decl))
-            {
-                // Add your code to deal with FieldDecl here
+                DealWithFunctionDecl(dyn_cast<FunctionDecl>(decl),0,Transystem.get_Canonical_count()-1);
             }
         }
         return;
     }
     else if (isa<BinaryOperator>(stmt))
     {
+
     }
 
     return;
 }
-
 
 bool CFGVisitor::VisitCallExpr(CallExpr *CE)
 {
     if (VS != VisitorState::Main)
         return true;
     FunctionDecl *callee = CE->getDirectCallee();
-    if (callee && Visited_Functions.count(callee->getNameAsString()) == 0)
+    if (!callee)
+        Terminate_errors(ErrorType::CalleeUnFoundError);
+    SourceManager &SM = context->getSourceManager();
+    if (!SM.isInMainFile(callee->getLocation()))
+        return true;
+    if (Visited_Functions.count(callee->getNameAsString()) == 0)
     {
-        SourceManager &SM = context->getSourceManager();
-        if (!SM.isInMainFile(callee->getLocation()))
-            return true;
         Visited_Functions.insert(callee->getNameAsString());
-        auto cfg = CFG::buildCFG(callee, callee->getBody(), context, CFG::BuildOptions());
         outs() << "CalleeFunction:" << callee->getNameAsString() << "\n";
-        // TraverseCFG(cfg);
     }
     return true;
 }
@@ -134,12 +144,20 @@ bool CFGVisitor::VisitFunctionDecl(FunctionDecl *func)
     }
     if (func->getNameAsString() == "main" || Main_Functions.count("main") == 0)
     {
-        Stmt* func_body=func->getBody();
-        if (CompoundStmt* compound=dyn_cast<CompoundStmt>(func_body)){
-            for (auto stmt : compound->body()){
-                outs()<<stmt->getStmtClassName()<<'\n';
+        Stmt *func_body = func->getBody();
+        if (CompoundStmt *compound = dyn_cast<CompoundStmt>(func_body))
+        {
+            for (auto stmt : compound->body())
+            {
+                PrintStmtInfo(stmt);
+                DealWithStmt(stmt,0,Transystem.get_Canonical_count()-1);
             }
         }
     }
     return true;
+}
+
+void CFGVisitor::PrintStmtInfo(Stmt *stmt)
+{
+    outs() << stmt->getStmtClassName() << '\n';
 }
