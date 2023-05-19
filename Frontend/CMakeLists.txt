@@ -1,4 +1,3 @@
-set(SOURCES CFGVisitor.cpp)
+set(SOURCES Variable.cpp TransitionSystem.cpp CFGVisitor.cpp)
 add_library(Frontend ${SOURCES})
-message(${LLVM_INCLUDE_FLAGS})
 include_directories(${LLVM_INCLUDE_FLAGS})

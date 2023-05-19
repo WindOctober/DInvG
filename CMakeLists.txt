@@ -95,6 +95,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -I/usr/lib/gcc/x86_64-linux-gnu/9/includ
 
 #Frontend commands
 
+add_subdirectory(Frontend)
 include_directories(${CMAKE_SOURCE_DIR}/Frontend)
 target_link_libraries(Inv Frontend)
-add_subdirectory(Frontend)
+
