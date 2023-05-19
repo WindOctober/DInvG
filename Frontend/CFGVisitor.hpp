@@ -11,7 +11,7 @@
 #include"clang/AST/RecursiveASTVisitor.h"
 #include"clang/Analysis/CFG.h"
 #include<stack>
-#include"DNFExpr.hpp"
+    
 #include<set>
 #include<vector>
 
@@ -27,18 +27,23 @@ class CFGVisitor:public RecursiveASTVisitor<CFGVisitor>{
 public:
     enum class VisitorState { Collect_All_Function, Main };
     explicit CFGVisitor(ASTContext *context,VisitorState VS):context(context),VS(VS),pp(context->getPrintingPolicy()){}
-    
+    enum class ErrorType {FloatVarError,UnexpectedTypeError,CFGInitError,VarDeclUnFoundError};
     void error_output(string error){
         outs()<<error<<"\n";
         exit(-1);
     }
 
-    void TraverseCFG(unique_ptr<CFG>& cfg);
+
     bool VisitCallExpr(CallExpr *CE);
     bool VisitFunctionDecl(FunctionDecl *func);
 
 private:
-    void TraverseCFG(unique_ptr<CFG>& cfg,unique_ptr<DExpr>& expression);
+
+    void DealWithStmt(const Stmt* stmt);
+
+    void DealWithVarDecl(const VarDecl* stmt);
+    void DealWithFunctionDecl(const FunctionDecl* stmt);
+    void Terminate_errors(enum ErrorType Errors);
     ASTContext *context;
     PrintingPolicy pp;
     VisitorState VS;
