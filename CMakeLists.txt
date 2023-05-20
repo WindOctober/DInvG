@@ -4,7 +4,7 @@ project(PowerInv)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE INTERNAL "")
 set(COPY_COMPILE_COMMANDS "${CMAKE_SOURCE_DIR}/compile_commands.json")
-
+add_compile_options(-fexceptions)
 add_executable(Inv ${CMAKE_SOURCE_DIR}/main.cpp)
 set(EXECUTABLE_OUTPUT_PATH "${CMAKE_SOURCE_DIR}")
 include_directories(${CMAKE_SOURCE_DIR})
