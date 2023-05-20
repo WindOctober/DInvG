@@ -38,12 +38,15 @@ public:
 
     bool VisitCallExpr(CallExpr *CE);
     bool VisitFunctionDecl(FunctionDecl *func);
+    
     void PrintStmtInfo(Stmt* stmt);
 
 private:
 
     void DealWithStmt(Stmt* stmt,int left,int right);
 
+    void DealWithBinaryOp(BinaryOperator* stmt,int left,int right);
+    void DealWithUnaryOp(UnaryOperator* stmt,int left,int right);
     void DealWithVarDecl(VarDecl* stmt,int left,int right);
     void DealWithFunctionDecl(FunctionDecl* stmt,int left,int right);
     void Terminate_errors(enum ErrorType Errors);

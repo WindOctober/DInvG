@@ -14,20 +14,25 @@ class VariableInfo
 {
 public:
     string getVariableName();
-    const Expr *getVariableValue();
+    Expr *getVariableValue();
     QualType getQualType();
+
+    static void search_and_insert(VariableInfo var,vector<VariableInfo> & Vars);
     void alterVarExpr(Expr *expr);
     VariableInfo() : VarValue(nullptr), VarName("") {}
-    void alterVar(string varname,const Expr* expr,QualType type);
+    void alterVar(string varname,Expr* expr,QualType type);
+
+    bool isPreVar();
 private:
     string VarName;
-    const Expr *VarValue;
+    Expr *VarValue;
     QualType VarType;
     bool structure_point_flag;
     bool numerical_point_flag;
     bool structure_array_flag;
     bool numerical_array_flag;
     
+    bool pre_var;
 };
 
 #endif
