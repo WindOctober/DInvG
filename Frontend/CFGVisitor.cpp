@@ -31,7 +31,7 @@ void CFGVisitor::Terminate_errors(enum ErrorType Errors)
     errs() << "CFGVisitor::Terminate_errors UnknownError";
     return;
 }
-void CFGVisitor::DealWithVarDecl(VarDecl *stmt, int left, int right)
+void CFGVisitor::DealWithVarDecl(VarDecl *stmt)
 {
     VariableInfo var;
     if (stmt == NULL)
@@ -50,14 +50,14 @@ void CFGVisitor::DealWithVarDecl(VarDecl *stmt, int left, int right)
     }
     else if (stmt_type->isIntegerType())
     {
-        var.alterVar(var_name, stmt->getInit(), stmt_type);
+        var.alterVar(var_name, stmt->getInit(), stmt_type, Transystem.get_InLoop());
     }
     else if (stmt_type->isFloatingType())
         Terminate_errors(ErrorType::FloatVarError);
-    Transystem.add_vars(var, left, right);
+    Transystem.add_vars(var);
 }
 
-void CFGVisitor::DealWithUnaryOp(UnaryOperator *stmt, int left, int right)
+void CFGVisitor::DealWithUnaryOp(UnaryOperator *stmt)
 {
     Expr *res;
     Expr *left_value = stmt->getSubExpr();
@@ -65,27 +65,37 @@ void CFGVisitor::DealWithUnaryOp(UnaryOperator *stmt, int left, int right)
     if (stmt->getOpcode() == UO_PreDec || stmt->getOpcode() == UO_PostDec)
     {
         IntegerLiteral *one = IntegerLiteral::Create(*context, APInt(32, 1), context->IntTy, SourceLocation());
-        BinaryOperator *plusOne = new (context) BinaryOperator(left_value, one, BO_Add, left_value->getType(), VK_RValue, OK_Ordinary, SourceLocation(), default_options);
+        BinaryOperator *plusOne = new (context) BinaryOperator(left_value, one, BO_Sub, left_value->getType(), VK_RValue, OK_Ordinary, SourceLocation(), default_options);
         res = new (*context) BinaryOperator(left_value, plusOne, BO_Assign, left_value->getType(), VK_RValue, OK_Ordinary, SourceLocation(), default_options);
+        Transystem.add_expr(res);
     }
     else if (stmt->getOpcode() == UO_PreInc || stmt->getOpcode() == UO_PostInc)
     {
         IntegerLiteral *one = IntegerLiteral::Create(*context, APInt(32, 1), context->IntTy, SourceLocation());
-        BinaryOperator *minusOne = new (context) BinaryOperator(left_value, one, BO_Sub, left_value->getType(), VK_RValue, OK_Ordinary, SourceLocation(), default_options);
+        BinaryOperator *minusOne = new (context) BinaryOperator(left_value, one, BO_Add, left_value->getType(), VK_RValue, OK_Ordinary, SourceLocation(), default_options);
         res = new (*context) BinaryOperator(left_value, minusOne, BO_Assign, left_value->getType(), VK_RValue, OK_Ordinary, SourceLocation(), default_options);
+        Transystem.add_expr(res);
     }
-    Transystem.add_expr(res, left, right);
     return;
 }
 
-void CFGVisitor::DealWithBinaryOp(BinaryOperator *stmt, int left, int right)
+void CFGVisitor::DealWithBinaryOp(BinaryOperator *stmt)
 {
+    Expr *res;
+    FPOptions default_options;
+    if (stmt->getOpcode() == BO_Assign)
+    {
+        VariableInfo var;
+        var.alterVar(stmt->getLHS(), stmt->getRHS(), Transystem.get_InLoop());
+        Transystem.add_vars(var);
+    }
+    return;
 }
 
-void CFGVisitor::DealWithFunctionDecl(FunctionDecl *stmt, int left, int right)
+void CFGVisitor::DealWithFunctionDecl(FunctionDecl *stmt)
 {
 }
-void CFGVisitor::DealWithStmt(Stmt *stmt, int left, int right)
+void CFGVisitor::DealWithStmt(Stmt *stmt)
 {
     // Deal with the whole Stmt in code. (which usually means the complete statement in one line.)
 
@@ -96,7 +106,6 @@ void CFGVisitor::DealWithStmt(Stmt *stmt, int left, int right)
     if (Transystem.get_Canonical_count() == 0)
     {
         Transystem.init_Canonical(1);
-        right=0;
     }
     if (isa<IfStmt>(stmt))
     {
@@ -107,52 +116,54 @@ void CFGVisitor::DealWithStmt(Stmt *stmt, int left, int right)
     }
     else if (isa<WhileStmt>(stmt))
     {
-        // TODO: Before Into loop -> get precondition from Vars vector.
+        // DONE: Before Into loop -> get precondition from Vars vector.
         // TODO: Process if While loop body is empty.
         WhileStmt *whileStmt = dyn_cast<WhileStmt>(stmt);
         Expr *loop_condition = whileStmt->getCond();
         Stmt *while_body = whileStmt->getBody();
-        Transystem.In_Loop(loop_condition);
+        Transystem.Update_Init_Vars();
+        Transystem.Merge_condition(loop_condition);
+        Transystem.In_Loop();
         if (CompoundStmt *compound = dyn_cast<CompoundStmt>(while_body))
         {
             for (auto stmt : compound->body())
             {
-                DealWithStmt(stmt, left, right);
+                DealWithStmt(stmt);
             }
+            Transystem.Update_Loop_Vars();
             Transystem.Print_DNF();
         }
+        Transystem.Out_Loop(whileStmt);
     }
     else if (isa<DeclStmt>(stmt))
     {
         DeclStmt *declStmt = dyn_cast<DeclStmt>(stmt);
-        
+
         for (auto *decl : declStmt->decls())
         {
             if (isa<VarDecl>(decl))
             {
-                DealWithVarDecl(dyn_cast<VarDecl>(decl), left, right);
+                DealWithVarDecl(dyn_cast<VarDecl>(decl));
             }
             else if (isa<FunctionDecl>(decl))
             {
-                DealWithFunctionDecl(dyn_cast<FunctionDecl>(decl), left, right);
+                DealWithFunctionDecl(dyn_cast<FunctionDecl>(decl));
             }
         }
     }
     else if (isa<BinaryOperator>(stmt))
     {
-
         BinaryOperator *binop = dyn_cast<BinaryOperator>(stmt);
-
+        DealWithBinaryOp(binop);
     }
     else if (isa<ParenExpr>(stmt))
     {
         ParenExpr *expr = dyn_cast<ParenExpr>(stmt);
-
     }
     else if (isa<UnaryOperator>(stmt))
     {
         UnaryOperator *unop = dyn_cast<UnaryOperator>(stmt);
-        DealWithUnaryOp(unop, left, right);
+        DealWithUnaryOp(unop);
     }
     return;
 }
@@ -192,7 +203,7 @@ bool CFGVisitor::VisitFunctionDecl(FunctionDecl *func)
         {
             for (auto stmt : compound->body())
             {
-                DealWithStmt(stmt, 0, Transystem.get_Canonical_count() - 1);
+                DealWithStmt(stmt);
             }
         }
     }
@@ -201,25 +212,21 @@ bool CFGVisitor::VisitFunctionDecl(FunctionDecl *func)
 
 void CFGVisitor::PrintStmtInfo(Stmt *stmt)
 {
-    // complete this function case by case
-    outs()<<"\n\n";
-    outs() << "[print statement info]"<<'\n';
+    // TODO: complete this function case by case
+    outs() << "\n\n";
+    outs() << "[print statement info]" << '\n';
     outs() << stmt->getStmtClassName() << '\n';
     if (isa<IfStmt>(stmt))
     {
     }
     else if (isa<ForStmt>(stmt))
     {
-
     }
     else if (isa<WhileStmt>(stmt))
     {
-
-
     }
     else if (isa<DeclStmt>(stmt))
     {
-        
     }
     else if (isa<BinaryOperator>(stmt))
     {

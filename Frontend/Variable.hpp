@@ -13,16 +13,16 @@ using namespace llvm;
 class VariableInfo
 {
 public:
+    VariableInfo();
     string getVariableName();
     Expr *getVariableValue();
     QualType getQualType();
 
     static void search_and_insert(VariableInfo var,vector<VariableInfo> & Vars);
-    void alterVarExpr(Expr *expr);
-    VariableInfo() : VarValue(nullptr), VarName("") {}
-    void alterVar(string varname,Expr* expr,QualType type);
+    void alterVar(string varname,Expr* expr,QualType type,bool inloop);
+    void alterVar(Expr* var_expr,Expr* init,bool in);
 
-    bool isPreVar();
+    bool isInLoop();
 private:
     string VarName;
     Expr *VarValue;
@@ -32,7 +32,7 @@ private:
     bool structure_array_flag;
     bool numerical_array_flag;
     
-    bool pre_var;
+    bool inLoop;
 };
 
 #endif
