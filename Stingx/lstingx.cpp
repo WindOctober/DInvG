@@ -1,4 +1,4 @@
-//TODO: return the final disjunctive invariant to the Frontend.
+// TODO: return the final disjunctive invariant to the Frontend.
 #include <iostream>
 #include <regex>
 #include <string>
@@ -364,10 +364,8 @@ void dfs_sequences_generation_traverse(
     int index,
     vector<Clump>& vcl,
     C_Polyhedron& init_poly) {
-
     Tree tr = Tree();
     tr.set_target_index(index);
-
 
     for (auto it = vcl.begin(); it < vcl.end(); it++) {
         (*it).clear();
@@ -928,7 +926,6 @@ void Clear_Location_Invariant() {
     }
 }
 
-
 int main() {
     ios::sync_with_stdio(false);
     total_timer.restart();
@@ -966,7 +963,7 @@ int main() {
             (*it)->compute_dual_constraints(init_poly);
         }
         //  vcl
-        
+
         vector<Clump> clumps;
         for (auto it = trlist->begin(); it < trlist->end(); it++) {
             (*it)->compute_consecution_constraints(clumps);

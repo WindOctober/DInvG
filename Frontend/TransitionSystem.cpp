@@ -3,14 +3,20 @@
 #include "var-info.h"
 #include "Define.hpp"
 #include "TransitionRelation.h"
+#include <set>
 extern var_info *info, *dual_info, *lambda_info;
 extern vector<Location *> *loclist;
 extern vector<TransitionRelation *> *trlist;
+
 void TransitionSystem::add_vars(VariableInfo var)
 {
-    for (int i = 0; i < Canonical_Branch_Count; i++)
+    int branch_count = InWhileLoop ? Canonical_Branch_Count : Init_Branch_Count;
+    for (int i = 0; i < branch_count; i++)
     {
-        VariableInfo::search_and_insert(var, Vars[i]);
+        if (InWhileLoop)
+            VariableInfo::search_and_insert(var, Vars[i]);
+        else
+            VariableInfo::search_and_insert(var, Init_Vars[i]);
     }
     return;
 }
@@ -27,6 +33,31 @@ void TransitionSystem::add_expr(Expr *expr)
             Init_DNF[i].push_back(expr);
     }
     return;
+}
+
+bool TransitionSystem::check_guard(Expr *expr)
+{
+    // TODO: make sure the unaryoperator is transformed to be the binop.
+    // TODO: make sure the other type in the benchmark won't hurt this funciton.
+    if (isa<BinaryOperator>(expr))
+    {
+        BinaryOperator *binop = dyn_cast<BinaryOperator>(expr);
+        if (binop->getType()->isBooleanType() && binop->getOpcode() != BO_Assign)
+        {
+            outs() << "\n\n[check_guard info] The Expr ( " << Print_Expr(expr) << " ) is guard\n\n";
+            return true;
+        }
+        else
+        {
+            outs() << "\n\n[check_guard warning] The Expr ( " << Print_Expr(expr) << " ) is not guard\n\n";
+            return false;
+        }
+    }
+    else
+    {
+        outs() << "\n\n[check_guard warning] The Expr ( " << Print_Expr(expr) << " ) is not guard\n\n";
+        return false;
+    }
 }
 
 bool TransitionSystem::get_InLoop()
@@ -95,9 +126,7 @@ void TransitionSystem::Merge_condition(Expr *condition)
 }
 void TransitionSystem::Update_Init_Vars()
 {
-    if (Init_DNF.size() < Canonical_Branch_Count)
-        Init_DNF.resize(Canonical_Branch_Count);
-    for (int i = 0; i < Canonical_Branch_Count; i++)
+    for (int i = 0; i < Init_Branch_Count; i++)
     {
         for (int j = 0; j < Vars[i].size(); j++)
         {
@@ -217,24 +246,163 @@ vector<vector<Expr *>> TransitionSystem::Connect_DNF(vector<vector<Expr *>> left
     return left_expr;
 }
 
-C_Polyhedron *TransitionSystem::Compute_Init_Poly()
+vector<C_Polyhedron *> TransitionSystem::Compute_and_Eliminate_Init_Poly(vector<VariableInfo> used_vars)
 {
+    for (int i = 0; i < Init_Branch_Count; i++)
+    {
+        for (int j = 0; j < Init_Vars[i].size(); j++)
+        {
+            string varname = Init_Vars[i][j].getVariableName();
+            bool flag = false;
+            for (int k = 0; k < used_vars.size(); k++)
+            {
+                if (used_vars[k].getVariableName() == varname)
+                {
+                    flag = true;
+                    break;
+                }
+            }
+            if (!flag)
+            {
+                Init_Vars[i].erase(Vars[i].begin() + j);
+                j--;
+            }
+        }
+    }
+    vector<C_Polyhedron *> init_polys;
+    Update_Init_Vars();
+    for (int i = 0; i < Init_Branch_Count; i++)
+    {
+        C_Polyhedron *p = new C_Polyhedron(Init_Vars[i].size(), UNIVERSE);
+        for (int j = 0; j < Init_DNF[i].size(); j++)
+        {
+            p->add_constraint(*Trans_Expr_to_Constraint(Init_DNF[i][j]));
+        }
+        init_polys.push_back(p);
+    }
+    return init_polys;
 }
 
-vector<vector<VariableInfo>> TransitionSystem::get_Used_Vars()
+void TransitionSystem::Traverse_Expr_ForVars(Expr *expr, set<VariableInfo> &res)
 {
-    vector<vector<VariableInfo>> res_vars;
-    vector<VariableInfo> rec;
+    if (isa<BinaryOperator>(expr))
+    {
+        BinaryOperator *binop = dyn_cast<BinaryOperator>(expr);
+        Traverse_Expr_ForVars(binop->getLHS(), res);
+        Traverse_Expr_ForVars(binop->getRHS(), res);
+    }
+    else if (isa<DeclRefExpr>(expr))
+    {
+        DeclRefExpr *declRef = dyn_cast<DeclRefExpr>(expr);
+        VariableInfo var;
+        Expr *emptyexpr = NULL;
+        var.alterVar(declRef, emptyexpr, InWhileLoop);
+        res.insert(var);
+    }
+    else
+    {
+        outs() << "[Info] Unexpected Type in Function Traverse_Expr_ForVars : " << expr->getStmtClassName() << "\n";
+        exit(0);
+    }
+    return;
+}
+
+void TransitionSystem::Elimiate_Impossible_Path(int size)
+{
+    for (int i = 0; i < DNF.size(); i++)
+    {
+        C_Polyhedron *p = new C_Polyhedron(size, UNIVERSE);
+        for (int j = 0; j < DNF[i].size(); j++)
+        {
+            p->add_constraint(*Trans_Expr_to_Constraint(DNF[i][j]));
+        }
+        if (p->is_empty())
+        {
+            DNF.erase(DNF.begin() + i);
+            i--;
+        }
+    }
+    return;
+}
+
+void TransitionSystem::Initialize_Locations_and_Transitions(int locsize, int varsize)
+{
+    vector<vector<Constraint *>> guard;
+    guard.resize(DNF.size());
+    for (int i = 0; i < DNF.size(); i++)
+    {
+        for (int j = 0; j < DNF[i].size(); j++)
+        {
+            if (check_guard(DNF[i][j]))
+                guard[i].push_back(Trans_Expr_to_Constraint(DNF[i][j]));
+        }
+    }
+    for (int i = 0; i < locsize; i++)
+    {
+        string locname = "Location_" + to_string(i);
+        Location *loc = new Location(varsize, info, dual_info, lambda_info, locname);
+        loclist->push_back(loc);
+    }
+    for (int i = 0; i < locsize; i++)
+    {
+        for (int j = 0; j < locsize; j++)
+        {
+            C_Polyhedron *p = new C_Polyhedron(varsize, UNIVERSE);
+            for (int index = 0; index < guard[j].size(); j++)
+                p->add_constraint(*guard[j][index]);
+            for (int index = 0; index < DNF[i].size(); j++)
+                p->add_constraint(*Trans_Expr_to_Constraint(DNF[i][index]));
+            if (p->is_empty())
+                continue;
+
+            string trans_name = "Transition_" + to_string(i) + "_" + to_string(j);
+            TransitionRelation *trans = new TransitionRelation(varsize, info, dual_info, lambda_info, trans_name);
+            trans->set_locs((*loclist)[i], (*loclist)[j]);
+            trans->set_relation(p);
+        }
+    }
+}
+
+vector<VariableInfo> TransitionSystem::get_Used_Vars()
+{
+    set<VariableInfo> res_vars_set;
+    vector<VariableInfo> res_vars;
     for (int i = 0; i < Canonical_Branch_Count; i++)
     {
+        for (int j = 0; j < DNF[i].size(); j++)
+        {
+            Traverse_Expr_ForVars(DNF[i][j], res_vars_set);
+        }
     }
+    for (auto it = res_vars_set.begin(); it != res_vars_set.end(); it++)
+    {
+        res_vars.push_back(*it);
+    }
+    return res_vars;
 }
 
 void TransitionSystem::Compute_Loop_Invariant()
 {
-    vector<vector<VariableInfo>> vars_in_dnf;
+    // TODO: delete the unused variables in init_dnf.
+    // TODO: Transform every path into a transition from one path to another.
+    // TODO: Construct Location and Transition, and get the invariant as put it into the source code.
+    // TODO: add variable_init to info.
+    // TODO: alter the mode of the
+    vector<VariableInfo> vars_in_dnf;
     vars_in_dnf = get_Used_Vars();
-    C_Polyhedron *init_poly = Compute_Init_Poly();
+    for (int i = 0; i < vars_in_dnf.size(); i++)
+        info->search_and_insert(vars_in_dnf[i].getVariableName().c_str());
+    vector<C_Polyhedron *> init_polys = Compute_and_Eliminate_Init_Poly(vars_in_dnf);
+    Elimiate_Impossible_Path(vars_in_dnf.size());
+    int locsize = DNF.size();
+    Initialize_Locations_and_Transitions(locsize, vars_in_dnf.size());
+    for (int i = 0; i < init_polys.size(); i++)
+    {
+        for (int j = 0; j < loclist->size(); j++)
+        {
+            (*loclist)[j]->set_initial(*init_polys[i]);
+        }
+    }
 }
 
 void TransitionSystem::Out_Loop(WhileStmt *whileloop)
@@ -243,23 +411,40 @@ void TransitionSystem::Out_Loop(WhileStmt *whileloop)
     Compute_Loop_Invariant();
     InWhileLoop = false;
     Vars.clear();
+    Init_Vars.clear();
     DNF.clear();
     Init_DNF.clear();
+    Init_Branch_Count = 0;
     Canonical_Branch_Count = 0;
     Verified_Loop_Count++;
 }
 
 void TransitionSystem::Split_If()
 {
-    for (int i = 0; i < Canonical_Branch_Count; i++)
+    if (InWhileLoop)
     {
-        Vars.push_back(Vars[i]);
+        for (int i = 0; i < Canonical_Branch_Count; i++)
+        {
+            Vars.push_back(Vars[i]);
+        }
+        for (int i = 0; i < Canonical_Branch_Count; i++)
+        {
+            DNF.push_back(DNF[i]);
+        }
+        Canonical_Branch_Count *= 2;
     }
-    for (int i = 0; i < Canonical_Branch_Count; i++)
+    else
     {
-        DNF.push_back(DNF[i]);
+        for (int i = 0; i < Init_Branch_Count; i++)
+        {
+            Init_Vars.push_back(Init_Vars[i]);
+        }
+        for (int i = 0; i < Init_Branch_Count; i++)
+        {
+            Init_DNF.push_back(Init_DNF[i]);
+        }
+        Init_Branch_Count *= 2;
     }
-    Canonical_Branch_Count *= 2;
     return;
 }
 
@@ -288,10 +473,13 @@ void TransitionSystem::init_Canonical(int size)
 {
     Vars.clear();
     DNF.clear();
+    Init_Vars.clear();
     Init_DNF.clear();
     Vars.resize(size);
     DNF.resize(size);
     Init_DNF.resize(size);
+    Init_Vars.resize(size);
+    Init_Branch_Count = size;
     Canonical_Branch_Count = size;
     return;
 }
@@ -359,14 +547,20 @@ void TransitionSystem::Print_DNF()
             outs() << "\t[Init_DNF Number " << j << " is:]"
                    << "\n";
             outs() << "\t";
-            PrintingPolicy Policy(context->getLangOpts());
-            string str;
-            llvm::raw_string_ostream rso(str);
-            Init_DNF[i][j]->printPretty(rso, nullptr, Policy);
-            rso.flush();
-            outs() << str << "\n";
+
+            outs() << Print_Expr(Init_DNF[i][j]) << "\n";
         }
         outs() << "Init_DNF disjunctive clause " << i << " is printed.";
     }
     return;
+}
+
+string TransitionSystem::Print_Expr(Expr *expr)
+{
+    PrintingPolicy Policy(context->getLangOpts());
+    string str;
+    llvm::raw_string_ostream rso(str);
+    expr->printPretty(rso, nullptr, Policy);
+    rso.flush();
+    return str;
 }

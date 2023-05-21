@@ -8,6 +8,7 @@
 #include <vector>
 #include <ppl.hh>
 #include <string>
+#include <set>
 
 using namespace std;
 using namespace clang;
@@ -20,13 +21,17 @@ public:
     // TODO: process the generation of the Locations and Transitions.
 
     void Compute_Loop_Invariant();
+    vector<C_Polyhedron *> Compute_and_Eliminate_Init_Poly(vector<VariableInfo> used_vars);
+    void Elimiate_Impossible_Path(int size);
+    void Initialize_Locations_and_Transitions(int locsize, int varsize);
 
     void init_Canonical(int size);
     TransitionSystem(ASTContext *&astcontext);
     int get_Canonical_count();
     bool get_InLoop();
-    vector<vector<VariableInfo>> get_Used_Vars();
+    vector<VariableInfo> get_Used_Vars();
 
+    void Traverse_Expr_ForVars(Expr *expr, set<VariableInfo> &res);
     void Merge_condition(Expr *condition);
     void Split_If();
 
@@ -42,21 +47,25 @@ public:
     void copy_after_update(int size);
     void Out_Loop(WhileStmt *whileloop);
 
-    C_Polyhedron* Compute_Init_Poly();
-
+    string Print_Expr(Expr *expr);
     void Print_Vars();
     void Print_DNF();
 
     void add_vars(VariableInfo var);
     void add_expr(Expr *expr);
+    bool check_guard(Expr *expr);
 
 private:
-    ASTContext *context;
-    vector<vector<VariableInfo>> Vars;
     int Verified_Loop_Count;
+
+    ASTContext *context;
+    vector<vector<VariableInfo>> Init_Vars;
+    vector<vector<VariableInfo>> Vars;
     vector<vector<Expr *>> DNF;
     vector<vector<Expr *>> Init_DNF;
     int Canonical_Branch_Count;
+    int Init_Branch_Count;
+
     bool InWhileLoop;
     int Inner_Loop_Depth;
     int Inner_Loop_Count;
