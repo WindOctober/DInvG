@@ -25,6 +25,7 @@ public:
     TransitionSystem(ASTContext *&astcontext);
     int get_Canonical_count();
     bool get_InLoop();
+    vector<vector<VariableInfo>> get_Used_Vars();
 
     void Merge_condition(Expr *condition);
     void Split_If();
@@ -40,6 +41,8 @@ public:
     void Update_Loop_Vars();
     void copy_after_update(int size);
     void Out_Loop(WhileStmt *whileloop);
+
+    C_Polyhedron* Compute_Init_Poly();
 
     void Print_Vars();
     void Print_DNF();

@@ -73,7 +73,7 @@ void TransitionSystem::In_Loop()
 
 void TransitionSystem::copy_after_update(int size)
 {
-    for (int i = 0; i < size-1; i++)
+    for (int i = 0; i < size - 1; i++)
     {
         for (int j = 0; j < Canonical_Branch_Count; j++)
         {
@@ -217,8 +217,24 @@ vector<vector<Expr *>> TransitionSystem::Connect_DNF(vector<vector<Expr *>> left
     return left_expr;
 }
 
+C_Polyhedron *TransitionSystem::Compute_Init_Poly()
+{
+}
+
+vector<vector<VariableInfo>> TransitionSystem::get_Used_Vars()
+{
+    vector<vector<VariableInfo>> res_vars;
+    vector<VariableInfo> rec;
+    for (int i = 0; i < Canonical_Branch_Count; i++)
+    {
+    }
+}
+
 void TransitionSystem::Compute_Loop_Invariant()
 {
+    vector<vector<VariableInfo>> vars_in_dnf;
+    vars_in_dnf = get_Used_Vars();
+    C_Polyhedron *init_poly = Compute_Init_Poly();
 }
 
 void TransitionSystem::Out_Loop(WhileStmt *whileloop)
