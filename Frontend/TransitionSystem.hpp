@@ -8,7 +8,7 @@
 #include <vector>
 #include <ppl.hh>
 #include <string>
-#include <set>
+#include <unordered_set>
 
 using namespace std;
 using namespace clang;
@@ -19,7 +19,7 @@ class TransitionSystem
 public:
     // TODO: process the transformation from the Expr* to Constraint*.
     // TODO: process the generation of the Locations and Transitions.
-
+    enum class TransformationType {Location,Transition,Guard};
     void Compute_Loop_Invariant();
     vector<C_Polyhedron *> Compute_and_Eliminate_Init_Poly(vector<VariableInfo> used_vars);
     void Elimiate_Impossible_Path(int size);
@@ -31,14 +31,14 @@ public:
     bool get_InLoop();
     vector<VariableInfo> get_Used_Vars();
 
-    void Traverse_Expr_ForVars(Expr *expr, set<VariableInfo> &res);
+    void Traverse_Expr_ForVars(Expr *expr, unordered_set<VariableInfo> &res);
     void Merge_condition(Expr *condition);
     void Split_If();
 
     void In_Loop();
     Expr *Trans_VariableInfo_to_Expr(VariableInfo var);
     Expr *Trans_VariableInfo_to_InitExpr(VariableInfo var);
-    Constraint *Trans_Expr_to_Constraint(Expr *expr);
+    Constraint *Trans_Expr_to_Constraint(Expr *expr,enum TransformationType type);
     vector<vector<Expr *>> Deal_with_condition(Expr *condition, bool not_logic, vector<vector<Expr *>> cur);
     vector<vector<Expr *>> Merge_DNF(vector<vector<Expr *>> left_expr, vector<vector<Expr *>> right_expr);
     vector<vector<Expr *>> Connect_DNF(vector<vector<Expr *>> left_expr, vector<vector<Expr *>> right_expr);

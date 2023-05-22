@@ -40,7 +40,3 @@ set(SRC_FILES
 add_library(lstingx STATIC ${SRC_FILES})
 target_link_libraries(lstingx PUBLIC -lppl -lgmpxx -lgmp)
 target_compile_options(lstingx PRIVATE -g )
-
-# create executable target that links against the static library
-add_executable(lstingX lstingx.cpp)
-target_link_libraries(lstingX PRIVATE lstingx)

@@ -1,25 +1,5 @@
 #include "Variable.hpp"
 
-string VariableInfo::getVariableName()
-{
-    return VarName;
-}
-
-Expr *VariableInfo::getVariableValue()
-{
-    return VarValue;
-}
-
-QualType VariableInfo::getQualType()
-{
-    return VarType;
-}
-
-bool VariableInfo::isInLoop()
-{
-    return inLoop;
-}
-
 VariableInfo::VariableInfo()
 {
     QualType EmptyType;

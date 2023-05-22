@@ -26,7 +26,7 @@ protected:
 static cl::OptionCategory ToolCategory("CFG Tool Options");
 cl::opt<string> InputFilename(cl::Positional, cl::desc("<input file>"), cl::Required,cl::cat(ToolCategory));
 cl::opt<bool> EnableFeature("enable-feature", cl::desc("Enable specific feature"), cl::init(false));
-
+#ifndef USE_LSTINGX_MAIN
 int main(int argc,const char **argv) {
     cl::HideUnrelatedOptions(ToolCategory);
     cl::ParseCommandLineOptions(argc, argv);
@@ -47,3 +47,4 @@ int main(int argc,const char **argv) {
     ClangTool tool(*compilationDB, sources);
     return tool.run(newFrontendActionFactory<CFGFrontendAction>().get());
 }
+#endif
