@@ -3,10 +3,32 @@
 #include "var-info.h"
 #include "Define.hpp"
 #include "TransitionRelation.h"
-#include <set>
+#include "lstingx.h"
+#include <unordered_set>
 extern var_info *info, *dual_info, *lambda_info;
 extern vector<Location *> *loclist;
 extern vector<TransitionRelation *> *trlist;
+
+namespace std
+{
+    template <>
+    struct hash<VariableInfo>
+    {
+        size_t operator()(const VariableInfo &v) const
+        {
+            size_t string_hash = hash<string>{}(v.getVariableName());
+            size_t bool_hash1 = hash<bool>{}(v.getStructurePointer());
+            size_t bool_hash2 = hash<bool>{}(v.getNumericalPointer());
+            size_t bool_hash3 = hash<bool>{}(v.getNumericalArray());
+            size_t bool_hash4 = hash<bool>{}(v.getStructureArray());
+            size_t bool_hash5 = hash<bool>{}(v.isInLoop());
+
+            // Combine the hash values. Note that this is a simplistic way to combine hashes,
+            // and there are better methods available if collision resistance is important.
+            return string_hash ^ bool_hash1 ^ bool_hash2 ^ bool_hash3 ^ bool_hash4 ^ bool_hash5;
+        }
+    };
+}
 
 void TransitionSystem::add_vars(VariableInfo var)
 {
@@ -124,6 +146,7 @@ void TransitionSystem::Merge_condition(Expr *condition)
     copy_after_update(exprs.size());
     return;
 }
+
 void TransitionSystem::Update_Init_Vars()
 {
     for (int i = 0; i < Init_Branch_Count; i++)
@@ -276,14 +299,14 @@ vector<C_Polyhedron *> TransitionSystem::Compute_and_Eliminate_Init_Poly(vector<
         C_Polyhedron *p = new C_Polyhedron(Init_Vars[i].size(), UNIVERSE);
         for (int j = 0; j < Init_DNF[i].size(); j++)
         {
-            p->add_constraint(*Trans_Expr_to_Constraint(Init_DNF[i][j]));
+            p->add_constraint(*Trans_Expr_to_Constraint(Init_DNF[i][j], TransformationType::Location));
         }
         init_polys.push_back(p);
     }
     return init_polys;
 }
 
-void TransitionSystem::Traverse_Expr_ForVars(Expr *expr, set<VariableInfo> &res)
+void TransitionSystem::Traverse_Expr_ForVars(Expr *expr, unordered_set<VariableInfo> &res)
 {
     if (isa<BinaryOperator>(expr))
     {
@@ -314,7 +337,7 @@ void TransitionSystem::Elimiate_Impossible_Path(int size)
         C_Polyhedron *p = new C_Polyhedron(size, UNIVERSE);
         for (int j = 0; j < DNF[i].size(); j++)
         {
-            p->add_constraint(*Trans_Expr_to_Constraint(DNF[i][j]));
+            p->add_constraint(*Trans_Expr_to_Constraint(DNF[i][j], TransformationType::Transition));
         }
         if (p->is_empty())
         {
@@ -334,7 +357,7 @@ void TransitionSystem::Initialize_Locations_and_Transitions(int locsize, int var
         for (int j = 0; j < DNF[i].size(); j++)
         {
             if (check_guard(DNF[i][j]))
-                guard[i].push_back(Trans_Expr_to_Constraint(DNF[i][j]));
+                guard[i].push_back(Trans_Expr_to_Constraint(DNF[i][j], TransformationType::Guard));
         }
     }
     for (int i = 0; i < locsize; i++)
@@ -351,7 +374,7 @@ void TransitionSystem::Initialize_Locations_and_Transitions(int locsize, int var
             for (int index = 0; index < guard[j].size(); j++)
                 p->add_constraint(*guard[j][index]);
             for (int index = 0; index < DNF[i].size(); j++)
-                p->add_constraint(*Trans_Expr_to_Constraint(DNF[i][index]));
+                p->add_constraint(*Trans_Expr_to_Constraint(DNF[i][index], TransformationType::Transition));
             if (p->is_empty())
                 continue;
 
@@ -365,7 +388,7 @@ void TransitionSystem::Initialize_Locations_and_Transitions(int locsize, int var
 
 vector<VariableInfo> TransitionSystem::get_Used_Vars()
 {
-    set<VariableInfo> res_vars_set;
+    unordered_set<VariableInfo> res_vars_set;
     vector<VariableInfo> res_vars;
     for (int i = 0; i < Canonical_Branch_Count; i++)
     {
@@ -383,24 +406,32 @@ vector<VariableInfo> TransitionSystem::get_Used_Vars()
 
 void TransitionSystem::Compute_Loop_Invariant()
 {
-    // TODO: delete the unused variables in init_dnf.
-    // TODO: Transform every path into a transition from one path to another.
-    // TODO: Construct Location and Transition, and get the invariant as put it into the source code.
-    // TODO: add variable_init to info.
-    // TODO: alter the mode of the
+    // DONE: delete the unused variables in init_dnf.
+    // DONE: Transform every path into a transition from one path to another.
+    // DONE: Construct Location and Transition, and get the invariant , then print.
+    // DONE: add variable_init to info.
+    // TODO: alter the mode of the Trans_Expr_to_Constraint
     vector<VariableInfo> vars_in_dnf;
     vars_in_dnf = get_Used_Vars();
     for (int i = 0; i < vars_in_dnf.size(); i++)
+    {
         info->search_and_insert(vars_in_dnf[i].getVariableName().c_str());
+        info->search_and_insert((vars_in_dnf[i].getVariableName() + INITSUFFIX).c_str());
+    }
     vector<C_Polyhedron *> init_polys = Compute_and_Eliminate_Init_Poly(vars_in_dnf);
     Elimiate_Impossible_Path(vars_in_dnf.size());
     int locsize = DNF.size();
-    Initialize_Locations_and_Transitions(locsize, vars_in_dnf.size());
+
     for (int i = 0; i < init_polys.size(); i++)
     {
         for (int j = 0; j < loclist->size(); j++)
         {
+            // TODO: Clarify that what should be clear and how to save the transition information to save time.
+            Initialize_Locations_and_Transitions(locsize, vars_in_dnf.size());
             (*loclist)[j]->set_initial(*init_polys[i]);
+            Compute_Invariant_Frontend();
+            print_disjunctive_inv_before_program();
+            Reset();
         }
     }
 }
@@ -465,8 +496,52 @@ int TransitionSystem::get_Canonical_count()
     return Canonical_Branch_Count;
 }
 
-Constraint *TransitionSystem::Trans_Expr_to_Constraint(Expr *expr)
+Constraint *TransitionSystem::Trans_Expr_to_Constraint(Expr *expr, enum TransformationType type)
 {
+    // TODO: confirm the expr template, which must be xxx <=/==/>= xxx;
+    Constraint *constraint = new Constraint();
+    switch (type)
+    {
+    case TransformationType::Location:
+        if (isa<BinaryOperator>(expr))
+        {
+            BinaryOperator *binop = dyn_cast<BinaryOperator>(expr);
+            if (binop->getOpcode() == BO_Assign || binop->getOpcode() == BO_EQ)
+            {
+            }
+            else if (binop->getOpcode() == BO_LT)
+            {
+            }
+            else if (binop->getOpcode() == BO_LE)
+            {
+            }
+            else if (binop->getOpcode() == BO_GE)
+            {
+            }
+            else if (binop->getOpcode() == BO_GT)
+            {
+            }
+            else if (binop->getOpcode() == BO_NE)
+            {
+            }
+            else
+            {
+                outs() << "\n[Transform unexpected Opcode in BinaryOperator Expr type:]" << binop->getOpcodeStr() << '\n';
+                exit(1);
+            }
+        }
+        else
+        {
+            outs() << "\n[Transform unexpected Expr type:]" << expr->getStmtClassName() << '\n';
+            exit(1);
+        }
+        break;
+    case TransformationType::Transition:
+        break;
+    case TransformationType::Guard:
+        break;
+    }
+    return constraint;
 }
 
 void TransitionSystem::init_Canonical(int size)

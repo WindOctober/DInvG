@@ -1,5 +1,10 @@
 cmake_minimum_required(VERSION 3.16.3)
 
+option(USE_LSTINGX "Use the lstingx main function" OFF)
+if(USE_LSTINGX)
+    add_definitions(-DUSE_LSTINGX_MAIN)
+endif()
+
 project(PowerInv)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE INTERNAL "")
@@ -97,5 +102,6 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -I/usr/lib/gcc/x86_64-linux-gnu/9/includ
 
 add_subdirectory(Frontend)
 include_directories(${CMAKE_SOURCE_DIR}/Frontend)
+target_link_libraries(Frontend lstingx)
 target_link_libraries(Inv Frontend)
 

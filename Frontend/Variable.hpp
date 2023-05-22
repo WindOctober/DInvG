@@ -14,15 +14,18 @@ class VariableInfo
 {
 public:
     VariableInfo();
-    string getVariableName();
-    Expr *getVariableValue();
-    QualType getQualType();
+    string getVariableName() const { return VarName; };
+    Expr *getVariableValue() const { return VarValue; };
+    QualType getQualType() const { return VarType; };
+    bool getStructurePointer() const { return structure_point_flag; }
+    bool getNumericalPointer() const { return numerical_point_flag; }
+    bool getStructureArray() const { return structure_array_flag; }
+    bool getNumericalArray() const { return numerical_array_flag; }
+    bool isInLoop() const { return inLoop; };
 
     static void search_and_insert(VariableInfo var, vector<VariableInfo> &Vars);
     void alterVar(string varname, Expr *expr, QualType type, bool inloop);
     void alterVar(Expr *var_expr, Expr *init, bool in);
-
-    bool isInLoop();
 
 private:
     string VarName;
@@ -34,6 +37,17 @@ private:
     bool numerical_array_flag;
 
     bool inLoop;
+
+public:
+    bool operator==(const VariableInfo &other) const
+    {
+        return VarName == other.VarName &&
+               structure_point_flag == other.structure_point_flag &&
+               numerical_point_flag == other.numerical_point_flag &&
+               structure_array_flag == other.structure_array_flag &&
+               numerical_array_flag == other.numerical_array_flag &&
+               inLoop == other.inLoop;
+    }
 };
 
 #endif
