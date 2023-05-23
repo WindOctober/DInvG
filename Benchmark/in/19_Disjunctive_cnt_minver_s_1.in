@@ -1,0 +1,70 @@
+variable [ i i0
+           j j0 ]
+
+Location b1 
+  i = i0 
+  j = j0 
+  i0 <= 2 
+  j0 <= 2 
+Location b2 
+Location le 
+
+transition t1_1: b1, 
+   i <= 2
+   j <= 2 
+  'i <= 2 
+  'j <= 2
+  'i = i + 1
+  'j = 3
+  'i0 = i0 
+  'j0 = j0 
+
+transition t1_2: b1,b2, 
+   i <= 2
+   j <= 2 
+  'i <= 2 
+  'j >= 3
+  'i = i + 1
+  'j = 3
+  'i0 = i0 
+  'j0 = j0 
+
+transition t1_e: b1,le,
+   i <= 2 
+   j <= 2 
+  'i >= 3
+  'i = i + 1
+  'j = 3
+  'i0 = i0 
+  'j0 = j0 
+
+transition t2_2: b2, 
+   i <= 2
+   j >= 3 
+  'i <= 2 
+  'j >= 3
+  'i = i + 1
+  'j = j 
+  'i0 = i0 
+  'j0 = j0 
+
+transition t2_1: b2,b1, 
+   i <= 2
+   j >= 3 
+  'i <= 2 
+  'j <= 2
+  'i = i + 1
+  'j = j 
+  'i0 = i0 
+  'j0 = j0 
+
+transition t2_e: b2,le, 
+   i <= 2
+   j >= 3 
+  'i >= 3 
+  'i = i + 1
+  'j = j 
+  'i0 = i0 
+  'j0 = j0 
+
+end 

@@ -1,0 +1,45 @@
+variable [ x x0
+           o 
+           t
+           s 
+           e e0 ]
+
+Location b1 
+  x  = x0 
+  e  = e0 
+  t >= 0 
+  s >= 0 
+  e  = x - o 
+
+invariant b1:
+  x0 - o - e0  = 0 
+  x - o - e  = 0 
+  x0  >= x
+  s  >= 0
+  t  >= 0
+
+Location le 
+
+transition t1_1: b1, 
+   e >= t + 1 
+  'e >= t + 1 
+  'x  = x - s 
+  'o  = o 
+  't  = t 
+  's  = s 
+  'e  = x - s - o
+  'x0 = x0 
+  'e0 = e0 
+
+transition t1_e: b1,le, 
+   e >= t + 1 
+  'e <= t 
+  'x  = x - s 
+  'o  = o 
+  't  = t 
+  's  = s 
+  'e  = x - s - o
+  'x0 = x0 
+  'e0 = e0 
+
+end

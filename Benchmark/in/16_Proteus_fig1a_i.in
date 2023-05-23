@@ -1,0 +1,74 @@
+variable [ n 
+           x 
+           z ]
+
+Location b1 
+  n = 100 
+  x = 0 
+  z = 1 
+invariant b1:
+  1 * x -1 * z  + 1 = 0 
+  1 * n -100 = 0 
+  1 * x  >= 0
+  99 >= x
+Location b2 
+invariant b2:
+  1 * x -1 * z  = 0 
+  1 * n -100 = 0 
+  99 >= x
+  1 * x -1 >= 0
+Location le 
+
+transition t1_1: b1, 
+   x + 1 <=  n 
+   x + 1 <=  z 
+  'x + 1 <= 'n 
+  'x + 1 <= 'z 
+  'n = n 
+  'x = x + 1
+  'z = z 
+
+transition t1_2: b1,b2, 
+   x + 1 <=  n 
+   x + 1 <=  z 
+  'x + 1 <= 'n 
+      'z <= 'x 
+  'n = n 
+  'x = x + 1
+  'z = z 
+
+transition t1_e: b1,le, 
+   x + 1 <=  n 
+   x + 1 <=  z 
+      'n <= 'x 
+  'n = n 
+  'x = x + 1
+  'z = z 
+
+transition t2_2: b2, 
+   x + 1 <=  n 
+       z <=  x 
+  'x + 1 <= 'n 
+      'z <= 'x 
+  'n = n 
+  'x = x 
+  'z = z + 1
+
+transition t2_1: b2,b1, 
+   x + 1 <=  n 
+       z <=  x 
+  'x + 1 <= 'n 
+  'x + 1 <= 'z 
+  'n = n 
+  'x = x 
+  'z = z + 1
+
+transition t2_e: b2,le, 
+   x + 1 <= n 
+       z <= x 
+      'n <= 'x 
+  'n = n 
+  'x = x 
+  'z = z + 1
+
+end 
