@@ -36,6 +36,7 @@ public:
 
     void init_Canonical(int size);
     TransitionSystem(ASTContext *&astcontext);
+    TransitionSystem(TransitionSystem& other);
     int get_Canonical_count();
     bool get_InLoop();
     vector<VariableInfo> get_Used_Vars();
@@ -43,6 +44,7 @@ public:
     void Traverse_Expr_ForVars(Expr *expr, unordered_set<VariableInfo> &res);
     void Merge_condition(Expr *condition);
     void Split_If();
+    Expr* NegateExpr(Expr* expr);
 
     void In_Loop();
     Expr *Trans_VariableInfo_to_Expr(VariableInfo var);
