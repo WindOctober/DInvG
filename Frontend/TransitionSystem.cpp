@@ -30,7 +30,8 @@ namespace std
     };
 }
 
-Expr* TransitionSystem::NegateExpr(Expr* expr){
+Expr *TransitionSystem::NegateExpr(Expr *expr)
+{
     UnaryOperator *notExpr = new (context) UnaryOperator(expr, UO_LNot, context->BoolTy, VK_RValue, OK_Ordinary, SourceLocation(), false);
     return notExpr;
 }
@@ -160,6 +161,11 @@ void TransitionSystem::Merge_condition(Expr *condition)
     DNF = Merge_DNF(exprs, DNF);
     copy_after_update(exprs.size());
     return;
+}
+
+TransitionSystem TransitionSystem::Merge_Transystem(TransitionSystem &left_trans, TransitionSystem &right_trans)
+{
+    
 }
 
 void TransitionSystem::Update_Init_Vars()
@@ -453,8 +459,8 @@ void TransitionSystem::Initialize_Locations_and_Transitions(int locsize, int var
             }
             else
             {
-                C_Polyhedron *q=new C_Polyhedron(varsize*2,UNIVERSE);
-                Expr* notExpr=NegateExpr(condition);
+                C_Polyhedron *q = new C_Polyhedron(varsize * 2, UNIVERSE);
+                Expr *notExpr = NegateExpr(condition);
                 vector<vector<Expr *>> notcond;
                 vector<vector<Constraint_System *>> exit_guard;
                 notcond = Deal_with_condition(notExpr, true, notcond);
@@ -464,7 +470,7 @@ void TransitionSystem::Initialize_Locations_and_Transitions(int locsize, int var
                         exit_guard[k].push_back(Trans_Expr_to_Constraints(notcond[k][index], TransformationType::Guard, varsize));
                 for (int k = 0; k < exit_guard.size(); k++)
                 {
-                    *q=*p;
+                    *q = *p;
                     trans_name = "Exit_Transition_from_" + to_string(i) + "_index_" + to_string(k);
                     for (int index = 0; index < exit_guard[k].size(); index++)
                     {
@@ -596,7 +602,7 @@ TransitionSystem::TransitionSystem(ASTContext *&astcontext) : context(astcontext
     InWhileLoop = false;
 }
 
-TransitionSystem::TransitionSystem(TransitionSystem& other) 
+TransitionSystem::TransitionSystem(TransitionSystem &other)
     : Verified_Loop_Count(other.Verified_Loop_Count),
       context(other.context),
       Init_Vars(other.Init_Vars),
@@ -607,7 +613,7 @@ TransitionSystem::TransitionSystem(TransitionSystem& other)
       Init_Branch_Count(other.Init_Branch_Count),
       InWhileLoop(other.InWhileLoop),
       Inner_Loop_Depth(other.Inner_Loop_Depth),
-      Inner_Loop_Count(other.Inner_Loop_Count) 
+      Inner_Loop_Count(other.Inner_Loop_Count)
 {
 }
 

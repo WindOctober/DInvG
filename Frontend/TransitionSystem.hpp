@@ -59,6 +59,8 @@ public:
     void copy_after_update(int size);
     void Out_Loop(WhileStmt *whileloop);
 
+    TransitionSystem Merge_Transystem(TransitionSystem& left_trans,TransitionSystem& right_trans);
+
     string Print_Expr(Expr *expr);
     void Print_Vars();
     void Print_DNF();
