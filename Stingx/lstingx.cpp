@@ -593,6 +593,36 @@ void Initialize_before_Parser() {
     cout << "Done!" << endl;
 }
 
+void Initialize() {
+    cout << endl << "- Initialize_before_Parser doing...";
+    weave_count = bang_count = backtrack_count = 0;
+    backtrack_success = 0;
+    backtrack_flag = false;
+    merge_count = 0;
+    inv_check = false;
+    clump_prune_count = prune_count = 0;
+    context_count = 0;
+    debug = 0;
+    debug_2 = 0;
+    debug_3 = 0;
+    print_tree = true;
+    num_context = 2;
+    projection = "kohler_improvement_eliminate_c";
+    tree_prior = "target_prior2";
+    some_per_group = "two_per_group";
+    gendrop = false;
+    global_sub_system_list = new vector<System*>();
+    zero = one = true;
+    falsepath = true;
+    trsat = true;
+    noexitpath = true;
+    djinv = true;
+    arrinv = false;
+    prop_steps = 2;
+    time_limit = 360000;
+    total_time = 360000;
+}
+
 void Print_Location_and_Transition() {
     cout << endl;
     cout << "----------------------------- " << endl;
@@ -932,7 +962,7 @@ void Reset(){
 
 void Compute_Invariant_Frontend(){
     total_timer.restart();
-    Initialize_before_Parser();
+    Initialize();
     add_preloc_invariants_to_transitions();
     Create_Adjacency_Matrix_for_Location_and_Transition();
     global_system = new System(info, dual_info, lambda_info);
@@ -1035,6 +1065,7 @@ void Compute_Invariant_Frontend(){
     dfs_traverse_time = dfs_traverse_timer.compute_time_elapsed();
 
     compute_invariants_by_propagation_with_farkas(clumps);
+    Print_Location();
     delete tt;
     delete global_system;
     delete trivial;

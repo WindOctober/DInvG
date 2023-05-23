@@ -1,0 +1,117 @@
+< < < compute_invariants_by_propagation_with_farkas()	      <
+----------------------------- 				      <
+| The Locations read in are: 				      <
+----------------------------- 				      <
+							      <
+Location: B1						      <
+# of variables: 4					      <
+「 l: 0, n: 4, nd: 25 」				      <
+Initial Condition: [[ 					      <
+| 							      <
+├ 13 * x -13 * x0 -3 * y  + 3 * y0 -56 >= 0		      <
+├ -1 * x  + 29 >= 0					      <
+├ -1 * x  + 1 * y  + 12 >= 0				      <
+├ -1 * x0  + 1 * y0  >= 0				      <
+├ 1 * y -6 >= 0						      <
+├ 1 * x -1 * y -1 >= 0					      <
+├ 5 * x -5 * x0  + 1 * y -1 * y0  >= 0			      <
+| 							      <
+]]							      <
+Invariant: [[ 						      <
+| 							      <
+├  True							      <
+| 							      <
+]]							      <
+							      <
+Location: B2						      <
+# of variables: 4					      <
+「 l: 5, n: 4, nd: 25 」				      <
+Initial Condition: [[ 					      <
+| 							      <
+├ 13 * x -13 * x0 -3 * y  + 3 * y0 -56 >= 0		      <
+├ -1 * x  + 1 * y  + 12 >= 0				      <
+├ -1 * x0  + 1 * y0  >= 0				      <
+├ -1 * y  + 5 >= 0					      <
+├ 1 * x -1 * y -1 >= 0					      <
+├ 5 * x -5 * x0  + 1 * y -1 * y0  >= 0			      <
+| 							      <
+]]							      <
+Invariant: [[ 						      <
+| 							      <
+├  True							      <
+| 							      <
+]]							      <
+							      <
+Location: B3						      <
+# of variables: 4					      <
+「 l: 10, n: 4, nd: 25 」				      <
+Initial Condition: [[ 					      <
+| 							      <
+├ 13 * x -13 * x0 -3 * y  + 3 * y0 -56 >= 0		      <
+├ -1 * x  + 1 * y  + 12 >= 0				      <
+├ -1 * x0  + 1 * y0  >= 0				      <
+├ -1 * y  + 5 >= 0					      <
+├ 1 * x -1 * y -1 >= 0					      <
+├ 5 * x -5 * x0  + 1 * y -1 * y0  >= 0			      <
+| 							      <
+]]							      <
+Invariant: [[ 						      <
+| 							      <
+├  True							      <
+| 							      <
+]]							      <
+							      <
+Location: B4						      <
+# of variables: 4					      <
+「 l: 15, n: 4, nd: 25 」				      <
+Initial Condition: [[ 					      <
+| 							      <
+├ 1 * y -1 * y0  = 0 					      <
+├ 1 * x -1 * x0  = 0 					      <
+├ -1 * x  + 29 >= 0					      <
+├ -1 * x  + 1 * y  >= 0					      <
+| 							      <
+]]							      <
+Invariant: [[ 						      <
+| 							      <
+├ -1 * x  + 1 * y  >= 0					      <
+├ -1 * x0  + 1 * y0  >= 0				      <
+├ 5 * x -5 * x0  + 1 * y -1 * y0  >= 0			      <
+├ 13 * x -13 * x0 -3 * y  + 3 * y0  >= 0		      <
+├ -1 * x  + 29 >= 0					      <
+| 							      <
+]]							      <
+							      <
+Location: le						      <
+# of variables: 4					      <
+「 l: 20, n: 4, nd: 25 」				      <
+[ no initial condition set]				      <
+Disjunctive Invariant: [[ 				      <
+  							      <
+1 * x -30 >= 0						      <
+-1 * x  + 31 >= 0					      <
+-1 * x0  + 1 * y0  >= 0					      <
+-1 * x  + 1 * y  + 12 >= 0				      <
+5 * x -5 * x0  + 1 * y -1 * y0  >= 0			      <
+13 * x -13 * x0 -3 * y  + 3 * y0 -56 >= 0		      <
+  							      <
+]]							      <
+							      <
+/---------------------------------------- 		      <
+| Disjunctive Invariants before Program: 		      <
+----------------------------------------- 		      <
+True							      <
+\/							      <
+True							      <
+\/							      <
+True							      <
+\/							      <
+-1 * x  + 1 * y  >= 0					      <
+-1 * x0  + 1 * y0  >= 0					      <
+5 * x -5 * x0  + 1 * y -1 * y0  >= 0			      <
+13 * x -13 * x0 -3 * y  + 3 * y0  >= 0			      <
+-1 * x  + 29 >= 0					      <
+\---------------------------------------- 		      <
+							      <
+/----------------------------- 				      <
+| Status after Solver: 					      <

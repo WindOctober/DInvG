@@ -99,9 +99,10 @@ void CFGVisitor::DealWithStmt(Stmt *stmt)
 {
     // Deal with the whole Stmt in code. (which usually means the complete statement in one line.)
 
-    // TODO: Deal with assignment statement in code.
+    // DONE: Deal with assignment statement in code.
     // TODO: Deal with If statement in code.
     // TODO: Deal with For loop in code.
+    // TODO: Deal with the situation of continue and break in code. [hint: consider the guard to break to be loop guard in break situation and the standalone branch cutted in continue statement]
     PrintStmtInfo(stmt);
     if (Transystem.get_Canonical_count() == 0)
     {
@@ -109,6 +110,7 @@ void CFGVisitor::DealWithStmt(Stmt *stmt)
     }
     if (isa<IfStmt>(stmt))
     {
+        
     }
     else if (isa<ForStmt>(stmt))
     {
@@ -121,7 +123,6 @@ void CFGVisitor::DealWithStmt(Stmt *stmt)
         WhileStmt *whileStmt = dyn_cast<WhileStmt>(stmt);
         Expr *loop_condition = whileStmt->getCond();
         Stmt *while_body = whileStmt->getBody();
-        Transystem.Update_Init_Vars();
         Transystem.Merge_condition(loop_condition);
         Transystem.In_Loop();
         if (CompoundStmt *compound = dyn_cast<CompoundStmt>(while_body))

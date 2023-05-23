@@ -1,0 +1,144 @@
+< < < compute_invariants_by_propagation_with_farkas()
+----------------------------- 
+| The Locations read in are: 
+----------------------------- 
+
+Location: b1
+# of variables: 14
+「 l: 0, vars_num: 14, dual_num: 30 」
+Initial Condition: [[ 
+| 
+├ 1 * cnt_mid -1 * cnt_mid0  = 0 
+├ 1 * y_mid -1 * y_mid0  = 0 
+├ 1 * x_mid -1 * x_mid0  = 0 
+├ 1 * cnt10  = 0 
+├ 1 * cnt1  = 0 
+├ 1 * cnt0  = 0 
+├ 1 * cnt  = 0 
+├ 1 * y -1 * y0  = 0 
+├ 1 * x -1 * x0  = 0 
+├ -1 * x  + 29 >= 0
+├ 1 * x  >= 0
+├ 1 * y  >= 0
+| 
+]]
+Invariant: [[ 
+| 
+├ 1 * cnt_mid -1 * cnt_mid0  = 0 
+├ 1 * y_mid -1 * y_mid0  = 0 
+├ 1 * x_mid -1 * x_mid0  = 0 
+├ 1 * cnt10  = 0 
+├ 1 * cnt0  = 0 
+├ -2 * x  + 2 * x0  + 1 * y -1 * y0  + 46 * cnt1  >= 0
+├ -2 * x  + 2 * x0  + 5 * y -5 * y0  + 54 * cnt1  >= 0
+├ -1 * x  + 29 >= 0
+├ -1 * x  + 1 * y  + 33 >= 0
+├ 1 * y0  >= 0
+├ 1 * x0  >= 0
+├ 1 * x -1 * x0 -2 * cnt1  >= 0
+├ 2 * x -2 * x0 -1 * y  + 1 * y0  + 8 * cnt1  >= 0
+├ 24 * x -24 * x0 -11 * y  + 11 * y0  + 62 * cnt1  >= 0
+├ 8 * x  + 3 * y  >= 0
+| 
+]]
+
+Location: le
+# of variables: 14
+「 l: 15, vars_num: 14, dual_num: 30 」
+[ no initial condition set]
+Disjunctive Invariant: [[ 
+  
+1 * y -1 * y_mid  + 10 = 0 
+1 * cnt10  = 0 
+1 * x -1 * x_mid -2 = 0 
+1 * y -1 * y_mid0  + 10 = 0 
+1 * x -1 * x_mid0 -2 = 0 
+1 * cnt_mid -1 * cnt_mid0  = 0 
+1 * cnt0  = 0 
+1 * x -30 >= 0
+1 * x -10 * cnt_mid -9 >= 0
+1 * y0  >= 0
+-1 * x  + 2 * x0 -1 * y0  + 46 * cnt1  + 10 * cnt_mid -45 >= 0
+1 * x0  >= 0
+1 * x -1 * y -13 >= 0
+-2 * x  + 2 * x0  + 1 * y -1 * y0  + 46 * cnt1  + 16 * cnt_mid -32 >= 0
+24 * x -24 * x0  + 11 * y0  + 62 * cnt1 -240 * cnt_mid -176 >= 0
+1 * y -4 * cnt_mid  + 4 >= 0
+1 * x -1 * x0 -2 * cnt1 -10 * cnt_mid  >= 0
+1 * cnt_mid  >= 0
+1 * cnt1 -1 >= 0
+3 * x  + 2 * x0 -5 * y0  + 54 * cnt1 -30 * cnt_mid -65 >= 0
+-1 * x  + 10 * cnt_mid  + 31 >= 0
+-2 * x  + 2 * x0  + 5 * y -5 * y0  + 54 * cnt1  >= 0
+2 * x -2 * x0  + 1 * y0  + 8 * cnt1 -20 * cnt_mid -18 >= 0
+
+\/
+
+1 * y -1 * y_mid  + 10 = 0 
+1 * x -1 * x_mid0 -2 = 0 
+1 * x -1 * x_mid -2 = 0 
+1 * y -1 * y_mid0  + 10 = 0 
+1 * cnt10  = 0 
+1 * cnt_mid -1 * cnt_mid0  = 0 
+1 * cnt0  = 0 
+1 * y0  >= 0
+1 * x -30 >= 0
+1 * x0  >= 0
+-46 * x  + 78 * x0  + 69 * y -195 * y0  + 2106 * cnt1 -368 * cnt_mid -496 >= 0
+46 * x  + 66 * x0 -165 * y0  + 1782 * cnt1 -460 * cnt_mid -425 >= 0
+-1 * x  + 1 * y  + 12 >= 0
+2 * x -2 * x0 -9 * y0  + 86 * cnt1 -20 * cnt_mid -27 >= 0
+3 * x -1 * y -49 >= 0
+-1 * x  + 2 * x0 -1 * y0  + 46 * cnt1  + 10 * cnt_mid -55 >= 0
+-6 * x  + 6 * x0  + 5 * y -3 * y0  + 138 * cnt1 -88 >= 0
+-6 * x  + 6 * x0  + 1 * y -3 * y0  + 138 * cnt1  + 48 * cnt_mid -152 >= 0
+-2 * x  + 3 * y -16 * cnt_mid  + 304 >= 0
+2 * x0 -1 * y0  + 46 * cnt1 -54 >= 0
+1 * cnt_mid -2 >= 0
+-2 * x  + 2 * x0 -5 * y0  + 54 * cnt1  + 20 * cnt_mid -43 >= 0
+-6 * x  + 6 * x0  + 5 * y -15 * y0  + 162 * cnt1 -64 >= 0
+8 * x -14 * cnt_mid -61 >= 0
+1 * x -1 * x0 -2 * cnt1 -1 * cnt_mid -9 >= 0
+4 * x  + 10 * x0 -25 * y0  + 270 * cnt1 -40 * cnt_mid -215 >= 0
+-6 * x  + 6 * x0  + 7 * y -15 * y0  + 162 * cnt1 -24 * cnt_mid -32 >= 0
+-1 * x0 -2 * cnt1  + 31 >= 0
+2 * x -20 * cnt_mid  + 257 >= 0
+1 * x  + 8 * x0 -9 * y0  + 194 * cnt1 -10 * cnt_mid -205 >= 0
+-2 * x -18 * x0  + 9 * y0  + 72 * cnt1  + 20 * cnt_mid  + 458 >= 0
+24 * x -24 * x0  + 11 * y0  + 62 * cnt1 -2 * cnt_mid -414 >= 0
+-1 * x  + 10 * cnt_mid  + 22 >= 0
+-2 * x  + 2 * x0  + 3 * y -9 * y0  + 94 * cnt1 -16 * cnt_mid -24 >= 0
+-12 * x  + 11 * y -12 * cnt_mid  + 536 >= 0
+2 * x -2 * x0  + 1 * y0  + 8 * cnt1 -38 >= 0
+-6 * x  + 18 * x0  + 11 * y -45 * y0  + 486 * cnt1 -72 * cnt_mid -244 >= 0
+-2 * x -7 * x0  + 3 * y -14 * cnt1 -16 * cnt_mid  + 381 >= 0
+-4 * x  + 3 * y  + 4 * cnt_mid  + 136 >= 0
+2 * x -11 * x0 -22 * cnt1 -20 * cnt_mid  + 378 >= 0
+-22 * x -216 * x0  + 99 * y0  + 558 * cnt1  + 220 * cnt_mid  + 5794 >= 0
+-2 * x  + 2 * x0 -1 * y0  + 46 * cnt1  + 20 * cnt_mid -55 >= 0
+1 * cnt1 -1 >= 0
+  
+]]
+
+/---------------------------------------- 
+| Disjunctive Invariants before Program: 
+----------------------------------------- 
+1 * cnt_mid -1 * cnt_mid0  = 0 
+1 * y_mid -1 * y_mid0  = 0 
+1 * x_mid -1 * x_mid0  = 0 
+1 * cnt10  = 0 
+1 * cnt0  = 0 
+-2 * x  + 2 * x0  + 1 * y -1 * y0  + 46 * cnt1  >= 0
+-2 * x  + 2 * x0  + 5 * y -5 * y0  + 54 * cnt1  >= 0
+-1 * x  + 29 >= 0
+-1 * x  + 1 * y  + 33 >= 0
+1 * y0  >= 0
+1 * x0  >= 0
+1 * x -1 * x0 -2 * cnt1  >= 0
+2 * x -2 * x0 -1 * y  + 1 * y0  + 8 * cnt1  >= 0
+24 * x -24 * x0 -11 * y  + 11 * y0  + 62 * cnt1  >= 0
+8 * x  + 3 * y  >= 0
+\---------------------------------------- 
+
+/----------------------------- 
+| Status after Solver: 

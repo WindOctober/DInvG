@@ -49,5 +49,8 @@ void VariableInfo::alterVar(Expr *var_expr, Expr *init, bool in)
         VarValue = init;
         inLoop = in;
     }
+    else{
+        outs()<<"[VariableInfo alterVar warning] Unexpected VarExpr Type that is: "<<var_expr->getStmtClassName()<<'\n';
+    }
     return;
 }
