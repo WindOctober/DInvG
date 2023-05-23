@@ -1,0 +1,107 @@
+< < < compute_invariants_by_propagation_with_farkas()
+----------------------------- 
+| The Locations read in are: 
+----------------------------- 
+
+Location: b1
+# of variables: 8
+「 l: 0, vars_num: 8, dual_num: 27 」
+Initial Condition: [[ 
+| 
+├ 1 * j0  = 0 
+├ 1 * j  = 0 
+├ 1 * i0  = 0 
+├ 1 * i  = 0 
+├ 1 * n -1 * n0  = 0 
+├ 1 * m -1 * m0  = 0 
+├ -1 * m  + 1 * n -1 >= 0
+├ 1 * m -1 >= 0
+| 
+]]
+Invariant: [[ 
+| 
+├ 1 * j0  = 0 
+├ 1 * i0  = 0 
+├ 1 * n -1 * n0  = 0 
+├ 1 * m -1 * m0  = 0 
+├ -1 * m  + 1 * n -1 >= 0
+├ 1 * j  >= 0
+├ 1 * i  >= 0
+├ 1 * n -1 * i -1 >= 0
+├ 1 * m -1 * j -1 >= 0
+| 
+]]
+
+Location: b2
+# of variables: 8
+「 l: 9, vars_num: 8, dual_num: 27 」
+Initial Condition: [[ 
+| 
+├ 1 * j0  = 0 
+├ 1 * m -1 * j  = 0 
+├ 1 * i0  = 0 
+├ 1 * n -1 * n0  = 0 
+├ 1 * m -1 * m0  = 0 
+├ -1 * m  + 1 * n -1 >= 0
+├ 1 * i  >= 0
+├ 1 * n -1 * i -1 >= 0
+├ 1 * m -1 >= 0
+| 
+]]
+Invariant: [[ 
+| 
+├ 1 * j0  = 0 
+├ 1 * m -1 * j  = 0 
+├ 1 * i0  = 0 
+├ 1 * n -1 * n0  = 0 
+├ 1 * m -1 * m0  = 0 
+├ -1 * m  + 1 * n -1 >= 0
+├ 1 * i  >= 0
+├ 1 * n -1 * i -1 >= 0
+├ 1 * m -1 >= 0
+| 
+]]
+
+Location: le
+# of variables: 8
+「 l: 18, vars_num: 8, dual_num: 27 」
+[ no initial condition set]
+Disjunctive Invariant: [[ 
+  
+1 * i0  = 0 
+1 * j  = 0 
+1 * m -1 * m0  = 0 
+1 * j0  = 0 
+1 * n -1 * n0  = 0 
+1 * n -1 * i  = 0 
+1 * m -1 >= 0
+-1 * m  + 1 * n -1 >= 0
+  
+]]
+
+/---------------------------------------- 
+| Disjunctive Invariants before Program: 
+----------------------------------------- 
+1 * j0  = 0 
+1 * i0  = 0 
+1 * n -1 * n0  = 0 
+1 * m -1 * m0  = 0 
+-1 * m  + 1 * n -1 >= 0
+1 * j  >= 0
+1 * i  >= 0
+1 * n -1 * i -1 >= 0
+1 * m -1 * j -1 >= 0
+\/
+1 * j0  = 0 
+1 * m -1 * j  = 0 
+1 * i0  = 0 
+1 * n -1 * n0  = 0 
+1 * m -1 * m0  = 0 
+-1 * m  + 1 * n -1 >= 0
+1 * i  >= 0
+1 * n -1 * i -1 >= 0
+1 * m -1 >= 0
+\---------------------------------------- 
+
+/----------------------------- 
+| Status after Solver: 

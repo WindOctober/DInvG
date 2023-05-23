@@ -365,7 +365,6 @@ bool Expression::factorize() {
     Rational factor;
     while (i < lambda_num + 1 && lin_expr[i].is_zero()){
         i++;
-        cout<<i<<endl;
     }
 
     if (i >= lambda_num + 1)

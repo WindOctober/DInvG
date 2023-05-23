@@ -1,0 +1,100 @@
+< < < compute_invariants_by_propagation_with_farkas()
+----------------------------- 
+| The Locations read in are: 
+----------------------------- 
+
+Location: b1
+# of variables: 12
+「 l: 0, vars_num: 12, dual_num: 39 」
+Initial Condition: [[ 
+| 
+├ 1 * n -1 * n0  = 0 
+├ 1 * m -1 * m0  = 0 
+├ 1 * j -1 * j0  = 0 
+├ 1 * k -1 * k0  = 0 
+├ 1 * i -1 * i0  = 0 
+├ -1 * i  + 1 * m  >= 0
+├ 1 * j -1 * n -1 >= 0
+| 
+]]
+Invariant: [[ 
+| 
+├ 1 * n -1 * n0  = 0 
+├ 1 * m -1 * m0  = 0 
+├ 1 * j -1 * n -1 >= 0
+├ 1 * j0 -1 * n -1 >= 0
+├ 1 * i -1 * i0  >= 0
+├ -1 * i  + 1 * m  >= 0
+| 
+]]
+
+Location: b2
+# of variables: 12
+「 l: 13, vars_num: 12, dual_num: 39 」
+Initial Condition: [[ 
+| 
+├ 1 * n -1 * n0  = 0 
+├ 1 * m -1 * m0  = 0 
+├ -1 * i  + 1 * m  >= 0
+├ -3 * k  + 1 * j  + 1 * n -1 >= 0
+├ -1 * k  + 1 * j -1 >= 0
+├ -1 * j  + 1 * n  >= 0
+├ 1 * j0 -1 * n -1 >= 0
+├ 2 * k -1 * j  >= 0
+├ 1 * i -1 * i0 -1 >= 0
+| 
+]]
+Invariant: [[ 
+| 
+├ 1 * n -1 * n0  = 0 
+├ 1 * m -1 * m0  = 0 
+├ -1 * j  + 1 * n  >= 0
+├ 2 * k -1 * j  >= 0
+├ 1 * j0 -1 * n -1 >= 0
+├ 1 * j -2 >= 0
+├ 1 * i -1 * i0 -1 >= 0
+├ -1 * i  + 1 * m  >= 0
+├ -1 * k  + 1 * n  >= 0
+| 
+]]
+
+Location: le
+# of variables: 12
+「 l: 26, vars_num: 12, dual_num: 39 」
+[ no initial condition set]
+Disjunctive Invariant: [[ 
+  
+1 * n -1 * n0  = 0 
+1 * i -1 * m -1 = 0 
+1 * i -1 * m0 -1 = 0 
+1 * i -1 * i0 -1 >= 0
+-1 * k  + 1 * j -1 >= 0
+2 * k -1 * j  >= 0
+-3 * k  + 1 * j  + 1 * n -1 >= 0
+1 * j0 -1 * n -1 >= 0
+  
+]]
+
+/---------------------------------------- 
+| Disjunctive Invariants before Program: 
+----------------------------------------- 
+1 * n -1 * n0  = 0 
+1 * m -1 * m0  = 0 
+1 * j -1 * n -1 >= 0
+1 * j0 -1 * n -1 >= 0
+1 * i -1 * i0  >= 0
+-1 * i  + 1 * m  >= 0
+\/
+1 * n -1 * n0  = 0 
+1 * m -1 * m0  = 0 
+-1 * j  + 1 * n  >= 0
+2 * k -1 * j  >= 0
+1 * j0 -1 * n -1 >= 0
+1 * j -2 >= 0
+1 * i -1 * i0 -1 >= 0
+-1 * i  + 1 * m  >= 0
+-1 * k  + 1 * n  >= 0
+\---------------------------------------- 
+
+/----------------------------- 
+| Status after Solver: 

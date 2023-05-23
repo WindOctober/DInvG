@@ -1,0 +1,687 @@
+
+- Initialize_before_Parser doing...Done!
+
+- Parsing Input Doing...
+Get Input Variable...
+
+/----------------------------- 
+| Status before Solver: 
+----------------------------- 
+| Debug ID # 0
+| Debug_2 ID # 0
+| Debug_3 ID # 0
+| Print Tree : 1
+| Strategy ID # 2
+| Strategy name : newdfs_seq_propagation
+| DFS Search method : target_prior2
+| Sequences Divide method : two_per_group
+| Projection method : kohler_improvement_eliminate_c
+| Local invariants to be generated : 1
+| Increasing invariants to be generated : 1
+| Falsepath to be enabled : 1
+| Transition-sat to be enabled : 1
+| Exit-Transition is computed : 0
+| Display Disjunctive Invariants : 1
+| Display Array Invariants : 0
+| Weave time allowed : 360000
+\----------------------------- 
+
+----------------------------- 
+| The Locations read in are: 
+----------------------------- 
+
+Location: b1
+# of variables: 6
+「 l: 0, vars_num: 6, dual_num: 21 」
+Initial Condition: [[ 
+| 
+├ 1 * t -1 * t0  = 0 
+├ 1 * p0  = 0 
+├ 1 * p  = 0 
+├ 1 * x -1 * x0  = 0 
+| 
+]]
+Invariant: [[ 
+| 
+├  True
+| 
+]]
+
+Location: b2
+# of variables: 6
+「 l: 7, vars_num: 6, dual_num: 21 」
+Initial Condition: [[ 
+| 
+├ 1 * t -1 * t0  = 0 
+├ 1 * p0 -1 = 0 
+├ 1 * p -1 = 0 
+├ 1 * x -1 * x0  = 0 
+| 
+]]
+Invariant: [[ 
+| 
+├  True
+| 
+]]
+
+Location: le
+# of variables: 6
+「 l: 14, vars_num: 6, dual_num: 21 」
+[ no initial condition set]
+Invariant: [[ 
+| 
+├  True
+| 
+]]
+----------------------------- 
+| The Transitions read in are: 
+----------------------------- 
+Transition Relation: t1_2
+Pre-Location:b1   Post-Location:b2
+Transition Relation: [[
+| 
+├ 1 * `p -1 = 0 
+├ 1 * t0 -1 * `t0  = 0 
+├ 1 * t -1 * `t  + 1 = 0 
+├ 1 * p0 -1 * `p0  = 0 
+├ 1 * p  = 0 
+├ 1 * x0 -1 * `x0  = 0 
+├ 1 * x -1 * `x  + 2 = 0 
+├ -1 * t  + 98 >= 0
+| 
+]]
+Guard: [[
+| 
+├ 1 * p  = 0 
+├ -1 * t  + 98 >= 0
+| 
+]]
+Update: [[
+| 
+├ 1 * t -1 * `t  + 1 = 0 
+├ 1 * `p -1 = 0 
+├ 1 * x -1 * `x  + 2 = 0 
+| 
+]]
+Preserved: [[
+| 
+├  x0
+├  p0
+├  t0
+| 
+]]
+
+- Transition Relation t1_2 Ends
+----------------------------- 
+Transition Relation: t1_e
+Pre-Location:b1   Post-Location:le
+Transition Relation: [[
+| 
+├ 1 * `t -100 = 0 
+├ 1 * `p -1 = 0 
+├ 1 * t0 -1 * `t0  = 0 
+├ 1 * t -99 = 0 
+├ 1 * p0 -1 * `p0  = 0 
+├ 1 * p  = 0 
+├ 1 * x0 -1 * `x0  = 0 
+├ 1 * x -1 * `x  + 2 = 0 
+| 
+]]
+Guard: [[
+| 
+├ 1 * t -99 = 0 
+├ 1 * p  = 0 
+| 
+]]
+Update: [[
+| 
+├ 1 * `t -100 = 0 
+├ 1 * `p -1 = 0 
+├ 1 * x -1 * `x  + 2 = 0 
+| 
+]]
+Preserved: [[
+| 
+├  x0
+├  p0
+├  t0
+| 
+]]
+
+- Transition Relation t1_e Ends
+----------------------------- 
+Transition Relation: t2_1
+Pre-Location:b2   Post-Location:b1
+Transition Relation: [[
+| 
+├ 1 * `p  = 0 
+├ 1 * t0 -1 * `t0  = 0 
+├ 1 * t -1 * `t  + 1 = 0 
+├ 1 * p0 -1 * `p0  = 0 
+├ 1 * p -1 = 0 
+├ 1 * x0 -1 * `x0  = 0 
+├ 1 * x -1 * `x -1 = 0 
+├ -1 * t  + 98 >= 0
+| 
+]]
+Guard: [[
+| 
+├ 1 * p -1 = 0 
+├ -1 * t  + 98 >= 0
+| 
+]]
+Update: [[
+| 
+├ 1 * t -1 * `t  + 1 = 0 
+├ 1 * `p  = 0 
+├ 1 * x -1 * `x -1 = 0 
+| 
+]]
+Preserved: [[
+| 
+├  x0
+├  p0
+├  t0
+| 
+]]
+
+- Transition Relation t2_1 Ends
+----------------------------- 
+Transition Relation: t2_e
+Pre-Location:b2   Post-Location:le
+Transition Relation: [[
+| 
+├ 1 * `t -100 = 0 
+├ 1 * `p  = 0 
+├ 1 * t0 -1 * `t0  = 0 
+├ 1 * t -99 = 0 
+├ 1 * p0 -1 * `p0  = 0 
+├ 1 * p -1 = 0 
+├ 1 * x0 -1 * `x0  = 0 
+├ 1 * x -1 * `x -1 = 0 
+| 
+]]
+Guard: [[
+| 
+├ 1 * t -99 = 0 
+├ 1 * p -1 = 0 
+| 
+]]
+Update: [[
+| 
+├ 1 * `t -100 = 0 
+├ 1 * `p  = 0 
+├ 1 * x -1 * `x -1 = 0 
+| 
+]]
+Preserved: [[
+| 
+├  x0
+├  p0
+├  t0
+| 
+]]
+
+- Transition Relation t2_e Ends
+----------------------------- 
+
+/----------------------------- 
+| Adjacency Matrix for Location and Transition: 
+----------------------------- 
+| Input: 4 transitions
+----------------------------- 
+| [#] is transition_index
+| b1: []->b1;  [ 0 ]->b2;  [ 1 ]->le;  
+| b2: [ 2 ]->b1;  []->b2;  [ 3 ]->le;  
+| le: []->b1;  []->b2;  []->le;  
+----------------------------- 
+| Output: 4 transitions
+\----------------------------- 
+
+> > > Location::compute_dual_constraints(), Location: b1's Initialization
+- Initial-Value is not empty: 
+  E - F = 0, D = 0, C = 0, A - B = 0
+< < < Location::compute_dual_constraints(), Location: b1's Initialization
+
+> > > Location::compute_dual_constraints(), Location: b2's Initialization
+- Initial-Value is not empty: 
+  E - F = 0, D = 1, C = 1, A - B = 0
+< < < Location::compute_dual_constraints(), Location: b2's Initialization
+
+> > > Location::compute_dual_constraints(), Location: le's Initialization
+- Initial-Value is not empty: 
+  true
+< < < ( !polyset ) in Location::le
+
+> > > (inter transition) In compute_consecution_01(), TransitionRelation : t1_2
+Current transition has poly as follows: 
+  I = 1, F - L = 0, E - K = -1, D - J = 0, C = 0, B - H = 0, A - G = -2, -E >= -98
+  Compute this transition: 1
+  pushing back clump with 1 Polyhedra...
+  pushing back clump with 2 Polyhedra...
+  pushing back clump with 3 Polyhedra (in falsepath)...
+< < < Inter-Transition::t1_2 pushing back clump with 3 Polyhedra...done
+
+> > > (inter transition) In compute_consecution_01(), TransitionRelation : t1_e
+Current transition has poly as follows: 
+  K = 100, I = 1, F - L = 0, E = 99, D - J = 0, C = 0, B - H = 0, A - G = -2
+  Compute this transition: 0
+< < < Inter-Transition::t1_e pushing back clump with 0 Polyhedra...done
+
+> > > (inter transition) In compute_consecution_01(), TransitionRelation : t2_1
+Current transition has poly as follows: 
+  I = 0, F - L = 0, E - K = -1, D - J = 0, C = 1, B - H = 0, A - G = 1, -E >= -98
+  Compute this transition: 1
+  pushing back clump with 1 Polyhedra...
+  pushing back clump with 2 Polyhedra...
+  pushing back clump with 3 Polyhedra (in falsepath)...
+< < < Inter-Transition::t2_1 pushing back clump with 3 Polyhedra...done
+
+> > > (inter transition) In compute_consecution_01(), TransitionRelation : t2_e
+Current transition has poly as follows: 
+  K = 100, I = 0, F - L = 0, E = 99, D - J = 0, C = 1, B - H = 0, A - G = 1
+  Compute this transition: 0
+< < < Inter-Transition::t2_e pushing back clump with 0 Polyhedra...done
+[note]Location
+
+> > > Location::b1 already has clump with 0 Polyhedra...
+> > > Location::b1 altogether pushing back clump with 1 Polyhedra...done
+[note]Location
+
+> > > Location::b2 already has clump with 0 Polyhedra...
+> > > Location::b2 altogether pushing back clump with 1 Polyhedra...done
+[note]Location
+
+> > > Location::le already has clump with 0 Polyhedra...
+> > > Location::le altogether pushing back clump with 1 Polyhedra...done
+
+/ Start to solve Location b1
+/ Using target_prior2
+/ Generate Sequences
+> > > Tree::sequences generation()
+> > > Tree::two_per_group()
+
+From hb:4 To lb:4
+> > > Tree::dfs_sub_sequences_traverse()
+( Weaved Prune Tree, current length is 1
+( 4  ⋁  [0]       --  b: 0 --  Location_Intra:: b1
+( 3  ⋁   0  1  2  --  b: 0 --  Transition_Inter:: t2_1
+( 2  ⋁   0  1  2  --  b: 0 --  Transition_Inter:: t1_2
+( 1  ⋁   0        --  b: 0 --  Location_Intra:: le
+( 0  ⋁   0        --  b: 0 --  Location_Intra:: b2
+This sub_sequences invd_vp has weaved:1
+< < < Tree::dfs_sub_sequences_traverse()
+sub_sequences.size()/capacity():1/1
+This PRE_LOC has banged:0
+
+From hb:3 To lb:2
+> > > Tree::dfs_sub_sequences_traverse()
+( Weaved Prune Tree, current length is 2
+( 4  ⋁   0        --  b: 0 --  Location_Intra:: b1
+( 3  ⋁  [0] 1  2  --  b: 0 --  Transition_Inter:: t2_1
+( 2  ⋁  [0] 1  2  --  b: 0 --  Transition_Inter:: t1_2
+( 1  ⋁   0        --  b: 0 --  Location_Intra:: le
+( 0  ⋁   0        --  b: 0 --  Location_Intra:: b2
+( Weaved Prune Tree, current length is 2
+( 4  ⋁   0        --  b: 0 --  Location_Intra:: b1
+( 3  ⋁  [0] 1  2  --  b: 0 --  Transition_Inter:: t2_1
+( 2  ⋁   0 [1] 2  --  b: 0 --  Transition_Inter:: t1_2
+( 1  ⋁   0        --  b: 0 --  Location_Intra:: le
+( 0  ⋁   0        --  b: 0 --  Location_Intra:: b2
+( Banged Prune Tree, current length is 2
+( in related transition
+( 4  ⋁   0        --  b: 0 --  Location_Intra:: b1
+( 3  ⋁  [0] 1  2  --  b: 0 --  Transition_Inter:: t2_1
+( 2  ⋁   0  1 [2] --  b: 1 --  Transition_Inter:: t1_2
+( 1  ⋁   0        --  b: 0 --  Location_Intra:: le
+( 0  ⋁   0        --  b: 0 --  Location_Intra:: b2
+( Weaved Prune Tree, current length is 2
+( 4  ⋁   0        --  b: 0 --  Location_Intra:: b1
+( 3  ⋁   0 [1] 2  --  b: 0 --  Transition_Inter:: t2_1
+( 2  ⋁  [0] 1  2  --  b: 1 --  Transition_Inter:: t1_2
+( 1  ⋁   0        --  b: 0 --  Location_Intra:: le
+( 0  ⋁   0        --  b: 0 --  Location_Intra:: b2
+( Weaved Prune Tree, current length is 2
+( 4  ⋁   0        --  b: 0 --  Location_Intra:: b1
+( 3  ⋁   0 [1] 2  --  b: 0 --  Transition_Inter:: t2_1
+( 2  ⋁   0 [1] 2  --  b: 1 --  Transition_Inter:: t1_2
+( 1  ⋁   0        --  b: 0 --  Location_Intra:: le
+( 0  ⋁   0        --  b: 0 --  Location_Intra:: b2
+Above part, the 2th poly is erased by next poly in back-prune
+Above part, the 3th poly is erased by next poly in back-prune
+( Banged Prune Tree, current length is 2
+( in related transition
+( 4  ⋁   0        --  b: 0 --  Location_Intra:: b1
+( 3  ⋁   0 [1] 2  --  b: 0 --  Transition_Inter:: t2_1
+( 2  ⋁   0  1 [2] --  b: 2 --  Transition_Inter:: t1_2
+( 1  ⋁   0        --  b: 0 --  Location_Intra:: le
+( 0  ⋁   0        --  b: 0 --  Location_Intra:: b2
+( Banged Prune Tree, current length is 1
+( in related transition
+( 4  ⋁   0        --  b: 0 --  Location_Intra:: b1
+( 3  ⋁   0  1 [2] --  b: 1 --  Transition_Inter:: t2_1
+( 2  ⋁   0  1  2  --  b: 2 --  Transition_Inter:: t1_2
+( 1  ⋁   0        --  b: 0 --  Location_Intra:: le
+( 0  ⋁   0        --  b: 0 --  Location_Intra:: b2
+This sub_sequences invd_vp has weaved:2
+< < < Tree::dfs_sub_sequences_traverse()
+sub_sequences.size()/capacity():2/4
+This PRE_LOC has banged:5
+
+From hb:1 To lb:0
+> > > Tree::dfs_sub_sequences_traverse()
+( Weaved Prune Tree, current length is 2
+( 4  ⋁   0        --  b: 0 --  Location_Intra:: b1
+( 3  ⋁   0  1  2  --  b: 1 --  Transition_Inter:: t2_1
+( 2  ⋁   0  1  2  --  b: 2 --  Transition_Inter:: t1_2
+( 1  ⋁  [0]       --  b: 0 --  Location_Intra:: le
+( 0  ⋁  [0]       --  b: 0 --  Location_Intra:: b2
+This sub_sequences invd_vp has weaved:1
+< < < Tree::dfs_sub_sequences_traverse()
+sub_sequences.size()/capacity():1/1
+This PRE_LOC has banged:5
+< < < Tree::two_per_group()
+< < < Tree::sequences generation()
+
+/ Start to solve Location b2
+/ Using target_prior2
+/ Generate Sequences
+> > > Tree::sequences generation()
+> > > Tree::two_per_group()
+
+From hb:4 To lb:4
+> > > Tree::dfs_sub_sequences_traverse()
+( Weaved Prune Tree, current length is 1
+( 4  ⋁  [0]       --  b: 0 --  Location_Intra:: b2
+( 3  ⋁   0  1  2  --  b: 0 --  Transition_Inter:: t2_1
+( 2  ⋁   0  1  2  --  b: 0 --  Transition_Inter:: t1_2
+( 1  ⋁   0        --  b: 0 --  Location_Intra:: le
+( 0  ⋁   0        --  b: 0 --  Location_Intra:: b1
+This sub_sequences invd_vp has weaved:1
+< < < Tree::dfs_sub_sequences_traverse()
+sub_sequences.size()/capacity():1/1
+This PRE_LOC has banged:0
+
+From hb:3 To lb:2
+> > > Tree::dfs_sub_sequences_traverse()
+( Weaved Prune Tree, current length is 2
+( 4  ⋁   0        --  b: 0 --  Location_Intra:: b2
+( 3  ⋁  [0] 1  2  --  b: 0 --  Transition_Inter:: t2_1
+( 2  ⋁  [0] 1  2  --  b: 0 --  Transition_Inter:: t1_2
+( 1  ⋁   0        --  b: 0 --  Location_Intra:: le
+( 0  ⋁   0        --  b: 0 --  Location_Intra:: b1
+( Weaved Prune Tree, current length is 2
+( 4  ⋁   0        --  b: 0 --  Location_Intra:: b2
+( 3  ⋁  [0] 1  2  --  b: 0 --  Transition_Inter:: t2_1
+( 2  ⋁   0 [1] 2  --  b: 0 --  Transition_Inter:: t1_2
+( 1  ⋁   0        --  b: 0 --  Location_Intra:: le
+( 0  ⋁   0        --  b: 0 --  Location_Intra:: b1
+( Banged Prune Tree, current length is 2
+( in related transition
+( 4  ⋁   0        --  b: 0 --  Location_Intra:: b2
+( 3  ⋁  [0] 1  2  --  b: 0 --  Transition_Inter:: t2_1
+( 2  ⋁   0  1 [2] --  b: 1 --  Transition_Inter:: t1_2
+( 1  ⋁   0        --  b: 0 --  Location_Intra:: le
+( 0  ⋁   0        --  b: 0 --  Location_Intra:: b1
+( Weaved Prune Tree, current length is 2
+( 4  ⋁   0        --  b: 0 --  Location_Intra:: b2
+( 3  ⋁   0 [1] 2  --  b: 0 --  Transition_Inter:: t2_1
+( 2  ⋁  [0] 1  2  --  b: 1 --  Transition_Inter:: t1_2
+( 1  ⋁   0        --  b: 0 --  Location_Intra:: le
+( 0  ⋁   0        --  b: 0 --  Location_Intra:: b1
+( Weaved Prune Tree, current length is 2
+( 4  ⋁   0        --  b: 0 --  Location_Intra:: b2
+( 3  ⋁   0 [1] 2  --  b: 0 --  Transition_Inter:: t2_1
+( 2  ⋁   0 [1] 2  --  b: 1 --  Transition_Inter:: t1_2
+( 1  ⋁   0        --  b: 0 --  Location_Intra:: le
+( 0  ⋁   0        --  b: 0 --  Location_Intra:: b1
+Above part, the 2th poly is erased by next poly in back-prune
+Above part, the 3th poly is erased by next poly in back-prune
+( Banged Prune Tree, current length is 2
+( in related transition
+( 4  ⋁   0        --  b: 0 --  Location_Intra:: b2
+( 3  ⋁   0 [1] 2  --  b: 0 --  Transition_Inter:: t2_1
+( 2  ⋁   0  1 [2] --  b: 2 --  Transition_Inter:: t1_2
+( 1  ⋁   0        --  b: 0 --  Location_Intra:: le
+( 0  ⋁   0        --  b: 0 --  Location_Intra:: b1
+( Banged Prune Tree, current length is 1
+( in related transition
+( 4  ⋁   0        --  b: 0 --  Location_Intra:: b2
+( 3  ⋁   0  1 [2] --  b: 1 --  Transition_Inter:: t2_1
+( 2  ⋁   0  1  2  --  b: 2 --  Transition_Inter:: t1_2
+( 1  ⋁   0        --  b: 0 --  Location_Intra:: le
+( 0  ⋁   0        --  b: 0 --  Location_Intra:: b1
+This sub_sequences invd_vp has weaved:2
+< < < Tree::dfs_sub_sequences_traverse()
+sub_sequences.size()/capacity():2/4
+This PRE_LOC has banged:5
+
+From hb:1 To lb:0
+> > > Tree::dfs_sub_sequences_traverse()
+( Weaved Prune Tree, current length is 2
+( 4  ⋁   0        --  b: 0 --  Location_Intra:: b2
+( 3  ⋁   0  1  2  --  b: 1 --  Transition_Inter:: t2_1
+( 2  ⋁   0  1  2  --  b: 2 --  Transition_Inter:: t1_2
+( 1  ⋁  [0]       --  b: 0 --  Location_Intra:: le
+( 0  ⋁  [0]       --  b: 0 --  Location_Intra:: b1
+This sub_sequences invd_vp has weaved:1
+< < < Tree::dfs_sub_sequences_traverse()
+sub_sequences.size()/capacity():1/1
+This PRE_LOC has banged:5
+< < < Tree::two_per_group()
+< < < Tree::sequences generation()
+- ( !init_poly_flag ) in Location::le
+
+/ Start to solve Location b1
+/ Using target_prior2
+/ Read(Traverse) Sequences
+> > > Tree::dfs_sequences_traverse()
+
+sequence:00000
+/-----------------------------
+( Weaved Prune Tree, current length is 5
+( 4  ⋁  [0]       --  b: 0 --  Location:: b1
+( 3  ⋁  [0] 1  2  --  b: 0 --  Transition:: t2_1
+( 2  ⋁  [0] 1  2  --  b: 0 --  Transition:: t1_2
+( 1  ⋁  [0]       --  b: 0 --  Location:: le
+( 0  ⋁  [0]       --  b: 0 --  Location:: b2
+For location: b1
+「 l: 0, vars_num: 6, dual_num: 21 」
+> > > Project_by_Kohler(), doing...
+< < < Project_by_Kohler(), done!
+
+- Have Collected 1 invariant(s)
+- The collect_invariants Time Taken (0.01s) = 0
+\-----------------------------
+( Banged Prune Tree, current length is 2
+( in related transition
+( 4  ⋁  [0]       --  b: 0 --  Location:: b1
+( 3  ⋁   0 [1] 2  --  b: 1 --  Transition:: t2_1
+( 2  ⋁   0  1  2  --  b: 0 --  Transition:: t1_2
+( 1  ⋁   0        --  b: 0 --  Location:: le
+( 0  ⋁   0        --  b: 0 --  Location:: b2
+< < < Tree::dfs_sequences_traverse()
+
+/ Start to solve Location b2
+/ Using target_prior2
+/ Read(Traverse) Sequences
+> > > Tree::dfs_sequences_traverse()
+
+sequence:00000
+/-----------------------------
+( Weaved Prune Tree, current length is 5
+( 4  ⋁  [0]       --  b: 0 --  Location:: b2
+( 3  ⋁  [0] 1  2  --  b: 0 --  Transition:: t2_1
+( 2  ⋁  [0] 1  2  --  b: 0 --  Transition:: t1_2
+( 1  ⋁  [0]       --  b: 0 --  Location:: le
+( 0  ⋁  [0]       --  b: 0 --  Location:: b1
+For location: b2
+「 l: 7, vars_num: 6, dual_num: 21 」
+> > > Project_by_Kohler(), doing...
+< < < Project_by_Kohler(), done!
+
+- Have Collected 2 invariant(s)
+- The collect_invariants Time Taken (0.01s) = 0
+\-----------------------------
+( Banged Prune Tree, current length is 3
+( in related transition
+( 4  ⋁  [0]       --  b: 0 --  Location:: b2
+( 3  ⋁   0 [1] 2  --  b: 0 --  Transition:: t2_1
+( 2  ⋁   0 [1] 2  --  b: 1 --  Transition:: t1_2
+( 1  ⋁   0        --  b: 0 --  Location:: le
+( 0  ⋁   0        --  b: 0 --  Location:: b1
+< < < Tree::dfs_sequences_traverse()
+- ( !init_poly_flag ) in Location::le
+
+> > > compute_invariants_by_propagation_with_farkas()
+- YES! Initial Location:: b1
+- YES! Initial Location:: b2
+' 2 location [ 0  1 ] remained in initial_lid
+
+> > > invgen_need_working()
+* all_ppg_flag: 1
+! invgen is over !
+< < < invgen_need_working()
+/------------------------------(Propagation to Exit-Location)
+= Location le is being Propagated:
+= From Location invariant b1
+  2*A - 2*B + 3*D - E + F = 0, C = 0, -D >= -1, A - B + D >= 0, D >= 0
+= Through Transition relation t1_e: 
+  K = 100, I = 1, F - L = 0, E = 99, D - J = 0, C = 0, B - H = 0, A - G = -2
+= Propagated Location Invariant le
+  true
+* After intersection 
+  2*A - 2*B + 3*D + L = 99, K = 100, D - J = 0, I = 1, B - H = 0, A - G = -2, 2*A - 2*B + 3*D + F = 99, E = 99, C = 0, A - B + D >= 0, -D >= -1, D >= 0
+* Propagated Invariant at le
+  E = 100, C = 1, 2*A - 2*B + 3*D + F = 103, D >= 0, -D - F >= -99, -D >= -1
+\------------------------------(Propagation to Exit-Location)
+/------------------------------(Propagation to Exit-Location)
+= Location le is being Propagated:
+= From Location invariant b2
+  2*A - 2*B + 3*D - E + F = 3, C = 1, -D >= -1, A - B + 2*D >= 2, D >= 0
+= Through Transition relation t2_e: 
+  K = 100, I = 0, F - L = 0, E = 99, D - J = 0, C = 1, B - H = 0, A - G = 1
+= Propagated Location Invariant le
+  true
+* After intersection 
+  2*A - 2*B + 3*D + L = 102, K = 100, D - J = 0, I = 0, B - H = 0, A - G = 1, 2*A - 2*B + 3*D + F = 102, E = 99, C = 1, A - B + 2*D >= 2, -D >= -1, D >= 0
+* Propagated Invariant at le
+  C = 0, E = 100, 2*A - 2*B + 3*D + F = 100, D >= 0, -D >= -1, D - F >= -98
+\------------------------------(Propagation to Exit-Location)
+< < < compute_invariants_by_propagation_with_farkas()
+----------------------------- 
+| The Locations read in are: 
+----------------------------- 
+
+Location: b1
+# of variables: 6
+「 l: 0, vars_num: 6, dual_num: 21 」
+Initial Condition: [[ 
+| 
+├ 1 * t -1 * t0  = 0 
+├ 1 * p0  = 0 
+├ 1 * p  = 0 
+├ 1 * x -1 * x0  = 0 
+| 
+]]
+Invariant: [[ 
+| 
+├ 2 * x -2 * x0  + 3 * p0 -1 * t  + 1 * t0  = 0 
+├ 1 * p  = 0 
+├ -1 * p0  + 1 >= 0
+├ 1 * x -1 * x0  + 1 * p0  >= 0
+├ 1 * p0  >= 0
+| 
+]]
+
+Location: b2
+# of variables: 6
+「 l: 7, vars_num: 6, dual_num: 21 」
+Initial Condition: [[ 
+| 
+├ 1 * t -1 * t0  = 0 
+├ 1 * p0 -1 = 0 
+├ 1 * p -1 = 0 
+├ 1 * x -1 * x0  = 0 
+| 
+]]
+Invariant: [[ 
+| 
+├ 2 * x -2 * x0  + 3 * p0 -1 * t  + 1 * t0 -3 = 0 
+├ 1 * p -1 = 0 
+├ -1 * p0  + 1 >= 0
+├ 1 * x -1 * x0  + 2 * p0 -2 >= 0
+├ 1 * p0  >= 0
+| 
+]]
+
+Location: le
+# of variables: 6
+「 l: 14, vars_num: 6, dual_num: 21 」
+[ no initial condition set]
+Disjunctive Invariant: [[ 
+  
+1 * t -100 = 0 
+1 * p -1 = 0 
+2 * x -2 * x0  + 3 * p0  + 1 * t0 -103 = 0 
+1 * p0  >= 0
+-1 * p0 -1 * t0  + 99 >= 0
+-1 * p0  + 1 >= 0
+
+\/
+
+1 * p  = 0 
+1 * t -100 = 0 
+2 * x -2 * x0  + 3 * p0  + 1 * t0 -100 = 0 
+1 * p0  >= 0
+-1 * p0  + 1 >= 0
+1 * p0 -1 * t0  + 98 >= 0
+  
+]]
+
+/---------------------------------------- 
+| Disjunctive Invariants before Program: 
+----------------------------------------- 
+2 * x -2 * x0  + 3 * p0 -1 * t  + 1 * t0  = 0 
+1 * p  = 0 
+-1 * p0  + 1 >= 0
+1 * x -1 * x0  + 1 * p0  >= 0
+1 * p0  >= 0
+\/
+2 * x -2 * x0  + 3 * p0 -1 * t  + 1 * t0 -3 = 0 
+1 * p -1 = 0 
+-1 * p0  + 1 >= 0
+1 * x -1 * x0  + 2 * p0 -2 >= 0
+1 * p0  >= 0
+\---------------------------------------- 
+
+/----------------------------- 
+| Status after Solver: 
+----------------------------- 
+| Time Taken Unit: (0.01s)
+| # of Contexts generated = 3
+|
+| # of pruned vcl in intra-transition = 0
+| # of pruned nodes by self inspection = 0, Time = 0
+| # of pruned by backtracking = 0, Time = 0
+| # of merged for sub sequences = 0
+|
+| t: collect_invariant Time
+| w: invariants *weav*ed
+| LOC 0: t = 0, w = 1
+| LOC 1: t = 0, w = 1
+| LOC 2: t = 0, w = 0
+| TOTAL: t = 0, w = 2
+|
+| t: dfs_traverse Time
+| b: path *bang*ed
+| PRE_0: t = 0, b = 5
+| PRE_1: t = 0, b = 5
+| PRE_2: t = 0, b = 0
+| PST_0: t = 0, b = 1
+| PST_1: t = 0, b = 1
+| PST_2: t = 0, b = 0
+| TOTAL: t = 0, b = 12
+|
+| TOTAL Time = 0
+\----------------------------- 

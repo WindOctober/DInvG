@@ -1,0 +1,359 @@
+{
+	"artifacts" : 
+	[
+		{
+			"path" : "/home/windoctober/Desktop/Clang-based-Invariant-Generator/bin/Inv"
+		}
+	],
+	"backtrace" : 1,
+	"backtraceGraph" : 
+	{
+		"commands" : 
+		[
+			"add_executable",
+			"target_link_libraries",
+			"add_compile_options",
+			"include_directories"
+		],
+		"files" : 
+		[
+			"CMakeLists.txt"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 13,
+				"parent" : 0
+			},
+			{
+				"command" : 1,
+				"file" : 0,
+				"line" : 95,
+				"parent" : 0
+			},
+			{
+				"command" : 1,
+				"file" : 0,
+				"line" : 106,
+				"parent" : 0
+			},
+			{
+				"command" : 2,
+				"file" : 0,
+				"line" : 12,
+				"parent" : 0
+			},
+			{
+				"command" : 3,
+				"file" : 0,
+				"line" : 15,
+				"parent" : 0
+			},
+			{
+				"command" : 3,
+				"file" : 0,
+				"line" : 90,
+				"parent" : 0
+			},
+			{
+				"command" : 3,
+				"file" : 0,
+				"line" : 104,
+				"parent" : 0
+			}
+		]
+	},
+	"compileGroups" : 
+	[
+		{
+			"compileCommandFragments" : 
+			[
+				{
+					"fragment" : " -I/usr/lib/gcc/x86_64-linux-gnu/9/include -fexceptions -DENABLE_LLVM_SHARED=1 -I/usr/lib/llvm-10/include -std=c++14   -fno-exceptions -D_GNU_SOURCE -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -g  "
+				},
+				{
+					"backtrace" : 4,
+					"fragment" : "-fexceptions"
+				}
+			],
+			"includes" : 
+			[
+				{
+					"backtrace" : 5,
+					"path" : "/home/windoctober/Desktop/Clang-based-Invariant-Generator"
+				},
+				{
+					"backtrace" : 6,
+					"path" : "/usr/lib/llvm-10/include"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "/home/windoctober/Desktop/Clang-based-Invariant-Generator/Frontend"
+				}
+			],
+			"language" : "CXX",
+			"sourceIndexes" : 
+			[
+				0
+			]
+		}
+	],
+	"dependencies" : 
+	[
+		{
+			"backtrace" : 2,
+			"id" : "lstingx::@ce4725f601c2c5bc0686"
+		},
+		{
+			"backtrace" : 3,
+			"id" : "Frontend::@efc2591412389b652cb3"
+		}
+	],
+	"id" : "Inv::@6890427a1f51a3e7e1df",
+	"link" : 
+	{
+		"commandFragments" : 
+		[
+			{
+				"fragment" : "-I/usr/lib/gcc/x86_64-linux-gnu/9/include -fexceptions -DENABLE_LLVM_SHARED=1 -I/usr/lib/llvm-10/include -std=c++14   -fno-exceptions -D_GNU_SOURCE -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -g",
+				"role" : "flags"
+			},
+			{
+				"fragment" : "-L/usr/lib/llvm-10/lib -lLLVM-10",
+				"role" : "flags"
+			},
+			{
+				"fragment" : "-Wl,--start-group",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lclang",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lclangAST",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lclangAnalysis",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lclangBasic",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lclangDriver",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lclangEdit",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lclangIndex",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lclangFrontend",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lclangFrontendTool",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lclangLex",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lclangParse",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lclangSema",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lclangEdit",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lclangASTMatchers",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lclangRewrite",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lclangRewriteFrontend",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lclangStaticAnalyzerFrontend",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lclangStaticAnalyzerCheckers",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lclangStaticAnalyzerCore",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lclangSerialization",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lclangToolingCore",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lclangTooling",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lLLVM-10",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lLLVMSupport",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-Wl,--end-group",
+				"role" : "libraries"
+			},
+			{
+				"backtrace" : 2,
+				"fragment" : "Stingx/liblstingx.a",
+				"role" : "libraries"
+			},
+			{
+				"backtrace" : 3,
+				"fragment" : "Frontend/libFrontend.a",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lclangIndex",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lclangFrontend",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lclangFrontendTool",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lclangLex",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lclangParse",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lclangSema",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lclangASTMatchers",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lclangRewrite",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lclangRewriteFrontend",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lclangStaticAnalyzerFrontend",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lclangStaticAnalyzerCheckers",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lclangStaticAnalyzerCore",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lclangSerialization",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lclangToolingCore",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lclangTooling",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lLLVM-10",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lLLVMSupport",
+				"role" : "libraries"
+			},
+			{
+				"backtrace" : 2,
+				"fragment" : "Stingx/liblstingx.a",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lppl",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lgmpxx",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lgmp",
+				"role" : "libraries"
+			}
+		],
+		"language" : "CXX"
+	},
+	"name" : "Inv",
+	"nameOnDisk" : "Inv",
+	"paths" : 
+	{
+		"build" : ".",
+		"source" : "."
+	},
+	"sourceGroups" : 
+	[
+		{
+			"name" : "Source Files",
+			"sourceIndexes" : 
+			[
+				0
+			]
+		}
+	],
+	"sources" : 
+	[
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "main.cpp",
+			"sourceGroupIndex" : 0
+		}
+	],
+	"type" : "EXECUTABLE"
+}

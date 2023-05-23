@@ -1,0 +1,95 @@
+< < < compute_invariants_by_propagation_with_farkas()
+----------------------------- 
+| The Locations read in are: 
+----------------------------- 
+
+Location: b1
+# of variables: 3
+「 l: 0, vars_num: 3, dual_num: 16 」
+Initial Condition: [[ 
+| 
+├ 1 * z -155 = 0 
+├ 1 * y -51 = 0 
+├ 1 * x -51 = 0 
+| 
+]]
+Invariant: [[ 
+| 
+├ 5 * x -1 * z -100 = 0 
+├ 1 * x  + 1 * y -102 = 0 
+├ -1 * x  + 99 >= 0
+├ 1 * x -51 >= 0
+| 
+]]
+
+Location: b2
+# of variables: 3
+「 l: 4, vars_num: 3, dual_num: 16 」
+Initial Condition: [[ 
+| 
+├ 1 * z -25 = 0 
+├ 1 * y -25 = 0 
+├ 1 * x -25 = 0 
+| 
+]]
+Invariant: [[ 
+| 
+├ 5 * x -1 * z -100 = 0 
+├ 1 * x -1 * y  = 0 
+├ -1 * x  + 50 >= 0
+├ 1 * x -25 >= 0
+| 
+]]
+
+Location: b3
+# of variables: 3
+「 l: 8, vars_num: 3, dual_num: 16 」
+Initial Condition: [[ 
+| 
+├ 1 * z  = 0 
+├ 1 * y  = 0 
+├ 1 * x  = 0 
+| 
+]]
+Invariant: [[ 
+| 
+├ 1 * x -1 * z  = 0 
+├ 1 * x -1 * y  = 0 
+├ -1 * x  + 24 >= 0
+├ 1 * x  >= 0
+| 
+]]
+
+Location: le
+# of variables: 3
+「 l: 12, vars_num: 3, dual_num: 16 」
+[ no initial condition set]
+Disjunctive Invariant: [[ 
+  
+1 * z -400 = 0 
+1 * x -100 = 0 
+1 * y -2 = 0 
+  
+]]
+
+/---------------------------------------- 
+| Disjunctive Invariants before Program: 
+----------------------------------------- 
+5 * x -1 * z -100 = 0 
+1 * x  + 1 * y -102 = 0 
+-1 * x  + 99 >= 0
+1 * x -51 >= 0
+\/
+5 * x -1 * z -100 = 0 
+1 * x -1 * y  = 0 
+-1 * x  + 50 >= 0
+1 * x -25 >= 0
+\/
+1 * x -1 * z  = 0 
+1 * x -1 * y  = 0 
+-1 * x  + 24 >= 0
+1 * x  >= 0
+\---------------------------------------- 
+
+/----------------------------- 
+| Status after Solver: 

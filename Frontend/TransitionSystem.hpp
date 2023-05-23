@@ -17,13 +17,22 @@ using namespace llvm;
 class TransitionSystem
 {
 public:
-    // TODO: process the transformation from the Expr* to Constraint*.
-    // TODO: process the generation of the Locations and Transitions.
-    enum class TransformationType {Location,Transition,Guard};
-    void Compute_Loop_Invariant();
+    // DONE: process the transformation from the Expr* to Constraint*.
+    // DONE: process the generation of the Locations and Transitions.
+    // TODO: process the merge of two transition system while split by if statement.
+    // TODO: 
+    enum class TransformationType
+    {
+        Location,
+        Transition,
+        Guard,
+        Primed,
+        Origin
+    };
+    void Compute_Loop_Invariant(Expr* condition);
     vector<C_Polyhedron *> Compute_and_Eliminate_Init_Poly(vector<VariableInfo> used_vars);
     void Elimiate_Impossible_Path(int size);
-    void Initialize_Locations_and_Transitions(int locsize, int varsize);
+    void Initialize_Locations_and_Transitions(int locsize, int varsize,Expr* condition);
 
     void init_Canonical(int size);
     TransitionSystem(ASTContext *&astcontext);
@@ -38,7 +47,8 @@ public:
     void In_Loop();
     Expr *Trans_VariableInfo_to_Expr(VariableInfo var);
     Expr *Trans_VariableInfo_to_InitExpr(VariableInfo var);
-    Constraint *Trans_Expr_to_Constraint(Expr *expr,enum TransformationType type);
+    Constraint_System *Trans_Expr_to_Constraints(Expr *expr, enum TransformationType type, int var_size);
+    Linear_Expression *Trans_Expr_to_LinExpr(Expr *expr, enum TransformationType type, int var_size);
     vector<vector<Expr *>> Deal_with_condition(Expr *condition, bool not_logic, vector<vector<Expr *>> cur);
     vector<vector<Expr *>> Merge_DNF(vector<vector<Expr *>> left_expr, vector<vector<Expr *>> right_expr);
     vector<vector<Expr *>> Connect_DNF(vector<vector<Expr *>> left_expr, vector<vector<Expr *>> right_expr);

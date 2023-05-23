@@ -1,0 +1,116 @@
+< < < compute_invariants_by_propagation_with_farkas()
+----------------------------- 
+| The Locations read in are: 
+----------------------------- 
+
+Location: b1
+# of variables: 3
+「 l: 0, vars_num: 3, dual_num: 20 」
+Initial Condition: [[ 
+| 
+├ 1 * i  = 0 
+├ 1 * j  = 0 
+├ 1 * a  = 0 
+| 
+]]
+Invariant: [[ 
+| 
+├ -1 * a  + 5 >= 0
+├ -1 * a  + 1 * j  >= 0
+├ -1 * j  + 7 >= 0
+├ -1 * j  + 1 * i  >= 0
+├ -1 * i  + 99 >= 0
+├ 99 * j -5 * i  >= 0
+├ 7 * a -2 * j  >= 0
+├ 99 * a -2 * i  >= 0
+| 
+]]
+
+Location: b2
+# of variables: 3
+「 l: 4, vars_num: 3, dual_num: 20 」
+Initial Condition: [[ 
+| 
+├ 1 * j -8 = 0 
+├ 1 * a -3 >= 0
+├ -1 * a  + 5 >= 0
+├ -1 * i  + 99 >= 0
+├ 1 * i -8 >= 0
+| 
+]]
+Invariant: [[ 
+| 
+├  True
+| 
+]]
+
+Location: b3
+# of variables: 3
+「 l: 8, vars_num: 3, dual_num: 20 」
+Initial Condition: [[ 
+| 
+├ 1 * a -6 = 0 
+├ 1 * j -6 >= 0
+├ -1 * j  + 7 >= 0
+├ -1 * j  + 1 * i  >= 0
+├ -1 * i  + 99 >= 0
+| 
+]]
+Invariant: [[ 
+| 
+├  True
+| 
+]]
+
+Location: b4
+# of variables: 3
+「 l: 12, vars_num: 3, dual_num: 20 」
+Initial Condition: [[ 
+| 
+├ 1 * j -8 = 0 
+├ 1 * a -6 = 0 
+├ 1 * i -8 >= 0
+├ -1 * i  + 99 >= 0
+| 
+]]
+Invariant: [[ 
+| 
+├  True
+| 
+]]
+
+Location: le
+# of variables: 3
+「 l: 16, vars_num: 3, dual_num: 20 」
+[ no initial condition set]
+Disjunctive Invariant: [[ 
+  
+1 * i -100 = 0 
+1 * a -3 >= 0
+1 * j -6 >= 0
+-1 * a  + 6 >= 0
+-1 * j  + 8 >= 0
+  
+]]
+
+/---------------------------------------- 
+| Disjunctive Invariants before Program: 
+----------------------------------------- 
+-1 * a  + 5 >= 0
+-1 * a  + 1 * j  >= 0
+-1 * j  + 7 >= 0
+-1 * j  + 1 * i  >= 0
+-1 * i  + 99 >= 0
+99 * j -5 * i  >= 0
+7 * a -2 * j  >= 0
+99 * a -2 * i  >= 0
+\/
+True
+\/
+True
+\/
+True
+\---------------------------------------- 
+
+/----------------------------- 
+| Status after Solver: 

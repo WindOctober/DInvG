@@ -1,0 +1,49 @@
+< < < compute_invariants_by_propagation_with_farkas()
+----------------------------- 
+| The Locations read in are: 
+----------------------------- 
+
+Location: b1
+# of variables: 8
+「 l: 0, vars_num: 8, dual_num: 18 」
+Initial Condition: [[ 
+| 
+├ 1 * a -1 * r  = 0 
+├ 1 * q  = 0 
+├ 1 * b -1 >= 0
+├ 1 * a -1 * b  >= 0
+| 
+]]
+Invariant: [[ 
+| 
+├ -1 * b  + 1 * r  >= 0
+├ 1 * q  >= 0
+├ 1 * b -1 >= 0
+├ 1 * a -1 * q -1 * r  >= 0
+| 
+]]
+
+Location: le
+# of variables: 8
+「 l: 9, vars_num: 8, dual_num: 18 」
+[ no initial condition set]
+Disjunctive Invariant: [[ 
+  
+1 * r  >= 0
+1 * b -1 * r -1 >= 0
+1 * q -1 >= 0
+1 * a -1 * b -1 * q -1 * r  + 1 >= 0
+  
+]]
+
+/---------------------------------------- 
+| Disjunctive Invariants before Program: 
+----------------------------------------- 
+-1 * b  + 1 * r  >= 0
+1 * q  >= 0
+1 * b -1 >= 0
+1 * a -1 * q -1 * r  >= 0
+\---------------------------------------- 
+
+/----------------------------- 
+| Status after Solver: 
