@@ -1,0 +1,80 @@
+variable [ m 
+           n 
+           i 
+           j 
+           k1 
+           k2 
+           k3
+           k4 ]
+
+Location b1 
+  m >= 1 
+  n >= m + 1 
+  i = 0 
+  j = 0
+  k1 = 0
+  k2 = 0
+  k3 = 0
+  k4 = 0
+
+Location b2 
+
+Location le 
+
+transition t1_1: b1, 
+   i <=  n - 1 
+   j <=  m - 1 
+  'i <= 'n - 1 
+  'j <= 'm - 1 
+  'j  =  j + 1 
+  'i  =  i 
+  'm  =  m 
+  'n  =  n 
+  'k1 =  k1 + 1 
+  'k2 =  k2
+  'k3 =  k3
+  'k4 =  k4
+
+transition t1_2: b1,b2, 
+   i <=  n - 1 
+   j <=  m - 1 
+  'i <= 'n - 1 
+  'j >= 'm 
+  'j  =  j + 1 
+  'i  =  i 
+  'm  =  m 
+  'n  =  n 
+  'k1 =  k1 
+  'k2 =  k2 + 1
+  'k3 =  k3
+  'k4 =  k4
+
+
+transition t2_1: b2,b1, 
+   i <=  n - 1 
+   j >=  m 
+  'i <= 'n - 1 
+  'j <= 'm - 1 
+  'j  =  0 
+  'i  =  i + 1 
+  'm  =  m 
+  'n  =  n 
+  'k1 =  k1 
+  'k2 =  k2 
+  'k3 =  k3 + 1
+  'k4 =  k4
+
+transition t2_e: b2,le, 
+   i <=  n - 1 
+   j >=  m 
+  'i >= 'n 
+  'j  =  0 
+  'i  =  i + 1 
+  'm  =  m 
+  'n  =  n 
+  'k1 =  k1 
+  'k2 =  k2 
+  'k3 =  k3
+  'k4 =  k4 + 1
+
+end 

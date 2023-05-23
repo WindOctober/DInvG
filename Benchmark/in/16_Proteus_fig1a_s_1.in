@@ -1,0 +1,86 @@
+variable [ n n0 
+           x x0 
+           z z0 ]
+
+Location b1 
+  n = n0 
+  x = x0 
+  z = z0 
+  x0 <= z0 - 1
+  z0 <= n0 - 1
+
+Location b2 
+
+Location le 
+
+transition t1_1: b1, 
+   x + 1 <=  n 
+   x + 1 <=  z 
+  'x + 1 <= 'n 
+  'x + 1 <= 'z 
+  'n = n 
+  'x = x + 1
+  'z = z 
+  'n0 = n0 
+  'x0 = x0 
+  'z0 = z0 
+
+transition t1_2: b1,b2, 
+   x + 1 <=  n 
+   x + 1 <=  z 
+  'x + 1 <= 'n 
+      'z <= 'x 
+  'n = n 
+  'x = x + 1
+  'z = z 
+  'n0 = n0 
+  'x0 = x0 
+  'z0 = z0 
+
+transition t1_e: b1,le, 
+   x + 1 <=  n 
+   x + 1 <=  z 
+      'n <= 'x 
+  'n = n 
+  'x = x + 1
+  'z = z 
+  'n0 = n0 
+  'x0 = x0 
+  'z0 = z0 
+
+transition t2_2: b2, 
+   x + 1 <=  n 
+       z <=  x 
+  'x + 1 <= 'n 
+      'z <= 'x 
+  'n = n 
+  'x = x 
+  'z = z + 1
+  'n0 = n0 
+  'x0 = x0 
+  'z0 = z0 
+
+transition t2_1: b2,b1, 
+   x + 1 <=  n 
+       z <=  x 
+  'x + 1 <= 'n 
+  'x + 1 <= 'z 
+  'n = n 
+  'x = x 
+  'z = z + 1
+  'n0 = n0 
+  'x0 = x0 
+  'z0 = z0 
+
+transition t2_e: b2,le, 
+   x + 1 <= n 
+       z <= x 
+      'n <= 'x 
+  'n = n 
+  'x = x 
+  'z = z + 1
+  'n0 = n0 
+  'x0 = x0 
+  'z0 = z0 
+
+end 

@@ -1,0 +1,36 @@
+variable [ a a0
+           b b0
+           q q0
+           r r0 ]
+
+Location b1 
+  a >= b 
+  b >= 1 
+  q  = 0 
+  r  = a 
+
+invariant b1:
+  a >= q + r
+  b >= 1 
+  q >= 0 
+  r >= b 
+
+Location le 
+
+transition t1_1: b1, 
+   b <=  r 
+  'b <= 'r 
+  'r  =  r - b 
+  'q  =  q + 1 
+  'a  =  a 
+  'b  =  b 
+
+transition t1_e: b1,le, 
+   b <=  r 
+  'r <= 'b - 1
+  'r  =  r - b 
+  'q  =  q + 1 
+  'a  =  a 
+  'b  =  b 
+
+end

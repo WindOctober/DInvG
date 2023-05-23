@@ -1,0 +1,30 @@
+variable [ k k0
+           j j0 ]
+
+Location b1
+  k = k0 
+  j = j0 
+  k0 <= j0 - 1 
+invariant b1:
+  2 * k -2 * k0 -1 * j  + 1 * j0  = 0 
+  1 * k0  + 1 * j -1 >= 2 * k
+  1 * j -1 >= k
+
+Location le 
+
+transition t1_1: b1, 
+   k <=  j - 1
+  'k <= 'j - 1
+  'j = j - k 
+  2 * 'k = k 
+  'k0 = k0 
+  'j0 = j0 
+transition t1_e: b1,le,
+   k <=  j - 1
+  'k >= 'j
+  'j = j - k 
+  2 * 'k = k 
+  'k0 = k0 
+  'j0 = j0 
+
+end 
