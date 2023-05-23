@@ -1,1 +1,0 @@
-/usr/bin/c++      CMakeFiles/lstingX.dir/lstingx.cpp.o  -o ../../bin/lstingX   -L"/usr/lib/llvm-10/lib -lLLVM-10"  -Wl,-rpath,"/usr/lib/llvm-10/lib -lLLVM-10" liblstingx.a -lppl -lgmpxx -lgmp 

@@ -1,9 +1,0 @@
-/home/windoctober/Desktop/Clang-based-Invariant-Generator/build/CMakeFiles/rebuild_cache.dir
-/home/windoctober/Desktop/Clang-based-Invariant-Generator/build/CMakeFiles/edit_cache.dir
-/home/windoctober/Desktop/Clang-based-Invariant-Generator/build/CMakeFiles/Inv.dir
-/home/windoctober/Desktop/Clang-based-Invariant-Generator/build/Stingx/CMakeFiles/rebuild_cache.dir
-/home/windoctober/Desktop/Clang-based-Invariant-Generator/build/Stingx/CMakeFiles/edit_cache.dir
-/home/windoctober/Desktop/Clang-based-Invariant-Generator/build/Stingx/CMakeFiles/lstingx.dir
-/home/windoctober/Desktop/Clang-based-Invariant-Generator/build/Frontend/CMakeFiles/rebuild_cache.dir
-/home/windoctober/Desktop/Clang-based-Invariant-Generator/build/Frontend/CMakeFiles/edit_cache.dir
-/home/windoctober/Desktop/Clang-based-Invariant-Generator/build/Frontend/CMakeFiles/Frontend.dir

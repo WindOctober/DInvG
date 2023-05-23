@@ -1,2 +1,0 @@
-/usr/bin/ar qc libFrontend.a  CMakeFiles/Frontend.dir/CFGVisitor.cpp.o CMakeFiles/Frontend.dir/TransitionSystem.cpp.o CMakeFiles/Frontend.dir/Variable.cpp.o
-/usr/bin/ranlib libFrontend.a
