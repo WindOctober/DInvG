@@ -30,6 +30,11 @@ namespace std
     };
 }
 
+Expr* TransitionSystem::NegateExpr(Expr* expr){
+    UnaryOperator *notExpr = new (context) UnaryOperator(expr, UO_LNot, context->BoolTy, VK_RValue, OK_Ordinary, SourceLocation(), false);
+    return notExpr;
+}
+
 void TransitionSystem::add_vars(VariableInfo var)
 {
     int branch_count = InWhileLoop ? Canonical_Branch_Count : Init_Branch_Count;
@@ -449,7 +454,7 @@ void TransitionSystem::Initialize_Locations_and_Transitions(int locsize, int var
             else
             {
                 C_Polyhedron *q=new C_Polyhedron(varsize*2,UNIVERSE);
-                UnaryOperator *notExpr = new (context) UnaryOperator(condition, UO_LNot, context->BoolTy, VK_RValue, OK_Ordinary, SourceLocation(), false);
+                Expr* notExpr=NegateExpr(condition);
                 vector<vector<Expr *>> notcond;
                 vector<vector<Constraint_System *>> exit_guard;
                 notcond = Deal_with_condition(notExpr, true, notcond);
@@ -589,6 +594,21 @@ TransitionSystem::TransitionSystem(ASTContext *&astcontext) : context(astcontext
     Inner_Loop_Count = 0;
     Inner_Loop_Depth = 0;
     InWhileLoop = false;
+}
+
+TransitionSystem::TransitionSystem(TransitionSystem& other) 
+    : Verified_Loop_Count(other.Verified_Loop_Count),
+      context(other.context),
+      Init_Vars(other.Init_Vars),
+      Vars(other.Vars),
+      DNF(other.DNF),
+      Init_DNF(other.Init_DNF),
+      Canonical_Branch_Count(other.Canonical_Branch_Count),
+      Init_Branch_Count(other.Init_Branch_Count),
+      InWhileLoop(other.InWhileLoop),
+      Inner_Loop_Depth(other.Inner_Loop_Depth),
+      Inner_Loop_Count(other.Inner_Loop_Count) 
+{
 }
 
 int TransitionSystem::get_Canonical_count()

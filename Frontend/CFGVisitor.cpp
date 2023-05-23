@@ -110,12 +110,36 @@ void CFGVisitor::DealWithStmt(Stmt *stmt)
     }
     if (isa<IfStmt>(stmt))
     {
+        IfStmt *ifStmt = dyn_cast<IfStmt>(stmt);
+        Expr* condition = ifStmt->getCond();
+        Stmt* then_branch =ifStmt->getThen();
+        Stmt* else_branch = ifStmt->getElse();
+        TransitionSystem ElseTransystem(Transystem);
+        TransitionSystem ThenTransystem(context);
+        Transystem.Merge_condition(condition);
+        ElseTransystem.Merge_condition(ElseTransystem.NegateExpr(condition));
+        if (CompoundStmt *compound = dyn_cast<CompoundStmt>(then_branch))
+        {
+            for (auto stmt : compound->body())
+            {
+                DealWithStmt(stmt);
+            }
+        }
+        ThenTransystem=Transystem;
+        Transystem=ElseTransystem;
+        if (CompoundStmt *compound = dyn_cast<CompoundStmt>(else_branch))
+        {
+            for (auto stmt : compound->body())
+            {
+                DealWithStmt(stmt);
+            }
+        }
         
     }
     else if (isa<ForStmt>(stmt))
     {
         // TODO: Process if For loop body is empty;
-        // TODO:
+        
     }
     else if (isa<WhileStmt>(stmt))
     {
