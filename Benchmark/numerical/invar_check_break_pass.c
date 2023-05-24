@@ -5,9 +5,6 @@ int main()
 {
   int r;
   while(r > 0)
-    // clang-format off
-
-    // clang-format on
     {
       --r;
       if(r <= 1)

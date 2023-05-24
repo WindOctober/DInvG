@@ -1,4 +1,5 @@
 #include "Variable.hpp"
+#include "Define.hpp"
 
 VariableInfo::VariableInfo()
 {
@@ -26,8 +27,19 @@ void VariableInfo::search_and_insert(VariableInfo var, vector<VariableInfo> &Var
     Vars.push_back(var);
     return;
 }
+Expr* VariableInfo::search_for_value(VariableInfo var, vector<VariableInfo> &Vars){
+    
+    for (int i = 0; i < Vars.size(); i++)
+    {
+        if (Vars[i].getVariableName() == var.getVariableName() && Vars[i].inLoop == var.inLoop)
+        {
+            return Vars[i].getVariableValue();
+        }
+    }
+    return var.getVariableValue();
+}
 
-void VariableInfo::alterVar(string varname, Expr *expr, QualType type, bool inLoop)
+void VariableInfo::alterVar(string varname, Expr *expr, QualType type, bool in)
 {
     if (varname != "")
         VarName = varname;
@@ -35,7 +47,7 @@ void VariableInfo::alterVar(string varname, Expr *expr, QualType type, bool inLo
         VarValue = expr;
     if (!type.isNull())
         VarType = type;
-    inLoop = inLoop;
+    inLoop = in;
     return;
 }
 
@@ -46,7 +58,7 @@ void VariableInfo::alterVar(Expr *var_expr, Expr *init, bool in)
         DeclRefExpr *decl = dyn_cast<DeclRefExpr>(var_expr);
         VarName = decl->getDecl()->getNameAsString();
         VarType = decl->getType();
-        VarValue = init;
+        if (init) VarValue = init;
         inLoop = in;
     }
     else{

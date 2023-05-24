@@ -2,6 +2,7 @@
 // TODO: think how to solve the inter-procedural invariant.
 #include "CFGVisitor.hpp"
 #include "TransitionSystem.hpp"
+#include "Define.hpp"
 #include <iostream>
 #include <memory>
 
@@ -31,7 +32,7 @@ void CFGVisitor::Terminate_errors(enum ErrorType Errors)
     errs() << "CFGVisitor::Terminate_errors UnknownError";
     return;
 }
-void CFGVisitor::DealWithVarDecl(VarDecl *stmt)
+void CFGVisitor::DealWithVarDecl(VarDecl *stmt, TransitionSystem &transystem)
 {
     VariableInfo var;
     if (stmt == NULL)
@@ -50,14 +51,14 @@ void CFGVisitor::DealWithVarDecl(VarDecl *stmt)
     }
     else if (stmt_type->isIntegerType())
     {
-        var.alterVar(var_name, stmt->getInit(), stmt_type, Transystem.get_InLoop());
+        var.alterVar(var_name, stmt->getInit(), stmt_type, transystem.get_InLoop());
     }
     else if (stmt_type->isFloatingType())
         Terminate_errors(ErrorType::FloatVarError);
-    Transystem.add_vars(var);
+    transystem.add_vars(var);
 }
 
-void CFGVisitor::DealWithUnaryOp(UnaryOperator *stmt)
+void CFGVisitor::DealWithUnaryOp(UnaryOperator *stmt, TransitionSystem &transystem)
 {
     Expr *res;
     Expr *left_value = stmt->getSubExpr();
@@ -65,37 +66,37 @@ void CFGVisitor::DealWithUnaryOp(UnaryOperator *stmt)
     if (stmt->getOpcode() == UO_PreDec || stmt->getOpcode() == UO_PostDec)
     {
         IntegerLiteral *one = IntegerLiteral::Create(*context, APInt(32, 1), context->IntTy, SourceLocation());
-        BinaryOperator *plusOne = new (context) BinaryOperator(left_value, one, BO_Sub, left_value->getType(), VK_RValue, OK_Ordinary, SourceLocation(), default_options);
-        res = new (*context) BinaryOperator(left_value, plusOne, BO_Assign, left_value->getType(), VK_RValue, OK_Ordinary, SourceLocation(), default_options);
-        Transystem.add_expr(res);
+        BinaryOperator *minusOne = new (context) BinaryOperator(left_value, one, BO_Sub, left_value->getType(), VK_RValue, OK_Ordinary, SourceLocation(), default_options);
+        res = new (*context) BinaryOperator(left_value, minusOne, BO_Assign, left_value->getType(), VK_RValue, OK_Ordinary, SourceLocation(), default_options);
+        DealWithBinaryOp(dyn_cast<BinaryOperator>(res), transystem);
     }
     else if (stmt->getOpcode() == UO_PreInc || stmt->getOpcode() == UO_PostInc)
     {
         IntegerLiteral *one = IntegerLiteral::Create(*context, APInt(32, 1), context->IntTy, SourceLocation());
-        BinaryOperator *minusOne = new (context) BinaryOperator(left_value, one, BO_Add, left_value->getType(), VK_RValue, OK_Ordinary, SourceLocation(), default_options);
-        res = new (*context) BinaryOperator(left_value, minusOne, BO_Assign, left_value->getType(), VK_RValue, OK_Ordinary, SourceLocation(), default_options);
-        Transystem.add_expr(res);
+        BinaryOperator *plusOne = new (context) BinaryOperator(left_value, one, BO_Add, left_value->getType(), VK_RValue, OK_Ordinary, SourceLocation(), default_options);
+        res = new (*context) BinaryOperator(left_value, plusOne, BO_Assign, left_value->getType(), VK_RValue, OK_Ordinary, SourceLocation(), default_options);
+        DealWithBinaryOp(dyn_cast<BinaryOperator>(res), transystem);
     }
     return;
 }
 
-void CFGVisitor::DealWithBinaryOp(BinaryOperator *stmt)
+void CFGVisitor::DealWithBinaryOp(BinaryOperator *stmt, TransitionSystem &transystem)
 {
     Expr *res;
     FPOptions default_options;
     if (stmt->getOpcode() == BO_Assign)
     {
         VariableInfo var;
-        var.alterVar(stmt->getLHS(), stmt->getRHS(), Transystem.get_InLoop());
-        Transystem.add_vars(var);
+        var.alterVar(stmt->getLHS(), NULL, transystem.get_InLoop());
+        transystem.add_vars(var, stmt->getRHS());
     }
     return;
 }
 
-void CFGVisitor::DealWithFunctionDecl(FunctionDecl *stmt)
+void CFGVisitor::DealWithFunctionDecl(FunctionDecl *stmt, TransitionSystem &transystem)
 {
 }
-void CFGVisitor::DealWithStmt(Stmt *stmt)
+void CFGVisitor::DealWithStmt(Stmt *stmt, TransitionSystem &transystem)
 {
     // Deal with the whole Stmt in code. (which usually means the complete statement in one line.)
 
@@ -103,43 +104,41 @@ void CFGVisitor::DealWithStmt(Stmt *stmt)
     // TODO: Deal with If statement in code.
     // TODO: Deal with For loop in code.
     // TODO: Deal with the situation of continue and break in code. [hint: consider the guard to break to be loop guard in break situation and the standalone branch cutted in continue statement]
+    // TODO: Deal with special cases likes x=(a==b), y=(a>=b), which should be handled to if (a==b) x=1 else x=0 and so on.
     PrintStmtInfo(stmt);
-    if (Transystem.get_Canonical_count() == 0)
+    if (transystem.get_Canonical_count() == 0)
     {
-        Transystem.init_Canonical(1);
+        transystem.init_Canonical(1);
     }
     if (isa<IfStmt>(stmt))
     {
         IfStmt *ifStmt = dyn_cast<IfStmt>(stmt);
-        Expr* condition = ifStmt->getCond();
-        Stmt* then_branch =ifStmt->getThen();
-        Stmt* else_branch = ifStmt->getElse();
-        TransitionSystem ElseTransystem(Transystem);
-        TransitionSystem ThenTransystem(context);
-        Transystem.Merge_condition(condition);
-        ElseTransystem.Merge_condition(ElseTransystem.NegateExpr(condition));
+        Expr *condition = ifStmt->getCond();
+        Stmt *then_branch = ifStmt->getThen();
+        Stmt *else_branch = ifStmt->getElse();
+        TransitionSystem ElseTransystem(transystem);
+        TransitionSystem ThenTransystem(transystem);
+        ThenTransystem.Merge_condition(condition, false);
+        ElseTransystem.Merge_condition(transystem.NegateExpr(condition), false);
         if (CompoundStmt *compound = dyn_cast<CompoundStmt>(then_branch))
         {
             for (auto stmt : compound->body())
             {
-                DealWithStmt(stmt);
+                DealWithStmt(stmt, ThenTransystem);
             }
         }
-        ThenTransystem=Transystem;
-        Transystem=ElseTransystem;
         if (CompoundStmt *compound = dyn_cast<CompoundStmt>(else_branch))
         {
             for (auto stmt : compound->body())
             {
-                DealWithStmt(stmt);
+                DealWithStmt(stmt, ElseTransystem);
             }
         }
-        
+        transystem = TransitionSystem::Merge_Transystem(ThenTransystem, ElseTransystem);
     }
     else if (isa<ForStmt>(stmt))
     {
         // TODO: Process if For loop body is empty;
-        
     }
     else if (isa<WhileStmt>(stmt))
     {
@@ -148,18 +147,17 @@ void CFGVisitor::DealWithStmt(Stmt *stmt)
         WhileStmt *whileStmt = dyn_cast<WhileStmt>(stmt);
         Expr *loop_condition = whileStmt->getCond();
         Stmt *while_body = whileStmt->getBody();
-        Transystem.Merge_condition(loop_condition);
-        Transystem.In_Loop();
+        transystem.Merge_condition(loop_condition, false);
+        transystem.In_Loop();
         if (CompoundStmt *compound = dyn_cast<CompoundStmt>(while_body))
         {
             for (auto stmt : compound->body())
             {
-                DealWithStmt(stmt);
+                DealWithStmt(stmt, transystem);
             }
-            Transystem.Update_Loop_Vars();
-            Transystem.Print_DNF();
+            transystem.Update_Loop_Vars();
         }
-        Transystem.Out_Loop(whileStmt);
+        transystem.Out_Loop(whileStmt);
     }
     else if (isa<DeclStmt>(stmt))
     {
@@ -169,18 +167,17 @@ void CFGVisitor::DealWithStmt(Stmt *stmt)
         {
             if (isa<VarDecl>(decl))
             {
-                DealWithVarDecl(dyn_cast<VarDecl>(decl));
+                DealWithVarDecl(dyn_cast<VarDecl>(decl), transystem);
             }
             else if (isa<FunctionDecl>(decl))
             {
-                DealWithFunctionDecl(dyn_cast<FunctionDecl>(decl));
+                DealWithFunctionDecl(dyn_cast<FunctionDecl>(decl), transystem);
             }
         }
     }
     else if (isa<BinaryOperator>(stmt))
     {
-        BinaryOperator *binop = dyn_cast<BinaryOperator>(stmt);
-        DealWithBinaryOp(binop);
+        DealWithBinaryOp(dyn_cast<BinaryOperator>(stmt), transystem);
     }
     else if (isa<ParenExpr>(stmt))
     {
@@ -188,8 +185,7 @@ void CFGVisitor::DealWithStmt(Stmt *stmt)
     }
     else if (isa<UnaryOperator>(stmt))
     {
-        UnaryOperator *unop = dyn_cast<UnaryOperator>(stmt);
-        DealWithUnaryOp(unop);
+        DealWithUnaryOp(dyn_cast<UnaryOperator>(stmt), transystem);
     }
     return;
 }
@@ -214,6 +210,7 @@ bool CFGVisitor::VisitCallExpr(CallExpr *CE)
 
 bool CFGVisitor::VisitFunctionDecl(FunctionDecl *func)
 {
+    TransitionSystem::context = context;
     SourceManager &SM = context->getSourceManager();
     if (!SM.isInMainFile(func->getLocation()))
         return true;
@@ -224,12 +221,13 @@ bool CFGVisitor::VisitFunctionDecl(FunctionDecl *func)
     }
     if (func->getNameAsString() == "main" || Main_Functions.count("main") == 0)
     {
+        TransitionSystem transystem;
         Stmt *func_body = func->getBody();
         if (CompoundStmt *compound = dyn_cast<CompoundStmt>(func_body))
         {
             for (auto stmt : compound->body())
             {
-                DealWithStmt(stmt);
+                DealWithStmt(stmt, transystem);
             }
         }
     }
