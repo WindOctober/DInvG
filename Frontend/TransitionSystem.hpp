@@ -14,6 +14,7 @@ using namespace std;
 using namespace clang;
 using namespace llvm;
 
+
 class TransitionSystem
 {
 public:
@@ -30,23 +31,24 @@ public:
         Origin
     };
     void Compute_Loop_Invariant(Expr* condition);
-    vector<C_Polyhedron *> Compute_and_Eliminate_Init_Poly(vector<VariableInfo> used_vars);
+    vector<C_Polyhedron *> Compute_and_Eliminate_Init_Poly(vector<VariableInfo> used_vars,Expr* condition);
     void Elimiate_Impossible_Path(int size);
     void Initialize_Locations_and_Transitions(int locsize, int varsize,Expr* condition);
 
     void init_Canonical(int size);
-    TransitionSystem(ASTContext *&astcontext);
+    TransitionSystem();
     TransitionSystem(TransitionSystem& other);
     int get_Canonical_count();
     bool get_InLoop();
     vector<VariableInfo> get_Used_Vars();
 
     void Traverse_Expr_ForVars(Expr *expr, unordered_set<VariableInfo> &res);
-    void Merge_condition(Expr *condition);
+    void Merge_condition(Expr *condition,bool init_flag);
     void Split_If();
-    Expr* NegateExpr(Expr* expr);
+    static Expr* NegateExpr(Expr* expr);
 
     void In_Loop();
+    Expr *Trans_Expr_by_CurVars(Expr* expr,vector<VariableInfo>& Vars);
     Expr *Trans_VariableInfo_to_Expr(VariableInfo var);
     Expr *Trans_VariableInfo_to_InitExpr(VariableInfo var);
     Constraint_System *Trans_Expr_to_Constraints(Expr *expr, enum TransformationType type, int var_size);
@@ -59,20 +61,21 @@ public:
     void copy_after_update(int size);
     void Out_Loop(WhileStmt *whileloop);
 
-    TransitionSystem Merge_Transystem(TransitionSystem& left_trans,TransitionSystem& right_trans);
+    static TransitionSystem Merge_Transystem(TransitionSystem& left_trans,TransitionSystem& right_trans);
 
-    string Print_Expr(Expr *expr);
+    
     void Print_Vars();
     void Print_DNF();
 
-    void add_vars(VariableInfo var);
+    void add_vars(VariableInfo& var);
+    void add_vars(VariableInfo& var,Expr* expr);
     void add_expr(Expr *expr);
     bool check_guard(Expr *expr);
-
+    static ASTContext *context;
 private:
     int Verified_Loop_Count;
 
-    ASTContext *context;
+    
     vector<vector<VariableInfo>> Init_Vars;
     vector<vector<VariableInfo>> Vars;
     vector<vector<Expr *>> DNF;

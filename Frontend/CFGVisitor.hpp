@@ -33,7 +33,7 @@ public:
         Collect_All_Function,
         Main
     };
-    explicit CFGVisitor(ASTContext *context, VisitorState VS) : context(context), VS(VS), pp(context->getPrintingPolicy()), Transystem(context) {}
+    explicit CFGVisitor(ASTContext *context, VisitorState VS) : context(context), VS(VS), pp(context->getPrintingPolicy()) {}
     enum class ErrorType
     {
         FloatVarError,
@@ -54,17 +54,16 @@ public:
     void PrintStmtInfo(Stmt *stmt);
 
 private:
-    void DealWithStmt(Stmt *stmt);
+    void DealWithStmt(Stmt *stmt,TransitionSystem& transystem);
 
-    void DealWithBinaryOp(BinaryOperator *stmt);
-    void DealWithUnaryOp(UnaryOperator *stmt);
-    void DealWithVarDecl(VarDecl *stmt);
-    void DealWithFunctionDecl(FunctionDecl *stmt);
+    void DealWithBinaryOp(BinaryOperator *stmt,TransitionSystem& transystem);
+    void DealWithUnaryOp(UnaryOperator *stmt,TransitionSystem& transystem);
+    void DealWithVarDecl(VarDecl *stmt,TransitionSystem& transystem);
+    void DealWithFunctionDecl(FunctionDecl *stmt,TransitionSystem& transystem);
     void Terminate_errors(enum ErrorType Errors);
     ASTContext *context;
     PrintingPolicy pp;
     VisitorState VS;
-    TransitionSystem Transystem;
 };
 
 #endif
