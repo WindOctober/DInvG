@@ -90,7 +90,7 @@ link_directories(${LLVM_LD_PATH})
 include_directories(${LLVM_INCLUDE_FLAGS})
 target_link_libraries(Inv ${CLANG_LIBS})
 
-
+include_directories(${CMAKE_SOURCE_DIR}/Stingx)
 add_subdirectory(Stingx)
 target_link_libraries(Inv lstingx)
 

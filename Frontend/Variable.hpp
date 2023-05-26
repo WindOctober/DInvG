@@ -13,7 +13,7 @@ using namespace llvm;
 class VariableInfo
 {
 public:
-    //TODO: allow the variable value to be inequality, which should be differed from the pure value(by assignment).
+    // TODO: allow the variable value to be inequality, which should be differed from the pure value(by assignment).
     VariableInfo();
     string getVariableName() const { return VarName; };
     Expr *getVariableValue() const { return VarValue; };
@@ -25,7 +25,7 @@ public:
     bool isInLoop() const { return inLoop; };
 
     static void search_and_insert(VariableInfo var, vector<VariableInfo> &Vars);
-    static Expr* search_for_value(VariableInfo var, vector<VariableInfo> &Vars);
+    static Expr *search_for_value(VariableInfo var, vector<VariableInfo> &Vars);
     void alterVar(string varname, Expr *expr, QualType type, bool inloop);
     void alterVar(Expr *var_expr, Expr *init, bool in);
 
@@ -37,7 +37,8 @@ private:
     bool numerical_point_flag;
     bool structure_array_flag;
     bool numerical_array_flag;
-
+    bool eq_value;
+    bool ineq_value;
     bool inLoop;
 
 public:

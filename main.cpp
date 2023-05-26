@@ -1,5 +1,4 @@
 #include "CFGVisitor.hpp"
-
 class CFGASTConsumer : public ASTConsumer {
 public:
     explicit CFGASTConsumer(ASTContext *context) : visitor(context,CFGVisitor::VisitorState::Main) {}

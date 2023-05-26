@@ -2,7 +2,7 @@
 // TODO: think how to solve the inter-procedural invariant.
 #include "CFGVisitor.hpp"
 #include "TransitionSystem.hpp"
-#include "Define.hpp"
+#include "Library.hpp"
 #include <iostream>
 #include <memory>
 

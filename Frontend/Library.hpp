@@ -9,6 +9,8 @@
 #include "clang/AST/ASTConsumer.h"
 #include "clang/AST/RecursiveASTVisitor.h"
 #include "clang/Analysis/CFG.h"
+#include "ppl.hh"
+#include "Variable.hpp"
 using namespace std;
 using namespace clang;
 using namespace llvm;
@@ -20,4 +22,10 @@ using namespace clang::tooling;
 
 void Log(const string& level, const string& function, int line,string msg);
 string Print_Expr(Expr *expr);
+
+vector<vector<Expr *>> Merge_DNF(vector<vector<Expr *>> left_expr, vector<vector<Expr *>> right_expr);
+vector<vector<Expr *>> Connect_DNF(vector<vector<Expr *>> left_expr, vector<vector<Expr *>> right_expr);
+
+vector<C_Polyhedron> Merge_Poly(vector<C_Polyhedron>& left_poly,vector<C_Polyhedron>& right_poly);
+vector<vector<vector<string>>> Derive_Vars_From_Poly(vector<C_Polyhedron>& poly,vector<VariableInfo> & vars);
 #endif

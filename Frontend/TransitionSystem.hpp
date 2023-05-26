@@ -8,6 +8,7 @@
 #include <vector>
 #include <ppl.hh>
 #include <string>
+#include <unordered_map>
 #include <unordered_set>
 
 using namespace std;
@@ -31,7 +32,7 @@ public:
         Origin
     };
     void Compute_Loop_Invariant(Expr* condition);
-    vector<C_Polyhedron *> Compute_and_Eliminate_Init_Poly(vector<VariableInfo> used_vars,Expr* condition);
+    vector<C_Polyhedron> Compute_and_Eliminate_Init_Poly(vector<VariableInfo> used_vars,Expr* condition);
     void Elimiate_Impossible_Path(int size);
     void Initialize_Locations_and_Transitions(int locsize, int varsize,Expr* condition);
 
@@ -54,8 +55,7 @@ public:
     Constraint_System *Trans_Expr_to_Constraints(Expr *expr, enum TransformationType type, int var_size);
     Linear_Expression *Trans_Expr_to_LinExpr(Expr *expr, enum TransformationType type, int var_size);
     vector<vector<Expr *>> Deal_with_condition(Expr *condition, bool not_logic, vector<vector<Expr *>> cur);
-    vector<vector<Expr *>> Merge_DNF(vector<vector<Expr *>> left_expr, vector<vector<Expr *>> right_expr);
-    vector<vector<Expr *>> Connect_DNF(vector<vector<Expr *>> left_expr, vector<vector<Expr *>> right_expr);
+    
     void Update_Init_Vars();
     void Update_Loop_Vars();
     void copy_after_update(int size);
@@ -74,8 +74,9 @@ public:
     static ASTContext *context;
 private:
     int Verified_Loop_Count;
-
     
+    vector<C_Polyhedron> invariant;
+    vector<vector<vector<string>>> invariant_used_vars;
     vector<vector<VariableInfo>> Init_Vars;
     vector<vector<VariableInfo>> Vars;
     vector<vector<Expr *>> DNF;
@@ -86,6 +87,7 @@ private:
     bool InWhileLoop;
     int Inner_Loop_Depth;
     int Inner_Loop_Count;
+
 };
 
 #endif
