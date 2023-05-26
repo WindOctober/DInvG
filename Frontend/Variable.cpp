@@ -1,5 +1,5 @@
 #include "Variable.hpp"
-#include "Define.hpp"
+#include "Library.hpp"
 
 VariableInfo::VariableInfo()
 {
@@ -12,6 +12,8 @@ VariableInfo::VariableInfo()
     numerical_point_flag = false;
     structure_array_flag = false;
     numerical_array_flag = false;
+    eq_value=false;
+    ineq_value=false;
 }
 void VariableInfo::search_and_insert(VariableInfo var, vector<VariableInfo> &Vars)
 {

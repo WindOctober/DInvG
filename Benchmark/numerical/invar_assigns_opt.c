@@ -4,7 +4,6 @@
 int main()
 {
   int r1, s1 = 1;
-  s1=s1+1;
   while(r1 > 0)
     {
       s1 = 1;

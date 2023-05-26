@@ -1,7 +1,7 @@
 #include "TransitionSystem.hpp"
 #include "Location.h"
 #include "var-info.h"
-#include "Define.hpp"
+#include "Library.hpp"
 #include "TransitionRelation.h"
 #include "lstingx.h"
 #include <unordered_set>
@@ -37,7 +37,7 @@ Expr *TransitionSystem::NegateExpr(Expr *expr)
     return notExpr;
 }
 
-void TransitionSystem::add_vars(VariableInfo& var)
+void TransitionSystem::add_vars(VariableInfo &var)
 {
     int branch_count = InWhileLoop ? Canonical_Branch_Count : Init_Branch_Count;
     for (int i = 0; i < branch_count; i++)
@@ -52,7 +52,7 @@ void TransitionSystem::add_vars(VariableInfo& var)
     return;
 }
 
-void TransitionSystem::add_vars(VariableInfo& var, Expr *expr)
+void TransitionSystem::add_vars(VariableInfo &var, Expr *expr)
 {
     int branch_count = InWhileLoop ? Canonical_Branch_Count : Init_Branch_Count;
     for (int i = 0; i < branch_count; i++)
@@ -62,7 +62,8 @@ void TransitionSystem::add_vars(VariableInfo& var, Expr *expr)
             var.alterVar("", Trans_Expr_by_CurVars(expr, Vars[i]), var.getQualType(), InWhileLoop);
             VariableInfo::search_and_insert(var, Vars[i]);
         }
-        else{
+        else
+        {
             var.alterVar("", Trans_Expr_by_CurVars(expr, Init_Vars[i]), var.getQualType(), InWhileLoop);
             VariableInfo::search_and_insert(var, Init_Vars[i]);
         }
@@ -322,31 +323,10 @@ vector<vector<Expr *>> TransitionSystem::Deal_with_condition(Expr *condition, bo
     return cur;
 }
 
-vector<vector<Expr *>> TransitionSystem::Merge_DNF(vector<vector<Expr *>> left_expr, vector<vector<Expr *>> right_expr)
+vector<C_Polyhedron> TransitionSystem::Compute_and_Eliminate_Init_Poly(vector<VariableInfo> used_vars, Expr *condition)
 {
-    vector<vector<Expr *>> merged_expr;
-    vector<Expr *> rec_expr;
-    for (int i = 0; i < left_expr.size(); i++)
-    {
-        for (int j = 0; j < right_expr.size(); j++)
-        {
-            rec_expr.insert(rec_expr.end(), left_expr[i].begin(), left_expr[i].end());
-            rec_expr.insert(rec_expr.end(), right_expr[j].begin(), right_expr[j].end());
-            merged_expr.push_back(rec_expr);
-            rec_expr.clear();
-        }
-    }
-    return merged_expr;
-}
-
-vector<vector<Expr *>> TransitionSystem::Connect_DNF(vector<vector<Expr *>> left_expr, vector<vector<Expr *>> right_expr)
-{
-    left_expr.insert(left_expr.end(), right_expr.begin(), right_expr.end());
-    return left_expr;
-}
-
-vector<C_Polyhedron *> TransitionSystem::Compute_and_Eliminate_Init_Poly(vector<VariableInfo> used_vars, Expr *condition)
-{
+    // TODO: deal with the situation that return size=0;
+    // DONE: write the transformation from Constraint to Expression.
     for (int i = 0; i < Init_Branch_Count; i++)
     {
         for (int j = 0; j < Init_Vars[i].size(); j++)
@@ -368,10 +348,41 @@ vector<C_Polyhedron *> TransitionSystem::Compute_and_Eliminate_Init_Poly(vector<
             }
         }
     }
+    unordered_set<string> variable_lists;
+    for (int i = 0; i < used_vars.size(); i++)
+    {
+        variable_lists.insert(used_vars[i].getVariableName());
+    }
+    for(int i=0;i<invariant_used_vars.size();i++){
+        Constraint_System cs=invariant[i].minimized_constraints();
+        auto it=cs.begin();
+        C_Polyhedron new_poly(invariant[i].space_dimension(),UNIVERSE);
+        for(int j=0;j<invariant_used_vars[i].size(),it!=cs.end();j++,it++){
+            bool flag=true;
+            for(int k=0;k<invariant_used_vars[i][j].size();k++){
+                if (variable_lists.find(invariant_used_vars[i][j][k])==variable_lists.end()){
+                    flag=false;
+                    break;
+                }
+            }
+            if (flag){
+                new_poly.add_constraint(*it);
+            }
+        }
+        if (new_poly.is_empty()){
+            invariant.erase(invariant.begin()+i);
+            invariant_used_vars.erase(invariant_used_vars.begin()+i);
+            i--;
+        }
+        else{
+            invariant[i]=new_poly;
+            cout<<"this is new invariant:"<<endl<<invariant[i]<<endl;
+        }
+    }
     Update_Init_Vars();
     Merge_condition(condition, true);
     Print_DNF();
-    vector<C_Polyhedron *> init_polys;
+    vector<C_Polyhedron> init_polys;
     for (int i = 0; i < Init_Branch_Count; i++)
     {
         C_Polyhedron *p = new C_Polyhedron(info->get_dimension(), UNIVERSE);
@@ -379,9 +390,9 @@ vector<C_Polyhedron *> TransitionSystem::Compute_and_Eliminate_Init_Poly(vector<
         {
             p->add_constraints(*Trans_Expr_to_Constraints(Init_DNF[i][j], TransformationType::Location, info->get_dimension()));
         }
-        init_polys.push_back(p);
+        init_polys.push_back(*p);
     }
-    return init_polys;
+    return Merge_Poly(invariant,init_polys);
 }
 
 Expr *TransitionSystem::Trans_Expr_by_CurVars(Expr *expr, vector<VariableInfo> &Vars)
@@ -400,12 +411,13 @@ Expr *TransitionSystem::Trans_Expr_by_CurVars(Expr *expr, vector<VariableInfo> &
         VariableInfo var;
         QualType emptyType;
         var.alterVar(name, declRef, emptyType, InWhileLoop);
+        Print_Vars();
         return VariableInfo::search_for_value(var, Vars);
     }
     else if (isa<ImplicitCastExpr>(expr))
     {
         ImplicitCastExpr *implict = dyn_cast<ImplicitCastExpr>(expr);
-        Trans_Expr_by_CurVars(implict->getSubExpr(), Vars);
+        return Trans_Expr_by_CurVars(implict->getSubExpr(), Vars);
     }
     else if (isa<IntegerLiteral>(expr))
     {
@@ -414,7 +426,6 @@ Expr *TransitionSystem::Trans_Expr_by_CurVars(Expr *expr, vector<VariableInfo> &
     {
         outs() << "[Info] Unexpected Type in Function Trans_Expr_by_CurVars : " << expr->getStmtClassName() << "\n"
                << Print_Expr(expr) << '\n';
-        return expr;
     }
     return expr;
 }
@@ -573,19 +584,21 @@ void TransitionSystem::Compute_Loop_Invariant(Expr *condition)
     // DONE: alter the mode of the Trans_Expr_to_Constraints
     vector<VariableInfo> vars_in_dnf;
     vars_in_dnf = get_Used_Vars();
-
     info = new var_info();
     lambda_info = new var_info();
     dual_info = new var_info();
+
     for (int i = 0; i < vars_in_dnf.size(); i++)
     {
         info->search_and_insert(vars_in_dnf[i].getVariableName().c_str());
         info->search_and_insert((vars_in_dnf[i].getVariableName() + INITSUFFIX).c_str());
     }
-    vector<C_Polyhedron *> init_polys = Compute_and_Eliminate_Init_Poly(vars_in_dnf, condition);
+    vector<C_Polyhedron> init_polys = Compute_and_Eliminate_Init_Poly(vars_in_dnf, condition);
     Elimiate_Impossible_Path(info->get_dimension());
     int locsize = DNF.size() + 1;
     cout << locsize << endl;
+    invariant.clear();
+    invariant_used_vars.clear();
     for (int i = 0; i < init_polys.size(); i++)
     {
         for (int j = 0; j < locsize; j++)
@@ -597,11 +610,18 @@ void TransitionSystem::Compute_Loop_Invariant(Expr *condition)
             loclist = new vector<Location *>();
             trlist = new vector<TransitionRelation *>();
             Initialize_Locations_and_Transitions(locsize, info->get_dimension(), condition);
-            (*loclist)[j]->set_initial(*init_polys[i]);
+            (*loclist)[j]->set_initial(init_polys[i]);
             Print_Location_and_Transition();
             Compute_Invariant_Frontend();
+            vector<C_Polyhedron> loc_invariant = (*loclist)[locsize - 1]->get_vp_inv().get_vp();
+            invariant = Merge_Poly(invariant, loc_invariant);
         }
     }
+    invariant_used_vars=Derive_Vars_From_Poly(invariant,vars_in_dnf);
+    if (loclist != NULL && trlist != NULL)
+        delete loclist, trlist;
+    delete info, dual_info, lambda_info;
+    return;
 }
 
 void TransitionSystem::Out_Loop(WhileStmt *whileloop)
