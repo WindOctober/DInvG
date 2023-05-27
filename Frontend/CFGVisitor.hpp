@@ -11,6 +11,7 @@
 #include "clang/Analysis/CFG.h"
 #include <stack>
 #include <ppl.hh>
+#include "ACSLComment.hpp"
 #include "TransitionSystem.hpp"
 #include "Variable.hpp"
 

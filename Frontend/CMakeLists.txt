@@ -1,4 +1,4 @@
-set(SOURCES Library.cpp Variable.cpp TransitionSystem.cpp CFGVisitor.cpp)
+set(SOURCES Library.cpp ACSLComment.cpp Variable.cpp TransitionSystem.cpp CFGVisitor.cpp)
 add_library(Frontend ${SOURCES})
 include_directories(${LLVM_INCLUDE_FLAGS})
 include_directories(${CMAKE_SOURCE_DIR}/Stingx)

@@ -37,6 +37,11 @@ Expr *TransitionSystem::NegateExpr(Expr *expr)
     return notExpr;
 }
 
+void TransitionSystem::add_comment(ACSLComment* comment){
+    comments.push_back(comment);
+    return;
+}
+
 void TransitionSystem::add_vars(VariableInfo &var)
 {
     int branch_count = InWhileLoop ? Canonical_Branch_Count : Init_Branch_Count;
@@ -188,6 +193,7 @@ void TransitionSystem::Merge_condition(Expr *condition, bool init_flag)
 
 TransitionSystem TransitionSystem::Merge_Transystem(TransitionSystem &left_trans, TransitionSystem &right_trans)
 {
+    return right_trans;
 }
 
 void TransitionSystem::Update_Init_Vars()
@@ -231,6 +237,10 @@ void TransitionSystem::Update_Loop_Vars()
     return;
 }
 
+vector<vector<Expr *>> TransitionSystem::Deal_with_condition(Expr *condition, bool logic){
+    vector<vector<Expr *>> cur;
+    return Deal_with_condition(condition,logic,cur);
+}
 vector<vector<Expr *>> TransitionSystem::Deal_with_condition(Expr *condition, bool logic, vector<vector<Expr *>> cur)
 {
     vector<vector<Expr *>> left_expr;
@@ -323,7 +333,7 @@ vector<vector<Expr *>> TransitionSystem::Deal_with_condition(Expr *condition, bo
     return cur;
 }
 
-vector<C_Polyhedron> TransitionSystem::Compute_and_Eliminate_Init_Poly(vector<VariableInfo> used_vars, Expr *condition)
+vector<C_Polyhedron> TransitionSystem::Compute_and_Eliminate_Init_Poly(unordered_set<string> used_vars, Expr *condition)
 {
     // TODO: deal with the situation that return size=0;
     // DONE: write the transformation from Constraint to Expression.
@@ -333,54 +343,28 @@ vector<C_Polyhedron> TransitionSystem::Compute_and_Eliminate_Init_Poly(vector<Va
         {
             string varname = Init_Vars[i][j].getVariableName();
             bool flag = false;
-            for (int k = 0; k < used_vars.size(); k++)
-            {
-                if (used_vars[k].getVariableName() == varname)
-                {
-                    flag = true;
-                    break;
-                }
-            }
-            if (!flag)
+            if (used_vars.find(varname) == used_vars.end())
             {
                 Init_Vars[i].erase(Init_Vars[i].begin() + j);
                 j--;
             }
         }
     }
-    unordered_set<string> variable_lists;
-    for (int i = 0; i < used_vars.size(); i++)
-    {
-        variable_lists.insert(used_vars[i].getVariableName());
-    }
-    for(int i=0;i<invariant_used_vars.size();i++){
-        Constraint_System cs=invariant[i].minimized_constraints();
-        auto it=cs.begin();
-        C_Polyhedron new_poly(invariant[i].space_dimension(),UNIVERSE);
-        for(int j=0;j<invariant_used_vars[i].size(),it!=cs.end();j++,it++){
-            bool flag=true;
-            for(int k=0;k<invariant_used_vars[i][j].size();k++){
-                if (variable_lists.find(invariant_used_vars[i][j][k])==variable_lists.end()){
-                    flag=false;
-                    break;
-                }
-            }
-            if (flag){
-                new_poly.add_constraint(*it);
+    for(int i=0;i<exit_invariant.size();i++){
+        for(int j=0;j<exit_invariant[i].size();j++){
+            if (!Traverse_Expr_CheckVars(exit_invariant[i][j],used_vars)){
+                exit_invariant[i].erase(exit_invariant[i].begin()+j);
+                j--;
             }
         }
-        if (new_poly.is_empty()){
-            invariant.erase(invariant.begin()+i);
-            invariant_used_vars.erase(invariant_used_vars.begin()+i);
+        if (exit_invariant[i].size()==0){
+            exit_invariant.erase(exit_invariant.begin()+i);
             i--;
-        }
-        else{
-            invariant[i]=new_poly;
-            cout<<"this is new invariant:"<<endl<<invariant[i]<<endl;
         }
     }
     Update_Init_Vars();
     Merge_condition(condition, true);
+    Init_DNF=Merge_DNF(Init_DNF,exit_invariant);
     Print_DNF();
     vector<C_Polyhedron> init_polys;
     for (int i = 0; i < Init_Branch_Count; i++)
@@ -390,9 +374,10 @@ vector<C_Polyhedron> TransitionSystem::Compute_and_Eliminate_Init_Poly(vector<Va
         {
             p->add_constraints(*Trans_Expr_to_Constraints(Init_DNF[i][j], TransformationType::Location, info->get_dimension()));
         }
-        init_polys.push_back(*p);
+        if (!p->is_empty())
+            init_polys.push_back(*p);
     }
-    return Merge_Poly(invariant,init_polys);
+    return init_polys;
 }
 
 Expr *TransitionSystem::Trans_Expr_by_CurVars(Expr *expr, vector<VariableInfo> &Vars)
@@ -430,7 +415,8 @@ Expr *TransitionSystem::Trans_Expr_by_CurVars(Expr *expr, vector<VariableInfo> &
     return expr;
 }
 
-void TransitionSystem::Traverse_Expr_ForVars(Expr *expr, unordered_set<VariableInfo> &res)
+
+void TransitionSystem::Traverse_Expr_ForVars(Expr *expr, unordered_set<string> &res)
 {
     if (isa<BinaryOperator>(expr))
     {
@@ -441,10 +427,7 @@ void TransitionSystem::Traverse_Expr_ForVars(Expr *expr, unordered_set<VariableI
     else if (isa<DeclRefExpr>(expr))
     {
         DeclRefExpr *declRef = dyn_cast<DeclRefExpr>(expr);
-        VariableInfo var;
-        Expr *emptyexpr = NULL;
-        var.alterVar(declRef, emptyexpr, InWhileLoop);
-        res.insert(var);
+        res.insert(declRef->getDecl()->getNameAsString());
     }
     else if (isa<ImplicitCastExpr>(expr))
     {
@@ -462,6 +445,41 @@ void TransitionSystem::Traverse_Expr_ForVars(Expr *expr, unordered_set<VariableI
         exit(0);
     }
     return;
+}
+
+bool TransitionSystem::Traverse_Expr_CheckVars(Expr *expr, unordered_set<string> &res){
+    bool flag=true;
+    if (isa<BinaryOperator>(expr))
+    {
+        BinaryOperator *binop = dyn_cast<BinaryOperator>(expr);
+        flag&=Traverse_Expr_CheckVars(binop->getLHS(), res);
+        flag&=Traverse_Expr_CheckVars(binop->getRHS(), res);
+    }
+    else if (isa<DeclRefExpr>(expr))
+    {
+        DeclRefExpr *declRef = dyn_cast<DeclRefExpr>(expr);
+        string name=declRef->getDecl()->getNameAsString();
+        if (res.find(name)!=res.end())
+            return true;
+        else
+            return false;
+    }
+    else if (isa<ImplicitCastExpr>(expr))
+    {
+        ImplicitCastExpr *implict = dyn_cast<ImplicitCastExpr>(expr);
+        flag&=Traverse_Expr_CheckVars(implict->getSubExpr(), res);
+    }
+    else if (isa<IntegerLiteral>(expr))
+    {
+
+    }
+    else
+    {
+        LOG_INFO("Unexpected Type in Function Traverse_Expr_ForVars :");
+        LOG_INFO(Print_Expr(expr));
+        exit(0);
+    }
+    return flag;
 }
 
 void TransitionSystem::Elimiate_Impossible_Path(int size)
@@ -557,10 +575,9 @@ void TransitionSystem::Initialize_Locations_and_Transitions(int locsize, int var
     }
 }
 
-vector<VariableInfo> TransitionSystem::get_Used_Vars()
+unordered_set<string> TransitionSystem::get_Used_Vars()
 {
-    unordered_set<VariableInfo> res_vars_set;
-    vector<VariableInfo> res_vars;
+    unordered_set<string> res_vars_set;
     for (int i = 0; i < Canonical_Branch_Count; i++)
     {
         for (int j = 0; j < DNF[i].size(); j++)
@@ -568,37 +585,37 @@ vector<VariableInfo> TransitionSystem::get_Used_Vars()
             Traverse_Expr_ForVars(DNF[i][j], res_vars_set);
         }
     }
-    for (auto it = res_vars_set.begin(); it != res_vars_set.end(); it++)
-    {
-        res_vars.push_back(*it);
-    }
-    return res_vars;
+    return res_vars_set;
 }
 
 void TransitionSystem::Compute_Loop_Invariant(Expr *condition)
 {
     // DONE: delete the unused variables in init_dnf.
     // DONE: Transform every path into a transition from one path to another.
-    // DONE: Construct Location and Transition, and get the invariant , then print.
+    // DONE: Construct Location and Transition, and get the exit_invariant , then print.
     // DONE: add variable_init to info.
     // DONE: alter the mode of the Trans_Expr_to_Constraints
-    vector<VariableInfo> vars_in_dnf;
+    unordered_set<string> vars_in_dnf;
+    if (comments.size()==0){
+        LOG_WARNING("No Comments has been added to the transystem.");
+        exit(0);
+    }
+    ACSLComment* loop_comment=comments[comments.size()-1];
     vars_in_dnf = get_Used_Vars();
     info = new var_info();
     lambda_info = new var_info();
     dual_info = new var_info();
 
-    for (int i = 0; i < vars_in_dnf.size(); i++)
+    for (const auto& var: vars_in_dnf)
     {
-        info->search_and_insert(vars_in_dnf[i].getVariableName().c_str());
-        info->search_and_insert((vars_in_dnf[i].getVariableName() + INITSUFFIX).c_str());
+        info->search_and_insert(var.c_str());
+        info->search_and_insert((var + INITSUFFIX).c_str());
     }
     vector<C_Polyhedron> init_polys = Compute_and_Eliminate_Init_Poly(vars_in_dnf, condition);
     Elimiate_Impossible_Path(info->get_dimension());
     int locsize = DNF.size() + 1;
     cout << locsize << endl;
-    invariant.clear();
-    invariant_used_vars.clear();
+    exit_invariant.clear();
     for (int i = 0; i < init_polys.size(); i++)
     {
         for (int j = 0; j < locsize; j++)
@@ -614,10 +631,18 @@ void TransitionSystem::Compute_Loop_Invariant(Expr *condition)
             Print_Location_and_Transition();
             Compute_Invariant_Frontend();
             vector<C_Polyhedron> loc_invariant = (*loclist)[locsize - 1]->get_vp_inv().get_vp();
-            invariant = Merge_Poly(invariant, loc_invariant);
+            exit_invariant = Merge_DNF(exit_invariant, Trans_Polys_to_Exprs(loc_invariant));
+            loop_comment->add_invariant(loc_invariant);
+            loc_invariant.clear();
+            for(int index=0;index<locsize-1;index++){
+                loc_invariant.push_back((*loclist)[index]->get_invariant());    
+            }
+            loop_comment->add_invariant(Trans_Polys_to_Exprs(loc_invariant));
         }
     }
-    invariant_used_vars=Derive_Vars_From_Poly(invariant,vars_in_dnf);
+    loop_comment->add_assign_vars(vars_in_dnf);
+    
+    Print_DNF();
     if (loclist != NULL && trlist != NULL)
         delete loclist, trlist;
     delete info, dual_info, lambda_info;
@@ -696,110 +721,6 @@ TransitionSystem::TransitionSystem(TransitionSystem &other)
 int TransitionSystem::get_Canonical_count()
 {
     return Canonical_Branch_Count;
-}
-
-Linear_Expression *TransitionSystem::Trans_Expr_to_LinExpr(Expr *expr, enum TransformationType type, int var_size)
-{
-    Linear_Expression *lin_expr = new Linear_Expression();
-    bool flag = (type == TransformationType::Primed);
-    if (isa<BinaryOperator>(expr))
-    {
-        BinaryOperator *binop = dyn_cast<BinaryOperator>(expr);
-        if (binop->getOpcode() == BO_Add)
-        {
-            Linear_Expression *left_expr = Trans_Expr_to_LinExpr(binop->getLHS(), type, var_size);
-            Linear_Expression *right_expr = Trans_Expr_to_LinExpr(binop->getRHS(), type, var_size);
-            *lin_expr = (*left_expr + *right_expr);
-        }
-        else if (binop->getOpcode() == BO_Sub)
-        {
-            Linear_Expression *left_expr = Trans_Expr_to_LinExpr(binop->getLHS(), type, var_size);
-            Linear_Expression *right_expr = Trans_Expr_to_LinExpr(binop->getRHS(), type, var_size);
-            *lin_expr = (*left_expr - *right_expr);
-        }
-        else if (binop->getOpcode() == BO_Mul)
-        {
-            Linear_Expression *left_expr = Trans_Expr_to_LinExpr(binop->getLHS(), type, var_size);
-            Linear_Expression *right_expr = Trans_Expr_to_LinExpr(binop->getRHS(), type, var_size);
-            Coefficient coef;
-            if (left_expr->space_dimension() == 0)
-            {
-                coef = left_expr->inhomogeneous_term();
-                *lin_expr = (coef * (*right_expr));
-            }
-            else if (right_expr->space_dimension() == 0)
-            {
-                coef = right_expr->inhomogeneous_term();
-                *lin_expr = (coef * (*left_expr));
-            }
-            else
-            {
-                outs() << "\n[Transform Warning:] Unexpected non-linear expression occur\n"
-                       << lin_expr;
-                exit(1);
-            }
-        }
-        else
-        {
-            outs() << "\n[Transform Info:] Unexpected BinaryOperator in Lin_expr:" << binop->getOpcodeStr() << "\n";
-        }
-    }
-    else if (isa<DeclRefExpr>(expr))
-    {
-        DeclRefExpr *decl = dyn_cast<DeclRefExpr>(expr);
-        string var_name = decl->getDecl()->getNameAsString();
-        int index = info->search(var_name.c_str());
-        if (flag)
-            *lin_expr = Variable(index + var_size);
-        else
-            *lin_expr = Variable(index);
-    }
-    else if (isa<ParenExpr>(expr))
-    {
-        ParenExpr *paren = dyn_cast<ParenExpr>(expr);
-        lin_expr = Trans_Expr_to_LinExpr(paren->getSubExpr(), type, var_size);
-    }
-    else if (isa<IntegerLiteral>(expr))
-    {
-        IntegerLiteral *intexpr = dyn_cast<IntegerLiteral>(expr);
-        uint64_t value = intexpr->getValue().getLimitedValue();
-        if (value <= numeric_limits<int>::max())
-        {
-            int intValue = static_cast<int>(value);
-            *lin_expr += intValue;
-        }
-        else
-        {
-            outs() << "\n[Transform Warning] Unexpected huge value while process interliterals:" << value << "\n";
-        }
-    }
-    else if (isa<UnaryOperator>(expr))
-    {
-        UnaryOperator *unop = dyn_cast<UnaryOperator>(expr);
-        if (unop->getOpcode() == UO_Minus)
-        {
-            *lin_expr -= *Trans_Expr_to_LinExpr(unop->getSubExpr(), type, var_size);
-        }
-        else if (unop->getOpcode() == UO_Plus)
-        {
-            *lin_expr += *Trans_Expr_to_LinExpr(unop->getSubExpr(), type, var_size);
-        }
-        else
-        {
-            outs() << "\n[Transform Info:] Unexpected UnaryOperator in Lin_expr:" << unop->getOpcodeStr(unop->getOpcode()) << "\n";
-        }
-    }
-    else if (isa<ImplicitCastExpr>(expr))
-    {
-        ImplicitCastExpr *implict = dyn_cast<ImplicitCastExpr>(expr);
-        lin_expr = Trans_Expr_to_LinExpr(implict->getSubExpr(), type, var_size);
-    }
-    else
-    {
-        outs() << "\n[Transform ToLinExpr Warning:] Unexpected Expression Type: " << expr->getStmtClassName() << "\n";
-        outs() << "\n[Warning:] Unexpected Expression: " << Print_Expr(expr) << "\n";
-    }
-    return lin_expr;
 }
 
 Constraint_System *TransitionSystem::Trans_Expr_to_Constraints(Expr *expr, enum TransformationType type, int var_size)
@@ -999,6 +920,21 @@ void TransitionSystem::Print_DNF()
             outs() << Print_Expr(Init_DNF[i][j]) << "\n";
         }
         outs() << "Init_DNF disjunctive clause " << i << " is printed.";
+    }
+    outs() << "\n";
+    outs() << "[Print Exit_Invariant Information]\n";
+    for (int i = 0; i < exit_invariant.size(); i++)
+    {
+        outs() << "Exit_Invariant disjunctive branch " << i << " and its size is:" << exit_invariant[i].size() << '\n';
+        for (int j = 0; j < exit_invariant[i].size(); j++)
+        {
+            outs() << "\t[Exit_Invariant Number " << j << " is:]"
+                   << "\n";
+            outs() << "\t";
+
+            outs() << Print_Expr(exit_invariant[i][j]) << "\n";
+        }
+        outs() << "Exit_Invariant disjunctive clause " << i << " is printed.";
     }
     return;
 }

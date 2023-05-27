@@ -145,7 +145,15 @@ void CFGVisitor::DealWithStmt(Stmt *stmt, TransitionSystem &transystem)
         // DONE: Before Into loop -> get precondition from Vars vector.
         // TODO: Process if While loop body is empty.
         WhileStmt *whileStmt = dyn_cast<WhileStmt>(stmt);
+        SourceRange sourceRange = whileStmt->getSourceRange();
+        SourceLocation startLocation = sourceRange.getBegin();
+        SourceManager &sourceManager =context->getSourceManager();
+        int lineNumber = sourceManager.getSpellingLineNumber(startLocation);
+        ACSLComment *loop_comment=new ACSLComment(lineNumber,ACSLComment::CommentType::LOOP);
+        
         Expr *loop_condition = whileStmt->getCond();
+        loop_comment->add_invariant(transystem.Deal_with_condition(loop_condition,false));
+        transystem.add_comment(loop_comment);
         Stmt *while_body = whileStmt->getBody();
         transystem.Merge_condition(loop_condition, false);
         transystem.In_Loop();
