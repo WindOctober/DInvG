@@ -48,14 +48,14 @@ public:
         outs() << error << "\n";
         exit(-1);
     }
-
+    void add_comments(vector<ACSLComment*> comment_vec);
     bool VisitCallExpr(CallExpr *CE);
     bool VisitFunctionDecl(FunctionDecl *func);
 
     void PrintStmtInfo(Stmt *stmt);
-
+    void Dump_Annotated_file();
 private:
-    void DealWithStmt(Stmt *stmt,TransitionSystem& transystem);
+    bool DealWithStmt(Stmt *stmt,TransitionSystem& transystem);
 
     void DealWithBinaryOp(BinaryOperator *stmt,TransitionSystem& transystem);
     void DealWithUnaryOp(UnaryOperator *stmt,TransitionSystem& transystem);
@@ -65,6 +65,7 @@ private:
     ASTContext *context;
     PrintingPolicy pp;
     VisitorState VS;
+    vector<ACSLComment*> comments;
 };
 
 #endif

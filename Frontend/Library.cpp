@@ -292,3 +292,122 @@ vector<vector<Expr *>> Trans_Polys_to_Exprs(vector<C_Polyhedron> poly)
     }
     return res;
 }
+
+bool Traverse_Expr_CheckVars(Expr *expr,const unordered_set<string> &res){
+    bool flag=true;
+    if (isa<BinaryOperator>(expr))
+    {
+        BinaryOperator *binop = dyn_cast<BinaryOperator>(expr);
+        flag&=Traverse_Expr_CheckVars(binop->getLHS(), res);
+        flag&=Traverse_Expr_CheckVars(binop->getRHS(), res);
+    }
+    else if (isa<DeclRefExpr>(expr))
+    {
+        DeclRefExpr *declRef = dyn_cast<DeclRefExpr>(expr);
+        string name=declRef->getDecl()->getNameAsString();
+        if (res.find(name)!=res.end())
+            return true;
+        else
+            return false;
+    }
+    else if (isa<ImplicitCastExpr>(expr))
+    {
+        ImplicitCastExpr *implict = dyn_cast<ImplicitCastExpr>(expr);
+        flag&=Traverse_Expr_CheckVars(implict->getSubExpr(), res);
+    }
+    else if (isa<IntegerLiteral>(expr))
+    {
+
+    }
+    else
+    {
+        LOG_INFO("Unexpected Type in Function Traverse_Expr_ForVars :");
+        LOG_INFO(Print_Expr(expr));
+        exit(0);
+    }
+    return flag;
+}
+
+void Traverse_Expr_ForVars(Expr *expr, unordered_set<string> &res)
+{
+    if (isa<BinaryOperator>(expr))
+    {
+        BinaryOperator *binop = dyn_cast<BinaryOperator>(expr);
+        Traverse_Expr_ForVars(binop->getLHS(), res);
+        Traverse_Expr_ForVars(binop->getRHS(), res);
+    }
+    else if (isa<DeclRefExpr>(expr))
+    {
+        DeclRefExpr *declRef = dyn_cast<DeclRefExpr>(expr);
+        res.insert(declRef->getDecl()->getNameAsString());
+    }
+    else if (isa<ImplicitCastExpr>(expr))
+    {
+        ImplicitCastExpr *implict = dyn_cast<ImplicitCastExpr>(expr);
+        Traverse_Expr_ForVars(implict->getSubExpr(), res);
+    }
+    else if (isa<IntegerLiteral>(expr))
+    {
+        return;
+    }
+    else
+    {
+        LOG_WARNING("Unexpected Type"+string(expr->getStmtClassName()));
+        LOG_WARNING(Print_Expr(expr));
+        exit(0);
+    }
+    return;
+}
+
+vector<C_Polyhedron> Compute_and_Eliminate_Init_Poly(const unordered_set<string>& used_vars, Expr *condition,vector<vector<Expr*>>& init_DNF)
+{
+    // TODO: deal with the situation that return size=0;
+    // DONE: write the transformation from Constraint to Expression.
+    // TODO: think the inequality init_value.
+    
+    vector<vector<Expr*> > DNF;
+    DNF.resize(init_DNF.size());
+    for(int i=0;i<init_DNF.size();i++){
+        for(int j=0;j<init_DNF[i].size();j++){
+            if (Traverse_Expr_CheckVars(init_DNF[i][j],used_vars)){
+                DNF[i].push_back(init_DNF[i][j]);
+                init_DNF[i].erase(init_DNF[i].begin()+j);
+                j--;
+            }
+        }
+        if (init_DNF[i].size()==0){
+            init_DNF.erase(init_DNF.begin()+i);
+            i--;
+        }
+        else if (DNF[i].size()==0){
+            DNF.erase(DNF.begin()+i);
+            i--;
+        }
+    }
+    for(int i=0;i<exit_invariant.size();i++){
+        for(int j=0;j<exit_invariant[i].size();j++){
+            if (!Traverse_Expr_CheckVars(exit_invariant[i][j],used_vars)){
+                exit_invariant[i].erase(exit_invariant[i].begin()+j);
+                j--;
+            }
+        }
+        if (exit_invariant[i].size()==0){
+            exit_invariant.erase(exit_invariant.begin()+i);
+            i--;
+        }
+    }
+    DNF=Merge_DNF(DNF,exit_invariant);
+    Print_DNF();
+    vector<C_Polyhedron> init_polys;
+    for (int i = 0; i < DNF.size(); i++)
+    {
+        C_Polyhedron *p = new C_Polyhedron(info->get_dimension(), UNIVERSE);
+        for (int j = 0; j < DNF[i].size(); j++)
+        {
+            p->add_constraints(*Trans_Expr_to_Constraints(DNF[i][j], TransformationType::Location, info->get_dimension()));
+        }
+        if (!p->is_empty())
+            init_polys.push_back(*p);
+    }
+    return init_polys;
+}

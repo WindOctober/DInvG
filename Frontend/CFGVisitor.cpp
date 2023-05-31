@@ -1,11 +1,14 @@
-// TODO: alter the source code and generate a annotated version (with invariant annotations before the while loop)
+// DONE: alter the source code and generate a annotated version (with invariant annotations before the while loop)
 // TODO: think how to solve the inter-procedural invariant.
 #include "CFGVisitor.hpp"
 #include "TransitionSystem.hpp"
 #include "Library.hpp"
 #include <iostream>
 #include <memory>
-
+#include <fstream>
+#include <string>
+extern ifstream infile;
+extern ofstream outfile;
 set<string> Main_Functions;
 set<string> Visited_Functions;
 
@@ -96,7 +99,7 @@ void CFGVisitor::DealWithBinaryOp(BinaryOperator *stmt, TransitionSystem &transy
 void CFGVisitor::DealWithFunctionDecl(FunctionDecl *stmt, TransitionSystem &transystem)
 {
 }
-void CFGVisitor::DealWithStmt(Stmt *stmt, TransitionSystem &transystem)
+bool CFGVisitor::DealWithStmt(Stmt *stmt, TransitionSystem &transystem)
 {
     // Deal with the whole Stmt in code. (which usually means the complete statement in one line.)
 
@@ -105,11 +108,8 @@ void CFGVisitor::DealWithStmt(Stmt *stmt, TransitionSystem &transystem)
     // TODO: Deal with For loop in code.
     // TODO: Deal with the situation of continue and break in code. [hint: consider the guard to break to be loop guard in break situation and the standalone branch cutted in continue statement]
     // TODO: Deal with special cases likes x=(a==b), y=(a>=b), which should be handled to if (a==b) x=1 else x=0 and so on.
+    // TODO: Deal with the return statement in loop.
     PrintStmtInfo(stmt);
-    if (transystem.get_Canonical_count() == 0)
-    {
-        transystem.init_Canonical(1);
-    }
     if (isa<IfStmt>(stmt))
     {
         IfStmt *ifStmt = dyn_cast<IfStmt>(stmt);
@@ -124,14 +124,16 @@ void CFGVisitor::DealWithStmt(Stmt *stmt, TransitionSystem &transystem)
         {
             for (auto stmt : compound->body())
             {
-                DealWithStmt(stmt, ThenTransystem);
+                bool flag=DealWithStmt(stmt, ThenTransystem);
+                if (!flag) break;
             }
         }
         if (CompoundStmt *compound = dyn_cast<CompoundStmt>(else_branch))
         {
             for (auto stmt : compound->body())
             {
-                DealWithStmt(stmt, ElseTransystem);
+                bool flag=DealWithStmt(stmt, ElseTransystem);
+                if (!flag) break;
             }
         }
         transystem = TransitionSystem::Merge_Transystem(ThenTransystem, ElseTransystem);
@@ -144,28 +146,39 @@ void CFGVisitor::DealWithStmt(Stmt *stmt, TransitionSystem &transystem)
     {
         // DONE: Before Into loop -> get precondition from Vars vector.
         // TODO: Process if While loop body is empty.
+
         WhileStmt *whileStmt = dyn_cast<WhileStmt>(stmt);
+        Expr *loop_condition = whileStmt->getCond();
+        Stmt *while_body = whileStmt->getBody();
+
+
+        unordered_set<string> used_vars;
+        transystem.Update_Init_Vars();
+        transystem.Merge_condition(loop_condition, false);
+        vector<vector<Expr*>> init_DNF=transystem.get_DNF();
+
         SourceRange sourceRange = whileStmt->getSourceRange();
         SourceLocation startLocation = sourceRange.getBegin();
-        SourceManager &sourceManager =context->getSourceManager();
+        SourceManager &sourceManager = context->getSourceManager();
         int lineNumber = sourceManager.getSpellingLineNumber(startLocation);
-        ACSLComment *loop_comment=new ACSLComment(lineNumber,ACSLComment::CommentType::LOOP);
-        
-        Expr *loop_condition = whileStmt->getCond();
-        loop_comment->add_invariant(transystem.Deal_with_condition(loop_condition,false));
+        ACSLComment *loop_comment = new ACSLComment(lineNumber, ACSLComment::CommentType::LOOP);
+        loop_comment->add_invariant(transystem.Deal_with_condition(loop_condition, false));
         transystem.add_comment(loop_comment);
-        Stmt *while_body = whileStmt->getBody();
-        transystem.Merge_condition(loop_condition, false);
+
         transystem.In_Loop();
+        transystem.Merge_condition(loop_condition, false);
+        
         if (CompoundStmt *compound = dyn_cast<CompoundStmt>(while_body))
         {
             for (auto stmt : compound->body())
             {
-                DealWithStmt(stmt, transystem);
+                bool flag=DealWithStmt(stmt, transystem);
+                if (!flag) break;
             }
             transystem.Update_Loop_Vars();
         }
-        transystem.Out_Loop(whileStmt);
+        
+        transystem.Out_Loop(whileStmt,used_vars,);
     }
     else if (isa<DeclStmt>(stmt))
     {
@@ -195,7 +208,7 @@ void CFGVisitor::DealWithStmt(Stmt *stmt, TransitionSystem &transystem)
     {
         DealWithUnaryOp(dyn_cast<UnaryOperator>(stmt), transystem);
     }
-    return;
+    return true;
 }
 
 bool CFGVisitor::VisitCallExpr(CallExpr *CE)
@@ -235,9 +248,11 @@ bool CFGVisitor::VisitFunctionDecl(FunctionDecl *func)
         {
             for (auto stmt : compound->body())
             {
-                DealWithStmt(stmt, transystem);
+                bool flag=DealWithStmt(stmt, transystem);
+                if (!flag) break;
             }
         }
+        add_comments(transystem.get_Comments());
     }
     return true;
 }
@@ -281,4 +296,34 @@ void CFGVisitor::PrintStmtInfo(Stmt *stmt)
         outs() << "unary operator: ";
         outs() << unop->getSubExpr()->getStmtClassName() << " " << unop->getOpcodeStr(unop->getOpcode()) << ' ';
     }
+}
+
+void CFGVisitor::add_comments(vector<ACSLComment *> comment_vec)
+{
+    comments.insert(comments.end(), comment_vec.begin(), comment_vec.end());
+    return;
+}
+
+void CFGVisitor::Dump_Annotated_file()
+{
+    int lineNumber = 0;
+    string line;
+    int index=0;
+    if (comments.size()==0){
+        LOG_WARNING("No comments have been generated");
+        exit(1);
+    }
+    int cur_lineno=comments[index]->get_line_number();
+    while (getline(infile, line)) {
+        lineNumber++;
+        if (lineNumber==cur_lineno){
+            comments[index]->dump(outfile);
+            index++;
+            if (index!=comments.size()){
+                cur_lineno=comments[index]->get_line_number();
+            }
+        }
+        outfile << line << "\n";
+    }
+    return;
 }

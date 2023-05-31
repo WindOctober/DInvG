@@ -1,4 +1,8 @@
 #include "CFGVisitor.hpp"
+#include <fstream>
+#include "Library.hpp"
+ifstream infile;
+ofstream outfile;
 class CFGASTConsumer : public ASTConsumer {
 public:
     explicit CFGASTConsumer(ASTContext *context) : visitor(context,CFGVisitor::VisitorState::Main) {}
@@ -7,6 +11,9 @@ public:
         CFGVisitor Function_Visitor(&context,CFGVisitor::VisitorState::Collect_All_Function);
         Function_Visitor.TraverseDecl(context.getTranslationUnitDecl());
         visitor.TraverseDecl(context.getTranslationUnitDecl());
+        visitor.Dump_Annotated_file();
+        infile.close();
+        outfile.close();
     }
 
 private:
@@ -24,6 +31,7 @@ protected:
 
 static cl::OptionCategory ToolCategory("CFG Tool Options");
 cl::opt<string> InputFilename(cl::Positional, cl::desc("<input file>"), cl::Required,cl::cat(ToolCategory));
+cl::opt<string> OutputFilename(cl::Positional, cl::desc("<output file>"), cl::Required,cl::cat(ToolCategory));
 cl::opt<bool> EnableFeature("enable-feature", cl::desc("Enable specific feature"), cl::init(false));
 #ifndef USE_LSTINGX_MAIN
 int main(int argc,const char **argv) {
@@ -31,8 +39,20 @@ int main(int argc,const char **argv) {
     cl::ParseCommandLineOptions(argc, argv);
 
     vector<string> sources;
-    sources.push_back(InputFilename.getValue());
-
+    string InputFile=InputFilename.getValue();
+    string OutputFile=OutputFilename.getValue();
+    infile.open(InputFile);
+    outfile.open(OutputFile);
+    if (!infile){
+        LOG_WARNING("Could not open the file"+InputFile);
+        return 1;
+    }
+    if (!outfile){
+        LOG_WARNING("Could not open the file"+OutputFile);
+        return 1;
+    }
+    sources.push_back(InputFile);
+    
     string errorMsg;
     int remainingArgc = argc;
     auto compilationDB = FixedCompilationDatabase::loadFromCommandLine(remainingArgc, argv, errorMsg);

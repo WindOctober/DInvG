@@ -26,10 +26,15 @@ string Print_Expr(Expr *expr);
 
 vector<vector<Expr *>> Merge_DNF(vector<vector<Expr *>> left_expr, vector<vector<Expr *>> right_expr);
 vector<vector<Expr *>> Connect_DNF(vector<vector<Expr *>> left_expr, vector<vector<Expr *>> right_expr);
-
 vector<C_Polyhedron> Merge_Poly(vector<C_Polyhedron> &left_poly, vector<C_Polyhedron> &right_poly);
+
 // vector<vector<vector<string>>> Derive_Vars_From_Poly(vector<C_Polyhedron> &poly, vector<VariableInfo> &vars);
 Linear_Expression *Trans_Expr_to_LinExpr(Expr *expr, enum TransitionSystem::TransformationType type, int var_size);
-Expr *Trans_Constraint_to_Expr(Constraint constraint);
 vector<vector<Expr *>> Trans_Polys_to_Exprs(vector<C_Polyhedron> poly);
+Expr *Trans_Constraint_to_Expr(Constraint constraint);
+
+void Traverse_Expr_ForVars(Expr *expr,unordered_set<string> &res);
+bool Traverse_Expr_CheckVars(Expr *expr,const unordered_set<string> &res);
+
+vector<C_Polyhedron> Compute_and_Eliminate_Init_Poly(unordered_set<string> used_vars, Expr *condition);
 #endif
