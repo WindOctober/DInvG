@@ -22,7 +22,6 @@ public:
     // DONE: process the transformation from the Expr* to Constraint*.
     // DONE: process the generation of the Locations and Transitions.
     // TODO: process the merge of two transition system while split by if statement.
-    // TODO:
     enum class TransformationType
     {
         Location,
@@ -31,20 +30,21 @@ public:
         Primed,
         Origin
     };
-    void Compute_Loop_Invariant(Expr *condition);
-    vector<C_Polyhedron> Compute_and_Eliminate_Init_Poly(unordered_set<string> used_vars, Expr *condition);
+    void Compute_Loop_Invariant(Expr *condition,unordered_set<string> vars_in_dnf);
+    
     void Elimiate_Impossible_Path(int size);
     void Initialize_Locations_and_Transitions(int locsize, int varsize, Expr *condition);
 
     void init_Canonical(int size);
     TransitionSystem();
     TransitionSystem(TransitionSystem &other);
-    int get_Canonical_count();
-    bool get_InLoop();
+    
+    vector<ACSLComment*> get_Comments(){return comments;}
     unordered_set<string> get_Used_Vars();
+    vector<vector<Expr*>> get_DNF() {return DNF;}
+    bool get_InLoop();
 
-    void Traverse_Expr_ForVars(Expr *expr, unordered_set<string> &res);
-    bool Traverse_Expr_CheckVars(Expr *expr, unordered_set<string> &res);
+    
     
     void Merge_condition(Expr *condition, bool init_flag);
     void Split_If();
@@ -81,16 +81,11 @@ public:
 private:
     vector<vector<Expr *>> Deal_with_condition(Expr *condition, bool not_logic, vector<vector<Expr *>> cur);
 
-
     int Verified_Loop_Count;
     vector<ACSLComment*> comments;
     vector<vector<Expr *>> exit_invariant;
-    vector<vector<VariableInfo>> Init_Vars;
     vector<vector<VariableInfo>> Vars;
     vector<vector<Expr *>> DNF;
-    vector<vector<Expr *>> Init_DNF;
-    int Canonical_Branch_Count;
-    int Init_Branch_Count;
 
     bool InWhileLoop;
     int Inner_Loop_Depth;

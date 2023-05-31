@@ -15,19 +15,21 @@ class ACSLComment{
     public:
         enum class CommentType{LOOP,ASSERT,FUNCTION};
         ACSLComment(int line_number,enum CommentType type):line(line_number),comment_type(type){}
-        void dump();
+        void dump(ofstream& out);
         void add_invariant(vector<vector<Expr*>> exprs);
         void add_invariant(vector<C_Polyhedron> polys);
         void add_assign_vars(string name);
         void add_assign_vars(vector<string> vars);
-        void add_assign_vars(unordered_set<string> vars);
+        void add_assign_vars(unordered_set<string>& vars);
         void set_assertion(Expr* assertion);
+
+        int get_line_number() {return line;}
         
     private:
         enum CommentType comment_type;
         vector<vector<Expr *>> loop_invariant;
         Expr* Assertion;
         int line;
-        vector<string> assign_vars;
+        unordered_set<string> assign_vars;
 };
 #endif
