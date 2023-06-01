@@ -22,12 +22,11 @@ public:
     bool getNumericalPointer() const { return numerical_point_flag; }
     bool getStructureArray() const { return structure_array_flag; }
     bool getNumericalArray() const { return numerical_array_flag; }
-    bool isInLoop() const { return inLoop; };
 
     static void search_and_insert(VariableInfo var, vector<VariableInfo> &Vars);
     static Expr *search_for_value(VariableInfo var, vector<VariableInfo> &Vars);
-    void alterVar(string varname, Expr *expr, QualType type, bool inloop);
-    void alterVar(Expr *var_expr, Expr *init, bool in);
+    void alterVar(string varname, Expr *expr, QualType type);
+    void alterVar(Expr *var_expr, Expr *init);
 
 private:
     string VarName;
@@ -37,9 +36,6 @@ private:
     bool numerical_point_flag;
     bool structure_array_flag;
     bool numerical_array_flag;
-    bool eq_value;
-    bool ineq_value;
-    bool inLoop;
 
 public:
     bool operator==(const VariableInfo &other) const
@@ -48,8 +44,7 @@ public:
                structure_point_flag == other.structure_point_flag &&
                numerical_point_flag == other.numerical_point_flag &&
                structure_array_flag == other.structure_array_flag &&
-               numerical_array_flag == other.numerical_array_flag &&
-               inLoop == other.inLoop;
+               numerical_array_flag == other.numerical_array_flag
     }
 };
 

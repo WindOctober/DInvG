@@ -7,22 +7,19 @@ VariableInfo::VariableInfo()
     VarName = "";
     VarValue = NULL;
     VarType = EmptyType;
-    inLoop = false;
     structure_point_flag = false;
     numerical_point_flag = false;
     structure_array_flag = false;
     numerical_array_flag = false;
-    eq_value=false;
-    ineq_value=false;
 }
 void VariableInfo::search_and_insert(VariableInfo var, vector<VariableInfo> &Vars)
 {
     QualType Emptytype;
     for (int i = 0; i < Vars.size(); i++)
     {
-        if (Vars[i].getVariableName() == var.getVariableName() && Vars[i].inLoop == var.inLoop)
+        if (Vars[i].getVariableName() == var.getVariableName())
         {
-            Vars[i].alterVar("", var.getVariableValue(), Emptytype, Vars[i].isInLoop());
+            Vars[i].alterVar("", var.getVariableValue(), Emptytype);
             return;
         }
     }
@@ -33,7 +30,7 @@ Expr* VariableInfo::search_for_value(VariableInfo var, vector<VariableInfo> &Var
     
     for (int i = 0; i < Vars.size(); i++)
     {
-        if (Vars[i].getVariableName() == var.getVariableName() && Vars[i].inLoop == var.inLoop)
+        if (Vars[i].getVariableName() == var.getVariableName())
         {
             return Vars[i].getVariableValue();
         }
@@ -41,7 +38,7 @@ Expr* VariableInfo::search_for_value(VariableInfo var, vector<VariableInfo> &Var
     return var.getVariableValue();
 }
 
-void VariableInfo::alterVar(string varname, Expr *expr, QualType type, bool in)
+void VariableInfo::alterVar(string varname, Expr *expr, QualType type)
 {
     if (varname != "")
         VarName = varname;
@@ -49,11 +46,10 @@ void VariableInfo::alterVar(string varname, Expr *expr, QualType type, bool in)
         VarValue = expr;
     if (!type.isNull())
         VarType = type;
-    inLoop = in;
     return;
 }
 
-void VariableInfo::alterVar(Expr *var_expr, Expr *init, bool in)
+void VariableInfo::alterVar(Expr *var_expr, Expr *init)
 {
     if (isa<DeclRefExpr>(var_expr))
     {
@@ -61,7 +57,6 @@ void VariableInfo::alterVar(Expr *var_expr, Expr *init, bool in)
         VarName = decl->getDecl()->getNameAsString();
         VarType = decl->getType();
         if (init) VarValue = init;
-        inLoop = in;
     }
     else{
         outs()<<"[VariableInfo alterVar warning] Unexpected VarExpr Type that is: "<<var_expr->getStmtClassName()<<'\n';

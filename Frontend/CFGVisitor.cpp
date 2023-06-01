@@ -146,14 +146,12 @@ bool CFGVisitor::DealWithStmt(Stmt *stmt, TransitionSystem &transystem)
     {
         // DONE: Before Into loop -> get precondition from Vars vector.
         // TODO: Process if While loop body is empty.
-
         WhileStmt *whileStmt = dyn_cast<WhileStmt>(stmt);
         Expr *loop_condition = whileStmt->getCond();
         Stmt *while_body = whileStmt->getBody();
 
-
         unordered_set<string> used_vars;
-        transystem.Update_Init_Vars();
+        transystem.Update_Vars(); 
         transystem.Merge_condition(loop_condition, false);
         vector<vector<Expr*>> init_DNF=transystem.get_DNF();
 
@@ -175,10 +173,10 @@ bool CFGVisitor::DealWithStmt(Stmt *stmt, TransitionSystem &transystem)
                 bool flag=DealWithStmt(stmt, transystem);
                 if (!flag) break;
             }
-            transystem.Update_Loop_Vars();
+            transystem.Update_Vars();
         }
         
-        transystem.Out_Loop(whileStmt,used_vars,);
+        transystem.Out_Loop(whileStmt,used_vars,init_DNF);
     }
     else if (isa<DeclStmt>(stmt))
     {
