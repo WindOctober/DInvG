@@ -54,7 +54,7 @@ void CFGVisitor::DealWithVarDecl(VarDecl *stmt, TransitionSystem &transystem)
     }
     else if (stmt_type->isIntegerType())
     {
-        var.alterVar(var_name, stmt->getInit(), stmt_type, transystem.get_InLoop());
+        var.alterVar(var_name, stmt->getInit(), stmt_type);
     }
     else if (stmt_type->isFloatingType())
         Terminate_errors(ErrorType::FloatVarError);
@@ -90,7 +90,7 @@ void CFGVisitor::DealWithBinaryOp(BinaryOperator *stmt, TransitionSystem &transy
     if (stmt->getOpcode() == BO_Assign)
     {
         VariableInfo var;
-        var.alterVar(stmt->getLHS(), NULL, transystem.get_InLoop());
+        var.alterVar(stmt->getLHS(), NULL);
         transystem.add_vars(var, stmt->getRHS());
     }
     return;
@@ -118,8 +118,8 @@ bool CFGVisitor::DealWithStmt(Stmt *stmt, TransitionSystem &transystem)
         Stmt *else_branch = ifStmt->getElse();
         TransitionSystem ElseTransystem(transystem);
         TransitionSystem ThenTransystem(transystem);
-        ThenTransystem.Merge_condition(condition, false);
-        ElseTransystem.Merge_condition(transystem.NegateExpr(condition), false);
+        ThenTransystem.Merge_condition(condition);
+        ElseTransystem.Merge_condition(transystem.NegateExpr(condition));
         if (CompoundStmt *compound = dyn_cast<CompoundStmt>(then_branch))
         {
             for (auto stmt : compound->body())
@@ -152,7 +152,7 @@ bool CFGVisitor::DealWithStmt(Stmt *stmt, TransitionSystem &transystem)
 
         unordered_set<string> used_vars;
         transystem.Update_Vars(); 
-        transystem.Merge_condition(loop_condition, false);
+        transystem.Merge_condition(loop_condition);
         vector<vector<Expr*>> init_DNF=transystem.get_DNF();
 
         SourceRange sourceRange = whileStmt->getSourceRange();
@@ -164,7 +164,7 @@ bool CFGVisitor::DealWithStmt(Stmt *stmt, TransitionSystem &transystem)
         transystem.add_comment(loop_comment);
 
         transystem.In_Loop();
-        transystem.Merge_condition(loop_condition, false);
+        transystem.Merge_condition(loop_condition);
         
         if (CompoundStmt *compound = dyn_cast<CompoundStmt>(while_body))
         {
@@ -174,6 +174,7 @@ bool CFGVisitor::DealWithStmt(Stmt *stmt, TransitionSystem &transystem)
                 if (!flag) break;
             }
             transystem.Update_Vars();
+            used_vars=transystem.get_Used_Vars();
         }
         
         transystem.Out_Loop(whileStmt,used_vars,init_DNF);

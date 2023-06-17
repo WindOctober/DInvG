@@ -23,8 +23,8 @@ using namespace clang::tooling;
 
 enum TransformationType
 {
-    Location,
-    Transition,
+    Loc,
+    Trans,
     Guard,
     Primed,
     Origin
@@ -48,5 +48,5 @@ void Traverse_Expr_ForVars(Expr *expr,unordered_set<string> &res);
 bool Traverse_Expr_CheckVars(Expr *expr,const unordered_set<string> &res);
 bool check_guard(Expr *expr);
 
-vector<C_Polyhedron> Compute_and_Eliminate_Init_Poly(unordered_set<string> used_vars, Expr *condition,vector<vector<Expr*>>& init_DNF,vector<vector<Expr*> > &init_ineq_DNF);
+vector<C_Polyhedron> Compute_and_Eliminate_Init_Poly(const unordered_set<string>& used_vars, Expr *condition,vector<vector<Expr*>>& init_DNF,vector<vector<Expr*> > &init_ineq_DNF);
 #endif
