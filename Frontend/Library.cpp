@@ -299,7 +299,7 @@ Constraint_System *Trans_Expr_to_Constraints(Expr *expr, enum TransformationType
     Constraint_System *constraint = new Constraint_System();
     if (check_guard(expr))
     {
-        if (type == TransformationType::Transition)
+        if (type == TransformationType::Trans)
         {
             type = TransformationType::Origin;
         }
@@ -307,7 +307,7 @@ Constraint_System *Trans_Expr_to_Constraints(Expr *expr, enum TransformationType
         {
             type = TransformationType::Primed;
         }
-        else if (type == TransformationType::Location)
+        else if (type == TransformationType::Loc)
         {
             type = TransformationType::Origin;
         }
@@ -372,7 +372,7 @@ Constraint_System *Trans_Expr_to_Constraints(Expr *expr, enum TransformationType
                 VariableInfo var;
                 var.alterVar(binop->getLHS(), binop->getRHS());
                 int index = info->search(var.getVariableName().c_str());
-                if (type == TransformationType::Transition)
+                if (type == TransformationType::Trans)
                     index += var_size;
                 type = TransformationType::Origin;
                 Linear_Expression *left_expr = new Linear_Expression(Variable(index));
@@ -493,7 +493,7 @@ vector<C_Polyhedron> Compute_and_Eliminate_Init_Poly(const unordered_set<string>
 {
     // TODO: deal with the situation that return size=0;
     // DONE: write the transformation from Constraint to Expression.
-    // TODO: think the inequality init_value.
+    // DONE: think the inequality init_value.
     
     vector<vector<Expr*> > DNF;
     DNF.resize(init_DNF.size());
@@ -507,7 +507,6 @@ vector<C_Polyhedron> Compute_and_Eliminate_Init_Poly(const unordered_set<string>
         }
         if (init_DNF[i].size()==0){
             init_DNF.erase(init_DNF.begin()+i);
-            i--;
         }
         else if (DNF[i].size()==0){
             DNF.erase(DNF.begin()+i);
@@ -526,7 +525,6 @@ vector<C_Polyhedron> Compute_and_Eliminate_Init_Poly(const unordered_set<string>
         }
         if (init_ineq_DNF[i].size()==0){
             init_ineq_DNF.erase(init_ineq_DNF.begin()+i);
-            i--;
         }
         else if (ineq_DNF[i].size()==0){
             ineq_DNF.erase(ineq_DNF.begin()+i);
@@ -540,7 +538,7 @@ vector<C_Polyhedron> Compute_and_Eliminate_Init_Poly(const unordered_set<string>
         C_Polyhedron *p = new C_Polyhedron(info->get_dimension(), UNIVERSE);
         for (int j = 0; j < DNF[i].size(); j++)
         {
-            p->add_constraints(*Trans_Expr_to_Constraints(DNF[i][j], TransformationType::Location, info->get_dimension()));
+            p->add_constraints(*Trans_Expr_to_Constraints(DNF[i][j], TransformationType::Loc, info->get_dimension()));
         }
         if (!p->is_empty())
             init_polys.push_back(*p);

@@ -44,7 +44,7 @@ public:
                structure_point_flag == other.structure_point_flag &&
                numerical_point_flag == other.numerical_point_flag &&
                structure_array_flag == other.structure_array_flag &&
-               numerical_array_flag == other.numerical_array_flag
+               numerical_array_flag == other.numerical_array_flag;
     }
 };
 

@@ -38,7 +38,7 @@ public:
     ACSLComment* get_CurComment() {return comments[comments.size() - 1];}
     bool get_InLoop();
 
-    void Merge_condition(Expr *condition, bool init_flag);
+    void Merge_condition(Expr *condition);
     void Split_If();
     static Expr *NegateExpr(Expr *expr);
 
@@ -52,7 +52,7 @@ public:
 
     void Update_Vars();
     void copy_after_update(int size);
-    void Out_Loop(WhileStmt *whileloop, unordered_set<string> used_vars, vector<vector<Expr *>> init_DNF);
+    void Out_Loop(WhileStmt *whileloop, unordered_set<string>& used_vars, vector<vector<Expr *>>& init_DNF);
 
     static TransitionSystem Merge_Transystem(TransitionSystem &left_trans, TransitionSystem &right_trans);
 
@@ -71,6 +71,7 @@ private:
 
     int Verified_Loop_Count;
     vector<ACSLComment *> comments;
+    // TODO: Process that where the ineq_dnf is generated, where it should be computed, and how to update the var in the inequality_DNF.
     vector<vector<Expr *>> inequality_DNF;
     vector<vector<VariableInfo>> Vars;
     vector<vector<Expr *>> DNF;

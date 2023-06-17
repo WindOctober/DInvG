@@ -22,11 +22,10 @@ namespace std
             size_t bool_hash2 = hash<bool>{}(v.getNumericalPointer());
             size_t bool_hash3 = hash<bool>{}(v.getNumericalArray());
             size_t bool_hash4 = hash<bool>{}(v.getStructureArray());
-            size_t bool_hash5 = hash<bool>{}(v.isInLoop());
 
             // Combine the hash values. Note that this is a simplistic way to combine hashes,
             // and there are better methods available if collision resistance is important.
-            return string_hash ^ bool_hash1 ^ bool_hash2 ^ bool_hash3 ^ bool_hash4 ^ bool_hash5;
+            return string_hash ^ bool_hash1 ^ bool_hash2 ^ bool_hash3 ^ bool_hash4;
         }
     };
 }
@@ -64,7 +63,7 @@ void TransitionSystem::add_vars(VariableInfo &var, Expr *expr)
     }
     for (int i = 0; i < Vars.size(); i++)
     {
-        var.alterVar("", Trans_Expr_by_CurVars(expr, Vars[i]), var.getQualType(), InWhileLoop);
+        var.alterVar("", Trans_Expr_by_CurVars(expr, Vars[i]), var.getQualType());
         VariableInfo::search_and_insert(var, Vars[i]);
     }
     return;
@@ -140,7 +139,7 @@ void TransitionSystem::copy_after_update(int size)
     return;
 }
 
-void TransitionSystem::Merge_condition(Expr *condition, bool init_flag)
+void TransitionSystem::Merge_condition(Expr *condition)
 {
     vector<vector<Expr *>> exprs;
     exprs = Deal_with_condition(condition, true, exprs);
@@ -281,7 +280,7 @@ Expr *TransitionSystem::Trans_Expr_by_CurVars(Expr *expr, vector<VariableInfo> &
         string name = declRef->getDecl()->getNameAsString();
         VariableInfo var;
         QualType emptyType;
-        var.alterVar(name, declRef, emptyType, InWhileLoop);
+        var.alterVar(name, declRef, emptyType);
         Print_Vars();
         return VariableInfo::search_for_value(var, Vars);
     }
@@ -308,7 +307,7 @@ void TransitionSystem::Elimiate_Impossible_Path(int size)
         C_Polyhedron *p = new C_Polyhedron(size * 2, UNIVERSE);
         for (int j = 0; j < DNF[i].size(); j++)
         {
-            p->add_constraints(*Trans_Expr_to_Constraints(DNF[i][j], TransformationType::Transition, size));
+            p->add_constraints(*Trans_Expr_to_Constraints(DNF[i][j], TransformationType::Trans, size));
         }
 
         if (p->is_empty())
@@ -350,7 +349,7 @@ void TransitionSystem::Initialize_Locations_and_Transitions(int locsize, int var
             C_Polyhedron *p;
             p = new C_Polyhedron(varsize * 2, UNIVERSE);
             for (int index = 0; index < DNF[i].size(); index++)
-                p->add_constraints(*Trans_Expr_to_Constraints(DNF[i][index], TransformationType::Transition, varsize));
+                p->add_constraints(*Trans_Expr_to_Constraints(DNF[i][index], TransformationType::Trans, varsize));
             if (j != locsize - 1)
             {
                 for (int index = 0; index < guard[j].size(); index++)
@@ -394,19 +393,6 @@ void TransitionSystem::Initialize_Locations_and_Transitions(int locsize, int var
     }
 }
 
-unordered_set<string> TransitionSystem::get_Used_Vars()
-{
-    unordered_set<string> res_vars_set;
-    for (int i = 0; i < DNF.size(); i++)
-    {
-        for (int j = 0; j < DNF[i].size(); j++)
-        {
-            Traverse_Expr_ForVars(DNF[i][j], res_vars_set);
-        }
-    }
-    return res_vars_set;
-}
-
 void TransitionSystem::Compute_Loop_Invariant(Expr *condition, unordered_set<string> vars_in_dnf, vector<C_Polyhedron> init_polys)
 {
     // DONE: delete the unused variables in init_dnf.
@@ -414,7 +400,6 @@ void TransitionSystem::Compute_Loop_Invariant(Expr *condition, unordered_set<str
     // DONE: Construct Location and Transition, and get the inequality_DNF , then print.
     // DONE: add variable_init to info.
     // DONE: alter the mode of the Trans_Expr_to_Constraints
-    unordered_set<string> vars_in_dnf;
     if (comments.size() == 0)
     {
         LOG_WARNING("No Comments has been added to the transystem.");
@@ -468,7 +453,7 @@ void TransitionSystem::Compute_Loop_Invariant(Expr *condition, unordered_set<str
     return;
 }
 
-void TransitionSystem::Out_Loop(WhileStmt *whileloop, unordered_set<string> used_vars, vector<vector<Expr *>> init_DNF)
+void TransitionSystem::Out_Loop(WhileStmt *whileloop, unordered_set<string>& used_vars, vector<vector<Expr *>>& init_DNF)
 {
     Print_Vars();
     vector<C_Polyhedron> init_polys=Compute_and_Eliminate_Init_Poly(used_vars,whileloop->getCond(),init_DNF,inequality_DNF);
@@ -544,8 +529,6 @@ void TransitionSystem::Print_Vars()
             {
                 outs() << "No Initialized." << '\n';
             }
-
-            outs() << "\t Variable InLoop is: " << Vars[i][j].isInLoop() << '\n';
             outs() << "\t Variable Type is: " << Vars[i][j].getQualType().getAsString() << '\n';
         }
     }
