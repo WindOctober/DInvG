@@ -405,7 +405,7 @@ void TransitionSystem::Compute_Loop_Invariant(Expr *condition, unordered_set<str
         LOG_WARNING("No Comments has been added to the transystem.");
         exit(0);
     }
-    ACSLComment *loop_comment = comments[comments.size() - 1];
+    ACSLComment *loop_comment = get_CurComment();
     info = new var_info();
     lambda_info = new var_info();
     dual_info = new var_info();
@@ -445,7 +445,6 @@ void TransitionSystem::Compute_Loop_Invariant(Expr *condition, unordered_set<str
         }
     }
     loop_comment->add_assign_vars(vars_in_dnf);
-
     Print_DNF();
     if (loclist != NULL && trlist != NULL)
         delete loclist, trlist;
