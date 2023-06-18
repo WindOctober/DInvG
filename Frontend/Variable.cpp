@@ -1,6 +1,5 @@
 #include "Variable.hpp"
 #include "Library.hpp"
-
 VariableInfo::VariableInfo()
 {
     QualType EmptyType;
@@ -63,3 +62,4 @@ void VariableInfo::alterVar(Expr *var_expr, Expr *init)
     }
     return;
 }
+

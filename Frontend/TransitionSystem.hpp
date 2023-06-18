@@ -16,6 +16,15 @@ using namespace std;
 using namespace clang;
 using namespace llvm;
 
+enum TransformationType
+{
+    Loc,
+    Trans,
+    Guard,
+    Primed,
+    Origin
+};
+
 class TransitionSystem
 {
 public:
@@ -63,7 +72,6 @@ public:
     void add_vars(VariableInfo &var, Expr *expr);
     void add_expr(Expr *expr);
     void add_comment(ACSLComment *comment);
-
     static ASTContext *context;
 
 private:
@@ -80,5 +88,6 @@ private:
     int Inner_Loop_Depth;
     int Inner_Loop_Count;
 };
+
 
 #endif

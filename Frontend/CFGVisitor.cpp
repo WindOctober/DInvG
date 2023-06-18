@@ -149,12 +149,11 @@ bool CFGVisitor::DealWithStmt(Stmt *stmt, TransitionSystem &transystem)
         WhileStmt *whileStmt = dyn_cast<WhileStmt>(stmt);
         Expr *loop_condition = whileStmt->getCond();
         Stmt *while_body = whileStmt->getBody();
-
         unordered_set<string> used_vars;
-        transystem.Update_Vars(); 
+        transystem.Update_Vars();
         transystem.Merge_condition(loop_condition);
         vector<vector<Expr*>> init_DNF=transystem.get_DNF();
-
+        
         SourceRange sourceRange = whileStmt->getSourceRange();
         SourceLocation startLocation = sourceRange.getBegin();
         SourceManager &sourceManager = context->getSourceManager();
@@ -162,7 +161,7 @@ bool CFGVisitor::DealWithStmt(Stmt *stmt, TransitionSystem &transystem)
         ACSLComment *loop_comment = new ACSLComment(lineNumber, ACSLComment::CommentType::LOOP);
         loop_comment->add_invariant(transystem.Deal_with_condition(loop_condition, false));
         transystem.add_comment(loop_comment);
-
+        
         transystem.In_Loop();
         transystem.Merge_condition(loop_condition);
         
@@ -176,7 +175,6 @@ bool CFGVisitor::DealWithStmt(Stmt *stmt, TransitionSystem &transystem)
             transystem.Update_Vars();
             used_vars=transystem.get_Used_Vars();
         }
-        
         transystem.Out_Loop(whileStmt,used_vars,init_DNF);
     }
     else if (isa<DeclStmt>(stmt))
@@ -259,7 +257,7 @@ bool CFGVisitor::VisitFunctionDecl(FunctionDecl *func)
 void CFGVisitor::PrintStmtInfo(Stmt *stmt)
 {
     // TODO: complete this function case by case
-    outs() << "\n\n";
+    outs() << "\n";
     outs() << "[print statement info]" << '\n';
     outs() << stmt->getStmtClassName() << '\n';
     if (isa<IfStmt>(stmt))
@@ -316,7 +314,7 @@ void CFGVisitor::Dump_Annotated_file()
     while (getline(infile, line)) {
         lineNumber++;
         if (lineNumber==cur_lineno){
-            comments[index]->dump(outfile);
+            comments[index]->dump(outfile,context);
             index++;
             if (index!=comments.size()){
                 cur_lineno=comments[index]->get_line_number();
