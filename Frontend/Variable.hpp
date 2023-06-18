@@ -5,7 +5,6 @@
 #include "clang/AST/RecursiveASTVisitor.h"
 #include "clang/Analysis/CFG.h"
 #include <string>
-
 using namespace std;
 using namespace clang;
 using namespace llvm;
@@ -25,6 +24,7 @@ public:
 
     static void search_and_insert(VariableInfo var, vector<VariableInfo> &Vars);
     static Expr *search_for_value(VariableInfo var, vector<VariableInfo> &Vars);
+    
     void alterVar(string varname, Expr *expr, QualType type);
     void alterVar(Expr *var_expr, Expr *init);
 

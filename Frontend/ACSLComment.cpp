@@ -1,7 +1,7 @@
 #include"ACSLComment.hpp"
 #include"Library.hpp"
 #include<fstream>
-void ACSLComment::dump(ofstream& out){
+void ACSLComment::dump(ofstream& out,ASTContext* context){
     out<<"\t /*@\n";
     bool flag;
     switch(comment_type){
@@ -16,7 +16,12 @@ void ACSLComment::dump(ofstream& out){
                     if (j){
                         out<<"\t\t && \n";
                     }
-                    out<<"\t ("<<Print_Expr(loop_invariant[i][j])<<")\n";
+                    PrintingPolicy Policy(context->getLangOpts());
+                    string str;
+                    llvm::raw_string_ostream rso(str);
+                    loop_invariant[i][j]->printPretty(rso, nullptr, Policy);
+                    rso.flush();
+                    out<<"\t ("<<str<<")\n";
                 }
                 out<<"\t ) \n";
             }
@@ -49,10 +54,7 @@ void ACSLComment::add_invariant(vector<vector<Expr*>> exprs){
     loop_invariant=Connect_DNF(loop_invariant,exprs);
     return;
 }
-void ACSLComment::add_invariant(vector<C_Polyhedron> polys){
-    loop_invariant=Connect_DNF(loop_invariant,Trans_Polys_to_Exprs(polys));
-    return;
-}
+
 void ACSLComment::add_assign_vars(string name){
     assign_vars.insert(name);
     return;
