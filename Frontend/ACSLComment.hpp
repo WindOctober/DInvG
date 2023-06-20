@@ -16,8 +16,7 @@ class ACSLComment{
         enum class CommentType{LOOP,ASSERT,FUNCTION};
         ACSLComment(int line_number,enum CommentType type):line(line_number),comment_type(type){}
         void dump(ofstream& out,ASTContext* context);
-        void add_invariant(vector<vector<Expr*>> exprs);
-        void add_invariant(vector<C_Polyhedron> polys);
+        void add_invariant(vector<vector<Expr*>> exprs,bool connect);
         void add_assign_vars(string name);
         void add_assign_vars(vector<string> vars);
         void add_assign_vars(unordered_set<string>& vars);

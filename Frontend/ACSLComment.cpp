@@ -50,10 +50,15 @@ void ACSLComment::dump(ofstream& out,ASTContext* context){
     out<<"\t */\n";
     return;
 }
-void ACSLComment::add_invariant(vector<vector<Expr*>> exprs){
-    loop_invariant=Connect_DNF(loop_invariant,exprs);
+void ACSLComment::add_invariant(vector<vector<Expr*>> exprs,bool connect){
+    if (connect)
+        loop_invariant=Connect_DNF(loop_invariant,exprs);
+    else
+        loop_invariant=Merge_DNF(loop_invariant,exprs);
     return;
 }
+
+
 
 void ACSLComment::add_assign_vars(string name){
     assign_vars.insert(name);

@@ -242,8 +242,6 @@ Expr *Trans_Constraint_to_Expr(Constraint constraint)
     return res;
 }
 
-
-
 Constraint_System *Trans_Expr_to_Constraints(Expr *expr, enum TransformationType type, int var_size)
 {
     // DONE: confirm the expr template, which must be xxx <=/==/>= xxx;
@@ -375,7 +373,6 @@ bool Traverse_Expr_CheckVars(Expr *expr,const unordered_set<string> &res){
     return flag;
 }
 
-
 void Traverse_Expr_ForVars(Expr *expr, unordered_set<string> &res)
 {
     if (isa<BinaryOperator>(expr))
@@ -407,6 +404,41 @@ void Traverse_Expr_ForVars(Expr *expr, unordered_set<string> &res)
     return;
 }
 
+Expr* Add_InitSuffix(Expr* expr){
+    if (isa<BinaryOperator>(expr))
+    {
+        BinaryOperator *binop = dyn_cast<BinaryOperator>(expr);
+        binop->setLHS(Add_InitSuffix(binop->getLHS()));
+        binop->setRHS(Add_InitSuffix(binop->getRHS()));
+        return binop;
+    }
+    else if (isa<DeclRefExpr>(expr))
+    {
+        DeclRefExpr *declRef = dyn_cast<DeclRefExpr>(expr);
+        VarDecl *VD;
+        ASTContext* context=TransitionSystem::context;
+        VD = VarDecl::Create(*context, context->getTranslationUnitDecl(), SourceLocation(), SourceLocation(), &context->Idents.get((declRef->getDecl()->getNameAsString()+INITSUFFIX)), declRef->getType(), nullptr, SC_None);
+        LOG_INFO(VD->getNameAsString());
+        return new (context) DeclRefExpr(*context, VD, false, VD->getType(), VK_LValue, SourceLocation(), DeclarationNameLoc(), NOUR_None);
+    }
+    else if (isa<ImplicitCastExpr>(expr))
+    {
+        ImplicitCastExpr *implict = dyn_cast<ImplicitCastExpr>(expr);
+        implict->setSubExpr(Add_InitSuffix(implict->getSubExpr()));
+        return implict;
+    }
+    else if (isa<IntegerLiteral>(expr))
+    {
+        return expr;
+    }
+    else
+    {
+        LOG_WARNING("Unexpected Type"+string(expr->getStmtClassName()));
+        LOG_WARNING(Print_Expr(expr));
+        exit(0);
+    }
+    return expr;
+}
 vector<C_Polyhedron> Compute_and_Eliminate_Init_Poly(const unordered_set<string>& used_vars, Expr *condition,vector<vector<Expr*>>& init_DNF,vector<vector<Expr*> > &init_ineq_DNF)
 {
     // TODO: deal with the situation that return size=0;
@@ -418,6 +450,14 @@ vector<C_Polyhedron> Compute_and_Eliminate_Init_Poly(const unordered_set<string>
     for(int i=0;i<init_DNF.size();i++){
         for(int j=0;j<init_DNF[i].size();j++){
             if (Traverse_Expr_CheckVars(init_DNF[i][j],used_vars)){
+                if (isa<BinaryOperator>(init_DNF[i][j])){
+                    LOG_INFO(Print_Expr(init_DNF[i][j]));
+                    BinaryOperator* binop=dyn_cast<BinaryOperator>(init_DNF[i][j]);
+                    binop->setRHS(Add_InitSuffix(binop->getRHS()));
+                }
+                else
+                    LOG_WARNING("Unexpected type of init_DNF.");
+                
                 DNF[i].push_back(init_DNF[i][j]);
                 init_DNF[i].erase(init_DNF[i].begin()+j);
                 j--;
@@ -465,8 +505,9 @@ vector<C_Polyhedron> Compute_and_Eliminate_Init_Poly(const unordered_set<string>
 }
 
 
-Expr *TransitionSystem::NegateExpr(Expr *expr)
+Expr *NegateExpr(Expr *expr)
 {
+    ASTContext* context=TransitionSystem::context;
     UnaryOperator *notExpr = new (context) UnaryOperator(expr, UO_LNot, context->BoolTy, VK_RValue, OK_Ordinary, SourceLocation(), false);
     return notExpr;
 }
@@ -519,9 +560,9 @@ void TransitionSystem::add_expr(Expr *expr)
     return;
 }
 
-bool TransitionSystem::get_InLoop()
-{
-    return InWhileLoop;
+void TransitionSystem::Merge_IneqDNF(vector<vector<Expr*>>& dnf){
+    inequality_DNF=Merge_DNF(inequality_DNF,dnf);
+    return;
 }
 Expr *TransitionSystem::Trans_VariableInfo_to_Expr(VariableInfo var)
 {
@@ -602,7 +643,20 @@ void TransitionSystem::Merge_condition(Expr *condition)
 
 TransitionSystem TransitionSystem::Merge_Transystem(TransitionSystem &left_trans, TransitionSystem &right_trans)
 {
-    return right_trans;
+    // TODO: consider the situation of nested loop.
+    TransitionSystem transystem;
+    transystem.inequality_DNF=Merge_DNF(left_trans.inequality_DNF,right_trans.inequality_DNF);
+    transystem.DNF=Connect_DNF(left_trans.DNF,right_trans.DNF);
+    for(int i=0;i<left_trans.comments.size();i++)
+        transystem.comments.push_back(left_trans.comments[i]);
+    for(int i=0;i<right_trans.comments.size();i++)
+        transystem.comments.push_back(right_trans.comments[i]);
+    for(int i=0;i<left_trans.Vars.size();i++)
+        transystem.Vars.push_back(left_trans.Vars[i]);
+    for(int i=0;i<right_trans.Vars.size();i++)
+        transystem.Vars.push_back(right_trans.Vars[i]);
+    transystem.Verified_Loop_Count=left_trans.Verified_Loop_Count+right_trans.Verified_Loop_Count;
+    return transystem;
 }
 
 void TransitionSystem::Update_Vars()
@@ -626,6 +680,7 @@ vector<vector<Expr *>> TransitionSystem::Deal_with_condition(Expr *condition, bo
     vector<vector<Expr *>> cur;
     return Deal_with_condition(condition, logic, cur);
 }
+
 vector<vector<Expr *>> TransitionSystem::Deal_with_condition(Expr *condition, bool logic, vector<vector<Expr *>> cur)
 {
     vector<vector<Expr *>> left_expr;
@@ -734,7 +789,6 @@ Expr *TransitionSystem::Trans_Expr_by_CurVars(Expr *expr, vector<VariableInfo> &
         VariableInfo var;
         QualType emptyType;
         var.alterVar(name, declRef, emptyType);
-        Print_Vars();
         return VariableInfo::search_for_value(var, Vars);
     }
     else if (isa<ImplicitCastExpr>(expr))
@@ -744,6 +798,7 @@ Expr *TransitionSystem::Trans_Expr_by_CurVars(Expr *expr, vector<VariableInfo> &
     }
     else if (isa<IntegerLiteral>(expr))
     {
+        
     }
     else
     {
@@ -880,13 +935,13 @@ void TransitionSystem::Compute_Loop_Invariant(Expr *condition, unordered_set<str
             Compute_Invariant_Frontend();
             vector<C_Polyhedron> loc_invariant = (*loclist)[locsize - 1]->get_vp_inv().get_vp();
             inequality_DNF = Merge_DNF(inequality_DNF, Trans_Polys_to_Exprs(loc_invariant));
-            loop_comment->add_invariant(Trans_Polys_to_Exprs(loc_invariant));
+            loop_comment->add_invariant(Trans_Polys_to_Exprs(loc_invariant),true);
             loc_invariant.clear();
             for (int index = 0; index < locsize - 1; index++)
             {
                 loc_invariant.push_back((*loclist)[index]->get_invariant());
             }
-            loop_comment->add_invariant(Trans_Polys_to_Exprs(loc_invariant));
+            loop_comment->add_invariant(Trans_Polys_to_Exprs(loc_invariant),true);
         }
     }
     loop_comment->add_assign_vars(vars_in_dnf);
@@ -907,15 +962,20 @@ void TransitionSystem::Out_Loop(WhileStmt *whileloop, unordered_set<string>& use
         info->search_and_insert((var + INITSUFFIX).c_str());
     }
     vector<C_Polyhedron> init_polys=Compute_and_Eliminate_Init_Poly(used_vars,whileloop->getCond(),init_DNF,inequality_DNF);
-    Compute_Loop_Invariant(whileloop->getCond(), used_vars, init_polys);
     ACSLComment* comment = get_CurComment();
-    // TODO: add the remaining DNF into the comment.
+    Print_DNF();
+    // DONE: add the remaining DNF into the comment.
+    vector<vector<Expr*>> remain_DNF=Merge_DNF(init_DNF,inequality_DNF);
+    Compute_Loop_Invariant(whileloop->getCond(), used_vars, init_polys);
+    comment->add_invariant(remain_DNF,false);
     InWhileLoop = false;
     Vars.clear();
     DNF.clear();
     inequality_DNF.clear();
     Verified_Loop_Count++;
+    Print_DNF();
     delete info, dual_info, lambda_info;
+    return;
 }
 
 void TransitionSystem::Split_If()
@@ -942,12 +1002,12 @@ TransitionSystem::TransitionSystem()
 }
 
 TransitionSystem::TransitionSystem(TransitionSystem &other)
-    : Verified_Loop_Count(other.Verified_Loop_Count),
+    : Verified_Loop_Count(0),
       Vars(other.Vars),
-      DNF(other.DNF),
-      InWhileLoop(other.InWhileLoop),
-      Inner_Loop_Depth(other.Inner_Loop_Depth),
-      Inner_Loop_Count(other.Inner_Loop_Count)
+      DNF(other.DNF)
+    //   InWhileLoop(other.InWhileLoop),
+    //   Inner_Loop_Depth(other.Inner_Loop_Depth),
+    //   Inner_Loop_Count(other.Inner_Loop_Count)
 {
 }
 

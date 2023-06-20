@@ -3,18 +3,25 @@
 
 int main()
 {
-  int r, s = 1;
+	int r, s = 1;
+	if (r > 0)
+	{
+		r++;
+	}
+	else
+	{
+		r = 0;
+	}
+	while (r > 0)
+	// clang-format off
 
-  while(r > 0)
-    // clang-format off
+	// clang-format on
+	{
+		s = 1;
+		r--;
+	}
+	assert(r == 0);
+	assert(s == 1);
 
-    // clang-format on
-    {
-      s = 1;
-      r--;
-    }
-  assert(r == 0);
-  assert(s == 1);
-
-  return 0;
+	return 0;
 }
