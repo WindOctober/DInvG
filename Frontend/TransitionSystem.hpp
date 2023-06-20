@@ -44,12 +44,14 @@ public:
     vector<ACSLComment *> get_Comments() { return comments; }
     unordered_set<string> get_Used_Vars();
     vector<vector<Expr *>> get_DNF() { return DNF; }
-    ACSLComment* get_CurComment() {return comments[comments.size() - 1];}
-    bool get_InLoop();
+    vector<vector<Expr *>> get_IneqDNF() { return inequality_DNF; }
+    ACSLComment *get_CurComment() { return comments[comments.size() - 1]; }
+    void clear_ineqDNF() { inequality_DNF.clear(); }
 
+    static TransitionSystem Merge_Transystem(TransitionSystem &left_trans, TransitionSystem &right_trans);
     void Merge_condition(Expr *condition);
+    void Merge_IneqDNF(vector<vector<Expr *>>& dnf);
     void Split_If();
-    static Expr *NegateExpr(Expr *expr);
 
     void set_incremental(Expr *increment); // only for for-loop, which is needed by continue situations.
 
@@ -61,9 +63,7 @@ public:
 
     void Update_Vars();
     void copy_after_update(int size);
-    void Out_Loop(WhileStmt *whileloop, unordered_set<string>& used_vars, vector<vector<Expr *>>& init_DNF);
-
-    static TransitionSystem Merge_Transystem(TransitionSystem &left_trans, TransitionSystem &right_trans);
+    void Out_Loop(WhileStmt *whileloop, unordered_set<string> &used_vars, vector<vector<Expr *>> &init_DNF);
 
     void Print_Vars();
     void Print_DNF();
@@ -89,5 +89,5 @@ private:
     int Inner_Loop_Count;
 };
 
-
+Expr *NegateExpr(Expr *expr);
 #endif

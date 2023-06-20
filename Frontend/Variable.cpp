@@ -31,7 +31,8 @@ Expr* VariableInfo::search_for_value(VariableInfo var, vector<VariableInfo> &Var
     {
         if (Vars[i].getVariableName() == var.getVariableName())
         {
-            return Vars[i].getVariableValue();
+            if (Vars[i].getVariableValue())
+                return Vars[i].getVariableValue();
         }
     }
     return var.getVariableValue();
