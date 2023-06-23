@@ -9,7 +9,7 @@ int main()
       --r;
       if(r <= 1)
       {
-        break;
+        --r;
       }
       else
       {
