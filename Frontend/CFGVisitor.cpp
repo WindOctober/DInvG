@@ -121,7 +121,7 @@ bool CFGVisitor::DealWithStmt(Stmt *stmt, TransitionSystem &transystem)
         TransitionSystem ThenTransystem(transystem);
         ThenTransystem.Merge_condition(condition);
         ElseTransystem.Merge_condition(NegateExpr(condition));
-        
+
         if (CompoundStmt *compound = dyn_cast<CompoundStmt>(then_branch))
         {
             for (auto stmt : compound->body())
@@ -140,11 +140,11 @@ bool CFGVisitor::DealWithStmt(Stmt *stmt, TransitionSystem &transystem)
                     break;
             }
         }
-        
+
         transystem = TransitionSystem::Merge_Transystem(ThenTransystem, ElseTransystem);
         transystem.Merge_IneqDNF(ineq_dnf);
-        // transystem.Print_DNF();
-        // transystem.Print_Vars();
+        transystem.Print_DNF();
+        transystem.Print_Vars();
     }
     else if (isa<ForStmt>(stmt))
     {
@@ -161,7 +161,7 @@ bool CFGVisitor::DealWithStmt(Stmt *stmt, TransitionSystem &transystem)
         transystem.Update_Vars();
         transystem.Merge_condition(loop_condition);
         vector<vector<Expr *>> init_DNF = transystem.get_DNF();
-
+        vector<vector<Expr *>> init_ineq_DNF = transystem.get_IneqDNF();
         SourceRange sourceRange = whileStmt->getSourceRange();
         SourceLocation startLocation = sourceRange.getBegin();
         SourceManager &sourceManager = context->getSourceManager();
@@ -169,10 +169,8 @@ bool CFGVisitor::DealWithStmt(Stmt *stmt, TransitionSystem &transystem)
         ACSLComment *loop_comment = new ACSLComment(lineNumber, ACSLComment::CommentType::LOOP);
         loop_comment->add_invariant(transystem.Deal_with_condition(loop_condition, false), true);
         transystem.add_comment(loop_comment);
-
         transystem.In_Loop();
         transystem.Merge_condition(loop_condition);
-
         if (CompoundStmt *compound = dyn_cast<CompoundStmt>(while_body))
         {
             for (auto stmt : compound->body())
@@ -184,7 +182,7 @@ bool CFGVisitor::DealWithStmt(Stmt *stmt, TransitionSystem &transystem)
             transystem.Update_Vars();
             used_vars = transystem.get_Used_Vars();
         }
-        transystem.Out_Loop(whileStmt, used_vars, init_DNF);
+        transystem.Out_Loop(whileStmt, used_vars, init_DNF, init_ineq_DNF);
     }
     else if (isa<DeclStmt>(stmt))
     {

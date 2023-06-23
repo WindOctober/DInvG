@@ -7,6 +7,20 @@ void Log(const string &level, const string &function, int line, string msg)
     outs() << "\n[" << level << " " << function << ":" << line << "] " << msg;
 }
 
+vector<vector<Expr *>> Append_DNF(vector<vector<Expr *>> left_expr, vector<vector<Expr *>> right_expr){
+    assert(left_expr.size() == right_expr.size());
+    vector<vector<Expr *>> merged_expr;
+    vector<Expr *> rec_expr;
+    for (int i = 0; i < left_expr.size(); i++)
+    {
+        rec_expr.insert(rec_expr.end(), left_expr[i].begin(), left_expr[i].end());
+        rec_expr.insert(rec_expr.end(), right_expr[i].begin(), right_expr[i].end());
+        merged_expr.push_back(rec_expr);
+        rec_expr.clear();
+    }
+    return merged_expr;
+}
+
 vector<vector<Expr *>> Merge_DNF(vector<vector<Expr *>> left_expr, vector<vector<Expr *>> right_expr)
 {
     if (left_expr.size() == 0)

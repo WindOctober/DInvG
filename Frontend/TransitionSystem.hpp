@@ -63,7 +63,7 @@ public:
 
     void Update_Vars();
     void copy_after_update(int size);
-    void Out_Loop(WhileStmt *whileloop, unordered_set<string> &used_vars, vector<vector<Expr *>> &init_DNF);
+    void Out_Loop(WhileStmt *whileloop, unordered_set<string> &used_vars, vector<vector<Expr *>> &init_DNF,vector<vector<Expr *>> &init_ineq_DNF);
 
     void Print_Vars();
     void Print_DNF();
