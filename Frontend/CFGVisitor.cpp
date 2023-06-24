@@ -104,9 +104,9 @@ bool CFGVisitor::DealWithStmt(Stmt *stmt, TransitionSystem &transystem)
     // Deal with the whole Stmt in code. (which usually means the complete statement in one line.)
 
     // DONE: Deal with assignment statement in code.
-    // TODO: Deal with If statement in code.
-    // TODO: Deal with For loop in code.
-    // TODO: Deal with the situation of continue and break in code. [hint: consider the guard to break to be loop guard in break situation and the standalone branch cutted in continue statement]
+    // DONE: Deal with If statement in code.
+    // DONE: Deal with For loop in code.
+    // DONE: Deal with the situation of continue and break in code. [hint: consider the guard to break to be loop guard in break situation and the standalone branch cutted in continue statement]
     // TODO: Deal with special cases likes x=(a==b), y=(a>=b), which should be handled to if (a==b) x=1 else x=0 and so on.
     // TODO: Deal with the return statement in loop.
     PrintStmtInfo(stmt);
@@ -146,63 +146,38 @@ bool CFGVisitor::DealWithStmt(Stmt *stmt, TransitionSystem &transystem)
         transystem.Merge_IneqDNF(ineq_dnf);
         transystem.Merge_Comments(rec_comments);
     }
-    else if (isa<ForStmt>(stmt))
+    else if (isa<ForStmt>(stmt) || isa<WhileStmt>(stmt))
     {
         // TODO: Process if For loop body is empty;
-        ForStmt* forstmt=dyn_cast<ForStmt>(stmt);
-        DealWithStmt(forstmt->getInit(),transystem);
-        Expr *loop_condition = forstmt->getCond();
-        Stmt *for_body = forstmt->getBody();
-        unordered_set<string> used_vars;
-        transystem.Update_Vars();
-        transystem.Merge_condition(loop_condition, true);
-        vector<vector<Expr*>> SkipLoop=transystem.Deal_with_condition(loop_condition, false);
-        SkipLoop=Merge_DNF(SkipLoop,Append_DNF(transystem.get_DNF(),transystem.get_IneqDNF()));
-        
-        vector<vector<Expr *>> init_DNF = transystem.get_DNF();
-        vector<vector<Expr *>> init_ineq_DNF = transystem.get_IneqDNF();
-        
-        SourceRange sourceRange = forstmt->getSourceRange();
-        SourceLocation startLocation = sourceRange.getBegin();
-        SourceManager &sourceManager = context->getSourceManager();
-        int lineNumber = sourceManager.getSpellingLineNumber(startLocation);
-        ACSLComment *loop_comment = new ACSLComment(lineNumber, ACSLComment::CommentType::LOOP);
-        transystem.add_comment(loop_comment);
-        
-        transystem.In_Loop();
-        transystem.Merge_condition(loop_condition, true);
-        if (CompoundStmt *compound = dyn_cast<CompoundStmt>(for_body))
-        {
-            for (auto stmt : compound->body())
-            {
-                bool flag = DealWithStmt(stmt, transystem);
-                if (!flag)
-                    break;
-            }
-            DealWithStmt(forstmt->getInc(),transystem);
-            transystem.Update_Vars();
-            used_vars = transystem.get_Used_Vars(loop_condition,forstmt->getInc());
+        bool flag;
+        Expr *loop_condition;
+        Stmt *loop_body;
+        SourceRange sourceRange;
+        Expr* inc=NULL;
+        if (isa<ForStmt>(stmt)){
+            flag=true;
+            ForStmt* forstmt=dyn_cast<ForStmt>(stmt);
+            DealWithStmt(forstmt->getInit(),transystem);
+            loop_condition= forstmt->getCond();
+            loop_body = forstmt->getBody();
+            sourceRange = forstmt->getSourceRange();
+            inc=forstmt->getInc();
         }
-        transystem.Out_Loop(loop_condition, used_vars, init_DNF, init_ineq_DNF);
-        loop_comment->add_invariant(SkipLoop, true);
-    }
-    else if (isa<WhileStmt>(stmt))
-    {
-        // DONE: Before Into loop -> get precondition from Vars vector.
-        // TODO: Process if While loop body is empty.
-        WhileStmt *whileStmt = dyn_cast<WhileStmt>(stmt);
-        Expr *loop_condition = whileStmt->getCond();
-        Stmt *while_body = whileStmt->getBody();
+        else{
+            flag=false;
+            WhileStmt *whileStmt = dyn_cast<WhileStmt>(stmt);
+            loop_condition = whileStmt->getCond();
+            loop_body = whileStmt->getBody();
+            sourceRange = whileStmt->getSourceRange();
+        }
         unordered_set<string> used_vars;
         transystem.Update_Vars();
-        transystem.Merge_condition(loop_condition, true);
         vector<vector<Expr*>> SkipLoop=transystem.Deal_with_condition(loop_condition, false);
         SkipLoop=Merge_DNF(SkipLoop,Append_DNF(transystem.get_DNF(),transystem.get_IneqDNF()));
-        
+        transystem.Merge_condition(loop_condition, true);
         vector<vector<Expr *>> init_DNF = transystem.get_DNF();
         vector<vector<Expr *>> init_ineq_DNF = transystem.get_IneqDNF();
         
-        SourceRange sourceRange = whileStmt->getSourceRange();
         SourceLocation startLocation = sourceRange.getBegin();
         SourceManager &sourceManager = context->getSourceManager();
         int lineNumber = sourceManager.getSpellingLineNumber(startLocation);
@@ -210,18 +185,20 @@ bool CFGVisitor::DealWithStmt(Stmt *stmt, TransitionSystem &transystem)
         transystem.add_comment(loop_comment);
         
         transystem.In_Loop();
-        transystem.Merge_condition(loop_condition, false);
-        if (CompoundStmt *compound = dyn_cast<CompoundStmt>(while_body))
+        transystem.Merge_condition(loop_condition, true);
+        if (CompoundStmt *compound = dyn_cast<CompoundStmt>(loop_body))
         {
             for (auto stmt : compound->body())
             {
-                bool flag = DealWithStmt(stmt, transystem);
-                if (!flag)
+                bool continue_flag = DealWithStmt(stmt, transystem);
+                if (!continue_flag)
                     break;
             }
-
+            if (flag)
+                DealWithStmt(inc,transystem);
             transystem.Update_Vars();
-            used_vars = transystem.get_Used_Vars(loop_condition,NULL);
+            used_vars = transystem.get_Used_Vars(loop_condition,inc);
+            transystem.add_fundamental_expr(used_vars);
         }
         transystem.Out_Loop(loop_condition, used_vars, init_DNF, init_ineq_DNF);
         loop_comment->add_invariant(SkipLoop, true);
@@ -277,6 +254,10 @@ bool CFGVisitor::DealWithStmt(Stmt *stmt, TransitionSystem &transystem)
             LOG_WARNING("Unknown function name: "+ FuncName);
             exit(-1);
         }
+    }
+    else if (isa<ReturnStmt>(stmt)){
+        
+        return false;
     }
     return true;
 }

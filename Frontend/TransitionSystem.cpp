@@ -259,7 +259,7 @@ Expr *Trans_Constraint_to_Expr(Constraint constraint)
     {
         string name = info->get_name(i);
         int coef = lin_expr.coefficient(Variable(i)).get_si();
-        if (name.find(INITSUFFIX) == name.npos && coef != 0)
+        if (coef != 0)
         {
             // TODO: only allow unsigned int or unsigned int, special deal with char* or string.
             VarDecl *VD = VarDecl::Create(*Context, Context->getTranslationUnitDecl(), SourceLocation(), SourceLocation(), &Context->Idents.get(name), Context->IntTy, nullptr, SC_None);
@@ -282,6 +282,7 @@ Expr *Trans_Constraint_to_Expr(Constraint constraint)
             }
         }
     }
+
     Coefficient coef = lin_expr.inhomogeneous_term();
     int const_term = static_cast<int>(coef.get_si());
     if (const_term != 0)
@@ -289,7 +290,7 @@ Expr *Trans_Constraint_to_Expr(Constraint constraint)
         IntegerLiteral *Coef = IntegerLiteral::Create(*Context, APInt(32, abs(const_term)), Context->IntTy, SourceLocation());
         if (!res)
         {
-            if (coef < 0)
+            if (const_term < 0)
                 res = new (Context) UnaryOperator(Coef, UO_Minus, Context->IntTy, VK_RValue, OK_Ordinary, SourceLocation(), false);
             else
                 res = Coef;
@@ -302,6 +303,7 @@ Expr *Trans_Constraint_to_Expr(Constraint constraint)
                 res = new (Context) BinaryOperator(res, Coef, BO_Add, Context->IntTy, VK_RValue, OK_Ordinary, SourceLocation(), default_options);
         }
     }
+
     IntegerLiteral *zero = IntegerLiteral::Create(*Context, APInt(32, 0), Context->IntTy, SourceLocation());
     if (constraint.type() == Constraint::NONSTRICT_INEQUALITY)
     {
@@ -315,6 +317,7 @@ Expr *Trans_Constraint_to_Expr(Constraint constraint)
     {
         res = new (Context) BinaryOperator(res, zero, BO_GT, Context->IntTy, VK_RValue, OK_Ordinary, SourceLocation(), default_options);
     }
+
     return res;
 }
 
@@ -442,9 +445,10 @@ bool Traverse_Expr_CheckVars(Expr *expr, const unordered_set<string> &res)
     else if (isa<IntegerLiteral>(expr))
     {
     }
-    else if (isa<UnaryOperator>(expr)){
+    else if (isa<UnaryOperator>(expr))
+    {
         UnaryOperator *unop = dyn_cast<UnaryOperator>(expr);
-        flag &= Traverse_Expr_CheckVars(unop->getSubExpr(),res);
+        flag &= Traverse_Expr_CheckVars(unop->getSubExpr(), res);
     }
     else
     {
@@ -457,7 +461,8 @@ bool Traverse_Expr_CheckVars(Expr *expr, const unordered_set<string> &res)
 
 void Traverse_Expr_ForVars(Expr *expr, unordered_set<string> &res)
 {
-    if (!expr) return;
+    if (!expr)
+        return;
     if (CheckBreakFlag(expr))
         return;
     if (isa<BinaryOperator>(expr))
@@ -480,9 +485,10 @@ void Traverse_Expr_ForVars(Expr *expr, unordered_set<string> &res)
     {
         return;
     }
-    else if (isa<UnaryOperator>(expr)){
+    else if (isa<UnaryOperator>(expr))
+    {
         UnaryOperator *unop = dyn_cast<UnaryOperator>(expr);
-        Traverse_Expr_ForVars(unop->getSubExpr(),res);
+        Traverse_Expr_ForVars(unop->getSubExpr(), res);
     }
     else
     {
@@ -706,6 +712,49 @@ void TransitionSystem::add_vars(VariableInfo &var, Expr *expr)
     return;
 }
 
+void TransitionSystem::add_fundamental_expr(unordered_set<string> &used_vars)
+{
+    for (int i = 0; i < DNF.size(); i++)
+    {
+        unordered_set<string> rec_used;
+        for (int j = 0; j < DNF[i].size(); j++)
+        {
+            if (CheckBreakFlag(DNF[i][j])) continue;
+            if (isa<BinaryOperator>(DNF[i][j]))
+            {
+                BinaryOperator *binop = dyn_cast<BinaryOperator>(DNF[i][j]);
+                if (binop->getOpcode() != BO_Assign)
+                {
+                    LOG_WARNING("Invalid DNF type: " + string(DNF[i][j]->getStmtClassName()));
+                    exit(-1);
+                }
+                DeclRefExpr *decl = dyn_cast<DeclRefExpr>(binop->getLHS());
+                rec_used.insert(decl->getDecl()->getNameAsString());
+            }
+            else
+            {
+                LOG_WARNING("Invalid DNF type: " + string(DNF[i][j]->getStmtClassName()));
+                exit(-1);
+            }
+        }
+        for (const auto &name : used_vars)
+        {
+            FPOptions default_options;
+            if (rec_used.count(name) == 0)
+            {
+                DeclRefExpr *decl_left = createDeclRefExpr(name);
+                DeclRefExpr *decl_right = createDeclRefExpr(name);
+                BinaryOperator *assign = new (context) BinaryOperator(decl_left, decl_right, BO_Assign, context->IntTy, VK_RValue, OK_Ordinary, SourceLocation(), default_options);
+                DNF[i].push_back(assign);
+            }
+            DeclRefExpr *decl_left = createDeclRefExpr(name + INITSUFFIX);
+            DeclRefExpr *decl_right = createDeclRefExpr(name + INITSUFFIX);
+            BinaryOperator *assign = new (context) BinaryOperator(decl_left, decl_right, BO_Assign, context->IntTy, VK_RValue, OK_Ordinary, SourceLocation(), default_options);
+            DNF[i].push_back(assign);
+        }
+    }
+}
+
 void TransitionSystem::add_expr(Expr *expr)
 {
     if (expr == NULL)
@@ -772,7 +821,7 @@ void TransitionSystem::In_Loop()
     return;
 }
 
-unordered_set<string> TransitionSystem::get_Used_Vars(Expr* cond,Expr* increment)
+unordered_set<string> TransitionSystem::get_Used_Vars(Expr *cond, Expr *increment)
 {
     unordered_set<string> used_vars;
     for (int i = 0; i < DNF.size(); i++)
@@ -782,8 +831,8 @@ unordered_set<string> TransitionSystem::get_Used_Vars(Expr* cond,Expr* increment
             Traverse_Expr_ForVars(DNF[i][j], used_vars);
         }
     }
-    Traverse_Expr_ForVars(cond,used_vars);
-    Traverse_Expr_ForVars(increment,used_vars);
+    Traverse_Expr_ForVars(cond, used_vars);
+    Traverse_Expr_ForVars(increment, used_vars);
     return used_vars;
 }
 
@@ -1146,6 +1195,7 @@ void TransitionSystem::Compute_Loop_Invariant(Expr *condition, unordered_set<str
             Print_DNF(Trans_Polys_to_Exprs(loc_invariant));
             loop_comment->add_invariant(Trans_Polys_to_Exprs(loc_invariant), true);
             loc_invariant.clear();
+
             for (int index = 0; index < locsize - 1; index++)
             {
                 loc_invariant.push_back((*loclist)[index]->get_invariant());
@@ -1155,12 +1205,13 @@ void TransitionSystem::Compute_Loop_Invariant(Expr *condition, unordered_set<str
             delete loclist, trlist;
         }
     }
+
     inequality_DNF = invariant;
     loop_comment->add_assign_vars(vars_in_dnf);
     return;
 }
 
-void TransitionSystem::Out_Loop(Expr* cond, unordered_set<string> &used_vars, vector<vector<Expr *>> &init_DNF, vector<vector<Expr *>> &init_ineq_DNF)
+void TransitionSystem::Out_Loop(Expr *cond, unordered_set<string> &used_vars, vector<vector<Expr *>> &init_DNF, vector<vector<Expr *>> &init_ineq_DNF)
 {
     info = new var_info();
     lambda_info = new var_info();
@@ -1176,6 +1227,7 @@ void TransitionSystem::Out_Loop(Expr* cond, unordered_set<string> &used_vars, ve
     // DONE: add the remaining DNF into the comment.
     vector<vector<Expr *>> remain_DNF = Append_DNF(init_DNF, init_ineq_DNF);
     Compute_Loop_Invariant(cond, used_vars, init_polys);
+
     if (remain_DNF.size())
         comment->add_invariant(remain_DNF, false);
     InWhileLoop = false;
@@ -1294,10 +1346,11 @@ void TransitionSystem::Print_DNF()
     return;
 }
 
-void TransitionSystem::init(){
+void TransitionSystem::init()
+{
     inequality_DNF.resize(1);
     DNF.resize(1);
     Vars.resize(1);
-    Verified_Loop_Count=0;
+    Verified_Loop_Count = 0;
     return;
 }

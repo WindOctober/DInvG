@@ -12,15 +12,19 @@ void ACSLComment::dump(ofstream& out,ASTContext* context){
                     out<<"\t\t || \n";
                 }
                 out<<"\t ( \n";
+                flag=false;
                 for(int j=0;j<loop_invariant[i].size();j++){
-                    if (j){
-                        out<<"\t\t && \n";
-                    }
+                    
                     PrintingPolicy Policy(context->getLangOpts());
                     string str;
                     llvm::raw_string_ostream rso(str);
                     loop_invariant[i][j]->printPretty(rso, nullptr, Policy);
                     rso.flush();
+                    if (str.find(INITSUFFIX)!=str.npos) continue;
+                    if (flag){
+                        out<<"\t\t && \n";
+                    }
+                    else flag=true;
                     out<<"\t ("<<str<<")\n";
                 }
                 out<<"\t ) \n";
