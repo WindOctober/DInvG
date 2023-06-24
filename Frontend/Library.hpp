@@ -14,8 +14,8 @@
 using namespace std;
 using namespace clang;
 using namespace llvm;
-#define INITSUFFIX "_initvariable_avoid_var_conflict_october"
-#define PRIMESUFFIX "_primedvariable_avoid_var_conflict_october"
+#define INITSUFFIX "_initvariable_avoid_conflict"
+#define PRIMESUFFIX "_primedvariable_avoid_conflict"
 #define LOG_INFO(msg) Log("INFO", __FUNCTION__, __LINE__, msg)
 #define LOG_WARNING(msg) Log("WARNING", __FUNCTION__, __LINE__, msg)
 

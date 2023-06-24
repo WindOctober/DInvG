@@ -117,11 +117,12 @@ bool CFGVisitor::DealWithStmt(Stmt *stmt, TransitionSystem &transystem)
         Stmt *then_branch = ifStmt->getThen();
         Stmt *else_branch = ifStmt->getElse();
         vector<vector<Expr *>> ineq_dnf = transystem.get_IneqDNF();
+        vector<ACSLComment *> rec_comments = transystem.get_Comments();
+        transystem.clear_ineqDNF();
         TransitionSystem ElseTransystem(transystem);
         TransitionSystem ThenTransystem(transystem);
-        ThenTransystem.Merge_condition(condition);
-        ElseTransystem.Merge_condition(NegateExpr(condition));
-
+        ThenTransystem.Merge_condition(condition, false);
+        ElseTransystem.Merge_condition(NegateExpr(condition), true);
         if (CompoundStmt *compound = dyn_cast<CompoundStmt>(then_branch))
         {
             for (auto stmt : compound->body())
@@ -143,12 +144,47 @@ bool CFGVisitor::DealWithStmt(Stmt *stmt, TransitionSystem &transystem)
 
         transystem = TransitionSystem::Merge_Transystem(ThenTransystem, ElseTransystem);
         transystem.Merge_IneqDNF(ineq_dnf);
-        transystem.Print_DNF();
-        transystem.Print_Vars();
+        transystem.Merge_Comments(rec_comments);
     }
     else if (isa<ForStmt>(stmt))
     {
         // TODO: Process if For loop body is empty;
+        ForStmt* forstmt=dyn_cast<ForStmt>(stmt);
+        DealWithStmt(forstmt->getInit(),transystem);
+        Expr *loop_condition = forstmt->getCond();
+        Stmt *for_body = forstmt->getBody();
+        unordered_set<string> used_vars;
+        transystem.Update_Vars();
+        transystem.Merge_condition(loop_condition, true);
+        vector<vector<Expr*>> SkipLoop=transystem.Deal_with_condition(loop_condition, false);
+        SkipLoop=Merge_DNF(SkipLoop,Append_DNF(transystem.get_DNF(),transystem.get_IneqDNF()));
+        
+        vector<vector<Expr *>> init_DNF = transystem.get_DNF();
+        vector<vector<Expr *>> init_ineq_DNF = transystem.get_IneqDNF();
+        
+        SourceRange sourceRange = forstmt->getSourceRange();
+        SourceLocation startLocation = sourceRange.getBegin();
+        SourceManager &sourceManager = context->getSourceManager();
+        int lineNumber = sourceManager.getSpellingLineNumber(startLocation);
+        ACSLComment *loop_comment = new ACSLComment(lineNumber, ACSLComment::CommentType::LOOP);
+        transystem.add_comment(loop_comment);
+        
+        transystem.In_Loop();
+        transystem.Merge_condition(loop_condition, true);
+        if (CompoundStmt *compound = dyn_cast<CompoundStmt>(for_body))
+        {
+            for (auto stmt : compound->body())
+            {
+                bool flag = DealWithStmt(stmt, transystem);
+                if (!flag)
+                    break;
+            }
+            DealWithStmt(forstmt->getInc(),transystem);
+            transystem.Update_Vars();
+            used_vars = transystem.get_Used_Vars(loop_condition,forstmt->getInc());
+        }
+        transystem.Out_Loop(loop_condition, used_vars, init_DNF, init_ineq_DNF);
+        loop_comment->add_invariant(SkipLoop, true);
     }
     else if (isa<WhileStmt>(stmt))
     {
@@ -159,18 +195,22 @@ bool CFGVisitor::DealWithStmt(Stmt *stmt, TransitionSystem &transystem)
         Stmt *while_body = whileStmt->getBody();
         unordered_set<string> used_vars;
         transystem.Update_Vars();
-        transystem.Merge_condition(loop_condition);
+        transystem.Merge_condition(loop_condition, true);
+        vector<vector<Expr*>> SkipLoop=transystem.Deal_with_condition(loop_condition, false);
+        SkipLoop=Merge_DNF(SkipLoop,Append_DNF(transystem.get_DNF(),transystem.get_IneqDNF()));
+        
         vector<vector<Expr *>> init_DNF = transystem.get_DNF();
         vector<vector<Expr *>> init_ineq_DNF = transystem.get_IneqDNF();
+        
         SourceRange sourceRange = whileStmt->getSourceRange();
         SourceLocation startLocation = sourceRange.getBegin();
         SourceManager &sourceManager = context->getSourceManager();
         int lineNumber = sourceManager.getSpellingLineNumber(startLocation);
         ACSLComment *loop_comment = new ACSLComment(lineNumber, ACSLComment::CommentType::LOOP);
-        loop_comment->add_invariant(transystem.Deal_with_condition(loop_condition, false), true);
         transystem.add_comment(loop_comment);
+        
         transystem.In_Loop();
-        transystem.Merge_condition(loop_condition);
+        transystem.Merge_condition(loop_condition, false);
         if (CompoundStmt *compound = dyn_cast<CompoundStmt>(while_body))
         {
             for (auto stmt : compound->body())
@@ -179,10 +219,12 @@ bool CFGVisitor::DealWithStmt(Stmt *stmt, TransitionSystem &transystem)
                 if (!flag)
                     break;
             }
+
             transystem.Update_Vars();
-            used_vars = transystem.get_Used_Vars();
+            used_vars = transystem.get_Used_Vars(loop_condition,NULL);
         }
-        transystem.Out_Loop(whileStmt, used_vars, init_DNF, init_ineq_DNF);
+        transystem.Out_Loop(loop_condition, used_vars, init_DNF, init_ineq_DNF);
+        loop_comment->add_invariant(SkipLoop, true);
     }
     else if (isa<DeclStmt>(stmt))
     {
@@ -211,6 +253,30 @@ bool CFGVisitor::DealWithStmt(Stmt *stmt, TransitionSystem &transystem)
     else if (isa<UnaryOperator>(stmt))
     {
         DealWithUnaryOp(dyn_cast<UnaryOperator>(stmt), transystem);
+    }
+    else if (isa<ContinueStmt>(stmt))
+    {
+        return false;
+    }
+    else if (isa<BreakStmt>(stmt))
+    {
+        DeclRefExpr *breakflag = createDeclRefExpr("break");
+        transystem.add_expr(breakflag);
+        return false;
+    }
+    else if (isa<CallExpr>(stmt))
+    {
+        CallExpr *callexpr = dyn_cast<CallExpr>(stmt);
+        FunctionDecl* CallFunction=callexpr->getDirectCallee();
+        string FuncName=CallFunction->getNameAsString();
+        if (FuncName=="__CPROVER_assume"){
+            assert(callexpr->getNumArgs()==1);
+            transystem.Merge_condition(callexpr->getArg(0),true);
+        }
+        else{
+            LOG_WARNING("Unknown function name: "+ FuncName);
+            exit(-1);
+        }
     }
     return true;
 }
@@ -247,6 +313,7 @@ bool CFGVisitor::VisitFunctionDecl(FunctionDecl *func)
     if (func->getNameAsString() == "main" || Main_Functions.count("main") == 0)
     {
         TransitionSystem transystem;
+        transystem.init();
         Stmt *func_body = func->getBody();
         if (CompoundStmt *compound = dyn_cast<CompoundStmt>(func_body))
         {

@@ -42,19 +42,19 @@ public:
     TransitionSystem(TransitionSystem &other);
 
     vector<ACSLComment *> get_Comments() { return comments; }
-    unordered_set<string> get_Used_Vars();
+    unordered_set<string> get_Used_Vars(Expr* cond,Expr* increment);
     vector<vector<Expr *>> get_DNF() { return DNF; }
     vector<vector<Expr *>> get_IneqDNF() { return inequality_DNF; }
     ACSLComment *get_CurComment() { return comments[comments.size() - 1]; }
     void clear_ineqDNF() { inequality_DNF.clear(); }
 
     static TransitionSystem Merge_Transystem(TransitionSystem &left_trans, TransitionSystem &right_trans);
-    void Merge_condition(Expr *condition);
+    void Merge_condition(Expr *condition,bool updated);
     void Merge_IneqDNF(vector<vector<Expr *>>& dnf);
+    void Merge_Comments(vector<ACSLComment*>& comment);
     void Split_If();
 
-    void set_incremental(Expr *increment); // only for for-loop, which is needed by continue situations.
-
+    void init();
     void In_Loop();
     Expr *Trans_Expr_by_CurVars(Expr *expr, vector<VariableInfo> &Vars);
     Expr *Trans_VariableInfo_to_Expr(VariableInfo var);
@@ -63,10 +63,11 @@ public:
 
     void Update_Vars();
     void copy_after_update(int size);
-    void Out_Loop(WhileStmt *whileloop, unordered_set<string> &used_vars, vector<vector<Expr *>> &init_DNF,vector<vector<Expr *>> &init_ineq_DNF);
+    void Out_Loop(Expr* cond, unordered_set<string> &used_vars, vector<vector<Expr *>> &init_DNF,vector<vector<Expr *>> &init_ineq_DNF);
 
     void Print_Vars();
     void Print_DNF();
+    void Print_DNF(vector<vector<Expr *> > DNF);
 
     void add_vars(VariableInfo &var);
     void add_vars(VariableInfo &var, Expr *expr);
@@ -79,7 +80,7 @@ private:
 
     int Verified_Loop_Count;
     vector<ACSLComment *> comments;
-    // TODO: Process that where the ineq_dnf is generated, where it should be computed, and how to update the var in the inequality_DNF.
+    // DONE: Process that where the ineq_dnf is generated, where it should be computed, and how to update the var in the inequality_DNF.
     vector<vector<Expr *>> inequality_DNF;
     vector<vector<VariableInfo>> Vars;
     vector<vector<Expr *>> DNF;
@@ -88,6 +89,7 @@ private:
     int Inner_Loop_Depth;
     int Inner_Loop_Count;
 };
-
+void Print_DNF(vector<vector<Expr *>> &DNF);
 Expr *NegateExpr(Expr *expr);
+DeclRefExpr* createDeclRefExpr(string name);
 #endif
