@@ -73,6 +73,7 @@ public:
     void add_vars(VariableInfo &var, Expr *expr);
     void add_expr(Expr *expr);
     void add_comment(ACSLComment *comment);
+    void add_fundamental_expr(unordered_set<string>& used_vars);
     static ASTContext *context;
 
 private:
