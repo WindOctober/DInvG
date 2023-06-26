@@ -42,38 +42,39 @@ public:
     TransitionSystem(TransitionSystem &other);
 
     vector<ACSLComment *> get_Comments() { return comments; }
-    unordered_set<string> get_Used_Vars(Expr* cond,Expr* increment);
+    unordered_set<string> get_Used_Vars(Expr *cond, Expr *increment);
     vector<vector<Expr *>> get_DNF() { return DNF; }
     vector<vector<Expr *>> get_IneqDNF() { return inequality_DNF; }
+    vector<vector<VariableInfo>> get_Vars() { return Vars; }
     ACSLComment *get_CurComment() { return comments[comments.size() - 1]; }
     void clear_ineqDNF() { inequality_DNF.clear(); }
 
     static TransitionSystem Merge_Transystem(TransitionSystem &left_trans, TransitionSystem &right_trans);
-    void Merge_condition(Expr *condition,bool updated);
-    void Merge_IneqDNF(vector<vector<Expr *>>& dnf);
-    void Merge_Comments(vector<ACSLComment*>& comment);
+    void Merge_condition(Expr *condition, bool updated);
+    void Merge_IneqDNF(vector<vector<Expr *>> &dnf);
+    void Merge_Comments(vector<ACSLComment *> &comment);
     void Split_If();
 
     void init();
     void In_Loop();
     Expr *Trans_Expr_by_CurVars(Expr *expr, vector<VariableInfo> &Vars);
-    Expr *Trans_VariableInfo_to_Expr(VariableInfo var);
+    Expr *Trans_VariableInfo_to_Expr(VariableInfo var,bool init);
 
     vector<vector<Expr *>> Deal_with_condition(Expr *condition, bool not_logic);
 
-    void Update_Vars();
+    void Update_Vars(bool init);
     void copy_after_update(int size);
-    void Out_Loop(Expr* cond, unordered_set<string> &used_vars, vector<vector<Expr *>> &init_DNF,vector<vector<Expr *>> &init_ineq_DNF);
+    void Out_Loop(Expr *cond, unordered_set<string> &used_vars, vector<vector<Expr *>> &init_DNF, vector<vector<Expr *>> &init_ineq_DNF, vector<vector<VariableInfo>> &vars);
 
     void Print_Vars();
     void Print_DNF();
-    void Print_DNF(vector<vector<Expr *> > DNF);
+    void Print_DNF(vector<vector<Expr *>> DNF);
 
     void add_vars(VariableInfo &var);
     void add_vars(VariableInfo &var, Expr *expr);
     void add_expr(Expr *expr);
     void add_comment(ACSLComment *comment);
-    void add_fundamental_expr(unordered_set<string>& used_vars);
+    void add_fundamental_expr(unordered_set<string> &used_vars);
     static ASTContext *context;
 
 private:
@@ -92,5 +93,5 @@ private:
 };
 void Print_DNF(vector<vector<Expr *>> &DNF);
 Expr *NegateExpr(Expr *expr);
-DeclRefExpr* createDeclRefExpr(string name);
+DeclRefExpr *createDeclRefExpr(string name);
 #endif
