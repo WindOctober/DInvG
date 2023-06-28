@@ -1,6 +1,9 @@
 #include"ACSLComment.hpp"
 #include"Library.hpp"
+#include"TransitionSystem.hpp"
+#include"var-info.h"
 #include<fstream>
+extern var_info* info;
 void ACSLComment::dump(ofstream& out,ASTContext* context){
     out<<"\t /*@\n";
     bool flag;
@@ -54,6 +57,48 @@ void ACSLComment::dump(ofstream& out,ASTContext* context){
     out<<"\t */\n";
     return;
 }
+
+void ACSLComment::deduplication(){
+    vector<C_Polyhedron*> polys;
+    Print_DNF(loop_invariant);
+    for(int i=0;i<loop_invariant.size();i++){
+        
+        C_Polyhedron *p=new C_Polyhedron(int(info->get_dimension()/2),UNIVERSE);
+        for(int j=0;j<loop_invariant[i].size();j++){
+            if (!CheckInitSuffix(loop_invariant[i][j]))
+                p->add_constraints(*Trans_Expr_to_Constraints(loop_invariant[i][j],TransformationType::Loc,info->get_dimension()));
+            else LOG_INFO(to_string(j));
+        }
+        if (p->is_empty()){
+            loop_invariant.erase(loop_invariant.begin()+i);
+            i--;
+            continue;
+        }
+        bool flag=true;
+        for(int j=0;j<polys.size();j++){
+            if (polys[j]->contains(*p)){
+                LOG_INFO("here");
+                flag=false;
+                break;
+            }
+            else if (p->contains(*polys[j])){
+                LOG_INFO("here");
+                polys.erase(polys.begin()+j);
+                loop_invariant.erase(loop_invariant.begin()+j);
+                i--;
+                j--;
+            }
+        }
+        if (!flag){
+            loop_invariant.erase(loop_invariant.begin()+i);
+            i--;
+        }
+        else polys.push_back(p);
+        
+    }
+    return;
+}
+
 void ACSLComment::add_invariant(vector<vector<Expr*>> exprs,bool connect){
     if (connect)
         loop_invariant=Connect_DNF(loop_invariant,exprs);

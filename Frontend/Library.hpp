@@ -19,9 +19,7 @@ using namespace llvm;
 #define LOG_INFO(msg) Log("INFO", __FUNCTION__, __LINE__, msg)
 #define LOG_WARNING(msg) Log("WARNING", __FUNCTION__, __LINE__, msg)
 
-
 void Log(const string &level, const string &function, int line, string msg);
-
 vector<vector<Expr *>> Merge_DNF(vector<vector<Expr *>> left_expr, vector<vector<Expr *>> right_expr);
 vector<vector<Expr *>> Append_DNF(vector<vector<Expr *>> left_expr, vector<vector<Expr *>> right_expr);
 vector<vector<Expr *>> Connect_DNF(vector<vector<Expr *>> left_expr, vector<vector<Expr *>> right_expr);

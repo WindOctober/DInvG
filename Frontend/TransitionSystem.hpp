@@ -40,7 +40,7 @@ public:
     void init_Canonical(int size);
     TransitionSystem();
     TransitionSystem(TransitionSystem &other);
-
+    void Process_SkipDNF(vector<vector<Expr *>> DNF, unordered_set<string> used_vars);
     vector<ACSLComment *> get_Comments() { return comments; }
     unordered_set<string> get_Used_Vars(Expr *cond, Expr *increment);
     vector<vector<Expr *>> get_DNF() { return DNF; }
@@ -64,7 +64,7 @@ public:
 
     void Update_Vars(bool init);
     void copy_after_update(int size);
-    void Out_Loop(Expr *cond, unordered_set<string> &used_vars, vector<vector<Expr *>> &init_DNF, vector<vector<Expr *>> &init_ineq_DNF, vector<vector<VariableInfo>> &vars);
+    vector<vector<Expr *>> Out_Loop(Expr *cond, unordered_set<string> &used_vars, vector<vector<Expr *>> &init_DNF, vector<vector<Expr *>> &init_ineq_DNF, vector<vector<VariableInfo>> &vars);
 
     void Print_Vars();
     void Print_DNF();
@@ -94,4 +94,8 @@ private:
 void Print_DNF(vector<vector<Expr *>> &DNF);
 Expr *NegateExpr(Expr *expr);
 DeclRefExpr *createDeclRefExpr(string name);
+Constraint_System *Trans_Expr_to_Constraints(Expr *expr, enum TransformationType type, int var_size);
+vector<vector<Expr *>> Trans_Polys_to_Exprs(vector<C_Polyhedron> poly);
+vector<vector<Expr *>> Trans_Polys_to_Exprs(vector<C_Polyhedron*> poly);
+bool CheckInitSuffix(Expr *expr);
 #endif

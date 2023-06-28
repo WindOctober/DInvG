@@ -148,6 +148,7 @@ bool CFGVisitor::DealWithStmt(Stmt *stmt, TransitionSystem &transystem)
     }
     else if (isa<ForStmt>(stmt) || isa<WhileStmt>(stmt))
     {
+        vector<vector<Expr *>> remain_DNF;
         bool flag;
         Expr *loop_condition;
         Stmt *loop_body;
@@ -174,6 +175,7 @@ bool CFGVisitor::DealWithStmt(Stmt *stmt, TransitionSystem &transystem)
         transystem.Print_DNF();
         vector<vector<Expr*>> SkipLoop=transystem.Deal_with_condition(loop_condition, false);
         SkipLoop=Merge_DNF(SkipLoop,Append_DNF(transystem.get_DNF(),transystem.get_IneqDNF()));
+        
         transystem.Merge_condition(loop_condition, true);
         vector<vector<Expr *>> init_DNF = transystem.get_DNF();
         vector<vector<Expr *>> init_ineq_DNF = transystem.get_IneqDNF();
@@ -200,8 +202,12 @@ bool CFGVisitor::DealWithStmt(Stmt *stmt, TransitionSystem &transystem)
             used_vars = transystem.get_Used_Vars(loop_condition,inc);
             transystem.add_fundamental_expr(used_vars);
         }
-        transystem.Out_Loop(loop_condition, used_vars, init_DNF, init_ineq_DNF,init_Vars);
+        
+        remain_DNF=transystem.Out_Loop(loop_condition, used_vars, init_DNF, init_ineq_DNF,init_Vars);
+        transystem.Process_SkipDNF(SkipLoop,used_vars);
         loop_comment->add_invariant(SkipLoop, true);
+        loop_comment->deduplication();
+        loop_comment->add_invariant(remain_DNF,false);
     }
     else if (isa<DeclStmt>(stmt))
     {
