@@ -76,17 +76,9 @@ void ACSLComment::deduplication(){
         }
         bool flag=true;
         for(int j=0;j<polys.size();j++){
-            if (polys[j]->contains(*p)){
-                LOG_INFO("here");
+            if (*polys[j]==*p){
                 flag=false;
                 break;
-            }
-            else if (p->contains(*polys[j])){
-                LOG_INFO("here");
-                polys.erase(polys.begin()+j);
-                loop_invariant.erase(loop_invariant.begin()+j);
-                i--;
-                j--;
             }
         }
         if (!flag){
