@@ -43,29 +43,61 @@ void CFGVisitor::DealWithVarDecl(VarDecl *vardecl, TransitionSystem &transystem)
     // Deal with pointer, pure numeric, arrays.
     QualType stmt_type = vardecl->getType();
     string var_name = vardecl->getName();
-    
+
     if (stmt_type->isArrayType())
     {
     }
     else if (stmt_type->isPointerType())
     {
         QualType pointer_type = stmt_type->getPointeeType();
-        if (pointer_type->isFloatingType()){
+        if (pointer_type->isFloatingType())
+        {
             LOG_WARNING("Pointer type is floating!");
             exit(0);
         }
-        Stmt* init=vardecl->getInit();
-        LOG_INFO(init->getStmtClassName());
-        var.alterVar(var_name,vardecl->getInit(),stmt_type);
+        Stmt *init = vardecl->getInit();
+        if (isa<ImplicitCastExpr>(init))
+        {
+            ImplicitCastExpr *implicit = dyn_cast<ImplicitCastExpr>(init);
+            Expr *expr = implicit->getSubExpr();
+            if (isa<CallExpr>(expr))
+            {
+                CallExpr *call = dyn_cast<CallExpr>(expr);
+                // NOTE: Assume Malloc is right, this tool do not check the mem safety.
+                FunctionDecl *func = call->getDirectCallee();
+                string name = func->getNameAsString();
+                if (name == "malloc")
+                {
+                    LOG_INFO("Variable "+ var_name +" is allocated.");
+                    var.alterVar(var_name, NULL, stmt_type);
+                }
+                else
+                {
+                    LOG_WARNING("Unsupported Function Call While initializing the variable");
+                    LOG_WARNING("function name is: " + name);
+                    exit(0);
+                }
+            }
+            else
+            {
+                LOG_INFO(expr->getStmtClassName());
+            }
+        }
+        else
+        {
+            LOG_INFO(init->getStmtClassName());
+        }
+        
     }
     else if (stmt_type->isIntegerType())
     {
         var.alterVar(var_name, vardecl->getInit(), stmt_type);
     }
-    else if (stmt_type->isUnsignedIntegerType()){
+    else if (stmt_type->isUnsignedIntegerType())
+    {
         var.alterVar(var_name, vardecl->getInit(), stmt_type);
         FPOptions default_options;
-        DeclRefExpr* decl=createDeclRefExpr(var_name);
+        DeclRefExpr *decl = createDeclRefExpr(var_name);
         IntegerLiteral *zero = IntegerLiteral::Create(*context, APInt(32, 0), context->IntTy, SourceLocation());
         BinaryOperator *constraint = new (context) BinaryOperator(decl, zero, BO_GE, stmt_type, VK_RValue, OK_Ordinary, SourceLocation(), default_options);
         transystem.add_expr(constraint);
@@ -104,6 +136,7 @@ void CFGVisitor::DealWithBinaryOp(BinaryOperator *stmt, TransitionSystem &transy
     if (stmt->getOpcode() == BO_Assign)
     {
         VariableInfo var;
+        Expr *expr = stmt->getLHS();
         var.alterVar(stmt->getLHS(), NULL);
         transystem.add_vars(var, stmt->getRHS());
     }
@@ -167,18 +200,20 @@ bool CFGVisitor::DealWithStmt(Stmt *stmt, TransitionSystem &transystem)
         Expr *loop_condition;
         Stmt *loop_body;
         SourceRange sourceRange;
-        Expr* inc=NULL;
-        if (isa<ForStmt>(stmt)){
-            flag=true;
-            ForStmt* forstmt=dyn_cast<ForStmt>(stmt);
-            DealWithStmt(forstmt->getInit(),transystem);
-            loop_condition= forstmt->getCond();
+        Expr *inc = NULL;
+        if (isa<ForStmt>(stmt))
+        {
+            flag = true;
+            ForStmt *forstmt = dyn_cast<ForStmt>(stmt);
+            DealWithStmt(forstmt->getInit(), transystem);
+            loop_condition = forstmt->getCond();
             loop_body = forstmt->getBody();
             sourceRange = forstmt->getSourceRange();
-            inc=forstmt->getInc();
+            inc = forstmt->getInc();
         }
-        else{
-            flag=false;
+        else
+        {
+            flag = false;
             WhileStmt *whileStmt = dyn_cast<WhileStmt>(stmt);
             loop_condition = whileStmt->getCond();
             loop_body = whileStmt->getBody();
@@ -187,19 +222,19 @@ bool CFGVisitor::DealWithStmt(Stmt *stmt, TransitionSystem &transystem)
         unordered_set<string> used_vars;
         transystem.Update_Vars(true);
         transystem.Print_DNF();
-        vector<vector<Expr*>> SkipLoop=transystem.Deal_with_condition(loop_condition, false);
-        SkipLoop=Merge_DNF(SkipLoop,Append_DNF(transystem.get_DNF(),transystem.get_IneqDNF()));
-        
+        vector<vector<Expr *>> SkipLoop = transystem.Deal_with_condition(loop_condition, false);
+        SkipLoop = Merge_DNF(SkipLoop, Append_DNF(transystem.get_DNF(), transystem.get_IneqDNF()));
+
         transystem.Merge_condition(loop_condition, true);
         vector<vector<Expr *>> init_DNF = transystem.get_DNF();
         vector<vector<Expr *>> init_ineq_DNF = transystem.get_IneqDNF();
-        vector<vector<VariableInfo>> init_Vars=transystem.get_Vars();
+        vector<vector<VariableInfo>> init_Vars = transystem.get_Vars();
         SourceLocation startLocation = sourceRange.getBegin();
         SourceManager &sourceManager = context->getSourceManager();
         int lineNumber = sourceManager.getSpellingLineNumber(startLocation);
         ACSLComment *loop_comment = new ACSLComment(lineNumber, ACSLComment::CommentType::LOOP);
         transystem.add_comment(loop_comment);
-        
+
         transystem.In_Loop();
         transystem.Merge_condition(loop_condition, true);
         if (CompoundStmt *compound = dyn_cast<CompoundStmt>(loop_body))
@@ -211,17 +246,17 @@ bool CFGVisitor::DealWithStmt(Stmt *stmt, TransitionSystem &transystem)
                     break;
             }
             if (flag)
-                DealWithStmt(inc,transystem);
+                DealWithStmt(inc, transystem);
             transystem.Update_Vars(false);
-            used_vars = transystem.get_Used_Vars(loop_condition,inc);
+            used_vars = transystem.get_Used_Vars(loop_condition, inc);
             transystem.add_fundamental_expr(used_vars);
         }
-        
-        remain_DNF=transystem.Out_Loop(loop_condition, used_vars, init_DNF, init_ineq_DNF,init_Vars);
-        transystem.Process_SkipDNF(SkipLoop,used_vars);
+
+        remain_DNF = transystem.Out_Loop(loop_condition, used_vars, init_DNF, init_ineq_DNF, init_Vars);
+        transystem.Process_SkipDNF(SkipLoop, used_vars);
         loop_comment->add_invariant(SkipLoop, true);
         loop_comment->deduplication();
-        loop_comment->add_invariant(remain_DNF,false);
+        loop_comment->add_invariant(remain_DNF, false);
     }
     else if (isa<DeclStmt>(stmt))
     {
@@ -264,19 +299,22 @@ bool CFGVisitor::DealWithStmt(Stmt *stmt, TransitionSystem &transystem)
     else if (isa<CallExpr>(stmt))
     {
         CallExpr *callexpr = dyn_cast<CallExpr>(stmt);
-        FunctionDecl* CallFunction=callexpr->getDirectCallee();
-        string FuncName=CallFunction->getNameAsString();
-        if (FuncName=="__CPROVER_assume"){
-            assert(callexpr->getNumArgs()==1);
-            transystem.Merge_condition(callexpr->getArg(0),true);
+        FunctionDecl *CallFunction = callexpr->getDirectCallee();
+        string FuncName = CallFunction->getNameAsString();
+        if (FuncName == "__CPROVER_assume")
+        {
+            assert(callexpr->getNumArgs() == 1);
+            transystem.Merge_condition(callexpr->getArg(0), true);
         }
-        else{
-            LOG_WARNING("Unknown function name: "+ FuncName);
+        else
+        {
+            LOG_WARNING("Unknown function name: " + FuncName);
             exit(-1);
         }
     }
-    else if (isa<ReturnStmt>(stmt)){
-        
+    else if (isa<ReturnStmt>(stmt))
+    {
+
         return false;
     }
     return true;
@@ -352,10 +390,10 @@ void CFGVisitor::PrintStmtInfo(Stmt *stmt)
         {
             if (isa<VarDecl>(decl))
             {
-                VarDecl *var=dyn_cast<VarDecl>(decl);
-                QualType type=var->getType();
-                outs()<<"\t[VarType] "<<type.getAsString()<<"\n";
-                outs()<<"\t[name]"<<var->getNameAsString()<<'\n';
+                VarDecl *var = dyn_cast<VarDecl>(decl);
+                QualType type = var->getType();
+                outs() << "\t[VarType] " << type.getAsString() << "\n";
+                outs() << "\t[name]" << var->getNameAsString() << '\n';
             }
             else if (isa<FunctionDecl>(decl))
             {
