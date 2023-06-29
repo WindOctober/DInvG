@@ -35,26 +35,40 @@ void CFGVisitor::Terminate_errors(enum ErrorType Errors)
     errs() << "CFGVisitor::Terminate_errors UnknownError";
     return;
 }
-void CFGVisitor::DealWithVarDecl(VarDecl *stmt, TransitionSystem &transystem)
+void CFGVisitor::DealWithVarDecl(VarDecl *vardecl, TransitionSystem &transystem)
 {
     VariableInfo var;
-    if (stmt == NULL)
+    if (vardecl == NULL)
         Terminate_errors(ErrorType::VarDeclUnFoundError);
     // Deal with pointer, pure numeric, arrays.
-    QualType stmt_type = stmt->getType();
-    string var_name = stmt->getName();
+    QualType stmt_type = vardecl->getType();
+    string var_name = vardecl->getName();
+    
     if (stmt_type->isArrayType())
     {
     }
     else if (stmt_type->isPointerType())
     {
         QualType pointer_type = stmt_type->getPointeeType();
-        if (pointer_type->isFloatingType())
-            Terminate_errors(ErrorType::FloatVarError);
+        if (pointer_type->isFloatingType()){
+            LOG_WARNING("Pointer type is floating!");
+            exit(0);
+        }
+        Stmt* init=vardecl->getInit();
+        LOG_INFO(init->getStmtClassName());
+        var.alterVar(var_name,vardecl->getInit(),stmt_type);
     }
     else if (stmt_type->isIntegerType())
     {
-        var.alterVar(var_name, stmt->getInit(), stmt_type);
+        var.alterVar(var_name, vardecl->getInit(), stmt_type);
+    }
+    else if (stmt_type->isUnsignedIntegerType()){
+        var.alterVar(var_name, vardecl->getInit(), stmt_type);
+        FPOptions default_options;
+        DeclRefExpr* decl=createDeclRefExpr(var_name);
+        IntegerLiteral *zero = IntegerLiteral::Create(*context, APInt(32, 0), context->IntTy, SourceLocation());
+        BinaryOperator *constraint = new (context) BinaryOperator(decl, zero, BO_GE, stmt_type, VK_RValue, OK_Ordinary, SourceLocation(), default_options);
+        transystem.add_expr(constraint);
     }
     else if (stmt_type->isFloatingType())
         Terminate_errors(ErrorType::FloatVarError);
@@ -333,6 +347,21 @@ void CFGVisitor::PrintStmtInfo(Stmt *stmt)
     }
     else if (isa<DeclStmt>(stmt))
     {
+        DeclStmt *declStmt = dyn_cast<DeclStmt>(stmt);
+        for (auto *decl : declStmt->decls())
+        {
+            if (isa<VarDecl>(decl))
+            {
+                VarDecl *var=dyn_cast<VarDecl>(decl);
+                QualType type=var->getType();
+                outs()<<"\t[VarType] "<<type.getAsString()<<"\n";
+                outs()<<"\t[name]"<<var->getNameAsString()<<'\n';
+            }
+            else if (isa<FunctionDecl>(decl))
+            {
+                dyn_cast<FunctionDecl>(decl);
+            }
+        }
     }
     else if (isa<BinaryOperator>(stmt))
     {

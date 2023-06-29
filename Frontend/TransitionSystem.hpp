@@ -40,7 +40,7 @@ public:
     void init_Canonical(int size);
     TransitionSystem();
     TransitionSystem(TransitionSystem &other);
-    void Process_SkipDNF(vector<vector<Expr *>> DNF, unordered_set<string> used_vars);
+    void Process_SkipDNF(vector<vector<Expr *>>& DNF, unordered_set<string> used_vars);
     vector<ACSLComment *> get_Comments() { return comments; }
     unordered_set<string> get_Used_Vars(Expr *cond, Expr *increment);
     vector<vector<Expr *>> get_DNF() { return DNF; }

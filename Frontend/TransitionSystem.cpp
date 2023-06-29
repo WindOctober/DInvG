@@ -1354,16 +1354,16 @@ void TransitionSystem::Split_If()
     }
     return;
 }
-void TransitionSystem::Process_SkipDNF(vector<vector<Expr *>> DNF, unordered_set<string> used_vars){
+void TransitionSystem::Process_SkipDNF(vector<vector<Expr *>>& DNF, unordered_set<string> used_vars){
     for(int i=0;i<DNF.size();i++){
         for(int j=0;j<DNF[i].size();j++){
-            if (!Traverse_Expr_CheckVars(DNF[i][j],used_vars)){
-                DNF[i].erase(DNF[i].begin()+j);
-                j--;
-            }
             if (isa<BinaryOperator>(DNF[i][j])){
                 BinaryOperator* binop=dyn_cast<BinaryOperator>(DNF[i][j]);
                 if (binop->getOpcode()==BO_Assign) binop->setOpcode(BO_EQ);
+            }
+            if (!Traverse_Expr_CheckVars(DNF[i][j],used_vars)){
+                DNF[i].erase(DNF[i].begin()+j);
+                j--;
             }
         }
     }
