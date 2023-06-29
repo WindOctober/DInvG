@@ -2,7 +2,7 @@ build/*
 Inv
 compile_commands.json
 Bak/*
-bin/*
+bin/origin
 lstingX
 Result/*
 origin-lstingX
