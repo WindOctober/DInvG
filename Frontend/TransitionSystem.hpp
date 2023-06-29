@@ -92,6 +92,7 @@ private:
     int Inner_Loop_Count;
 };
 void Print_DNF(vector<vector<Expr *>> &DNF);
+string Print_Expr(Expr *expr);
 Expr *NegateExpr(Expr *expr);
 DeclRefExpr *createDeclRefExpr(string name);
 Constraint_System *Trans_Expr_to_Constraints(Expr *expr, enum TransformationType type, int var_size);
