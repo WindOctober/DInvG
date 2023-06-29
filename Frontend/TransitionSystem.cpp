@@ -980,6 +980,7 @@ void TransitionSystem::Update_Vars(bool init)
 {
     if (DNF.size() != Vars.size())
         DNF.resize(Vars.size());
+    Print_Vars();
     for (int i = 0; i < Vars.size(); i++)
     {
         for (int j = 0; j < Vars[i].size(); j++)

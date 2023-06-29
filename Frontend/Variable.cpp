@@ -58,8 +58,22 @@ void VariableInfo::alterVar(Expr *var_expr, Expr *init)
         VarType = decl->getType();
         if (init) VarValue = init;
     }
+    else if (isa<UnaryOperator>(var_expr)){
+        UnaryOperator *unop=dyn_cast<UnaryOperator>(var_expr);
+        if (unop->getOpcode()==UO_Deref){
+            alterVar(unop->getSubExpr(),init);
+            return;
+        }
+    }
+    else if (isa<ImplicitCastExpr>(var_expr)){
+        ImplicitCastExpr *implicit=dyn_cast<ImplicitCastExpr>(var_expr);
+        alterVar(implicit->getSubExpr(),init);
+        return;
+    }
     else{
-        outs()<<"[VariableInfo alterVar warning] Unexpected VarExpr Type that is: "<<var_expr->getStmtClassName()<<'\n';
+        LOG_WARNING("Unexpected VarExpr Type that is: ");
+        LOG_WARNING(var_expr->getStmtClassName());
+        exit(0);
     }
     return;
 }
