@@ -43,7 +43,8 @@ void CFGVisitor::DealWithVarDecl(VarDecl *vardecl, TransitionSystem &transystem)
     // Deal with pointer, pure numeric, arrays.
     QualType stmt_type = vardecl->getType();
     string var_name = vardecl->getName();
-
+    
+    
     if (stmt_type->isArrayType())
     {
     }
@@ -69,7 +70,7 @@ void CFGVisitor::DealWithVarDecl(VarDecl *vardecl, TransitionSystem &transystem)
                 if (name == "malloc")
                 {
                     LOG_INFO("Variable "+ var_name +" is allocated.");
-                    var.alterVar(var_name, NULL, stmt_type);
+                    var.alterVar("*"+var_name, NULL, stmt_type);
                 }
                 else
                 {
@@ -89,10 +90,6 @@ void CFGVisitor::DealWithVarDecl(VarDecl *vardecl, TransitionSystem &transystem)
         }
         
     }
-    else if (stmt_type->isIntegerType())
-    {
-        var.alterVar(var_name, vardecl->getInit(), stmt_type);
-    }
     else if (stmt_type->isUnsignedIntegerType())
     {
         var.alterVar(var_name, vardecl->getInit(), stmt_type);
@@ -101,6 +98,10 @@ void CFGVisitor::DealWithVarDecl(VarDecl *vardecl, TransitionSystem &transystem)
         IntegerLiteral *zero = IntegerLiteral::Create(*context, APInt(32, 0), context->IntTy, SourceLocation());
         BinaryOperator *constraint = new (context) BinaryOperator(decl, zero, BO_GE, stmt_type, VK_RValue, OK_Ordinary, SourceLocation(), default_options);
         transystem.add_expr(constraint);
+    }
+    else if (stmt_type->isIntegerType())
+    {
+        var.alterVar(var_name, vardecl->getInit(), stmt_type);
     }
     else if (stmt_type->isFloatingType())
         Terminate_errors(ErrorType::FloatVarError);
@@ -221,10 +222,11 @@ bool CFGVisitor::DealWithStmt(Stmt *stmt, TransitionSystem &transystem)
         }
         unordered_set<string> used_vars;
         transystem.Update_Vars(true);
+        LOG_INFO("After collect initial DNF information: ");
         transystem.Print_DNF();
         vector<vector<Expr *>> SkipLoop = transystem.Deal_with_condition(loop_condition, false);
         SkipLoop = Merge_DNF(SkipLoop, Append_DNF(transystem.get_DNF(), transystem.get_IneqDNF()));
-
+        Print_DNF(SkipLoop);
         transystem.Merge_condition(loop_condition, true);
         vector<vector<Expr *>> init_DNF = transystem.get_DNF();
         vector<vector<Expr *>> init_ineq_DNF = transystem.get_IneqDNF();
@@ -234,9 +236,10 @@ bool CFGVisitor::DealWithStmt(Stmt *stmt, TransitionSystem &transystem)
         int lineNumber = sourceManager.getSpellingLineNumber(startLocation);
         ACSLComment *loop_comment = new ACSLComment(lineNumber, ACSLComment::CommentType::LOOP);
         transystem.add_comment(loop_comment);
-
         transystem.In_Loop();
         transystem.Merge_condition(loop_condition, true);
+        transystem.Print_DNF();
+        
         if (CompoundStmt *compound = dyn_cast<CompoundStmt>(loop_body))
         {
             for (auto stmt : compound->body())
@@ -251,7 +254,6 @@ bool CFGVisitor::DealWithStmt(Stmt *stmt, TransitionSystem &transystem)
             used_vars = transystem.get_Used_Vars(loop_condition, inc);
             transystem.add_fundamental_expr(used_vars);
         }
-
         remain_DNF = transystem.Out_Loop(loop_condition, used_vars, init_DNF, init_ineq_DNF, init_Vars);
         transystem.Process_SkipDNF(SkipLoop, used_vars);
         loop_comment->add_invariant(SkipLoop, true);
@@ -397,7 +399,7 @@ void CFGVisitor::PrintStmtInfo(Stmt *stmt)
             }
             else if (isa<FunctionDecl>(decl))
             {
-                dyn_cast<FunctionDecl>(decl);
+                // dyn_cast<FunctionDecl>(decl);
             }
         }
     }

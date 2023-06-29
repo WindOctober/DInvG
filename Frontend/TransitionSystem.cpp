@@ -121,24 +121,24 @@ bool check_guard(Expr *expr)
         {
             if (binop->getOpcode() == BO_EQ || binop->getOpcode() == BO_NE || binop->getOpcode() == BO_LT || binop->getOpcode() == BO_GT || binop->getOpcode() == BO_GE || binop->getOpcode() == BO_LE)
             {
-                outs() << "\n[check_guard info] The Expr " << Print_Expr(expr) << " is guard";
+                // outs() << "\n[check_guard info] The Expr " << Print_Expr(expr) << " is guard";
                 return true;
             }
             else
             {
-                outs() << "\n[check_guard info] The Expr " << Print_Expr(expr) << " is not guard";
+                // outs() << "\n[check_guard info] The Expr " << Print_Expr(expr) << " is not guard";
                 return false;
             }
         }
         else
         {
-            outs() << "\n[check_guard info] The Expr " << Print_Expr(expr) << " is not guard";
+            // outs() << "\n[check_guard info] The Expr " << Print_Expr(expr) << " is not guard";
             return false;
         }
     }
     else
     {
-        outs() << "\n[check_guard warning] The Unexpected Expr type " << Print_Expr(expr) << "";
+        // outs() << "\n[check_guard warning] The Unexpected Expr type " << Print_Expr(expr) << "";
         return false;
     }
 }
@@ -181,12 +181,13 @@ Linear_Expression *Trans_Expr_to_LinExpr(Expr *expr, enum TransformationType typ
             {
                 outs() << "\n[Transform Warning:] Unexpected non-linear expression occur\n"
                        << lin_expr;
-                exit(1);
+                exit(-1);
             }
         }
         else
         {
             outs() << "\n[Transform Info:] Unexpected BinaryOperator in Lin_expr:" << binop->getOpcodeStr() << "\n";
+            exit(-1);
         }
     }
     else if (isa<DeclRefExpr>(expr))
@@ -194,8 +195,6 @@ Linear_Expression *Trans_Expr_to_LinExpr(Expr *expr, enum TransformationType typ
         DeclRefExpr *decl = dyn_cast<DeclRefExpr>(expr);
         string var_name = decl->getDecl()->getNameAsString();
         int index = info->search(var_name.c_str());
-        LOG_INFO(to_string(index));
-        LOG_INFO(var_name.c_str());
         if (flag)
             *lin_expr = Variable(index + var_size);
         else
@@ -403,7 +402,6 @@ Constraint_System *Trans_Expr_to_Constraints(Expr *expr, enum TransformationType
                 VariableInfo var;
                 var.alterVar(binop->getLHS(), binop->getRHS());
                 int index = info->search(var.getVariableName().c_str());
-                LOG_INFO(var.getVariableName().c_str());
                 if (type == TransformationType::Trans)
                     index += var_size;
                 type = TransformationType::Origin;
@@ -420,6 +418,55 @@ Constraint_System *Trans_Expr_to_Constraints(Expr *expr, enum TransformationType
     }
     return constraint;
 }
+
+
+bool Traverse_Expr_ForVar(Expr *expr, string var_name)
+{
+    if (!expr) return false;
+    if (CheckBreakFlag(expr))
+        return true;
+    bool flag = false;
+    if (isa<BinaryOperator>(expr))
+    {
+        BinaryOperator *binop = dyn_cast<BinaryOperator>(expr);
+        flag |= Traverse_Expr_ForVar(binop->getLHS(), var_name);
+        flag |= Traverse_Expr_ForVar(binop->getRHS(), var_name);
+    }
+    else if (isa<DeclRefExpr>(expr))
+    {
+        DeclRefExpr *declRef = dyn_cast<DeclRefExpr>(expr);
+        string name = declRef->getDecl()->getNameAsString();
+        if (name.find(INITSUFFIX)!=name.npos){
+            int index=name.find(INITSUFFIX);
+            name.replace(index,strlen(INITSUFFIX),"");
+        }
+        if (name==var_name)
+            return true;
+        else
+            return false;
+    }
+    else if (isa<ImplicitCastExpr>(expr))
+    {
+        ImplicitCastExpr *implict = dyn_cast<ImplicitCastExpr>(expr);
+        flag |= Traverse_Expr_ForVar(implict->getSubExpr(), var_name);
+    }
+    else if (isa<IntegerLiteral>(expr))
+    {
+    }
+    else if (isa<UnaryOperator>(expr))
+    {
+        UnaryOperator *unop = dyn_cast<UnaryOperator>(expr);
+        flag |= Traverse_Expr_ForVar(unop->getSubExpr(), var_name);
+    }
+    else
+    {
+        LOG_INFO("Unexpected Type in Function Traverse_Expr_ForVars :");
+        LOG_INFO(Print_Expr(expr));
+        exit(0);
+    }
+    return flag;
+}
+
 
 bool Traverse_Expr_CheckVars(Expr *expr, const unordered_set<string> &res)
 {
@@ -635,8 +682,10 @@ vector<C_Polyhedron> Compute_and_Eliminate_Init_Poly(const unordered_set<string>
     for(int i=0;i<init_DNF.size();i++){
         unordered_set<string> rec_used;
         for(int j=0;j<init_vars[i].size();j++){
-            if (init_vars[i][j].getVariableValue())
-                rec_used.insert(init_vars[i][j].getVariableName());
+            string var_name=init_vars[i][j].getVariableName();
+            if (Traverse_Expr_ForVar(init_vars[i][j].getVariableValue(),var_name+INITSUFFIX)){
+                rec_used.insert(var_name);
+            }
         }
         for(auto name: used_vars){
             if (rec_used.count(name)==0){
@@ -652,10 +701,7 @@ vector<C_Polyhedron> Compute_and_Eliminate_Init_Poly(const unordered_set<string>
                                                                         context->IntTy, VK_RValue,
                                                                         OK_Ordinary, SourceLocation(),
                                                                         default_option);
-                for (int j = 0; j < DNF.size(); j++)
-                {
-                    DNF[j].push_back(AssignStmt);
-                }
+                DNF[i].push_back(AssignStmt);
             }
         }
     }
@@ -679,6 +725,7 @@ vector<C_Polyhedron> Compute_and_Eliminate_Init_Poly(const unordered_set<string>
             }
         }
     }
+    
     vector<vector<Expr *>> ineq_DNF;
     ineq_DNF.resize(init_ineq_DNF.size());
     for (int i = 0; i < init_ineq_DNF.size(); i++)
@@ -703,8 +750,8 @@ vector<C_Polyhedron> Compute_and_Eliminate_Init_Poly(const unordered_set<string>
                 ineq_DNF[i][j] = Add_InitSuffix(ineq_DNF[i][j]);
         }
     }
-    DNF = Merge_DNF(DNF, ineq_DNF);
-    
+    DNF = Append_DNF(DNF, ineq_DNF);
+    LOG_INFO("Before Transform init_dnf into polyhedron: ");
     Print_DNF(DNF);
     vector<C_Polyhedron> init_polys;
     for (int i = 0; i < DNF.size(); i++)
@@ -845,12 +892,17 @@ Expr *TransitionSystem::Trans_VariableInfo_to_Expr(VariableInfo var,bool init)
     {
         return NULL;
     }
-
-    VD = VarDecl::Create(*context, context->getTranslationUnitDecl(), SourceLocation(), SourceLocation(), &context->Idents.get(var.getVariableName()), var.getQualType(), nullptr, SC_None);
-    if (init)
+    if (init){
+        if (!Traverse_Expr_ForVar(initExpr,var.getVariableName()))
+            VD = VarDecl::Create(*context, context->getTranslationUnitDecl(), SourceLocation(), SourceLocation(), &context->Idents.get(var.getVariableName()+INITSUFFIX), var.getQualType(), nullptr, SC_None);
+        else
+            VD = VarDecl::Create(*context, context->getTranslationUnitDecl(), SourceLocation(), SourceLocation(), &context->Idents.get(var.getVariableName()+INITSUFFIX), var.getQualType(), nullptr, SC_None);
         VD->setInit(Add_InitSuffix(initExpr));
-    else
+    }
+    else{
+        VD = VarDecl::Create(*context, context->getTranslationUnitDecl(), SourceLocation(), SourceLocation(), &context->Idents.get(var.getVariableName()), var.getQualType(), nullptr, SC_None);
         VD->setInit(initExpr);
+    }
     DeclRefExpr *LHS = new (context) DeclRefExpr(*context, VD, false, VD->getType(), VK_LValue, SourceLocation(), DeclarationNameLoc(), NOUR_None);
     FPOptions default_options;
     Expr *expr = new (context) BinaryOperator(LHS, var.getVariableValue(), BO_Assign, var.getVariableValue()->getType(), VK_RValue, OK_Ordinary, SourceLocation(), default_options);
@@ -929,9 +981,10 @@ unordered_set<string> TransitionSystem::get_Used_Vars(Expr *cond, Expr *incremen
 
 void TransitionSystem::copy_after_update(int size)
 {
+    int duplicated=DNF.size();
     for (int i = 0; i < size - 1; i++)
     {
-        for (int j = 0; j < DNF.size(); j++)
+        for (int j = 0; j < duplicated; j++)
         {
             Vars.push_back(Vars[j]);
             DNF.push_back(DNF[j]);
@@ -980,7 +1033,6 @@ void TransitionSystem::Update_Vars(bool init)
 {
     if (DNF.size() != Vars.size())
         DNF.resize(Vars.size());
-    Print_Vars();
     for (int i = 0; i < Vars.size(); i++)
     {
         for (int j = 0; j < Vars[i].size(); j++)
@@ -1004,6 +1056,7 @@ vector<vector<Expr *>> TransitionSystem::Deal_with_condition(Expr *condition, bo
 {
     vector<vector<Expr *>> left_expr;
     vector<vector<Expr *>> right_expr;
+    FPOptions default_options;
     if (BinaryOperator *binop = dyn_cast<BinaryOperator>(condition))
     {
         if (binop->getOpcode() == BO_LAnd)
@@ -1036,6 +1089,24 @@ vector<vector<Expr *>> TransitionSystem::Deal_with_condition(Expr *condition, bo
                 return Connect_DNF(left_expr, right_expr);
             }
         }
+        else if (binop->getOpcode() == BO_NE){
+            if (logic){
+                BinaryOperator* binop_left = new (context) BinaryOperator(binop->getLHS(), binop->getRHS(), BO_LT, binop->getRHS()->getType(), VK_RValue, OK_Ordinary, SourceLocation(), default_options);
+                BinaryOperator* binop_right = new (context) BinaryOperator(binop->getLHS(), binop->getRHS(), BO_GT, binop->getRHS()->getType(), VK_RValue, OK_Ordinary, SourceLocation(), default_options);
+                left_expr = Deal_with_condition(binop_left, logic, cur);
+                right_expr = Deal_with_condition(binop_right, logic, cur);
+                return Connect_DNF(left_expr, right_expr);
+            }
+        }
+        else if (binop->getOpcode() == BO_EQ){
+            if (!logic){
+                BinaryOperator* binop_left = new (context) BinaryOperator(binop->getLHS(), binop->getRHS(), BO_LT, binop->getRHS()->getType(), VK_RValue, OK_Ordinary, SourceLocation(), default_options);
+                BinaryOperator* binop_right = new (context) BinaryOperator(binop->getLHS(), binop->getRHS(), BO_GT, binop->getRHS()->getType(), VK_RValue, OK_Ordinary, SourceLocation(), default_options);
+                left_expr = Deal_with_condition(binop_left, logic, cur);
+                right_expr = Deal_with_condition(binop_right, logic, cur);
+                return Connect_DNF(left_expr, right_expr);
+            }
+        }
     }
     if (UnaryOperator *unop = dyn_cast<UnaryOperator>(condition))
     {
@@ -1054,14 +1125,10 @@ vector<vector<Expr *>> TransitionSystem::Deal_with_condition(Expr *condition, bo
     {
         if (isa<BinaryOperator>(condition))
         {
-            FPOptions default_options;
             BinaryOperator *binop = dyn_cast<BinaryOperator>(condition);
             Expr *new_binop;
             switch (binop->getOpcode())
             {
-            case BO_EQ:
-                new_binop = new (context) BinaryOperator(binop->getLHS(), binop->getRHS(), BO_NE, binop->getRHS()->getType(), VK_RValue, OK_Ordinary, SourceLocation(), default_options);
-                break;
             case BO_LT:
                 new_binop = new (context) BinaryOperator(binop->getLHS(), binop->getRHS(), BO_GE, binop->getRHS()->getType(), VK_RValue, OK_Ordinary, SourceLocation(), default_options);
                 break;
@@ -1078,7 +1145,8 @@ vector<vector<Expr *>> TransitionSystem::Deal_with_condition(Expr *condition, bo
                 new_binop = new (context) BinaryOperator(binop->getLHS(), binop->getRHS(), BO_EQ, binop->getRHS()->getType(), VK_RValue, OK_Ordinary, SourceLocation(), default_options);
                 break;
             default:
-                outs() << "\n[Transform unexpected Opcode in BinaryOperator Expr type:]" << binop->getOpcodeStr() << '\n';
+                LOG_WARNING("Unexpected Opcode Type: " + string(binop->getOpcodeStr()));
+                exit(0);
             }
             rec_expr.push_back(new_binop);
         }
@@ -1128,6 +1196,8 @@ Expr *TransitionSystem::Trans_Expr_by_CurVars(Expr *expr, vector<VariableInfo> &
 
 void TransitionSystem::Elimiate_Impossible_Path(int size)
 {
+    LOG_INFO("Before Eliminate impossible path");
+    Print_DNF();
     for (int i = 0; i < DNF.size(); i++)
     {
         C_Polyhedron *p = new C_Polyhedron(size * 2, UNIVERSE);
@@ -1169,6 +1239,7 @@ void TransitionSystem::Initialize_Locations_and_Transitions(int locsize, int var
     {
         for (int j = 0; j < inequality_DNF[i].size(); j++)
         {
+            
             guard_primed[i].push_back(Trans_Expr_to_Constraints(inequality_DNF[i][j], TransformationType::Guard, varsize));
             guard[i].push_back(Trans_Expr_to_Constraints(inequality_DNF[i][j], TransformationType::Loc, varsize));
         }
@@ -1267,6 +1338,7 @@ void TransitionSystem::Compute_Loop_Invariant(Expr *condition, unordered_set<str
     int locsize = DNF.size() + 1;
     cout << locsize << endl;
     vector<vector<Expr *>> invariant;
+    LOG_INFO(to_string(init_polys.size()));
     for (int i = 0; i < init_polys.size(); i++)
     {
         for (int j = 0; j < locsize; j++)
@@ -1318,6 +1390,7 @@ vector<vector<Expr *>> TransitionSystem::Out_Loop(Expr *cond, unordered_set<stri
     {
         info->search_and_insert((var + INITSUFFIX).c_str());
     }
+    LOG_INFO("Collect Loop Transition Relation");
     Print_DNF();
     vector<C_Polyhedron> init_polys = Compute_and_Eliminate_Init_Poly(used_vars, cond, init_DNF, init_ineq_DNF, init_vars);
     ACSLComment *comment = get_CurComment();
@@ -1358,6 +1431,7 @@ void TransitionSystem::Split_If()
 void TransitionSystem::Process_SkipDNF(vector<vector<Expr *>>& DNF, unordered_set<string> used_vars){
     for(int i=0;i<DNF.size();i++){
         for(int j=0;j<DNF[i].size();j++){
+            eliminate_initsuffix(DNF[i][j]);
             if (isa<BinaryOperator>(DNF[i][j])){
                 BinaryOperator* binop=dyn_cast<BinaryOperator>(DNF[i][j]);
                 if (binop->getOpcode()==BO_Assign) binop->setOpcode(BO_EQ);
