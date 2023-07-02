@@ -1,11 +1,11 @@
 build/*
 compile_commands.json
 Bak/*
-bin/*
 lstingX
 Result/*
 origin-lstingX
 *.sh
+bin/*
 .vscode/*
 tmp/*
 .DS_Store
