@@ -105,6 +105,10 @@ void VariableInfo::alterVar(Expr *var_expr, Expr *init)
         //     exit(0);
         // }
     }
+    else if (isa<ParenExpr>(var_expr)){
+        ParenExpr* paren=dyn_cast<ParenExpr>(var_expr);
+        alterVar(paren->getSubExpr(),init);
+    }
     else{
         LOG_WARNING("Unexpected VarExpr Type that is: ");
         LOG_WARNING(var_expr->getStmtClassName());

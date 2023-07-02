@@ -11,7 +11,7 @@ extern ifstream infile;
 extern ofstream outfile;
 set<string> Main_Functions;
 set<string> Visited_Functions;
-
+unordered_set<string> global_vars;
 void CFGVisitor::Terminate_errors(enum ErrorType Errors)
 {
     switch (Errors)
@@ -34,6 +34,55 @@ void CFGVisitor::Terminate_errors(enum ErrorType Errors)
     }
     errs() << "CFGVisitor::Terminate_errors UnknownError";
     return;
+}
+
+Expr* preprocess_expr(Expr* expr){
+    if (isa<BinaryOperator>(expr)){
+        BinaryOperator *binop=dyn_cast<BinaryOperator>(expr);
+        binop->setLHS(preprocess_expr(binop->getLHS()));
+        binop->setRHS(preprocess_expr(binop->getRHS()));
+        return binop;
+    }
+    if (isa<UnaryOperator>(expr)){
+        UnaryOperator *unop=dyn_cast<UnaryOperator>(expr);
+        if (unop->getOpcode()!=UO_Deref)
+            unop->setSubExpr(preprocess_expr(unop->getSubExpr()));
+        else{
+            Expr* subexpr=unop->getSubExpr();
+            if (isa<ImplicitCastExpr>(subexpr)){
+                ImplicitCastExpr* implicit=dyn_cast<ImplicitCastExpr>(subexpr);
+                subexpr=implicit->getSubExpr();
+            }
+            if (isa<DeclRefExpr>(subexpr)){
+                DeclRefExpr *ref=dyn_cast<DeclRefExpr>(subexpr);
+                ref=createDeclRefExpr("*"+ref->getDecl()->getNameAsString());
+                return ref;
+            }
+            else{
+                LOG_WARNING("Unexpected UnaryOperator Type: "+ string(subexpr->getStmtClassName()));
+                exit(0);
+            }
+        }
+        return unop;
+    }
+    if (isa<ImplicitCastExpr>(expr)){
+        ImplicitCastExpr *implicit=dyn_cast<ImplicitCastExpr>(expr);
+        implicit->setSubExpr(preprocess_expr(implicit->getSubExpr()));
+        return implicit;
+    }
+    if (isa<DeclRefExpr>(expr)){
+        return expr;
+    }
+    if (isa<IntegerLiteral>(expr)){
+        return expr;
+    }
+    if (isa<ParenExpr>(expr)){
+        ParenExpr* paren=dyn_cast<ParenExpr>(expr);
+        paren->setSubExpr(preprocess_expr(paren->getSubExpr()));
+        return paren;
+    }
+    LOG_WARNING("Unexpected Expr Type: "+ string(expr->getStmtClassName()));
+    exit(0);
 }
 void CFGVisitor::DealWithVarDecl(VarDecl *vardecl, TransitionSystem &transystem)
 {
@@ -103,6 +152,9 @@ void CFGVisitor::DealWithVarDecl(VarDecl *vardecl, TransitionSystem &transystem)
     {
         var.alterVar(var_name, vardecl->getInit(), stmt_type);
     }
+    else if (stmt_type->isBooleanType()){
+        var.alterVar(var_name, vardecl->getInit(), stmt_type);
+    }
     else if (stmt_type->isFloatingType())
         Terminate_errors(ErrorType::FloatVarError);
     transystem.add_vars(var);
@@ -139,7 +191,7 @@ void CFGVisitor::DealWithBinaryOp(BinaryOperator *stmt, TransitionSystem &transy
         VariableInfo var;
         Expr *expr = stmt->getLHS();
         var.alterVar(stmt->getLHS(), NULL);
-        transystem.add_vars(var, stmt->getRHS());
+        transystem.add_vars(var, preprocess_expr(stmt->getRHS()));
     }
     return;
 }
@@ -207,16 +259,16 @@ bool CFGVisitor::DealWithStmt(Stmt *stmt, TransitionSystem &transystem)
             flag = true;
             ForStmt *forstmt = dyn_cast<ForStmt>(stmt);
             DealWithStmt(forstmt->getInit(), transystem);
-            loop_condition = forstmt->getCond();
+            loop_condition = preprocess_expr(forstmt->getCond());
             loop_body = forstmt->getBody();
             sourceRange = forstmt->getSourceRange();
-            inc = forstmt->getInc();
+            inc = preprocess_expr(forstmt->getInc());
         }
         else
         {
             flag = false;
             WhileStmt *whileStmt = dyn_cast<WhileStmt>(stmt);
-            loop_condition = whileStmt->getCond();
+            loop_condition = preprocess_expr(whileStmt->getCond());
             loop_body = whileStmt->getBody();
             sourceRange = whileStmt->getSourceRange();
         }
@@ -226,7 +278,7 @@ bool CFGVisitor::DealWithStmt(Stmt *stmt, TransitionSystem &transystem)
         transystem.Print_DNF();
         vector<vector<Expr *>> SkipLoop = transystem.Deal_with_condition(loop_condition, false);
         SkipLoop = Merge_DNF(SkipLoop, Append_DNF(transystem.get_DNF(), transystem.get_IneqDNF()));
-        Print_DNF(SkipLoop);
+        
         transystem.Merge_condition(loop_condition, true);
         vector<vector<Expr *>> init_DNF = transystem.get_DNF();
         vector<vector<Expr *>> init_ineq_DNF = transystem.get_IneqDNF();
@@ -252,13 +304,18 @@ bool CFGVisitor::DealWithStmt(Stmt *stmt, TransitionSystem &transystem)
                 DealWithStmt(inc, transystem);
             transystem.Update_Vars(false);
             used_vars = transystem.get_Used_Vars(loop_condition, inc);
-            transystem.add_fundamental_expr(used_vars);
         }
+        
         remain_DNF = transystem.Out_Loop(loop_condition, used_vars, init_DNF, init_ineq_DNF, init_Vars);
-        transystem.Process_SkipDNF(SkipLoop, used_vars);
+        transystem.Process_SkipDNF(SkipLoop);
+        Print_DNF(SkipLoop);
+        transystem.After_loop(SkipLoop,used_vars);
         loop_comment->add_invariant(SkipLoop, true);
         loop_comment->deduplication();
         loop_comment->add_invariant(remain_DNF, false);
+        LOG_INFO("Remained DNF:");
+        Print_DNF(remain_DNF);
+        transystem.deduplicate(loop_comment->get_invariant());
     }
     else if (isa<DeclStmt>(stmt))
     {
@@ -316,7 +373,7 @@ bool CFGVisitor::DealWithStmt(Stmt *stmt, TransitionSystem &transystem)
     }
     else if (isa<ReturnStmt>(stmt))
     {
-
+        //TODO: When Exit, record current DNF and ineq_DNF (update var) 
         return false;
     }
     return true;
@@ -336,6 +393,15 @@ bool CFGVisitor::VisitCallExpr(CallExpr *CE)
     {
         Visited_Functions.insert(callee->getNameAsString());
         outs() << "CalleeFunction:" << callee->getNameAsString() << "\n";
+    }
+    return true;
+}
+
+bool CFGVisitor::VisitVarDecl(VarDecl *var) {
+    if (VS!=VisitorState::Collect_All_Function)
+        return true;
+    if (var->hasGlobalStorage() && !var->isStaticLocal()) {
+        global_vars.insert(var->getNameAsString());
     }
     return true;
 }

@@ -143,7 +143,7 @@ int input_test(const char *filename, unsigned int namelength, unsigned int fg)
 	////@ for bad_input: assert res == -1;
 	return res;
 }
-//这个再说
+
 int test(const char *name, unsigned int length)
 {
 	unsigned int i, j;

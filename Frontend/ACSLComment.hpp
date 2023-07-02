@@ -22,6 +22,7 @@ class ACSLComment{
         void add_assign_vars(unordered_set<string>& vars);
         void set_assertion(Expr* assertion);
         void deduplication();
+        vector<vector<Expr *>>& get_invariant() {return loop_invariant;}
         int get_line_number() {return line;}
         
     private:
