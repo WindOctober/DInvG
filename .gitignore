@@ -9,6 +9,7 @@ origin-lstingX
 .vscode/*
 tmp/*
 .DS_Store
+core
 
 # Prerequisites
 *.d

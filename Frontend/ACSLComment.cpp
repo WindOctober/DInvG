@@ -60,13 +60,14 @@ void ACSLComment::dump(ofstream& out,ASTContext* context){
 
 void ACSLComment::deduplication(){
     vector<C_Polyhedron*> polys;
+    LOG_INFO("loop_invariant before deduplication");
     Print_DNF(loop_invariant);
     for(int i=0;i<loop_invariant.size();i++){
         
         C_Polyhedron *p=new C_Polyhedron(int(info->get_dimension()/2),UNIVERSE);
         for(int j=0;j<loop_invariant[i].size();j++){
             if (!CheckInitSuffix(loop_invariant[i][j]))
-                p->add_constraints(*Trans_Expr_to_Constraints(loop_invariant[i][j],TransformationType::Loc,info->get_dimension()));
+                p->add_constraints(*Trans_Expr_to_Constraints(loop_invariant[i][j],TransformationType::Loc,info->get_dimension()/2));
             else LOG_INFO(to_string(j));
         }
         if (p->is_empty()){
@@ -86,8 +87,9 @@ void ACSLComment::deduplication(){
             i--;
         }
         else polys.push_back(p);
-        
     }
+    LOG_INFO("Final ACSL invariant Before Add Remain:");
+    Print_DNF(loop_invariant);
     return;
 }
 

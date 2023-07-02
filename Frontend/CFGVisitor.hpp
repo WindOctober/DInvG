@@ -51,7 +51,7 @@ public:
     void add_comments(vector<ACSLComment*> comment_vec);
     bool VisitCallExpr(CallExpr *CE);
     bool VisitFunctionDecl(FunctionDecl *func);
-
+    bool VisitVarDecl(VarDecl *var);
     void PrintStmtInfo(Stmt *stmt);
     void Dump_Annotated_file();
 private:
@@ -66,6 +66,7 @@ private:
     PrintingPolicy pp;
     VisitorState VS;
     vector<ACSLComment*> comments;
+    unordered_set<string> verified_funcs;
 };
 
 #endif

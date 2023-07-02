@@ -97,6 +97,9 @@ var_info::var_info(var_info* lambda_info, vector<int> v1) {
 }
 
 var_info::var_info(var_info const* lambda_info) {
+    if (!lambda_info){
+        return;
+    }
     int i;
 
     this->v = new vector<char*>();
