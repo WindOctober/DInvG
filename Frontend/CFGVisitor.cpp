@@ -1,16 +1,18 @@
 // DONE: alter the source code and generate a annotated version (with invariant annotations before the while loop)
-// TODO: think how to solve the inter-procedural invariant.
+// DONE: think how to solve the inter-procedural invariant.
 #include "CFGVisitor.hpp"
 #include "TransitionSystem.hpp"
 #include "Library.hpp"
 #include <iostream>
 #include <memory>
 #include <fstream>
+#include "var-info.h"
 #include <string>
 extern ifstream infile;
 extern ofstream outfile;
 set<string> Main_Functions;
 set<string> Visited_Functions;
+extern var_info *info;
 unordered_set<string> global_vars;
 void CFGVisitor::Terminate_errors(enum ErrorType Errors)
 {
@@ -36,52 +38,76 @@ void CFGVisitor::Terminate_errors(enum ErrorType Errors)
     return;
 }
 
-Expr* preprocess_expr(Expr* expr){
-    if (isa<BinaryOperator>(expr)){
-        BinaryOperator *binop=dyn_cast<BinaryOperator>(expr);
-        binop->setLHS(preprocess_expr(binop->getLHS()));
-        binop->setRHS(preprocess_expr(binop->getRHS()));
+string CFGVisitor::create_name(string base)
+{
+    global_conflict_index++;
+    string Name = base + to_string(global_conflict_index);
+    return Name;
+}
+
+Expr *CFGVisitor::preprocess_expr(Expr *expr, TransitionSystem &transystem)
+{
+    if (isa<BinaryOperator>(expr))
+    {
+        BinaryOperator *binop = dyn_cast<BinaryOperator>(expr);
+        binop->setLHS(preprocess_expr(binop->getLHS(), transystem));
+        binop->setRHS(preprocess_expr(binop->getRHS(), transystem));
         return binop;
     }
-    if (isa<UnaryOperator>(expr)){
-        UnaryOperator *unop=dyn_cast<UnaryOperator>(expr);
-        if (unop->getOpcode()!=UO_Deref)
-            unop->setSubExpr(preprocess_expr(unop->getSubExpr()));
-        else{
-            Expr* subexpr=unop->getSubExpr();
-            if (isa<ImplicitCastExpr>(subexpr)){
-                ImplicitCastExpr* implicit=dyn_cast<ImplicitCastExpr>(subexpr);
-                subexpr=implicit->getSubExpr();
+    if (isa<UnaryOperator>(expr))
+    {
+        UnaryOperator *unop = dyn_cast<UnaryOperator>(expr);
+        if (unop->getOpcode() != UO_Deref)
+            unop->setSubExpr(preprocess_expr(unop->getSubExpr(), transystem));
+        else
+        {
+            Expr *subexpr = unop->getSubExpr();
+            if (isa<ImplicitCastExpr>(subexpr))
+            {
+                ImplicitCastExpr *implicit = dyn_cast<ImplicitCastExpr>(subexpr);
+                subexpr = implicit->getSubExpr();
             }
-            if (isa<DeclRefExpr>(subexpr)){
-                DeclRefExpr *ref=dyn_cast<DeclRefExpr>(subexpr);
-                ref=createDeclRefExpr("*"+ref->getDecl()->getNameAsString());
+            if (isa<DeclRefExpr>(subexpr))
+            {
+                DeclRefExpr *ref = dyn_cast<DeclRefExpr>(subexpr);
+                ref = createDeclRefExpr("*" + ref->getDecl()->getNameAsString());
                 return ref;
             }
-            else{
-                LOG_WARNING("Unexpected UnaryOperator Type: "+ string(subexpr->getStmtClassName()));
+            else
+            {
+                LOG_WARNING("Unexpected UnaryOperator Type: " + string(subexpr->getStmtClassName()));
                 exit(0);
             }
         }
         return unop;
     }
-    if (isa<ImplicitCastExpr>(expr)){
-        ImplicitCastExpr *implicit=dyn_cast<ImplicitCastExpr>(expr);
-        implicit->setSubExpr(preprocess_expr(implicit->getSubExpr()));
+    if (isa<ImplicitCastExpr>(expr))
+    {
+        ImplicitCastExpr *implicit = dyn_cast<ImplicitCastExpr>(expr);
+        implicit->setSubExpr(preprocess_expr(implicit->getSubExpr(), transystem));
         return implicit;
     }
-    if (isa<DeclRefExpr>(expr)){
+    if (isa<DeclRefExpr>(expr))
+    {
         return expr;
     }
-    if (isa<IntegerLiteral>(expr)){
+    if (isa<IntegerLiteral>(expr))
+    {
         return expr;
     }
-    if (isa<ParenExpr>(expr)){
-        ParenExpr* paren=dyn_cast<ParenExpr>(expr);
-        paren->setSubExpr(preprocess_expr(paren->getSubExpr()));
+    if (isa<ParenExpr>(expr))
+    {
+        ParenExpr *paren = dyn_cast<ParenExpr>(expr);
+        paren->setSubExpr(preprocess_expr(paren->getSubExpr(), transystem));
         return paren;
     }
-    LOG_WARNING("Unexpected Expr Type: "+ string(expr->getStmtClassName()));
+    if (isa<CallExpr>(expr))
+    {
+        string return_name;
+        DealWithCallExpr(dyn_cast<CallExpr>(expr), transystem, return_name);
+        return createDeclRefExpr(return_name);
+    }
+    LOG_WARNING("Unexpected Expr Type: " + string(expr->getStmtClassName()));
     exit(0);
 }
 void CFGVisitor::DealWithVarDecl(VarDecl *vardecl, TransitionSystem &transystem)
@@ -92,8 +118,7 @@ void CFGVisitor::DealWithVarDecl(VarDecl *vardecl, TransitionSystem &transystem)
     // Deal with pointer, pure numeric, arrays.
     QualType stmt_type = vardecl->getType();
     string var_name = vardecl->getName();
-    
-    
+
     if (stmt_type->isArrayType())
     {
     }
@@ -118,8 +143,8 @@ void CFGVisitor::DealWithVarDecl(VarDecl *vardecl, TransitionSystem &transystem)
                 string name = func->getNameAsString();
                 if (name == "malloc")
                 {
-                    LOG_INFO("Variable "+ var_name +" is allocated.");
-                    var.alterVar("*"+var_name, NULL, stmt_type);
+                    LOG_INFO("Variable " + var_name + " is allocated.");
+                    var.alterVar("*" + var_name, NULL, stmt_type);
                 }
                 else
                 {
@@ -137,7 +162,6 @@ void CFGVisitor::DealWithVarDecl(VarDecl *vardecl, TransitionSystem &transystem)
         {
             LOG_INFO(init->getStmtClassName());
         }
-        
     }
     else if (stmt_type->isUnsignedIntegerType())
     {
@@ -152,7 +176,8 @@ void CFGVisitor::DealWithVarDecl(VarDecl *vardecl, TransitionSystem &transystem)
     {
         var.alterVar(var_name, vardecl->getInit(), stmt_type);
     }
-    else if (stmt_type->isBooleanType()){
+    else if (stmt_type->isBooleanType())
+    {
         var.alterVar(var_name, vardecl->getInit(), stmt_type);
     }
     else if (stmt_type->isFloatingType())
@@ -191,7 +216,7 @@ void CFGVisitor::DealWithBinaryOp(BinaryOperator *stmt, TransitionSystem &transy
         VariableInfo var;
         Expr *expr = stmt->getLHS();
         var.alterVar(stmt->getLHS(), NULL);
-        transystem.add_vars(var, preprocess_expr(stmt->getRHS()));
+        transystem.add_vars(var, preprocess_expr(stmt->getRHS(), transystem));
     }
     return;
 }
@@ -199,7 +224,59 @@ void CFGVisitor::DealWithBinaryOp(BinaryOperator *stmt, TransitionSystem &transy
 void CFGVisitor::DealWithFunctionDecl(FunctionDecl *stmt, TransitionSystem &transystem)
 {
 }
-bool CFGVisitor::DealWithStmt(Stmt *stmt, TransitionSystem &transystem)
+
+void CFGVisitor::DealWithCallExpr(CallExpr *callexpr, TransitionSystem &transystem, string &return_value)
+{
+    FunctionDecl *CallFunction = callexpr->getDirectCallee();
+    SourceManager &SM = context->getSourceManager();
+    string FuncName = CallFunction->getNameAsString();
+    if (FuncName == "__CPROVER_assume")
+    {
+        assert(callexpr->getNumArgs() == 1);
+        transystem.Merge_condition(callexpr->getArg(0), true);
+    }
+    else
+    {
+        if (!SM.isInMainFile(CallFunction->getLocation()))
+        {
+            LOG_INFO("Visit Unexpected outer-defined function" + FuncName);
+            exit(-1);
+        }
+        LOG_INFO("Function Name:" + FuncName);
+        if (verified_funcs.count(FuncName) == 0)
+        {
+            LOG_INFO("Visit Function:" + FuncName);
+            VisitFunctionDecl(CallFunction);
+        }
+        vector<vector<Expr *>> function_dnf = dnf_for_funcs[FuncName];
+        if (function_dnf.size() != 0)
+        {
+            for(int i=0;i<function_dnf.size();i++){
+                for(int j=0;j<function_dnf[i].size();j++){
+                    Expr* expr=function_dnf[i][j];
+                    if (isa<BinaryOperator>(expr)){
+                        BinaryOperator *binop=dyn_cast<BinaryOperator>(expr);
+                        if (binop->getOpcode()!=BO_Assign) continue;
+                        DealWithBinaryOp(binop,transystem);
+                        function_dnf[i].erase(function_dnf[i].begin()+j);
+                        j--;
+                    }
+                }
+            }
+            transystem.Merge_IneqDNF(function_dnf);
+            return_value = FuncName + "_RetVal";
+            LOG_INFO("After Merge Function Call");
+            transystem.Print_DNF();
+        }
+        else
+        {
+            LOG_WARNING("No DNF for this function: " + FuncName);
+            exit(-1);
+        }
+    }
+}
+
+bool CFGVisitor::DealWithStmt(Stmt *stmt, TransitionSystem &transystem, FunctionDecl *func)
 {
     // Deal with the whole Stmt in code. (which usually means the complete statement in one line.)
 
@@ -208,7 +285,7 @@ bool CFGVisitor::DealWithStmt(Stmt *stmt, TransitionSystem &transystem)
     // DONE: Deal with For loop in code.
     // DONE: Deal with the situation of continue and break in code. [hint: consider the guard to break to be loop guard in break situation and the standalone branch cutted in continue statement]
     // TODO: Deal with special cases likes x=(a==b), y=(a>=b), which should be handled to if (a==b) x=1 else x=0 and so on.
-    // TODO: Deal with the return statement in loop.
+    // DONE: Deal with the return statement in loop.
     PrintStmtInfo(stmt);
     if (isa<IfStmt>(stmt))
     {
@@ -227,7 +304,7 @@ bool CFGVisitor::DealWithStmt(Stmt *stmt, TransitionSystem &transystem)
         {
             for (auto stmt : compound->body())
             {
-                bool flag = DealWithStmt(stmt, ThenTransystem);
+                bool flag = DealWithStmt(stmt, ThenTransystem, func);
                 if (!flag)
                     break;
             }
@@ -236,7 +313,7 @@ bool CFGVisitor::DealWithStmt(Stmt *stmt, TransitionSystem &transystem)
         {
             for (auto stmt : compound->body())
             {
-                bool flag = DealWithStmt(stmt, ElseTransystem);
+                bool flag = DealWithStmt(stmt, ElseTransystem, func);
                 if (!flag)
                     break;
             }
@@ -258,17 +335,17 @@ bool CFGVisitor::DealWithStmt(Stmt *stmt, TransitionSystem &transystem)
         {
             flag = true;
             ForStmt *forstmt = dyn_cast<ForStmt>(stmt);
-            DealWithStmt(forstmt->getInit(), transystem);
-            loop_condition = preprocess_expr(forstmt->getCond());
+            DealWithStmt(forstmt->getInit(), transystem, func);
+            loop_condition = preprocess_expr(forstmt->getCond(), transystem);
             loop_body = forstmt->getBody();
             sourceRange = forstmt->getSourceRange();
-            inc = preprocess_expr(forstmt->getInc());
+            inc = preprocess_expr(forstmt->getInc(), transystem);
         }
         else
         {
             flag = false;
             WhileStmt *whileStmt = dyn_cast<WhileStmt>(stmt);
-            loop_condition = preprocess_expr(whileStmt->getCond());
+            loop_condition = preprocess_expr(whileStmt->getCond(), transystem);
             loop_body = whileStmt->getBody();
             sourceRange = whileStmt->getSourceRange();
         }
@@ -278,7 +355,7 @@ bool CFGVisitor::DealWithStmt(Stmt *stmt, TransitionSystem &transystem)
         transystem.Print_DNF();
         vector<vector<Expr *>> SkipLoop = transystem.Deal_with_condition(loop_condition, false);
         SkipLoop = Merge_DNF(SkipLoop, Append_DNF(transystem.get_DNF(), transystem.get_IneqDNF()));
-        
+
         transystem.Merge_condition(loop_condition, true);
         vector<vector<Expr *>> init_DNF = transystem.get_DNF();
         vector<vector<Expr *>> init_ineq_DNF = transystem.get_IneqDNF();
@@ -291,25 +368,25 @@ bool CFGVisitor::DealWithStmt(Stmt *stmt, TransitionSystem &transystem)
         transystem.In_Loop();
         transystem.Merge_condition(loop_condition, true);
         transystem.Print_DNF();
-        
+
         if (CompoundStmt *compound = dyn_cast<CompoundStmt>(loop_body))
         {
             for (auto stmt : compound->body())
             {
-                bool continue_flag = DealWithStmt(stmt, transystem);
+                bool continue_flag = DealWithStmt(stmt, transystem, func);
                 if (!continue_flag)
                     break;
             }
             if (flag)
-                DealWithStmt(inc, transystem);
+                DealWithStmt(inc, transystem, func);
             transystem.Update_Vars(false);
             used_vars = transystem.get_Used_Vars(loop_condition, inc);
         }
-        
+
         remain_DNF = transystem.Out_Loop(loop_condition, used_vars, init_DNF, init_ineq_DNF, init_Vars);
         transystem.Process_SkipDNF(SkipLoop);
         Print_DNF(SkipLoop);
-        transystem.After_loop(SkipLoop,used_vars);
+        transystem.After_loop(SkipLoop, used_vars);
         loop_comment->add_invariant(SkipLoop, true);
         loop_comment->deduplication();
         loop_comment->add_invariant(remain_DNF, false);
@@ -357,23 +434,94 @@ bool CFGVisitor::DealWithStmt(Stmt *stmt, TransitionSystem &transystem)
     }
     else if (isa<CallExpr>(stmt))
     {
-        CallExpr *callexpr = dyn_cast<CallExpr>(stmt);
-        FunctionDecl *CallFunction = callexpr->getDirectCallee();
-        string FuncName = CallFunction->getNameAsString();
-        if (FuncName == "__CPROVER_assume")
-        {
-            assert(callexpr->getNumArgs() == 1);
-            transystem.Merge_condition(callexpr->getArg(0), true);
-        }
-        else
-        {
-            LOG_WARNING("Unknown function name: " + FuncName);
-            exit(-1);
-        }
+        CallExpr *call = dyn_cast<CallExpr>(stmt);
+        string ReturnValue;
+        DealWithCallExpr(call, transystem, ReturnValue);
+        transystem.delete_expr_by_var(ReturnValue);
+        LOG_INFO(ReturnValue);
     }
     else if (isa<ReturnStmt>(stmt))
     {
-        //TODO: When Exit, record current DNF and ineq_DNF (update var) 
+        // DONE: When Exit, record current DNF and ineq_DNF (update var)
+        ReturnStmt *ret = dyn_cast<ReturnStmt>(stmt);
+        transystem.Update_Vars(false);
+        transystem.Construct_Graph();
+        vector<vector<Expr *>> return_dnf;
+        string func_name = func->getNameAsString();
+        return_dnf = Append_DNF(transystem.get_IneqDNF(), transystem.get_DNF());
+        if (verified_funcs.count(func_name) == 0)
+        {
+            verified_funcs.insert(func_name);
+            string return_name = func_name + "_RetVal";
+            DeclRefExpr *returnExpr = createDeclRefExpr(return_name);
+            Expr *returnValue = ret->getRetValue();
+            returnValue = createBinOp(returnExpr, returnValue,BO_Assign);
+            for (int i = 0; i < return_dnf.size(); i++)
+            {
+                return_dnf[i].push_back(returnValue);
+            }
+            unordered_set<string> used_vars;
+            unordered_set<string> total_vars;
+
+            used_vars.insert(return_name);
+            for (auto name : global_vars)
+            {
+                used_vars.insert(name);
+            }
+            for (auto it = func->param_begin(); it != func->param_end(); it++)
+            {
+                ParmVarDecl *param = *it;
+                used_vars.insert(param->getNameAsString());
+            }
+            for (int i = 0; i < return_dnf.size(); i++)
+            {
+                for (int j = 0; j < return_dnf[i].size(); j++)
+                {
+                    Traverse_Expr_ForVars(return_dnf[i][j], total_vars);
+                }
+            }
+            var_info *rec_info = new var_info(info);
+            if (info)
+            {
+                delete info;
+                info = NULL;
+            }
+            else
+                rec_info = NULL;
+            info = new var_info();
+            for (auto name : used_vars)
+                info->insert(name.c_str());
+            for (auto name : total_vars)
+                info->search_and_insert(name.c_str());
+            vector<C_Polyhedron *> polys;
+            for (int i = 0; i < return_dnf.size(); i++)
+            {
+                C_Polyhedron *p = new C_Polyhedron(info->get_dimension(), UNIVERSE);
+                for (int j = 0; j < return_dnf[i].size(); j++)
+                {
+                    p->add_constraints(*Trans_Expr_to_Constraints(return_dnf[i][j], TransformationType::Loc, info->get_dimension()));
+                }
+                if (p->is_empty())
+                {
+                    LOG_WARNING("Unexpected empty polyhedron when process function");
+                    exit(-1);
+                }
+                p->remove_higher_space_dimensions(used_vars.size());
+                polys.push_back(p);
+            }
+            return_dnf = Trans_Polys_to_Exprs(polys, false);
+            transystem.recover_dnf(return_dnf);
+            delete info;
+            info = rec_info;
+            dnf_for_funcs[func_name] = return_dnf;
+        }
+        else
+        {
+            LOG_WARNING("Duplicate function visit.");
+            exit(-1);
+        }
+        LOG_INFO("record function: " + func_name + " of which dnf is :");
+        Print_DNF(return_dnf);
         return false;
     }
     return true;
@@ -397,10 +545,12 @@ bool CFGVisitor::VisitCallExpr(CallExpr *CE)
     return true;
 }
 
-bool CFGVisitor::VisitVarDecl(VarDecl *var) {
-    if (VS!=VisitorState::Collect_All_Function)
+bool CFGVisitor::VisitVarDecl(VarDecl *var)
+{
+    if (VS != VisitorState::Collect_All_Function)
         return true;
-    if (var->hasGlobalStorage() && !var->isStaticLocal()) {
+    if (var->hasGlobalStorage() && !var->isStaticLocal())
+    {
         global_vars.insert(var->getNameAsString());
     }
     return true;
@@ -417,22 +567,22 @@ bool CFGVisitor::VisitFunctionDecl(FunctionDecl *func)
         Main_Functions.insert(func->getNameAsString());
         return true;
     }
-    if (func->getNameAsString() == "main" || Main_Functions.count("main") == 0)
+    if (verified_funcs.count(func->getNameAsString()) != 0)
+        return true;
+
+    TransitionSystem transystem;
+    transystem.init();
+    Stmt *func_body = func->getBody();
+    if (CompoundStmt *compound = dyn_cast<CompoundStmt>(func_body))
     {
-        TransitionSystem transystem;
-        transystem.init();
-        Stmt *func_body = func->getBody();
-        if (CompoundStmt *compound = dyn_cast<CompoundStmt>(func_body))
+        for (auto stmt : compound->body())
         {
-            for (auto stmt : compound->body())
-            {
-                bool flag = DealWithStmt(stmt, transystem);
-                if (!flag)
-                    break;
-            }
+            bool flag = DealWithStmt(stmt, transystem, func);
+            if (!flag)
+                break;
         }
-        add_comments(transystem.get_Comments());
     }
+    add_comments(transystem.get_Comments());
     return true;
 }
 

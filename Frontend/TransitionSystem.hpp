@@ -25,12 +25,17 @@ enum TransformationType
     Origin
 };
 
+struct VarGraph{
+    map<string,unordered_set<string>> edges;
+    map<string,unordered_set<string>> possible_rv;  
+};
+
 class TransitionSystem
 {
 public:
     // DONE: process the transformation from the Expr* to Constraint*.
     // DONE: process the generation of the Locations and Transitions.
-    // TODO: process the merge of two transition system while split by if statement.
+    // DONE: process the merge of two transition system while split by if statement.
 
     void Compute_Loop_Invariant(Expr *condition, unordered_set<string> vars_in_dnf, vector<C_Polyhedron> init_polys);
 
@@ -41,6 +46,7 @@ public:
     TransitionSystem();
     TransitionSystem(TransitionSystem &other);
     void Process_SkipDNF(vector<vector<Expr *>> &dnf);
+    void Construct_Graph();
     void After_loop(vector<vector<Expr *>> &dnf, unordered_set<string> &used_vars);
     vector<ACSLComment *> get_Comments() { return comments; }
     unordered_set<string> get_Used_Vars(Expr *cond, Expr *increment);
@@ -60,10 +66,12 @@ public:
     void In_Loop();
     Expr *Trans_Expr_by_CurVars(Expr *expr, vector<VariableInfo> &Vars);
     Expr *Trans_VariableInfo_to_Expr(VariableInfo var, bool init);
+    void recover_dnf(vector<vector<Expr*>> &dnf);
 
     vector<vector<Expr *>> Deal_with_condition(Expr *condition, bool not_logic);
     void deduplicate(vector<vector<Expr *>> &dnf);
 
+    void delete_expr_by_var(string var_name);
     void Update_Vars(bool init);
     void copy_after_update(int size);
     vector<vector<Expr *>> Out_Loop(Expr *cond, unordered_set<string> &used_vars, vector<vector<Expr *>> &init_DNF, vector<vector<Expr *>> &init_ineq_DNF, vector<vector<VariableInfo>> &vars);
@@ -92,13 +100,18 @@ private:
     bool InWhileLoop;
     int Inner_Loop_Depth;
     int Inner_Loop_Count;
+    vector<VarGraph> Graphs;
 };
 void Print_DNF(vector<vector<Expr *>> &DNF);
 string Print_Expr(Expr *expr);
 Expr *NegateExpr(Expr *expr);
 DeclRefExpr *createDeclRefExpr(string name);
+BinaryOperator *createBinOp(Expr *left, Expr *right,BinaryOperatorKind kind);
+IntegerLiteral *createIntegerLiteral(int val);
 Constraint_System *Trans_Expr_to_Constraints(Expr *expr, enum TransformationType type, int var_size);
-vector<vector<Expr *>> Trans_Polys_to_Exprs(vector<C_Polyhedron> poly);
-vector<vector<Expr *>> Trans_Polys_to_Exprs(vector<C_Polyhedron *> poly);
+vector<vector<Expr *>> Trans_Polys_to_Exprs(vector<C_Polyhedron> poly,bool init_remove);
+vector<vector<Expr *>> Trans_Polys_to_Exprs(vector<C_Polyhedron *> poly,bool init_remove);
+bool Traverse_Expr_CheckVars(Expr *expr, const unordered_set<string> &res);
+void Traverse_Expr_ForVars(Expr *expr, unordered_set<string> &res);
 bool CheckInitSuffix(Expr *expr);
 #endif
