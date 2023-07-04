@@ -1,4 +1,4 @@
-// TODO: return the final disjunctive invariant to the Frontend.
+// DONE: return the final disjunctive invariant to the Frontend.
 #include <iostream>
 #include <regex>
 #include <string>
@@ -1074,7 +1074,7 @@ void Compute_Invariant_Frontend(){
 }
 #ifdef USE_LSTINGX_MAIN
 int main() {
-    //TODO: create a interface to connect the frontend and stingx.
+    //DONE: create a interface to connect the frontend and stingx.
     ios::sync_with_stdio(false);
     total_timer.restart();
     Initialize_before_Parser();

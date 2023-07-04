@@ -10,6 +10,7 @@ bin/*
 tmp/*
 .DS_Store
 core
+output.txt
 
 # Prerequisites
 *.d

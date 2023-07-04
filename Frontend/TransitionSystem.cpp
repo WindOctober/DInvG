@@ -8,7 +8,7 @@
 extern var_info *info, *dual_info, *lambda_info;
 extern vector<Location *> *loclist;
 extern vector<TransitionRelation *> *trlist;
-
+extern unordered_set<string> global_vars;
 ASTContext *TransitionSystem::context = NULL;
 namespace std
 {
@@ -35,6 +35,31 @@ DeclRefExpr *createDeclRefExpr(string name)
     VarDecl *VD = VarDecl::Create(*context, context->getTranslationUnitDecl(), SourceLocation(), SourceLocation(), &context->Idents.get(name), context->IntTy, nullptr, SC_None);
     DeclRefExpr *RefExpr = new (context) DeclRefExpr(*context, VD, false, VD->getType(), VK_LValue, SourceLocation(), DeclarationNameLoc(), NOUR_None);
     return RefExpr;
+}
+
+BinaryOperator *createBinOp(Expr *left, Expr *right,BinaryOperatorKind kind)
+{
+    ASTContext *context = TransitionSystem::context;
+    QualType resultType = left->getType();
+    FPOptions default_option;
+    BinaryOperator *Binop = new (context) BinaryOperator(left, right, kind, resultType, VK_RValue, OK_Ordinary, SourceLocation(), default_option);
+    return Binop;
+}
+
+
+UnaryOperator *createUnOp(Expr *expr,UnaryOperatorKind kind)
+{
+    ASTContext *context = TransitionSystem::context;
+    QualType resultType = expr->getType();
+    UnaryOperator *Unop = new (context) UnaryOperator(expr, kind, resultType, VK_RValue, OK_Ordinary, SourceLocation(), false);
+    return Unop;
+}
+
+IntegerLiteral *createIntegerLiteral(int val)
+{
+    ASTContext *context = TransitionSystem::context;
+    IntegerLiteral *value = IntegerLiteral::Create(*context, APInt(context->getIntWidth(context->IntTy), val), context->IntTy, SourceLocation());
+    return value;
 }
 
 bool CheckBreakFlag(Expr *expr)
@@ -64,7 +89,7 @@ void TransitionSystem::Print_DNF(vector<vector<Expr *>> DNF)
             outs() << "\t";
             PrintingPolicy Policy(TransitionSystem::context->getLangOpts());
             string str;
-            llvm::raw_string_ostream rso(str);
+            raw_string_ostream rso(str);
             DNF[i][j]->printPretty(rso, nullptr, Policy);
             rso.flush();
             outs() << str << "\n";
@@ -88,7 +113,7 @@ void Print_DNF(vector<vector<Expr *>> &DNF)
             outs() << "\t";
             PrintingPolicy Policy(TransitionSystem::context->getLangOpts());
             string str;
-            llvm::raw_string_ostream rso(str);
+            raw_string_ostream rso(str);
             DNF[i][j]->printPretty(rso, nullptr, Policy);
             rso.flush();
             outs() << str << "\n";
@@ -102,7 +127,7 @@ string Print_Expr(Expr *expr)
 {
     PrintingPolicy Policy(TransitionSystem::context->getLangOpts());
     string str;
-    llvm::raw_string_ostream rso(str);
+    raw_string_ostream rso(str);
     expr->printPretty(rso, nullptr, Policy);
     rso.flush();
     return str;
@@ -141,6 +166,31 @@ bool check_guard(Expr *expr)
         // outs() << "\n[check_guard warning] The Unexpected Expr type " << Print_Expr(expr) << "";
         return false;
     }
+}
+
+Expr* Trans_LinExpr_to_Expr(Linear_Expression* lin_expr,string eliminate_var){
+    Expr* res=NULL;
+    for(int i=0;i<info->get_dimension();i++){
+        string var_name=info->get_name(i);
+        Expr* rec_expr;
+        if (var_name==eliminate_var) continue;
+        int coef = lin_expr->coefficient(Variable(i)).get_si();
+        if (coef==0) continue;
+        rec_expr=createBinOp(createIntegerLiteral(abs(coef)),createDeclRefExpr(var_name),BO_Mul);
+        if (res){
+            if (coef<0)
+                res=createBinOp(res,rec_expr,BO_Sub);
+            else
+                res=createBinOp(res,rec_expr,BO_Add);
+        }
+        else{
+            if (coef<0)
+                res=createUnOp(rec_expr,UO_Minus);
+            else
+                res=rec_expr;
+        }
+    }
+    return res;
 }
 
 Linear_Expression *Trans_Expr_to_LinExpr(Expr *expr, enum TransformationType type, int var_size)
@@ -256,10 +306,11 @@ Expr *Trans_Constraint_to_Expr(Constraint constraint)
     Expr *res = nullptr;
     auto lin_expr = constraint.expression();
     FPOptions default_options;
-    int basic_dimenstion = info->get_dimension() / 2;
-    for (int i = 0; i < basic_dimenstion; i++)
+    for (int i = 0; i < info->get_dimension(); i++)
     {
         string name = info->get_name(i);
+        if (name.find(INITSUFFIX) != name.npos)
+            continue;
         int coef = lin_expr.coefficient(Variable(i)).get_si();
         if (coef != 0)
         {
@@ -695,6 +746,11 @@ Expr *Add_InitSuffix(Expr *expr)
     {
         return expr;
     }
+    else if (isa<UnaryOperator>(expr)){
+        UnaryOperator *unop = dyn_cast<UnaryOperator>(expr);
+        unop->setSubExpr(Add_InitSuffix(unop->getSubExpr()));
+        return unop;
+    }
     else
     {
         LOG_WARNING("Unexpected Type" + string(expr->getStmtClassName()));
@@ -751,7 +807,7 @@ vector<C_Polyhedron> Compute_and_Eliminate_Init_Poly(unordered_set<string> &used
     ASTContext *context = TransitionSystem::context;
     DNF.resize(init_DNF.size());
     assert(init_DNF.size() == init_vars.size());
-    
+
     for (int i = 0; i < init_DNF.size(); i++)
     {
         unordered_set<string> rec_used;
@@ -783,7 +839,7 @@ vector<C_Polyhedron> Compute_and_Eliminate_Init_Poly(unordered_set<string> &used
             }
         }
     }
-    
+
     for (int i = 0; i < init_DNF.size(); i++)
     {
         for (int j = 0; j < init_DNF[i].size(); j++)
@@ -804,7 +860,7 @@ vector<C_Polyhedron> Compute_and_Eliminate_Init_Poly(unordered_set<string> &used
             }
         }
     }
-    
+
     vector<vector<Expr *>> ineq_DNF;
     ineq_DNF.resize(init_ineq_DNF.size());
     for (int i = 0; i < init_ineq_DNF.size(); i++)
@@ -960,8 +1016,59 @@ void TransitionSystem::add_expr(Expr *expr)
 void TransitionSystem::Merge_IneqDNF(vector<vector<Expr *>> &dnf)
 {
     inequality_DNF = Merge_DNF(inequality_DNF, dnf);
+    copy_after_update(dnf.size());
     return;
 }
+
+void TransitionSystem::recover_dnf(vector<vector<Expr *>> &dnf)
+{
+    assert(Graphs.size() == dnf.size());
+    for (int i = 0; i < dnf.size(); i++)
+    {
+        map<string, unordered_set<string>> possibles = Graphs[i].possible_rv;
+        vector<string> node;
+        for (const auto &pair : possibles)
+            node.push_back(pair.first);
+        for(auto name:node)
+            LOG_INFO(name);
+        for (int j = 0; j < dnf[i].size(); j++)
+        {
+            Expr *expr = dnf[i][j];
+            if (!isa<BinaryOperator>(expr))
+            {
+                LOG_WARNING("Unexpected Expr Type: " + string(expr->getStmtClassName()));
+                exit(-1);
+            }
+            BinaryOperator *binop = dyn_cast<BinaryOperator>(expr);
+            if (binop->getOpcode() != BO_EQ)
+                continue;
+            int count = 0;
+            string rec_name;
+            for (const auto &name : node)
+            {
+                if (Traverse_Expr_CheckVars(expr, possibles[name]))
+                {
+                    count++;
+                    rec_name = name;
+                }
+            }
+            LOG_INFO(to_string(count));
+            if (count == 1)
+            {
+                DeclRefExpr* left=createDeclRefExpr(rec_name);
+                Expr* right_expr=Trans_LinExpr_to_Expr(Trans_Expr_to_LinExpr(binop->getLHS(),TransformationType::Loc,info->get_dimension()),rec_name);
+                dnf[i][j]=createBinOp(left,right_expr,BO_Assign);
+            }
+            else if (count > 1)
+            {
+                //TODO : Deal the different order, which possibly leads to such issues
+                LOG_WARNING("Unexpected Situtation While possible left value count >=2");
+                exit(-1);
+            }
+        }
+    }
+}
+
 Expr *TransitionSystem::Trans_VariableInfo_to_Expr(VariableInfo var, bool init)
 {
     // assert(var.getQualType().getAsString()=="int");
@@ -989,14 +1096,15 @@ Expr *TransitionSystem::Trans_VariableInfo_to_Expr(VariableInfo var, bool init)
     Expr *expr = new (context) BinaryOperator(LHS, var.getVariableValue(), BO_Assign, var.getVariableValue()->getType(), VK_RValue, OK_Ordinary, SourceLocation(), default_options);
     return expr;
 }
-vector<vector<Expr *>> Trans_Polys_to_Exprs(vector<C_Polyhedron *> poly)
+vector<vector<Expr *>> Trans_Polys_to_Exprs(vector<C_Polyhedron *> poly, bool init_remove)
 {
     vector<vector<Expr *>> res;
     for (int i = 0; i < poly.size(); i++)
     {
         C_Polyhedron *rec_poly = poly[i];
         vector<Expr *> exprs;
-        rec_poly->remove_higher_space_dimensions(int(info->get_dimension() / 2));
+        if (init_remove)
+            rec_poly->remove_higher_space_dimensions(int(info->get_dimension() / 2));
         for (auto constraint : rec_poly->minimized_constraints())
         {
             exprs.push_back(Trans_Constraint_to_Expr(constraint));
@@ -1013,14 +1121,15 @@ vector<vector<Expr *>> Trans_Polys_to_Exprs(vector<C_Polyhedron *> poly)
     }
     return res;
 }
-vector<vector<Expr *>> Trans_Polys_to_Exprs(vector<C_Polyhedron> poly)
+vector<vector<Expr *>> Trans_Polys_to_Exprs(vector<C_Polyhedron> poly, bool init_remove)
 {
     vector<vector<Expr *>> res;
     for (int i = 0; i < poly.size(); i++)
     {
         C_Polyhedron rec_poly = poly[i];
         vector<Expr *> exprs;
-        rec_poly.remove_higher_space_dimensions(int(info->get_dimension() / 2));
+        if (init_remove)
+            rec_poly.remove_higher_space_dimensions(int(info->get_dimension() / 2));
         for (auto constraint : rec_poly.minimized_constraints())
         {
             exprs.push_back(Trans_Constraint_to_Expr(constraint));
@@ -1058,6 +1167,13 @@ unordered_set<string> TransitionSystem::get_Used_Vars(Expr *cond, Expr *incremen
         for (int j = 0; j < DNF[i].size(); j++)
         {
             Traverse_Expr_ForVars(DNF[i][j], used_vars);
+        }
+    }
+    for (int i = 0; i < inequality_DNF.size(); i++)
+    {
+        for (int j = 0; j < inequality_DNF[i].size(); j++)
+        {
+            Traverse_Expr_ForVars(inequality_DNF[i][j], used_vars);
         }
     }
     Traverse_Expr_ForVars(cond, used_vars);
@@ -1115,10 +1231,39 @@ TransitionSystem TransitionSystem::Merge_Transystem(TransitionSystem &left_trans
     return transystem;
 }
 
+void TransitionSystem::delete_expr_by_var(string var_name)
+{
+    unordered_set<string> used_vars;
+    used_vars.insert(var_name);
+    for (int i = 0; i < DNF.size(); i++)
+    {
+        for (int j = 0; j < DNF[i].size(); j++)
+        {
+            if (Traverse_Expr_CheckVar(DNF[i][j], used_vars))
+            {
+                DNF[i].erase(DNF[i].begin() + j);
+                j--;
+            }
+        }
+    }
+    for (int i = 0; i < inequality_DNF.size(); i++)
+    {
+        for (int j = 0; j < inequality_DNF[i].size(); j++)
+        {
+            if (Traverse_Expr_CheckVar(inequality_DNF[i][j], used_vars))
+            {
+                inequality_DNF[i].erase(inequality_DNF[i].begin() + j);
+                j--;
+            }
+        }
+    }
+    return;
+}
 void TransitionSystem::Update_Vars(bool init)
 {
     if (DNF.size() != Vars.size())
         DNF.resize(Vars.size());
+
     for (int i = 0; i < Vars.size(); i++)
     {
         for (int j = 0; j < Vars[i].size(); j++)
@@ -1142,13 +1287,14 @@ void TransitionSystem::deduplicate(vector<vector<Expr *>> &dnf)
             Traverse_Expr_ForVars(dnf[i][j], used_vars);
         }
     }
-    var_info* rec_info=new var_info(info);
+    var_info *rec_info = new var_info(info);
     if (info)
     {
         delete info;
         info = NULL;
     }
-    else rec_info=NULL;
+    else
+        rec_info = NULL;
     info = new var_info();
     for (auto name : used_vars)
         info->search_and_insert(name.c_str());
@@ -1166,7 +1312,7 @@ void TransitionSystem::deduplicate(vector<vector<Expr *>> &dnf)
         }
     }
     delete info;
-    info=rec_info;
+    info = rec_info;
     return;
 }
 vector<vector<Expr *>> TransitionSystem::Deal_with_condition(Expr *condition, bool logic)
@@ -1366,7 +1512,6 @@ void TransitionSystem::Initialize_Locations_and_Transitions(int locsize, int var
     {
         for (int j = 0; j < inequality_DNF[i].size(); j++)
         {
-
             guard_primed[i].push_back(Trans_Expr_to_Constraints(inequality_DNF[i][j], TransformationType::Guard, varsize));
             guard[i].push_back(Trans_Expr_to_Constraints(inequality_DNF[i][j], TransformationType::Loc, varsize));
         }
@@ -1482,9 +1627,9 @@ void TransitionSystem::Compute_Loop_Invariant(Expr *condition, unordered_set<str
             Print_Location_and_Transition();
             Compute_Invariant_Frontend();
             vector<C_Polyhedron> loc_invariant = (*loclist)[locsize - 1]->get_vp_inv().get_vp();
-            invariant = Connect_DNF(invariant, Trans_Polys_to_Exprs(loc_invariant));
+            invariant = Connect_DNF(invariant, Trans_Polys_to_Exprs(loc_invariant, true));
             // Print_DNF(Trans_Polys_to_Exprs(loc_invariant));
-            loop_comment->add_invariant(Trans_Polys_to_Exprs(loc_invariant), true);
+            loop_comment->add_invariant(Trans_Polys_to_Exprs(loc_invariant, true), true);
             loc_invariant.clear();
 
             for (int index = 0; index < locsize - 1; index++)
@@ -1492,7 +1637,7 @@ void TransitionSystem::Compute_Loop_Invariant(Expr *condition, unordered_set<str
                 loc_invariant.push_back((*loclist)[index]->get_invariant());
             }
             // Print_DNF(Trans_Polys_to_Exprs(loc_invariant));
-            loop_comment->add_invariant(Trans_Polys_to_Exprs(loc_invariant), true);
+            loop_comment->add_invariant(Trans_Polys_to_Exprs(loc_invariant, true), true);
             delete loclist, trlist;
         }
     }
@@ -1504,11 +1649,12 @@ void TransitionSystem::Compute_Loop_Invariant(Expr *condition, unordered_set<str
 
 vector<vector<Expr *>> TransitionSystem::Out_Loop(Expr *cond, unordered_set<string> &used_vars, vector<vector<Expr *>> &init_DNF, vector<vector<Expr *>> &init_ineq_DNF, vector<vector<VariableInfo>> &init_vars)
 {
-    if (info && dual_info && lambda_info){
+    if (info && dual_info && lambda_info)
+    {
         delete info, dual_info, lambda_info;
-        info=NULL;
-        dual_info=NULL;
-        lambda_info=NULL;
+        info = NULL;
+        dual_info = NULL;
+        lambda_info = NULL;
     }
     info = new var_info();
     lambda_info = new var_info();
@@ -1617,6 +1763,69 @@ void TransitionSystem::Process_SkipDNF(vector<vector<Expr *>> &dnf)
     return;
 }
 
+unordered_set<string> DFS_VarGraph(int cur, unordered_set<string> &visited, vector<string> &node, map<string, int> &cor_index, VarGraph *graph)
+{
+    unordered_set<string> possibles;
+    string cur_name = node[cur];
+    visited.insert(cur_name);
+    possibles.insert(cur_name);
+    unordered_set<string> to = graph->edges[cur_name];
+    for (const auto &to_name : to)
+    {
+        if (visited.find(to_name) != visited.end())
+        {
+            unordered_set<string> traverse_var = graph->possible_rv[to_name];
+            possibles.insert(traverse_var.begin(), traverse_var.end());
+            continue;
+        }
+        if (cor_index.find(to_name) == cor_index.end()){
+            possibles.insert(to_name);
+            continue;
+        }
+        unordered_set<string> traverse_var = DFS_VarGraph(cor_index[to_name], visited, node, cor_index, graph);
+        possibles.insert(traverse_var.begin(), traverse_var.end());
+    }
+    graph->possible_rv[cur_name] = possibles;
+    return possibles;
+}
+
+void TransitionSystem::Construct_Graph()
+{
+    for (int i = 0; i < Vars.size(); i++)
+    {
+        VarGraph graph;
+        for (int j = 0; j < Vars[i].size(); j++)
+        {
+            unordered_set<string> used_vars;
+            Expr *expr = Vars[i][j].getVariableValue();
+            string var_name = Vars[i][j].getVariableName();
+            Traverse_Expr_ForVars(expr, used_vars);
+            graph.edges[var_name] = used_vars;
+        }
+        Graphs.push_back(graph);
+    }
+    for (int i = 0; i < Graphs.size(); i++)
+    {
+        VarGraph *graph = &Graphs[i];
+        vector<string> node;
+        unordered_set<string> visited;
+        map<string, int> cor_index;
+        visited.clear();
+        for (auto &pair : graph->edges)
+            node.push_back(pair.first);
+        for (int j = 0; j < node.size(); j++)
+        {
+            cor_index[node[j]] = j;
+        }
+        for (int j = 0; j < node.size(); j++)
+        {
+            if (visited.find(node[j]) == visited.end())
+                DFS_VarGraph(j, visited, node, cor_index, graph);
+        }
+    }
+    return;
+}
+
 TransitionSystem::TransitionSystem()
 {
     Vars.clear();
@@ -1686,7 +1895,7 @@ void TransitionSystem::Print_DNF()
             outs() << "\t";
             PrintingPolicy Policy(context->getLangOpts());
             string str;
-            llvm::raw_string_ostream rso(str);
+            raw_string_ostream rso(str);
             DNF[i][j]->printPretty(rso, nullptr, Policy);
             rso.flush();
             outs() << str << "\n";

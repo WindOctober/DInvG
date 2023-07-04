@@ -48,25 +48,30 @@ public:
         outs() << error << "\n";
         exit(-1);
     }
-    void add_comments(vector<ACSLComment*> comment_vec);
+    void add_comments(vector<ACSLComment *> comment_vec);
     bool VisitCallExpr(CallExpr *CE);
     bool VisitFunctionDecl(FunctionDecl *func);
     bool VisitVarDecl(VarDecl *var);
     void PrintStmtInfo(Stmt *stmt);
     void Dump_Annotated_file();
-private:
-    bool DealWithStmt(Stmt *stmt,TransitionSystem& transystem);
+    string create_name(string base);
+    Expr *preprocess_expr(Expr *expr,TransitionSystem& transystem);
 
-    void DealWithBinaryOp(BinaryOperator *stmt,TransitionSystem& transystem);
-    void DealWithUnaryOp(UnaryOperator *stmt,TransitionSystem& transystem);
-    void DealWithVarDecl(VarDecl *stmt,TransitionSystem& transystem);
-    void DealWithFunctionDecl(FunctionDecl *stmt,TransitionSystem& transystem);
+private:
+    bool DealWithStmt(Stmt *stmt, TransitionSystem &transystem,FunctionDecl* func);
+    void DealWithCallExpr(CallExpr *call, TransitionSystem &transystem, string &return_value);
+    void DealWithBinaryOp(BinaryOperator *stmt, TransitionSystem &transystem);
+    void DealWithUnaryOp(UnaryOperator *stmt, TransitionSystem &transystem);
+    void DealWithVarDecl(VarDecl *stmt, TransitionSystem &transystem);
+    void DealWithFunctionDecl(FunctionDecl *stmt, TransitionSystem &transystem);
     void Terminate_errors(enum ErrorType Errors);
     ASTContext *context;
     PrintingPolicy pp;
     VisitorState VS;
-    vector<ACSLComment*> comments;
+    vector<ACSLComment *> comments;
     unordered_set<string> verified_funcs;
+    map<string, vector<vector<Expr *>>> dnf_for_funcs;
+    int global_conflict_index = 0;
 };
 
 #endif
