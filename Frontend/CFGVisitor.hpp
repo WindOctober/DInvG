@@ -53,6 +53,7 @@ public:
     bool VisitFunctionDecl(FunctionDecl *func);
     bool VisitVarDecl(VarDecl *var);
     void PrintStmtInfo(Stmt *stmt);
+    void Process_Verfied_Function(vector<vector<Expr*>>& return_dnf,FunctionDecl* func,string return_name, TransitionSystem &transystem);
     void Dump_Annotated_file();
     string create_name(string base);
     Expr *preprocess_expr(Expr *expr,TransitionSystem& transystem);
