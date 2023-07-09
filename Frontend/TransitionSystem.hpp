@@ -36,7 +36,7 @@ public:
     // DONE: process the transformation from the Expr* to Constraint*.
     // DONE: process the generation of the Locations and Transitions.
     // DONE: process the merge of two transition system while split by if statement.
-
+    
     void Compute_Loop_Invariant(Expr *condition, unordered_set<string> vars_in_dnf, vector<C_Polyhedron> init_polys);
 
     void Elimiate_Impossible_Path(int size);
@@ -46,27 +46,32 @@ public:
     TransitionSystem();
     TransitionSystem(TransitionSystem &other);
     void Process_SkipDNF(vector<vector<Expr *>> &dnf);
-    void Construct_Graph();
+    // void Construct_Graph();
     void After_loop(vector<vector<Expr *>> &dnf, unordered_set<string> &used_vars);
-    vector<ACSLComment *> get_Comments() { return comments; }
-    unordered_set<string> get_Used_Vars(Expr *cond, Expr *increment);
-    vector<vector<Expr *>> get_DNF() { return DNF; }
-    vector<vector<Expr *>> get_IneqDNF() { return inequality_DNF; }
-    vector<vector<VariableInfo>> get_Vars() { return Vars; }
-    ACSLComment *get_CurComment() { return comments[comments.size() - 1]; }
+
     void clear_ineqDNF() { inequality_DNF.clear(); }
+    
+    vector<vector<Expr *>> get_DNF() { return DNF; }
+    int get_verified_loop() {return Verified_Loop_Count;}
+    vector<vector<VariableInfo>> get_Vars() { return Vars; }
+    vector<ACSLComment *> get_Comments() { return comments; }
+    vector<vector<Expr *>> get_IneqDNF() { return inequality_DNF; }
+    unordered_set<string> get_Used_Vars(Expr *cond, Expr *increment);
+    ACSLComment *get_CurComment() { return comments[comments.size() - 1]; }
+    
 
     static TransitionSystem Merge_Transystem(TransitionSystem &left_trans, TransitionSystem &right_trans);
     void Merge_condition(Expr *condition, bool updated);
     void Merge_IneqDNF(vector<vector<Expr *>> &dnf);
     void Merge_Comments(vector<ACSLComment *> &comment);
+    void Merge_Function_Call(vector<vector<Expr*>> &function_dnf,FunctionDecl* func,string new_return_name);
     void Split_If();
 
     void init();
     void In_Loop();
     Expr *Trans_Expr_by_CurVars(Expr *expr, vector<VariableInfo> &Vars);
     Expr *Trans_VariableInfo_to_Expr(VariableInfo var, bool init);
-    void recover_dnf(vector<vector<Expr*>> &dnf);
+    // void recover_dnf(vector<vector<Expr*>> &dnf);
 
     vector<vector<Expr *>> Deal_with_condition(Expr *condition, bool not_logic);
     void deduplicate(vector<vector<Expr *>> &dnf);
@@ -85,6 +90,9 @@ public:
     void add_expr(Expr *expr);
     void add_comment(ACSLComment *comment);
     void add_fundamental_expr(unordered_set<string> &used_vars);
+    void add_fundamental_initexpr(unordered_set<string> &used_vars,vector<vector<Expr*>>& dnf);
+
+    void clear();
     static ASTContext *context;
 
 private:
@@ -105,9 +113,11 @@ private:
 void Print_DNF(vector<vector<Expr *>> &DNF);
 string Print_Expr(Expr *expr);
 Expr *NegateExpr(Expr *expr);
+Expr *Add_InitSuffix(Expr *expr);
 DeclRefExpr *createDeclRefExpr(string name);
 BinaryOperator *createBinOp(Expr *left, Expr *right,BinaryOperatorKind kind);
 IntegerLiteral *createIntegerLiteral(int val);
+Expr* replace_expr_for_var(Expr* expr,string origin_name,string new_name);
 Constraint_System *Trans_Expr_to_Constraints(Expr *expr, enum TransformationType type, int var_size);
 vector<vector<Expr *>> Trans_Polys_to_Exprs(vector<C_Polyhedron> poly,bool init_remove);
 vector<vector<Expr *>> Trans_Polys_to_Exprs(vector<C_Polyhedron *> poly,bool init_remove);
