@@ -47,8 +47,10 @@ vector<vector<Expr *>> Connect_DNF(vector<vector<Expr *>> left_expr, vector<vect
 {
     if (left_expr.size() == 0)
         return right_expr;
-    left_expr.insert(left_expr.end(), right_expr.begin(), right_expr.end());
-    return left_expr;
+    vector<vector<Expr*>> rec_expr;
+    rec_expr.insert(rec_expr.end(), left_expr.begin(), left_expr.end());
+    rec_expr.insert(rec_expr.end(), right_expr.begin(), right_expr.end());
+    return rec_expr;
 }
 
 vector<C_Polyhedron> Merge_Poly(vector<C_Polyhedron> &left_poly, vector<C_Polyhedron> &right_poly)

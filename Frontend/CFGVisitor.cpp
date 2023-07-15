@@ -14,6 +14,7 @@ set<string> Main_Functions;
 set<string> Visited_Functions;
 extern var_info *info;
 unordered_set<string> global_vars;
+unordered_set<string> local_vars;
 void CFGVisitor::Terminate_errors(enum ErrorType Errors)
 {
     switch (Errors)
@@ -52,8 +53,7 @@ Expr *CFGVisitor::preprocess_expr(Expr *expr, TransitionSystem &transystem)
     if (isa<BinaryOperator>(expr))
     {
         BinaryOperator *binop = dyn_cast<BinaryOperator>(expr);
-        binop->setLHS(preprocess_expr(binop->getLHS(), transystem));
-        binop->setRHS(preprocess_expr(binop->getRHS(), transystem));
+        binop = createBinOp(preprocess_expr(binop->getLHS(), transystem), preprocess_expr(binop->getRHS(), transystem), binop->getOpcode());
         return binop;
     }
     if (isa<UnaryOperator>(expr))
@@ -78,7 +78,7 @@ Expr *CFGVisitor::preprocess_expr(Expr *expr, TransitionSystem &transystem)
             else
             {
                 LOG_WARNING("Unexpected UnaryOperator Type: " + string(subexpr->getStmtClassName()));
-                exit(0);
+                exit(-1);
             }
         }
         return unop;
@@ -122,7 +122,7 @@ Expr *CFGVisitor::preprocess_expr(Expr *expr, TransitionSystem &transystem)
         return createDeclRefExpr(return_name);
     }
     LOG_WARNING("Unexpected Expr Type: " + string(expr->getStmtClassName()));
-    exit(0);
+    exit(-1);
 }
 void CFGVisitor::DealWithVarDecl(VarDecl *vardecl, TransitionSystem &transystem)
 {
@@ -142,7 +142,7 @@ void CFGVisitor::DealWithVarDecl(VarDecl *vardecl, TransitionSystem &transystem)
         if (pointer_type->isFloatingType())
         {
             LOG_WARNING("Pointer type is floating!");
-            exit(0);
+            exit(-1);
         }
         Stmt *init = vardecl->getInit();
         if (isa<ImplicitCastExpr>(init))
@@ -164,7 +164,7 @@ void CFGVisitor::DealWithVarDecl(VarDecl *vardecl, TransitionSystem &transystem)
                 {
                     LOG_WARNING("Unsupported Function Call While initializing the variable");
                     LOG_WARNING("function name is: " + name);
-                    exit(0);
+                    exit(-1);
                 }
             }
             else
@@ -272,7 +272,8 @@ void CFGVisitor::DealWithCallExpr(CallExpr *callexpr, TransitionSystem &transyst
         Print_DNF(function_dnf);
         if (function_dnf.size() != 0)
         {
-            transystem.Merge_Function_Call(function_dnf, CallFunction, return_value);
+            unordered_set<string> rec_vars = transystem.Merge_Function_Call(function_dnf, callexpr, return_value, global_vars);
+            local_vars.insert(rec_vars.begin(), rec_vars.end());
         }
         else
         {
@@ -298,7 +299,6 @@ bool CFGVisitor::DealWithStmt(Stmt *stmt, TransitionSystem &transystem, Function
         Stmt *else_branch = ifStmt->getElse();
         vector<vector<Expr *>> ineq_dnf = transystem.get_IneqDNF();
         vector<ACSLComment *> rec_comments = transystem.get_Comments();
-        transystem.clear_ineqDNF();
         TransitionSystem ElseTransystem(transystem);
         TransitionSystem ThenTransystem(transystem);
         ThenTransystem.Merge_condition(condition, false);
@@ -332,7 +332,6 @@ bool CFGVisitor::DealWithStmt(Stmt *stmt, TransitionSystem &transystem, Function
                 DealWithStmt(else_branch, ElseTransystem, func);
             }
         transystem = TransitionSystem::Merge_Transystem(ThenTransystem, ElseTransystem);
-        transystem.Merge_IneqDNF(ineq_dnf);
         transystem.Merge_Comments(rec_comments);
     }
     else if (isa<ForStmt>(stmt) || isa<WhileStmt>(stmt))
@@ -351,7 +350,7 @@ bool CFGVisitor::DealWithStmt(Stmt *stmt, TransitionSystem &transystem, Function
             loop_condition = preprocess_expr(forstmt->getCond(), transystem);
             loop_body = forstmt->getBody();
             sourceRange = forstmt->getSourceRange();
-            inc = preprocess_expr(forstmt->getInc(), transystem);
+            inc = forstmt->getInc();
         }
         else
         {
@@ -361,14 +360,15 @@ bool CFGVisitor::DealWithStmt(Stmt *stmt, TransitionSystem &transystem, Function
             loop_body = whileStmt->getBody();
             sourceRange = whileStmt->getSourceRange();
         }
+        
         unordered_set<string> used_vars;
         transystem.Update_Vars(true);
-        LOG_INFO("After collect initial DNF information: ");
-        transystem.Print_DNF();
+
         vector<vector<Expr *>> SkipLoop = transystem.Deal_with_condition(loop_condition, false);
         SkipLoop = Merge_DNF(SkipLoop, Append_DNF(transystem.get_DNF(), transystem.get_IneqDNF()));
-
         transystem.Merge_condition(loop_condition, true);
+        LOG_INFO("After collect initial DNF information: ");
+        transystem.Print_DNF();
         vector<vector<Expr *>> init_DNF = transystem.get_DNF();
         vector<vector<Expr *>> init_ineq_DNF = transystem.get_IneqDNF();
         vector<vector<VariableInfo>> init_Vars = transystem.get_Vars();
@@ -378,8 +378,9 @@ bool CFGVisitor::DealWithStmt(Stmt *stmt, TransitionSystem &transystem, Function
         ACSLComment *loop_comment = new ACSLComment(lineNumber, ACSLComment::CommentType::LOOP);
         transystem.add_comment(loop_comment);
         transystem.In_Loop();
+        
         transystem.Merge_condition(loop_condition, true);
-        transystem.Print_DNF();
+        LOG_INFO("start loop");
         if (loop_body)
             if (CompoundStmt *compound = dyn_cast<CompoundStmt>(loop_body))
             {
@@ -398,7 +399,7 @@ bool CFGVisitor::DealWithStmt(Stmt *stmt, TransitionSystem &transystem, Function
             {
                 DealWithStmt(loop_body, transystem, func);
             }
-        remain_DNF = transystem.Out_Loop(loop_condition, used_vars, init_DNF, init_ineq_DNF, init_Vars);
+        remain_DNF = transystem.Out_Loop(loop_condition, used_vars, init_DNF, init_ineq_DNF, init_Vars, local_vars);
         transystem.Process_SkipDNF(SkipLoop);
         Print_DNF(SkipLoop);
         transystem.After_loop(SkipLoop, used_vars);
@@ -460,9 +461,10 @@ bool CFGVisitor::DealWithStmt(Stmt *stmt, TransitionSystem &transystem, Function
         // DONE: When Exit, record current DNF and ineq_DNF (update var)
         ReturnStmt *ret = dyn_cast<ReturnStmt>(stmt);
         transystem.Update_Vars(false);
-        transystem.Print_DNF();
         vector<vector<Expr *>> return_dnf;
         string func_name = func->getNameAsString();
+        transystem.Print_DNF();
+        transystem.Print_Vars();
         return_dnf = Append_DNF(transystem.get_IneqDNF(), transystem.get_DNF());
         verified_funcs.insert(func_name);
         string return_name = func_name + "_RetVal";
@@ -548,14 +550,13 @@ bool CFGVisitor::VisitFunctionDecl(FunctionDecl *func)
         DealWithStmt(func_body, transystem, func);
     if (verified_funcs.find(func->getNameAsString()) == verified_funcs.end())
     {
+        verified_funcs.insert(func->getNameAsString());
         transystem.Update_Vars(false);
         vector<vector<Expr *>> return_dnf;
         string func_name = func->getNameAsString();
         return_dnf = Append_DNF(transystem.get_IneqDNF(), transystem.get_DNF());
         dnf_for_funcs[func_name] = Connect_DNF(dnf_for_funcs[func_name], return_dnf);
     }
-    LOG_INFO("print function \'" + string(func->getNameAsString()) + " \' 's DNF");
-    Print_DNF(dnf_for_funcs[func->getNameAsString()]);
     add_comments(transystem.get_Comments());
     return true;
 }

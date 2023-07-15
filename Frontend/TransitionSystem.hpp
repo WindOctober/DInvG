@@ -37,10 +37,10 @@ public:
     // DONE: process the generation of the Locations and Transitions.
     // DONE: process the merge of two transition system while split by if statement.
     
-    void Compute_Loop_Invariant(Expr *condition, unordered_set<string> vars_in_dnf, vector<C_Polyhedron> init_polys);
+    void Compute_Loop_Invariant(Expr *condition, unordered_set<string> vars_in_dnf, vector<C_Polyhedron> init_polys,int actual_size);
 
     void Elimiate_Impossible_Path(int size);
-    void Initialize_Locations_and_Transitions(int locsize, int varsize, Expr *condition);
+    void Initialize_Locations_and_Transitions(int locsize, int varsize, Expr *condition,int actual_size);
 
     void init_Canonical(int size);
     TransitionSystem();
@@ -64,7 +64,7 @@ public:
     void Merge_condition(Expr *condition, bool updated);
     void Merge_IneqDNF(vector<vector<Expr *>> &dnf);
     void Merge_Comments(vector<ACSLComment *> &comment);
-    void Merge_Function_Call(vector<vector<Expr*>> &function_dnf,FunctionDecl* func,string new_return_name);
+    unordered_set<string> Merge_Function_Call(vector<vector<Expr*>> &function_dnf,CallExpr* callexpr,string new_return_name,unordered_set<string> global_vars);
     void Split_If();
 
     void init();
@@ -79,7 +79,7 @@ public:
     void delete_expr_by_var(string var_name);
     void Update_Vars(bool init);
     void copy_after_update(int size);
-    vector<vector<Expr *>> Out_Loop(Expr *cond, unordered_set<string> &used_vars, vector<vector<Expr *>> &init_DNF, vector<vector<Expr *>> &init_ineq_DNF, vector<vector<VariableInfo>> &vars);
+    vector<vector<Expr *>> Out_Loop(Expr *cond, unordered_set<string> &used_vars, vector<vector<Expr *>> &init_DNF, vector<vector<Expr *>> &init_ineq_DNF, vector<vector<VariableInfo>> &vars, unordered_set<string> &local_vars);
 
     void Print_Vars();
     void Print_DNF();
@@ -108,7 +108,6 @@ private:
     bool InWhileLoop;
     int Inner_Loop_Depth;
     int Inner_Loop_Count;
-    vector<VarGraph> Graphs;
 };
 void Print_DNF(vector<vector<Expr *>> &DNF);
 string Print_Expr(Expr *expr);
