@@ -10,7 +10,7 @@ int before_loop()
   return __static_local;
 }
 
-int after_loop()
+int AfterLoop()
 {
   static int __static_local;
   __static_local = 0;
@@ -62,7 +62,6 @@ int body_3(int *i)
   (*i)++;
   if(*i == 4)
     return 1;
-
   (*i)--;
   return 0;
 }
@@ -86,5 +85,5 @@ int main()
 
   assert(j == 9);
   assert(before_loop() == 0);
-  assert(after_loop() == 0);
+  assert(AfterLoop() == 0);
 }

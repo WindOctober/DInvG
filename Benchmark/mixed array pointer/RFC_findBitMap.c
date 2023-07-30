@@ -66,28 +66,28 @@ behavior can_not_find:
 
 complete behaviors;
 disjoint behaviors;
-*/
-int findBitMap(BitMap *bitMap, U32 used, const U32 *bits)
-{
-    int matched = 1;
+// */
+// int findBitMap(BitMap *bitMap, U32 used, const U32 *bits)
+// {
+//     int matched = 1;
     
-    /*@
-    loop invariant 0 <= i <= used;
-    loop invariant matched == 1 || matched == 0;
-    loop invariant \forall integer j; 0 <= j < used ==> ( j < i ==> \exists integer k; 0 <= k < BYTE_COUNT && (bitMap+j)->bits[k] != bits[k]); 
-    //loop invariant matched == 1 ==> \forall integer j; 0 <= j < used ==> ( j < i ==> \forall integer k; 0 <= k < BYTE_COUNT ==> (bitMap+j)->bits[k] == bits[k]); 
-    //loop invariant matched == 0 ==> \exists integer j; 0 <= j < used && \exists integer k; 0 <= k < BYTE_COUNT && (bitMap+j)->bits[k] != bits[k];
-    loop assigns matched, i;
-    */
-    for (int i = 0; i < used; ++i)
-    {
-        BitMap *pTmp = bitMap + i;
-        matched = isMatch(pTmp->bits, bits);
-        if (matched)
-        {
-            return pTmp->mapId;
-        }
-    }
+//     /*@
+//     loop invariant 0 <= i <= used;
+//     loop invariant matched == 1 || matched == 0;
+//     loop invariant \forall integer j; 0 <= j < used ==> ( j < i ==> \exists integer k; 0 <= k < BYTE_COUNT && (bitMap+j)->bits[k] != bits[k]); 
+//     //loop invariant matched == 1 ==> \forall integer j; 0 <= j < used ==> ( j < i ==> \forall integer k; 0 <= k < BYTE_COUNT ==> (bitMap+j)->bits[k] == bits[k]); 
+//     //loop invariant matched == 0 ==> \exists integer j; 0 <= j < used && \exists integer k; 0 <= k < BYTE_COUNT && (bitMap+j)->bits[k] != bits[k];
+//     loop assigns matched, i;
+//     */
+//     for (int i = 0; i < used; ++i)
+//     {
+//         BitMap *pTmp = bitMap + i;
+//         matched = isMatch(pTmp->bits, bits);
+//         if (matched)
+//         {
+//             return pTmp->mapId;
+//         }
+//     }
 
-    return -1;
-}
+//     return -1;
+// }

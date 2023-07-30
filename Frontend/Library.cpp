@@ -2,12 +2,17 @@
 #include "var-info.h"
 #include <unordered_set>
 extern var_info *info;
+int GlobalIndexCount = 0;
 void Log(const string &level, const string &function, int line, string msg)
 {
     outs() << "\n[" << level << " " << function << ":" << line << "] " << msg;
 }
 
-vector<vector<Expr *>> Append_DNF(vector<vector<Expr *>> left_expr, vector<vector<Expr *>> right_expr)
+string MakeIndexName(){
+    GlobalIndexCount++;
+    return INDEXPREFIX + to_string(GlobalIndexCount);
+}
+vector<vector<Expr *>> AppendDNF(vector<vector<Expr *>> left_expr, vector<vector<Expr *>> right_expr)
 {
     assert(left_expr.size() == right_expr.size());
     vector<vector<Expr *>> merged_expr;
@@ -43,7 +48,7 @@ vector<vector<Expr *>> Merge_DNF(vector<vector<Expr *>> left_expr, vector<vector
     return merged_expr;
 }
 
-vector<vector<Expr *>> Connect_DNF(vector<vector<Expr *>> left_expr, vector<vector<Expr *>> right_expr)
+vector<vector<Expr *>> ConnectDNF(vector<vector<Expr *>> left_expr, vector<vector<Expr *>> right_expr)
 {
     if (left_expr.size() == 0)
         return right_expr;
@@ -84,13 +89,13 @@ vector<C_Polyhedron> Merge_Poly(vector<C_Polyhedron> &left_poly, vector<C_Polyhe
 //     unordered_map<int, string> var_map;
 //     for (int i = 0; i < vars.size(); i++)
 //     {
-//         int index = info->search(vars[i].getVariableName().c_str());
-//         string name = vars[i].getVariableName();
+//         int index = info->search(vars[i].getVarName().c_str());
+//         string name = vars[i].getVarName();
 //         var_map.insert(pair<int, string>(Variable(index).id(), name));
 //     }
 //     for (int i = 0; i < poly.size(); i++)
 //     {
-//         vector<vector<string>> used_vars;
+//         vector<vector<string>> UsedVars;
 //         Constraint_System constraints = poly[i].minimized_constraints();
 //         for (auto &constraint : constraints)
 //         {
@@ -106,12 +111,12 @@ vector<C_Polyhedron> Merge_Poly(vector<C_Polyhedron> &left_poly, vector<C_Polyhe
 //                 }
 //                 else
 //                 {
-//                     LOG_WARNING("UnFounded Variable with var id is: " + to_string(var_id));
+//                     LOGWARN("UnFounded Variable with var id is: " + to_string(var_id));
 //                 }
 //             }
-//             used_vars.push_back(used);
+//             UsedVars.push_back(used);
 //         }
-//         res[i] = used_vars;
+//         res[i] = UsedVars;
 //     }
 //     return res;
 // }

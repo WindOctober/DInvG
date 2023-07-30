@@ -1729,7 +1729,7 @@ void Tree::dfs_sequences_traverse_recursive2(
             cout << endl << "- invd: " << endl << "  " << invd;
             cout << endl
                  << "- invariant: " << endl
-                 << "  " << (*loclist)[target_index]->get_invariant();
+                 << "  " << (*loclist)[target_index]->GetInv();
         }
         cout << endl << "\\-----------------------------";
         return;
@@ -1781,7 +1781,7 @@ void Tree::dfs_sequences_traverse_recursive2(
                     cout << endl << "- invd: " << endl << "  " << invd;
                     cout << endl
                          << "- invariant: " << endl
-                         << "  " << (*loclist)[target_index]->get_invariant();
+                         << "  " << (*loclist)[target_index]->GetInv();
                     cout << endl << "\\-----------------------------";
                 }
 

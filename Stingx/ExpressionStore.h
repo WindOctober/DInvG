@@ -79,7 +79,7 @@ class ExpressionStore {
    public:
     ExpressionStore(int vars_num, int lambda_num, var_info* dual_info, var_info* lambda_info);
 
-    bool add_expression(Expression& exp);
+    bool AddExpression(Expression& exp);
 
     void add_transform(LinTransform lt);
 

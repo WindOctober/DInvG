@@ -660,11 +660,11 @@ void print_disjunctive_inv_before_program() {
     for (vector<Location*>::iterator it = loclist->begin(); it < loclist->end();
          it++) {
         if ((*it)->get_name() != EXIT_LOCATION &&
-            !(*it)->get_invariant().is_empty()) {
+            !(*it)->GetInv().is_empty()) {
             if (i != 0) {
                 cout << endl << "\\/";
             }
-            print_pure_polyhedron((*it)->get_invariant(),
+            print_pure_polyhedron((*it)->GetInv(),
                                   (*it)->get_var_info());
             i++;
         }
@@ -681,11 +681,11 @@ void print_array_inv_before_program() {
     for (vector<Location*>::iterator it = loclist->begin(); it < loclist->end();
          it++) {
         if ((*it)->get_name() != EXIT_LOCATION &&
-            !(*it)->get_invariant().is_empty()) {
+            !(*it)->GetInv().is_empty()) {
             if (i != 0) {
                 cout << endl << "\\/";
             }
-            print_pure_polyhedron_for_arrayinv((*it)->get_invariant(),
+            print_pure_polyhedron_for_arrayinv((*it)->GetInv(),
                                                (*it)->get_var_info());
             i++;
         }

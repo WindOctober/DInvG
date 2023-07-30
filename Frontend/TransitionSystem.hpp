@@ -8,6 +8,7 @@
 #include <vector>
 #include <ppl.hh>
 #include <string>
+#include "var-info.h"
 #include "ACSLComment.hpp"
 #include <unordered_map>
 #include <unordered_set>
@@ -25,10 +26,8 @@ enum TransformationType
     Origin
 };
 
-struct VarGraph{
-    map<string,unordered_set<string>> edges;
-    map<string,unordered_set<string>> possible_rv;  
-};
+
+
 
 class TransitionSystem
 {
@@ -37,90 +36,103 @@ public:
     // DONE: process the generation of the Locations and Transitions.
     // DONE: process the merge of two transition system while split by if statement.
     
-    void Compute_Loop_Invariant(Expr *condition, unordered_set<string> vars_in_dnf, vector<C_Polyhedron> init_polys,int actual_size);
+    void ComputeInv(Expr *condition, unordered_set<string> vars_in_dnf, vector<C_Polyhedron> init_polys,var_info* total_info);
 
-    void Elimiate_Impossible_Path(int size);
-    void Initialize_Locations_and_Transitions(int locsize, int varsize, Expr *condition,int actual_size);
+    void EliminatePath(var_info* total_info);
+    void EliminateArray();
+    void InitializeLocTrans(int locsize, Expr *condition, var_info* total_info);
 
-    void init_Canonical(int size);
+    void InitCanonical(int size);
     TransitionSystem();
     TransitionSystem(TransitionSystem &other);
-    void Process_SkipDNF(vector<vector<Expr *>> &dnf);
+
+    bool CheckArrayExist();
+    bool CheckArrayIncr(ArrIndex RecArrIndex);
+    bool CheckModeOne();
+    bool CheckModeTwo(string &FlagVar);
+    bool CheckModeThree();
+    void ArrayInvariantProcess();
+    void ArrayInvariantProcessModeOne();
+    void ArrayInvariantProcessModeTwo(string FlagVar);
+    void ArrayInvariantProcessModeThree();
+    
+    void ProcessSkipDNF(vector<vector<Expr *>> &dnf);
     // void Construct_Graph();
-    void After_loop(vector<vector<Expr *>> &dnf, unordered_set<string> &used_vars);
+    void AfterLoop(vector<vector<Expr *>> &dnf, unordered_set<string> &UsedVars);
 
-    void clear_ineqDNF() { inequality_DNF.clear(); }
+    void ClearIneqDNF() { InequalityDNF.clear(); }
     
-    vector<vector<Expr *>> get_DNF() { return DNF; }
-    int get_verified_loop() {return Verified_Loop_Count;}
-    vector<vector<VariableInfo>> get_Vars() { return Vars; }
-    vector<ACSLComment *> get_Comments() { return comments; }
-    vector<vector<Expr *>> get_IneqDNF() { return inequality_DNF; }
-    unordered_set<string> get_Used_Vars(Expr *cond, Expr *increment);
-    ACSLComment *get_CurComment() { return comments[comments.size() - 1]; }
+    vector<vector<Expr *>> getDNF() { return DNF; }
+    int getVerifiedLoop() {return Verified_Loop_Count;}
+    vector<vector<VariableInfo>> getVars() { return Vars; }
+    vector<ACSLComment *> getComments() { return comments; }
+    vector<vector<Expr *>> getIneqDNF() { return InequalityDNF; }
+    unordered_set<string> getUsedVars(Expr *cond, Expr *increment);
+    ACSLComment *getCurComment() { return comments[comments.size() - 1]; }
     
 
-    static TransitionSystem Merge_Transystem(TransitionSystem &left_trans, TransitionSystem &right_trans);
-    void Merge_condition(Expr *condition, bool updated);
-    void Merge_IneqDNF(vector<vector<Expr *>> &dnf);
-    void Merge_Comments(vector<ACSLComment *> &comment);
-    unordered_set<string> Merge_Function_Call(vector<vector<Expr*>> &function_dnf,CallExpr* callexpr,string new_return_name,unordered_set<string> global_vars);
+    static TransitionSystem MergeTransystem(TransitionSystem &left_trans, TransitionSystem &right_trans);
+    void MergeCond(Expr *condition, bool updated);
+    void MergeIneqDNF(vector<vector<Expr *>> &dnf);
+    void MergeComments(vector<ACSLComment *> &comment);
+    unordered_set<string> MergeFuncCall(vector<vector<Expr*>> &function_dnf,CallExpr* callexpr,string new_return_name,unordered_set<string> global_vars);
     void Split_If();
 
     void init();
-    void In_Loop();
-    Expr *Trans_Expr_by_CurVars(Expr *expr, vector<VariableInfo> &Vars);
-    Expr *Trans_VariableInfo_to_Expr(VariableInfo var, bool init);
+    void InLoop();
+    Expr *TransExprbyCurVars(Expr *expr, vector<VariableInfo> &Vars);
+    Expr *TransVartoExpr(VariableInfo var, bool init);
     // void recover_dnf(vector<vector<Expr*>> &dnf);
 
-    vector<vector<Expr *>> Deal_with_condition(Expr *condition, bool not_logic);
+    vector<vector<Expr *>> DealwithCond(Expr *condition, bool not_logic);
     void deduplicate(vector<vector<Expr *>> &dnf);
 
     void delete_expr_by_var(string var_name);
-    void Update_Vars(bool init);
-    void copy_after_update(int size);
-    vector<vector<Expr *>> Out_Loop(Expr *cond, unordered_set<string> &used_vars, vector<vector<Expr *>> &init_DNF, vector<vector<Expr *>> &init_ineq_DNF, vector<vector<VariableInfo>> &vars, unordered_set<string> &local_vars);
+    void UpdateVars(bool init);
+    void CopyAfterUpdate(int size);
+    vector<vector<Expr *>> OutLoop(Expr *cond, unordered_set<string> &UsedVars, vector<vector<Expr *>> &InitDNF, vector<vector<Expr *>> &InitIneqDNF, vector<vector<VariableInfo>> &vars, unordered_set<string> &LocalVars);
 
-    void Print_Vars();
-    void Print_DNF();
-    void Print_DNF(vector<vector<Expr *>> DNF);
+    void PrintVars();
+    void PrintDNF();
+    void PrintDNF(vector<vector<Expr *>> DNF);
 
-    void add_vars(VariableInfo &var);
-    void add_vars(VariableInfo &var, Expr *expr);
-    void add_expr(Expr *expr);
-    void add_comment(ACSLComment *comment);
-    void add_fundamental_expr(unordered_set<string> &used_vars);
-    void add_fundamental_initexpr(unordered_set<string> &used_vars,vector<vector<Expr*>>& dnf);
+    void AddVars(VariableInfo &var);
+    void AddVars(VariableInfo &var, Expr *expr);
+    void AddExpr(Expr *expr);
+    void AddComment(ACSLComment *comment);
+    void AddFundExpr(unordered_set<string> &UsedVars);
+    void AddFundInitexpr(unordered_set<string> &UsedVars,vector<vector<Expr*>>& dnf);
 
     void clear();
     static ASTContext *context;
-
 private:
-    vector<vector<Expr *>> Deal_with_condition(Expr *condition, bool not_logic, vector<vector<Expr *>> cur);
+    vector<vector<Expr *>> DealwithCond(Expr *condition, bool not_logic, vector<vector<Expr *>> cur);
 
     int Verified_Loop_Count;
     vector<ACSLComment *> comments;
-    // DONE: Process that where the ineq_dnf is generated, where it should be computed, and how to update the var in the inequality_DNF.
-    vector<vector<Expr *>> inequality_DNF;
+    // DONE: Process that where the RecIneqDNF is generated, where it should be computed, and how to update the var in the InequalityDNF.
+    vector<vector<Expr *>> InequalityDNF;
     vector<vector<VariableInfo>> Vars;
     vector<vector<Expr *>> DNF;
-
+    
+    Variables_Set project_set;
     bool InWhileLoop;
     int Inner_Loop_Depth;
     int Inner_Loop_Count;
 };
-void Print_DNF(vector<vector<Expr *>> &DNF);
-string Print_Expr(Expr *expr);
+extern vector<ArrIndex> ArrayIndex;
+void PrintDNF(vector<vector<Expr *>> &DNF);
+string PrintExpr(Expr *expr);
 Expr *NegateExpr(Expr *expr);
 Expr *Add_InitSuffix(Expr *expr);
 DeclRefExpr *createDeclRefExpr(string name);
 BinaryOperator *createBinOp(Expr *left, Expr *right,BinaryOperatorKind kind);
 IntegerLiteral *createIntegerLiteral(int val);
-Expr* replace_expr_for_var(Expr* expr,string origin_name,string new_name);
-Constraint_System *Trans_Expr_to_Constraints(Expr *expr, enum TransformationType type, int var_size);
-vector<vector<Expr *>> Trans_Polys_to_Exprs(vector<C_Polyhedron> poly,bool init_remove);
-vector<vector<Expr *>> Trans_Polys_to_Exprs(vector<C_Polyhedron *> poly,bool init_remove);
-bool Traverse_Expr_CheckVars(Expr *expr, const unordered_set<string> &res);
-void Traverse_Expr_ForVars(Expr *expr, unordered_set<string> &res);
+Expr* ReplaceExprForVar(Expr* expr,string origin_name,string new_name);
+Constraint_System *TransExprtoConstraints(Expr *expr, enum TransformationType type, var_info* total_info);
+vector<vector<Expr *>> TransPolystoExprs(vector<C_Polyhedron> poly,bool init_remove);
+vector<vector<Expr *>> TransPolystoExprs(vector<C_Polyhedron *> poly,bool init_remove);
+bool TraverseExprCheckVars(Expr *expr, const unordered_set<string> &res);
+void TraverseExprForVars(Expr *expr, unordered_set<string> &res);
 bool CheckInitSuffix(Expr *expr);
 #endif

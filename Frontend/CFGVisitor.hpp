@@ -23,7 +23,7 @@ using namespace clang;
 using namespace llvm;
 using namespace clang::tooling;
 
-extern set<string> Main_Functions;
+extern set<string> MainFuncs;
 extern set<string> Visited_Functions;
 
 class CFGVisitor : public RecursiveASTVisitor<CFGVisitor>
@@ -48,15 +48,15 @@ public:
         outs() << error << "\n";
         exit(-1);
     }
-    void add_comments(vector<ACSLComment *> comment_vec);
+    void AddComments(vector<ACSLComment *> RecComment);
     bool VisitCallExpr(CallExpr *CE);
     bool VisitFunctionDecl(FunctionDecl *func);
     bool VisitVarDecl(VarDecl *var);
     void PrintStmtInfo(Stmt *stmt);
-    void Process_Verfied_Function(vector<vector<Expr*>>& return_dnf,FunctionDecl* func,string return_name, TransitionSystem &transystem);
+    void Process_Verfied_Function(vector<vector<Expr*>>& ReturnDNF,FunctionDecl* func,string return_name, TransitionSystem &transystem);
     void Dump_Annotated_file();
     string create_name(string base);
-    Expr *preprocess_expr(Expr *expr,TransitionSystem& transystem);
+    Expr *PreprocessExpr(Expr *expr,TransitionSystem& transystem);
 
 private:
     bool DealWithStmt(Stmt *stmt, TransitionSystem &transystem,FunctionDecl* func);
@@ -70,8 +70,8 @@ private:
     PrintingPolicy pp;
     VisitorState VS;
     vector<ACSLComment *> comments;
-    unordered_set<string> verified_funcs;
-    map<string, vector<vector<Expr *>>> dnf_for_funcs;
+    unordered_set<string> VerifiedFunc;
+    map<string, vector<vector<Expr *>>> FuncsDNF;
     int global_conflict_index = 0;
 };
 
