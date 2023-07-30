@@ -79,7 +79,7 @@ unsigned int bootload_get_file_from_patch_pkg(const LOAD_PATCH_HEADER_S* pstPatH
             *puiOffset = pstPatHeader->astPatchInfo[uiIndex].uiOffset;
             *uiLen = pstPatHeader->astPatchInfo[uiIndex].uiLength;
 			ret = 0;
-            return ret;
+			break;
         }
     }
 

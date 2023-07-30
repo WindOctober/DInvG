@@ -1,3 +1,4 @@
+#define HEADER_TAG_LEN_SIZE 256
 static Uint32 GetTlvLen(BuffConst **array, Uint32 arrayNum)
 {
     Uint32 i = 0;

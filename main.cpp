@@ -44,11 +44,11 @@ int main(int argc,const char **argv) {
     infile.open(InputFile);
     outfile.open(OutputFile);
     if (!infile){
-        LOG_WARNING("Could not open the file"+InputFile);
+        LOGWARN("Could not open the file"+InputFile);
         return 1;
     }
     if (!outfile){
-        LOG_WARNING("Could not open the file"+OutputFile);
+        LOGWARN("Could not open the file"+OutputFile);
         return 1;
     }
     sources.push_back(InputFile);

@@ -130,7 +130,7 @@ void propagate_invariants(C_Polyhedron& preloc_inv,
     cout << endl
          << "* Propagated Invariant at "
          << (*loclist)[postloc_index]->get_name() << endl
-         << "  " << (*loclist)[postloc_index]->get_invariant();
+         << "  " << (*loclist)[postloc_index]->GetInv();
 }
 
 void propagation_invariants(C_Polyhedron& preloc_inv,
@@ -236,9 +236,9 @@ void propagate_from_inv_to_inv_by_transition(int trans_index) {
     int postloc_index = get_index_of_location(postloc_name);
 
     //  prepare the constraints for location invariant and transition relation
-    C_Polyhedron preloc_inv = (*loclist)[preloc_index]->get_invariant();
+    C_Polyhedron preloc_inv = (*loclist)[preloc_index]->GetInv();
     C_Polyhedron trans_relation = (*trlist)[trans_index]->get_relation();
-    C_Polyhedron postloc_inv = (*loclist)[postloc_index]->get_invariant();
+    C_Polyhedron postloc_inv = (*loclist)[postloc_index]->GetInv();
     cout << endl << "= Location " << postloc_name << " is being Propagated:";
     (*loclist)[postloc_index]->ppg_flag_betrue();
     cout << endl
@@ -264,9 +264,9 @@ C_Polyhedron propagation_from_inv_to_inv_by_transition(int trans_index) {
     // C_Polyhedron result;
 
     //  prepare the constraints for location invariant and transition relation
-    C_Polyhedron preloc_inv = (*loclist)[preloc_index]->get_invariant();
+    C_Polyhedron preloc_inv = (*loclist)[preloc_index]->GetInv();
     C_Polyhedron trans_relation = (*trlist)[trans_index]->get_relation();
-    C_Polyhedron postloc_inv = (*loclist)[postloc_index]->get_invariant();
+    C_Polyhedron postloc_inv = (*loclist)[postloc_index]->GetInv();
     cout << endl << "= Location " << postloc_name << " is being Propagated:";
     //(*loclist)[postloc_index]->ppg_flag_betrue();
     cout << endl
@@ -314,7 +314,7 @@ void propagate_from_inv_to_initval_by_transition(int trans_index) {
     int postloc_index = get_index_of_location(postloc_name);
 
     //  prepare the constraints for location invariant and transition relation
-    C_Polyhedron preloc_inv = (*loclist)[preloc_index]->get_invariant();
+    C_Polyhedron preloc_inv = (*loclist)[preloc_index]->GetInv();
     C_Polyhedron trans_relation = (*trlist)[trans_index]->get_relation();
     C_Polyhedron* postloc_initval = (*loclist)[postloc_index]->get_initial();
     cout << endl << "= Location " << postloc_name << " is being Propagated:";

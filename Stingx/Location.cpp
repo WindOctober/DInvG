@@ -220,7 +220,7 @@ ostream& operator<<(ostream& in, Location const& l) {
     } else {
         in << "Invariant: [[ " << endl;
         in << "| " << endl;
-        print_polyhedron(in, l.get_invariant(), info);
+        print_polyhedron(in, l.GetInv(), info);
         in << "| " << endl;
     }
     in << "]]" << endl;

@@ -14,8 +14,8 @@ class VariableInfo
 public:
     // TODO: allow the variable value to be inequality, which should be differed from the pure value(by assignment).
     VariableInfo();
-    string getVariableName() const { return VarName; };
-    Expr *getVariableValue() const { return VarValue; };
+    string getVarName() const { return VarName; };
+    Expr *getVarValue() const { return VarValue; };
     QualType getQualType() const { return VarType; };
     bool getStructurePointer() const { return structure_point_flag; }
     bool getNumericalPointer() const { return numerical_point_flag; }
@@ -25,8 +25,8 @@ public:
     static void search_and_insert(VariableInfo var, vector<VariableInfo> &Vars);
     static Expr *search_for_value(VariableInfo var, vector<VariableInfo> &Vars);
     
-    void alterVar(string varname, Expr *expr, QualType type);
-    void alterVar(Expr *var_expr, Expr *init);
+    void assign(string varname, Expr *expr, QualType type);
+    void assign(Expr *var_expr, Expr *init);
 
 private:
     string VarName;

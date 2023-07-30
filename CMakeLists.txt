@@ -13,7 +13,8 @@ add_compile_options(-fexceptions)
 add_executable(Inv ${CMAKE_SOURCE_DIR}/main.cpp)
 set(EXECUTABLE_OUTPUT_PATH "${CMAKE_SOURCE_DIR}")
 include_directories(${CMAKE_SOURCE_DIR})
-
+message("C++ compiler ID: " ${CMAKE_CXX_COMPILER_ID})
+message("C++ compiler version: " ${CMAKE_CXX_COMPILER_VERSION})
 file(MAKE_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
 
 

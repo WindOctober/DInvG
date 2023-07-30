@@ -49,7 +49,7 @@ ExpressionStore::ExpressionStore(int vars_num, int lambda_num, var_info* dual_in
     initialize(vars_num, lambda_num, dual_info, lambda_info);
 }
 
-bool ExpressionStore::add_expression(Expression& exp) {
+bool ExpressionStore::AddExpression(Expression& exp) {
     Expression* e = new Expression(exp);
 
     /* if (exp.is_pure_a()){

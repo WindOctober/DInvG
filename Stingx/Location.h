@@ -164,7 +164,7 @@ class Location {
     }
 
     C_Polyhedron& invariant_reference() { return (*invariant); }
-    C_Polyhedron const& get_invariant() const { return *invariant; }
+    C_Polyhedron const& GetInv() const { return *invariant; }
     void invariant_intersected_with(C_Polyhedron& what) {
         invariant->intersection_assign(what);
     }
