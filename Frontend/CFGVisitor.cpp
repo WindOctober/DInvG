@@ -142,9 +142,9 @@ Expr *CFGVisitor::PreprocessExpr(Expr *expr, TransitionSystem &transystem)
     }
     if (isa<CallExpr>(expr))
     {
-        string return_name="";
+        string return_name = "";
         DealWithCallExpr(dyn_cast<CallExpr>(expr), transystem, return_name);
-        if (return_name!="")
+        if (return_name != "")
             return createDeclRefExpr(return_name);
         else
             return NULL;
@@ -176,7 +176,17 @@ Expr *CFGVisitor::PreprocessExpr(Expr *expr, TransitionSystem &transystem)
         {
             ArrIndex RecArrIndex;
             RecArrIndex.IndexName = (dyn_cast<DeclRefExpr>(IndexExpr))->getDecl()->getNameAsString();
-            ArrayIndex.push_back(RecArrIndex);
+            bool flag = true;
+            for (int i = 0; i < ArrayIndex.size(); i++)
+            {
+                if (RecArrIndex.IndexName == ArrayIndex[i].IndexName)
+                {
+                    flag = false;
+                    break;
+                }
+            }
+            if (flag)
+                ArrayIndex.push_back(RecArrIndex);
         }
         else if (IndexExpr->isConstantInitializer(*context, false))
         {
@@ -310,7 +320,7 @@ void CFGVisitor::DealWithBinaryOp(BinaryOperator *binop, TransitionSystem &trans
         VariableInfo var;
         Expr *expr = binop->getLHS();
         var.assign(binop->getLHS(), NULL);
-        Expr* value=PreprocessExpr(binop->getRHS(), transystem);
+        Expr *value = PreprocessExpr(binop->getRHS(), transystem);
         if (value)
             transystem.AddVars(var, value);
     }
@@ -337,7 +347,7 @@ void CFGVisitor::DealWithCallExpr(CallExpr *callexpr, TransitionSystem &transyst
         assert(callexpr->getNumArgs() == 1);
         transystem.MergeCond(callexpr->getArg(0), true);
     }
-    else if (FuncName == "__VERIFIER_nondet_int" || FuncName=="__VERIFIER_assert")
+    else if (FuncName == "__VERIFIER_nondet_int" || FuncName == "__VERIFIER_assert")
         return;
     else
     {

@@ -93,7 +93,7 @@ void VariableInfo::assign(Expr *var_expr, Expr *init)
                     LOGWARN("unexpected Array Mode");
                     exit(-1);
                 }
-                RecArrIndex.IndexName=MakeIndexName();
+                RecArrIndex.IndexName = MakeIndexName();
                 ArrayIndex.push_back(RecArrIndex);
             }
             else
@@ -131,7 +131,17 @@ void VariableInfo::assign(Expr *var_expr, Expr *init)
             {
                 ArrIndex RecArrIndex;
                 RecArrIndex.IndexName = (dyn_cast<DeclRefExpr>(IndexExpr))->getDecl()->getNameAsString();
-                ArrayIndex.push_back(RecArrIndex);
+                bool flag = true;
+                for (int i = 0; i < ArrayIndex.size(); i++)
+                {
+                    if (RecArrIndex.IndexName == ArrayIndex[i].IndexName)
+                    {
+                        flag = false;
+                        break;
+                    }
+                }
+                if (flag)
+                    ArrayIndex.push_back(RecArrIndex);
             }
             else if (IndexExpr->isConstantInitializer(*TransitionSystem::context, false))
             {

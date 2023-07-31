@@ -10,6 +10,8 @@ bin/*
 tmp/*
 .DS_Store
 core
+test.c
+result.c
 output.txt
 
 # Prerequisites
