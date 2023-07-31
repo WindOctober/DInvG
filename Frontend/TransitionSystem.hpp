@@ -52,8 +52,8 @@ public:
     bool CheckModeTwo(string &FlagVar);
     bool CheckModeThree();
     void ArrayInvariantProcess();
-    void ArrayInvariantProcessModeOne();
-    void ArrayInvariantProcessModeTwo(string FlagVar);
+    void ArrayInvariantProcessModeOne(ArrIndex RecArrIndex);
+    void ArrayInvariantProcessModeTwo(string FlagVar,ArrIndex RecArrIndex);
     void ArrayInvariantProcessModeThree();
     
     void ProcessSkipDNF(vector<vector<Expr *>> &dnf);

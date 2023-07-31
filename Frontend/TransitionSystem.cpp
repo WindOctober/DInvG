@@ -26,8 +26,6 @@ namespace std
             size_t bool_hash3 = hash<bool>{}(v.getNumericalArray());
             size_t bool_hash4 = hash<bool>{}(v.getStructureArray());
 
-            // Combine the hash values. Note that this is a simplistic way to combine hashes,
-            // and there are better methods available if collision resistance is important.
             return string_hash ^ bool_hash1 ^ bool_hash2 ^ bool_hash3 ^ bool_hash4;
         }
     };
@@ -1613,12 +1611,14 @@ vector<vector<Expr *>> TransitionSystem::DealwithCond(Expr *condition, bool logi
     {
         return DealwithCond(createBinOp(decl, createIntegerLiteral(0), BO_NE), logic, cur);
     }
-    if (ParenExpr* paren=dyn_cast<ParenExpr>(condition)){
+    if (ParenExpr *paren = dyn_cast<ParenExpr>(condition))
+    {
         return DealwithCond(paren->getSubExpr(), logic, cur);
     }
-    if (IntegerLiteral* integer=dyn_cast<IntegerLiteral>(condition)){
-        Expr* Cond=createBinOp(integer,createIntegerLiteral(0),BO_NE);
-        return DealwithCond(Cond,logic,cur);
+    if (IntegerLiteral *integer = dyn_cast<IntegerLiteral>(condition))
+    {
+        Expr *Cond = createBinOp(integer, createIntegerLiteral(0), BO_NE);
+        return DealwithCond(Cond, logic, cur);
     }
     assert(cur.size() == 0);
     vector<Expr *> rec_expr;
@@ -1786,12 +1786,10 @@ void TransitionSystem::EliminatePath(var_info *total_info)
         if (p->is_empty())
         {
             DNF.erase(DNF.begin() + i);
-            InequalityDNF.erase(InequalityDNF.begin()+i);
+            InequalityDNF.erase(InequalityDNF.begin() + i);
             i--;
         }
     }
-    PrintDNF();
-    exit(0);
     return;
 }
 
@@ -2349,7 +2347,8 @@ bool TransitionSystem::CheckArrayExist()
 
 bool TransitionSystem::CheckArrayIncr(ArrIndex RecArrIndex)
 {
-    if (ArrayIndex.size()==0) return false;
+    if (ArrayIndex.size() == 0)
+        return false;
     string IndexName = RecArrIndex.IndexName;
     for (int i = 0; i < Vars.size(); i++)
     {
@@ -2559,28 +2558,31 @@ void TransitionSystem::ArrayInvariantProcess()
 {
     if (!CheckArrayExist())
         return;
-    for(int i=0;i<ArrayIndex.size();i++){
-        if (!CheckArrayIncr(ArrayIndex[i])) return;
-    }
-    if (CheckModeOne())
+    for (int i = 0; i < ArrayIndex.size(); i++)
     {
-        ArrayInvariantProcessModeOne();
-        return;
+        if (!CheckArrayIncr(ArrayIndex[i]))
+            return;
+        if (CheckModeOne())
+        {
+            ArrayInvariantProcessModeOne(ArrayIndex[i]);
+            return;
+        }
+        string FlagVar;
+        if (CheckModeTwo(FlagVar))
+            ArrayInvariantProcessModeTwo(FlagVar, ArrayIndex[i]);
+        else if (CheckModeThree())
+            ArrayInvariantProcessModeThree();
+        else
+        {
+            LOGWARN("Invalid mode specified.");
+            exit(-1);
+        }
     }
-    string FlagVar;
-    if (CheckModeTwo(FlagVar))
-        ArrayInvariantProcessModeTwo(FlagVar);
-    else if (CheckModeThree())
-        ArrayInvariantProcessModeThree();
-    else
-    {
-        LOGWARN("Invalid mode specified.");
-        exit(-1);
-    }
+
     return;
 }
 
-void TransitionSystem::ArrayInvariantProcessModeOne()
+void TransitionSystem::ArrayInvariantProcessModeOne(ArrIndex RecArrIndex)
 {
     ACSLComment *RecComment = getCurComment();
     comments.pop_back();
@@ -2594,8 +2596,22 @@ void TransitionSystem::ArrayInvariantProcessModeOne()
             string VarName = var.getVarName();
             if (VarName.find("[") == VarName.npos)
                 continue;
+            regex pattern("(\\w+)\\[(\\w+)\\]");
+            smatch matches;
+            string::const_iterator searchStart(VarName.cbegin());
+            if (regex_search(searchStart, VarName.cend(), matches, pattern))
+            {
+                if (matches.size() < 3)
+                {
+                    LOGWARN("Unexpected pattern");
+                    exit(-1);
+                }
+                string match = matches[2].str();
+                if (match != RecArrIndex.IndexName)
+                    continue;
+            }
             Expr *VarValue = var.getVarValue();
-            // NewComment->AddArrayInv(createBinOp(createDeclRefExpr(VarName), VarValue, BO_EQ));
+            NewComment->AddArrayInv(createBinOp(createDeclRefExpr(VarName), VarValue, BO_EQ), RecArrIndex);
             Vars[i].erase(Vars[i].begin() + j);
             j--;
         }
@@ -2606,7 +2622,7 @@ void TransitionSystem::ArrayInvariantProcessModeOne()
     return;
 }
 
-void TransitionSystem::ArrayInvariantProcessModeTwo(string FlagVar)
+void TransitionSystem::ArrayInvariantProcessModeTwo(string FlagVar, ArrIndex RecArrIndex)
 {
     ACSLComment *RecComment = getCurComment();
     comments.pop_back();
@@ -2637,28 +2653,41 @@ void TransitionSystem::ArrayInvariantProcessModeTwo(string FlagVar)
                 TraverseExprForVars(cond, RecVars);
                 for (auto name : RecVars)
                 {
-                    if (name.find('[') != name.npos)
+                    if (name.find('[') == name.npos)
+                        continue;
+                    regex pattern("(\\w+)\\[(\\w+)\\]");
+                    smatch matches;
+                    string::const_iterator searchStart(name.cbegin());
+                    if (regex_search(searchStart, name.cend(), matches, pattern))
                     {
-                        if (ExistInv)
+                        if (matches.size() < 3)
                         {
-                            ExistInv = createBinOp(ExistInv, cond, BO_LOr);
-                            ForallInv = createBinOp(ForallInv, cond, BO_LAnd);
+                            LOGWARN("Unexpected pattern");
+                            exit(-1);
                         }
-                        else
-                        {
-                            ExistInv = cond;
-                            ForallInv = cond;
-                        }
-                        break;
+                        string match = matches[2].str();
+                        if (match != RecArrIndex.IndexName)
+                            break;
                     }
+                    if (ExistInv)
+                    {
+                        ExistInv = createBinOp(ExistInv, cond, BO_LOr);
+                        ForallInv = createBinOp(ForallInv, cond, BO_LAnd);
+                    }
+                    else
+                    {
+                        ExistInv = cond;
+                        ForallInv = cond;
+                    }
+                    break;
                 }
             }
         }
     }
     ExistComment->AddFlagExpr(createBinOp(createDeclRefExpr(FlagVar), RecFlagExpr, BO_EQ));
     ForallComment->AddFlagExpr(createBinOp(createDeclRefExpr(FlagVar), RecFlagExpr, BO_NE));
-    // ExistComment->AddArrayInv(ExistInv);
-    // ForallComment->AddArrayInv(ForallInv);
+    ExistComment->AddArrayInv(ExistInv,RecArrIndex);
+    ForallComment->AddArrayInv(ForallInv,RecArrIndex);
     AddComment(ExistComment);
     AddComment(ForallComment);
     AddComment(RecComment);
