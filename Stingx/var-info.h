@@ -47,7 +47,7 @@ class var_info {
     virtual ~var_info() {}
     var_info(var_info const* info);
 
-    var_info(var_info* lambda_info,
+    var_info(var_info* lambdaInfo,
              vector<int>
                  v);  // project and just provide the dimensions that are in v
 

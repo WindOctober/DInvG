@@ -56,13 +56,13 @@ class PolyStore {
     // printing information
     var_info* info;
     // vector<Variable *> * v;
-    int vars_num;  // The dimensions
+    int varsNum;  // The dimensions
 
-    void initialize(int vars_num, var_info* info);
+    void initialize(int varsNum, var_info* info);
     void make_trivial_polyhedron();
 
    public:
-    PolyStore(int vars_num, var_info* info);
+    PolyStore(int varsNum, var_info* info);
     ~PolyStore();
 
     // add constraints

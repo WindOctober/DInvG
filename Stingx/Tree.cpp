@@ -24,7 +24,7 @@
 #include "Macro.h"
 
 extern int dimension;
-extern var_info *info, *dualInfo, *lambda_info;
+extern var_info *info, *dualInfo, *lambdaInfo;
 extern vector<Location*>* loclist;
 extern vector<TransitionRelation*>* trlist;
 extern int get_index_of_transition(string name);
@@ -690,7 +690,7 @@ void Tree::prune_clumps_by_hierarchy_inclusion() {
 
     // initialize union
     for (vi = vcl.begin(); vi < vcl.end(); vi++) {
-        Location clumps_union(dimension, info, dualInfo, lambda_info, "union_" + (*vi).get_name(),
+        Location clumps_union(dimension, info, dualInfo, lambdaInfo, "union_" + (*vi).get_name(),
                               target_index * (dimension + 1));
         tr_union.push_back(clumps_union);
     }

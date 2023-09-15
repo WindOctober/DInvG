@@ -29,12 +29,12 @@
 #include "myassertions.h"
 #include "var-info.h"
 
-void Expression::initialize(int dual_num, int lambda_num, var_info* dualInfo, var_info* lambda_info) {
+void Expression::initialize(int dual_num, int lambda_num, var_info* dualInfo, var_info* lambdaInfo) {
     // Initialize the parameters of the class
     this->dual_num = dual_num;
     this->lambda_num = lambda_num;
     this->dualInfo = dualInfo;
-    this->lambda_info = lambda_info;
+    this->lambdaInfo = lambdaInfo;
     factored = false;
     lin_expr.resize(lambda_num + 1, SparseLinExpr(dual_num, dualInfo));
     count = 0;
@@ -47,8 +47,8 @@ void Expression::zero_out() {
         lin_expr[i].init_set(dual_num, dualInfo);
 }
 
-Expression::Expression(int dual_num, int lambda_num, var_info* dualInfo, var_info* lambda_info) {
-    initialize(dual_num, lambda_num, dualInfo, lambda_info);
+Expression::Expression(int dual_num, int lambda_num, var_info* dualInfo, var_info* lambdaInfo) {
+    initialize(dual_num, lambda_num, dualInfo, lambdaInfo);
 }
 
 Expression::~Expression() {
@@ -72,7 +72,7 @@ Expression::Expression(Expression const& e) {
 }
 
 Expression Expression::operator+(Expression const& p1) const {
-    Expression temp(dual_num, lambda_num, dualInfo, lambda_info);
+    Expression temp(dual_num, lambda_num, dualInfo, lambdaInfo);
     int i;
     for (i = 0; i < lambda_num + 1; i++)
         temp[lambda_num] = lin_expr[lambda_num] + p1(lambda_num);
@@ -90,7 +90,7 @@ Expression& Expression::operator+=(Expression const& p1) {
 }
 
 Expression Expression::operator-(Expression const& p1) const {
-    Expression temp(dual_num, lambda_num, dualInfo, lambda_info);
+    Expression temp(dual_num, lambda_num, dualInfo, lambdaInfo);
     int i;
     for (i = 0; i < lambda_num + 1; i++)
         temp[lambda_num] = lin_expr[lambda_num] - p1(lambda_num);
@@ -129,7 +129,7 @@ int Expression::get_r() const {
     return lambda_num;
 }
 var_info* Expression::get_fr() const {
-    return lambda_info;
+    return lambdaInfo;
 }
 var_info* Expression::get_fn() const {
     return dualInfo;
@@ -176,7 +176,7 @@ LinTransform Expression::convert_transform() const {
     // assuming this blindly convert.
     //
 
-    LinTransform tmp(lambda_num, lambda_info);
+    LinTransform tmp(lambda_num, lambdaInfo);
     SparseLinExpr temp;
 
     for (int i = 0; i < lambda_num + 1; i++) {
@@ -296,11 +296,11 @@ ostream& operator<<(ostream& os, Expression const& expr) {
         expr.print_factors(os);
     } else {
         int lambda_num = expr.get_r();
-        var_info* lambda_info = expr.get_fr();
+        var_info* lambdaInfo = expr.get_fr();
 
-        os << lambda_info->get_name(0) << " * (" << expr(0) << " ) ";
+        os << lambdaInfo->get_name(0) << " * (" << expr(0) << " ) ";
         for (int i = 1; i < lambda_num; i++) {
-            os << " + " << lambda_info->get_name(i) << " * ( " << expr(i) << " ) ";
+            os << " + " << lambdaInfo->get_name(i) << " * ( " << expr(i) << " ) ";
         }
 
         os << " + " << expr(lambda_num) << "  ";
@@ -371,7 +371,7 @@ bool Expression::factorize() {
         return false;  // DO NOT ALLOW THIS TO HAPPEN
     // DETECT trivial terms and take them out
     i0 = i;
-    LinTransform t(lambda_num, lambda_info);
+    LinTransform t(lambda_num, lambdaInfo);
 
     t[i0] = 1;
     for (i = i0 + 1; i < lambda_num + 1; i++) {
@@ -398,7 +398,7 @@ LinTransform& Expression::get_transform_factor() {
 
 Expression* Expression::clone() const {
     // create a new expression
-    Expression* ret = new Expression(dual_num, lambda_num, dualInfo, lambda_info);
+    Expression* ret = new Expression(dual_num, lambda_num, dualInfo, lambdaInfo);
     for (int i = 0; i < lambda_num + 1; i++) {
         (*ret)[i] = lin_expr[i];  // Assign the appropriate linear expressions
     }
@@ -439,7 +439,7 @@ void Expression::drop_transform(LinTransform& lt) {
 }
 
 SparseLinExpr Expression::to_transform(Generator const& g) {
-    SparseLinExpr ret(lambda_num, lambda_info);
+    SparseLinExpr ret(lambda_num, lambdaInfo);
     for (int i = 0; i < lambda_num + 1; i++) {
         ret.set_coefficient(
             i,

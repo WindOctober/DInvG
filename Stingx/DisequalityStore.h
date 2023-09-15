@@ -57,7 +57,7 @@ class DisequalityStore {
      * Class Members:
      *    vp = a vector of disequalities.
      *    ineq_exprs = the inequalities
-     *    vars_num = dimensionality
+     *    varsNum = dimensionality
      *    info= information for printing
      *   incon = flag signifying inconsistent
      */
@@ -67,17 +67,17 @@ class DisequalityStore {
 
     C_Polyhedron* ineq_exprs;  // The inequalities of the system
 
-    int vars_num;        // the dimensionality  of the system
+    int varsNum;        // the dimensionality  of the system
     var_info* info;  // The information about variables
 
     bool incon;
 
-    void initialize(int vars_num, var_info* info);
+    void initialize(int varsNum, var_info* info);
     // check for consistency
     void check_consistent();
 
    public:
-    DisequalityStore(int vars_num, var_info* info);
+    DisequalityStore(int varsNum, var_info* info);
     ~DisequalityStore();
 
     // add a constraint

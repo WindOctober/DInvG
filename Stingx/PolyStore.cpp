@@ -32,11 +32,11 @@
 
 extern C_Polyhedron* trivial;
 
-void PolyStore::initialize(int vars_num, var_info* info) {
-    this->vars_num = vars_num;
+void PolyStore::initialize(int varsNum, var_info* info) {
+    this->varsNum = varsNum;
     this->info = info;
-    // Build a polyhedron with a space dimension vars_num
-    p = new C_Polyhedron(vars_num);
+    // Build a polyhedron with a space dimension varsNum
+    p = new C_Polyhedron(varsNum);
     make_trivial_polyhedron();
 }
 
@@ -50,8 +50,8 @@ void PolyStore::add_constraint(Constraint const& cc) {
     p->add_constraint(cc);
 }
 
-PolyStore::PolyStore(int vars_num, var_info* info) {
-    initialize(vars_num, info);
+PolyStore::PolyStore(int varsNum, var_info* info) {
+    initialize(varsNum, info);
 }
 
 bool PolyStore::is_consistent() const {
@@ -59,13 +59,13 @@ bool PolyStore::is_consistent() const {
 }
 
 void PolyStore::make_trivial_polyhedron() {
-    // Construct the zero polyhedron on vars_num dimensions
+    // Construct the zero polyhedron on varsNum dimensions
     // Question: Does PPL have a routine to do this?
 
-    C_Polyhedron* trivial_poly = new C_Polyhedron(vars_num, EMPTY);
+    C_Polyhedron* trivial_poly = new C_Polyhedron(varsNum, EMPTY);
     int i;
     Linear_Expression l;
-    for (i = 0; i < vars_num; i++) {
+    for (i = 0; i < varsNum; i++) {
         Variable v(i);
         l = l + 0 * v;
     }
@@ -88,7 +88,7 @@ void PolyStore::extract_linear_part(MatrixStore& m) const {
     Constraint_System::const_iterator vi;
 
     // stuff
-    SparseLinExpr l(vars_num, info);
+    SparseLinExpr l(varsNum, info);
     Coefficient t;
     int i;
     bool nonzero;
@@ -109,7 +109,7 @@ void PolyStore::extract_linear_part(MatrixStore& m) const {
             // SparseLinExpr PPL free?
 
             // iterate through coefficients
-            for (i = 0; i < vars_num; i++) {
+            for (i = 0; i < varsNum; i++) {
                 Coefficient t = cc.coefficient(Variable(i));
                 if (!t.fits_sint_p()) {
                     cout << "Error in PolyStore::extract_linear_part-- gmp "
@@ -133,9 +133,9 @@ void PolyStore::extract_linear_part(MatrixStore& m) const {
                      << endl;
                 exit(1);
             }
-            l.set_coefficient(vars_num, (int)t.get_si());
+            l.set_coefficient(varsNum, (int)t.get_si());
             // bizarre code.. implement rational !=0 operator please.
-            if (!(l(vars_num) == 0)) {
+            if (!(l(varsNum) == 0)) {
                 nonzero = true;
             }
 
@@ -158,7 +158,7 @@ void PolyStore::add_linear_store(MatrixStore const& m) {
 }
 
 int PolyStore::get_dimension() const {
-    return vars_num;
+    return varsNum;
 }
 
 const C_Polyhedron& PolyStore::get_nnc_poly_reference() const {
@@ -175,9 +175,9 @@ var_info* PolyStore::get_var_info() const {
 
 ostream& operator<<(ostream& os, PolyStore const& p) {
     // print the contents of p into os
-    int vars_num = p.get_dimension();
+    int varsNum = p.get_dimension();
 
-    os << "├ Polyhedral Constraint Store of Dimension " << vars_num << endl;
+    os << "├ Polyhedral Constraint Store of Dimension " << varsNum << endl;
 
     C_Polyhedron pp = p.get_nnc_poly_reference();
     Constraint_System cs = pp.minimized_constraints();
@@ -187,12 +187,12 @@ ostream& operator<<(ostream& os, PolyStore const& p) {
     Coefficient t;
 
     Constraint_System::const_iterator vi;
-    SparseLinExpr l(vars_num, info);
+    SparseLinExpr l(varsNum, info);
 
     for (vi = cs.begin(); vi != cs.end(); ++vi) {
         Constraint cc = *vi;
 
-        for (i = 0; i < vars_num; i++) {
+        for (i = 0; i < varsNum; i++) {
             t = cc.coefficient(Variable(i));
             l.set_coefficient(i, (int)t.get_si());
         }
@@ -219,7 +219,7 @@ ostream& operator<<(ostream& os, PolyStore const& p) {
 
 PolyStore* PolyStore::clone() const {
     // create a new cloned polystore
-    PolyStore* ret = new PolyStore(vars_num, info);
+    PolyStore* ret = new PolyStore(varsNum, info);
     // now extract the constraints from p
     Constraint_System cs =
         p->minimized_constraints();  // extract the constraints

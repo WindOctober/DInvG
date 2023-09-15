@@ -64,7 +64,7 @@ class Expression {
 
 private:
     int dual_num, lambda_num;           // the number of linear and multiplier variables resp.
-    var_info *dualInfo, *lambda_info;  // Mostly for printing purposes
+    var_info *dualInfo, *lambdaInfo;  // Mostly for printing purposes
 
     vector<SparseLinExpr> lin_expr;  // An lambda_num+1 dimension array of linear expressions
 
@@ -74,12 +74,12 @@ private:
     bool factored;
     int count;
 
-    void initialize(int dual_num, int lambda_num, var_info* dualInfo, var_info* lambda_info);
+    void initialize(int dual_num, int lambda_num, var_info* dualInfo, var_info* lambdaInfo);
 
     void zero_out();
 
    public:
-    Expression(int dual_num, int lambda_num, var_info* dualInfo, var_info* lambda_info);
+    Expression(int dual_num, int lambda_num, var_info* dualInfo, var_info* lambdaInfo);
     ~Expression();
     Expression(Expression const& e);
     Expression(Expression* e1, Expression* e2);
