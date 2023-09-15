@@ -40,3 +40,9 @@ set(SRC_FILES
 add_library(lstingx STATIC ${SRC_FILES})
 target_link_libraries(lstingx PUBLIC -lppl -lgmpxx -lgmp)
 target_compile_options(lstingx PRIVATE -g )
+
+# create executable target
+add_executable(lstingX lstingx.cpp)
+target_compile_definitions(lstingX PRIVATE USE_LSTINGX_MAIN)
+target_link_libraries(lstingX PUBLIC lstingx)
+set_target_properties(lstingX PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)

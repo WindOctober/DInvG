@@ -6,7 +6,7 @@
 #include "lstingx.h"
 #include <regex>
 #include <unordered_set>
-extern var_info *info, *dual_info, *lambda_info;
+extern var_info *info, *dualInfo, *lambda_info;
 extern vector<Location *> *loclist;
 extern vector<TransitionRelation *> *trlist;
 extern unordered_set<string> global_vars;
@@ -1482,7 +1482,6 @@ void TransitionSystem::UpdateVars(bool init)
         LOGWARN("Unexpected size of DNF and Vars: " + to_string(DNF.size()) + " and " + to_string(Vars.size()));
         exit(-1);
     }
-
     for (int i = 0; i < Vars.size(); i++)
     {
         for (int j = 0; j < Vars[i].size(); j++)
@@ -1669,7 +1668,7 @@ Expr *ReplaceExprForVar(Expr *expr, string origin_name, string new_name)
 {
     if (!expr)
     {
-        LOGWARN("expr is empty");
+        LOGWARN("Unexpected EmptyExpr in ReplaceExprForVar Function");
         exit(-1);
     }
     if (isa<BinaryOperator>(expr))
@@ -1824,7 +1823,7 @@ void TransitionSystem::InitializeLocTrans(int locsize, Expr *condition, var_info
         string locname = "Location_" + to_string(i);
         if (i == locsize - 1)
             locname = "le";
-        Location *loc = new Location(info->get_dimension(), info, dual_info, lambda_info, locname);
+        Location *loc = new Location(info->get_dimension(), info, dualInfo, lambda_info, locname);
         loclist->push_back(loc);
     }
     for (int i = 0; i < total_info->get_dimension(); i++)
@@ -1859,7 +1858,7 @@ void TransitionSystem::InitializeLocTrans(int locsize, Expr *condition, var_info
                     continue;
                 trans_name = "Exit_Transition_from_" + to_string(i) + "by breakstmt";
                 p->remove_space_dimensions(project_set);
-                TransitionRelation *trans = new TransitionRelation(info->get_dimension(), info, dual_info, lambda_info, trans_name);
+                TransitionRelation *trans = new TransitionRelation(info->get_dimension(), info, dualInfo, lambda_info, trans_name);
                 trans->set_locs((*loclist)[i], (*loclist)[j]);
                 trans->set_relation(p);
                 trlist->push_back(trans);
@@ -1873,7 +1872,7 @@ void TransitionSystem::InitializeLocTrans(int locsize, Expr *condition, var_info
                     continue;
                 trans_name = "Transition_" + to_string(i) + "_" + to_string(j);
                 p->remove_space_dimensions(project_set);
-                TransitionRelation *trans = new TransitionRelation(info->get_dimension(), info, dual_info, lambda_info, trans_name);
+                TransitionRelation *trans = new TransitionRelation(info->get_dimension(), info, dualInfo, lambda_info, trans_name);
                 trans->set_locs((*loclist)[i], (*loclist)[j]);
                 trans->set_relation(p);
                 trlist->push_back(trans);
@@ -1900,7 +1899,7 @@ void TransitionSystem::InitializeLocTrans(int locsize, Expr *condition, var_info
                     if (q->is_empty())
                         continue;
                     q->remove_space_dimensions(project_set);
-                    TransitionRelation *trans = new TransitionRelation(info->get_dimension(), info, dual_info, lambda_info, trans_name);
+                    TransitionRelation *trans = new TransitionRelation(info->get_dimension(), info, dualInfo, lambda_info, trans_name);
                     trans->set_locs((*loclist)[i], (*loclist)[j]);
                     trans->set_relation(q);
                     trlist->push_back(trans);
@@ -1965,16 +1964,16 @@ void TransitionSystem::ComputeInv(Expr *condition, unordered_set<string> vars_in
 
 vector<vector<Expr *>> TransitionSystem::OutLoop(Expr *cond, unordered_set<string> &UsedVars, vector<vector<Expr *>> &InitDNF, vector<vector<Expr *>> &InitIneqDNF, vector<vector<VariableInfo>> &InitVars, unordered_set<string> &LocalVars)
 {
-    if (info && dual_info && lambda_info)
+    if (info && dualInfo && lambda_info)
     {
-        delete info, dual_info, lambda_info;
+        delete info, dualInfo, lambda_info;
         info = NULL;
-        dual_info = NULL;
+        dualInfo = NULL;
         lambda_info = NULL;
     }
     info = new var_info();
     lambda_info = new var_info();
-    dual_info = new var_info();
+    dualInfo = new var_info();
     var_info *total_info = new var_info();
     LOGINFO("Collect Loop Transition Relation");
     PrintDNF();

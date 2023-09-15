@@ -307,7 +307,7 @@ bool LinExpr::equiv(LinExpr const& l2, Rational& factor) const {
         i++;
     }
 
-    factor = l2(i) * lin[i].inv();
+    factor = l2(i) * lin[i].inverse();
 
     while (i < n + 1) {
         if (factor * lin[i] != l2(i))

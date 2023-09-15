@@ -11,7 +11,7 @@ public:
         CFGVisitor Function_Visitor(&context,CFGVisitor::VisitorState::Collect_All_Function);
         Function_Visitor.TraverseDecl(context.getTranslationUnitDecl());
         visitor.TraverseDecl(context.getTranslationUnitDecl());
-        visitor.Dump_Annotated_file();
+        visitor.DumpAnnotatedFile();
         infile.close();
         outfile.close();
     }

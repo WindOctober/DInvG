@@ -72,9 +72,9 @@ int Rational::den() const {
 
 void breakfn() {}
 
-Rational Rational::inv() const {
+Rational Rational::inverse() const {
     if (nu == 0) {
-        cerr << "Rational::inv(): Divide by zero error" << *this << endl;
+        cerr << "Rational::inverse(): Divide by zero error" << *this << endl;
         breakfn();
         exit(1);
     }
@@ -216,8 +216,8 @@ Rational operator-(int n1, Rational const& n2) {
     return t;
 }
 
-ostream& operator<<(ostream& os, Rational const& p1) {
-    int n = p1.num(), d = p1.den();
+ostream& operator<<(ostream& os, Rational const& r) {
+    int n = r.num(), d = r.den();
     if (d == 1)
         os << n;
     else

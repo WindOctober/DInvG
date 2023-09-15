@@ -36,7 +36,7 @@ extern int debug_2, debug_3;
 
 void TransitionRelation::initialize(int vars_num,
                                     var_info* info,
-                                    var_info* dual_info,
+                                    var_info* dualInfo,
                                     var_info* lambda_info,
                                     Location* preloc,
                                     Location* postloc,
@@ -45,7 +45,7 @@ void TransitionRelation::initialize(int vars_num,
     this->vars_num = vars_num;
     this->info = info;
     fp = info->prime();
-    this->dual_info = dual_info;
+    this->dualInfo = dualInfo;
 
     this->lambda_info = lambda_info;
     this->preloc = preloc;
@@ -61,13 +61,13 @@ void TransitionRelation::initialize(int vars_num,
 
 void TransitionRelation::initialize(int vars_num,
                                     var_info* info,
-                                    var_info* dual_info,
+                                    var_info* dualInfo,
                                     var_info* lambda_info,
                                     string name) {
     this->vars_num = vars_num;
     this->info = info;
     fp = info->prime();
-    this->dual_info = dual_info;
+    this->dualInfo = dualInfo;
 
     this->lambda_info = lambda_info;
 
@@ -81,7 +81,7 @@ void TransitionRelation::initialize(int vars_num,
 
 void TransitionRelation::initialize_without_populating(int vars_num,
                                                        var_info* info,
-                                                       var_info* dual_info,
+                                                       var_info* dualInfo,
                                                        var_info* lambda_info,
                                                        Location* preloc,
                                                        Location* postloc,
@@ -91,7 +91,7 @@ void TransitionRelation::initialize_without_populating(int vars_num,
     this->vars_num = vars_num;
     this->info = info;
     fp = info->prime();
-    this->dual_info = dual_info;
+    this->dualInfo = dualInfo;
 
     this->lambda_info = lambda_info;
     this->preloc = preloc;
@@ -107,14 +107,14 @@ void TransitionRelation::initialize_without_populating(int vars_num,
 
 void TransitionRelation::initialize_without_populating(int vars_num,
                                                        var_info* info,
-                                                       var_info* dual_info,
+                                                       var_info* dualInfo,
                                                        var_info* lambda_info,
                                                        string name,
                                                        int index) {
     this->vars_num = vars_num;
     this->info = info;
     fp = info->prime();
-    this->dual_info = dual_info;
+    this->dualInfo = dualInfo;
 
     this->lambda_info = lambda_info;
     this->index = index;
@@ -270,44 +270,44 @@ void TransitionRelation::compute_constraints_num() {
 
 TransitionRelation::TransitionRelation(int vars_num,
                                        var_info* info,
-                                       var_info* dual_info,
+                                       var_info* dualInfo,
                                        var_info* lambda_info,
                                        string name) {
-    initialize(vars_num, info, dual_info, lambda_info, name);
+    initialize(vars_num, info, dualInfo, lambda_info, name);
 }
 
 TransitionRelation::TransitionRelation(int vars_num,
                                        var_info* info,
-                                       var_info* dual_info,
+                                       var_info* dualInfo,
                                        var_info* lambda_info,
                                        Location* preloc,
                                        Location* postloc,
                                        C_Polyhedron* rel,
                                        string name) {
-    initialize(vars_num, info, dual_info, lambda_info, preloc, postloc, rel,
+    initialize(vars_num, info, dualInfo, lambda_info, preloc, postloc, rel,
                name);
 }
 
 TransitionRelation::TransitionRelation(int vars_num,
                                        var_info* info,
-                                       var_info* dual_info,
+                                       var_info* dualInfo,
                                        var_info* lambda_info,
                                        string name,
                                        int index) {
-    initialize_without_populating(vars_num, info, dual_info, lambda_info, name,
+    initialize_without_populating(vars_num, info, dualInfo, lambda_info, name,
                                   index);
 }
 
 TransitionRelation::TransitionRelation(int vars_num,
                                        var_info* info,
-                                       var_info* dual_info,
+                                       var_info* dualInfo,
                                        var_info* lambda_info,
                                        Location* preloc,
                                        Location* postloc,
                                        C_Polyhedron* rel,
                                        string name,
                                        int index) {
-    initialize_without_populating(vars_num, info, dual_info, lambda_info,
+    initialize_without_populating(vars_num, info, dualInfo, lambda_info,
                                   preloc, postloc, rel, name, index);
 }
 
@@ -372,7 +372,7 @@ void TransitionRelation::compute_consecution_constraints(Context& context) {
 
     if (legal_trans) {
         int lambda_num = lambda_info->get_dimension();
-        int dual_num = dual_info->get_dimension();
+        int dual_num = dualInfo->get_dimension();
         Constraint_System constraints = trans_poly->minimized_constraints();
         Constraint_System cs_dis;
         Constraint_System::const_iterator it;
@@ -383,7 +383,6 @@ void TransitionRelation::compute_consecution_constraints(Context& context) {
         C_Polyhedron disable_poly(2 * vars_num + 2 + constraints_num, UNIVERSE);
         int offset = vars_num + 1, primed_offset = 2 * vars_num + 2;
         Linear_Expression expr(0);
-
         // (1) first the constraints on the unprimed variables
         for (i = 0; i < vars_num; i++) {
             expr = Variable(i);  //\mu=1 to eliminate the secondary constraint.
@@ -408,7 +407,6 @@ void TransitionRelation::compute_consecution_constraints(Context& context) {
                     Variable(primed_offset + j);
                 j++;
             }
-
             enable_poly.add_constraint(expr == 0);
         }
 
@@ -457,14 +455,13 @@ void TransitionRelation::compute_consecution_constraints(Context& context) {
 
         enable_poly.remove_higher_space_dimensions(2 * vars_num + 2);
         disable_poly.remove_higher_space_dimensions(2 * vars_num + 2);
-
         // now populate the context
         constraints = enable_poly.minimized_constraints();
         cs_dis = disable_poly.minimized_constraints();
 
-        Expression e(dual_num, lambda_num, dual_info, lambda_info);
+        Expression e(dual_num, lambda_num, dualInfo, lambda_info);
         C_Polyhedron pdis1(dual_num, UNIVERSE);
-        LinExpr ll1(dual_num, dual_info);
+        LinExpr ll1(dual_num, dualInfo);
         for (it = constraints.begin(); it != constraints.end(); ++it) {
             for (i = 0; i <= vars_num; i++)
                 e[index].set_coefficient(
@@ -490,8 +487,7 @@ void TransitionRelation::compute_consecution_constraints(Context& context) {
                 for (i = 0; i <= vars_num; i++)
                     ll1[pre_lindex + i] =
                         handle_integers((*it).coefficient(Variable(i)));
-
-                ll1[dual_num] = handle_integers((*it).inhomogeneous_term());
+                ll1[dual_num] = handle_integers((*it).inhomogeneous_term());    
                 if ((*it).is_inequality())
                     pdis1.add_constraint((ll1.to_lin_expression()) >= 0);
                 else if ((*it).is_equality())
@@ -516,7 +512,7 @@ void TransitionRelation::compute_consecution_01(vector<Clump>& clumps) {
          << "> > > (inter transition) In compute_consecution_01(), "
             "TransitionRelation : "
          << name;
-    Clump clump(dual_info, name, "Transition");
+    Clump clump(dualInfo, name, "Transition");
     bool compute_this_trans = true;
     cout << endl << "Current transition has poly as follows: ";
     cout << endl << "  " << *trans_poly;
@@ -540,7 +536,7 @@ void TransitionRelation::compute_consecution_01(vector<Clump>& clumps) {
     if (compute_this_trans) {
         Constraint_System constraints, cs_dis;
         Constraint_System::const_iterator it;
-        int dual_num = dual_info->get_dimension();
+        int dual_num = dualInfo->get_dimension();
         constraints = trans_poly->minimized_constraints();
         int pre_lindex = preloc->get_range_left(),
             post_lindex = postloc->get_range_left();
@@ -549,7 +545,6 @@ void TransitionRelation::compute_consecution_01(vector<Clump>& clumps) {
         C_Polyhedron disable_poly(2 * vars_num + 2 + constraints_num, UNIVERSE);
         int offset = vars_num + 1, primed_offset = 2 * vars_num + 2;
         Linear_Expression expr(0);
-
         // (1) first the constraints on the unprimed variables
         for (i = 0; i < vars_num; i++) {
             expr = Variable(i);  // place holder for \mu * c_i
@@ -625,8 +620,7 @@ void TransitionRelation::compute_consecution_01(vector<Clump>& clumps) {
         // now create two input polyhedra
         constraints = enable_poly.minimized_constraints();
         cs_dis = disable_poly.minimized_constraints();
-        LinExpr template_expr(dual_num, dual_info);
-
+        LinExpr template_expr(dual_num, dualInfo);
         if (one) {
             C_Polyhedron polyhedron(dual_num, UNIVERSE);
             for (it = constraints.begin(); it != constraints.end(); ++it) {
@@ -816,79 +810,6 @@ void TransitionRelation::add_preloc_invariant() {
     temp.add_space_dimensions_and_embed(vars_num);
     trans_poly->intersection_assign(temp);
     compute_constraints_num();
-    return;
-}
-
-void TransitionRelation::dualize_standard(C_Polyhedron& result) const {
-    result = C_Polyhedron(2 * vars_num + 2 + constraints_num, UNIVERSE);
-    Constraint_System constraints = trans_poly->minimized_constraints();
-    Constraint_System::const_iterator it;
-    bool flag = true;
-    int i;
-    int j, k;
-
-    //
-    // dualize & build the constraints
-    // \rho \models c_1 x_1 + ... + c_{vars_num+2} x_1' + .. + c_{2n+1} x_n' +
-    // c_{vars_num+1}
-    // + c_{2n+2} >=0
-    //
-
-    for (i = 0; i < vars_num; ++i) {
-        Linear_Expression ll;
-        ll += -1 * Variable(i);
-        flag = true;
-        for (k = 0, it = constraints.begin(); it != constraints.end();
-             ++k, ++it) {
-            flag &= handle_integers((*it).coefficient(Variable(i)), j);
-            ll += j * Variable(2 * vars_num + 2 + k);
-        }
-        INVARIANT(flag,
-                  " Fatal overflow in TransitionRelation::dualize_standard ");
-
-        result.add_constraint(ll == 0);
-    }
-
-    for (i = vars_num + 1; i < 2 * vars_num + 1; ++i) {
-        Linear_Expression ll;
-        ll += -1 * Variable(i);
-        flag = true;
-        for (k = 0, it = constraints.begin(); it != constraints.end();
-             ++k, ++it) {
-            flag &= handle_integers((*it).coefficient(Variable(i - 1)), j);
-            ll += j * Variable(2 * vars_num + 2 + k);
-        }
-        INVARIANT(flag,
-                  " Fatal overflow in TransitionRelation::dualize_standard ");
-
-        result.add_constraint(ll == 0);
-    }
-
-    // now for the constraint on the constant term
-    Linear_Expression ll1;
-    ll1 = -1 * Variable(vars_num) - Variable(2 * vars_num + 1);
-    flag = true;
-    for (k = 0, it = constraints.begin(); it != constraints.end(); ++k, ++it) {
-        flag &= handle_integers((*it).inhomogeneous_term(), j);
-        ll1 += j * Variable(2 * vars_num + 2 + k);
-    }
-    INVARIANT(flag, " Fatal overflow in TransitionRelation::dualize_standard ");
-
-    result.add_constraint(ll1 <= 0);
-
-    // now add the constraints on the multipliers
-    for (k = 0, it = constraints.begin(); it != constraints.end(); ++it, ++k) {
-        if ((*it).is_equality())
-            continue;
-        if ((*it).is_nonstrict_inequality())
-            result.add_constraint(Variable(2 * vars_num + 2 + k) >= 0);
-        else
-            result.add_constraint(Variable(2 * vars_num + 2 + k) > 0);
-    }
-
-    // project off the dimension..
-
-    result.remove_higher_space_dimensions(2 * vars_num + 2);
     return;
 }
 

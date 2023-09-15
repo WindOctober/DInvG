@@ -53,13 +53,6 @@ var_info::var_info() {
     dimension = 0;
     v = new vector<char*>();
 }
-/*
-var_info::var_info( var_info info){
-   v=info.get_vector();
-   dimension=info.get_dimension();
-}
-
-*/
 
 int var_info::get_dimension() const {
     return dimension;
@@ -166,15 +159,6 @@ string var_info::get_arr_name(int dim) const {
     return (arr_v)[dim];
 }
 
-var_info* var_info::dualize() {
-    var_info* v1 = new var_info();
-    int i;
-    for (i = 0; i < dimension; i++)
-        v1->insert(get_name(i), 2);
-    v1->insert("d");
-
-    return v1;
-}
 
 var_info* var_info::prime() {
     var_info* v1 = new var_info();

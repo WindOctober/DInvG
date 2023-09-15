@@ -15,31 +15,8 @@ set<string> Visited_Functions;
 extern var_info *info;
 unordered_set<string> global_vars;
 unordered_set<string> LocalVars;
-void CFGVisitor::Terminate_errors(enum ErrorType Errors)
-{
-    switch (Errors)
-    {
-    case ErrorType::FloatVarError:
-        errs() << "CFGVisitor::Terminate_errors FloatVarError";
-        return;
-    case ErrorType::CFGInitError:
-        errs() << "CFGVisitor::Terminate_errors CFGInitError";
-        return;
-    case ErrorType::UnexpectedTypeError:
-        errs() << "CFGVisitor::Terminate_errors UnexpectedType";
-        return;
-    case ErrorType::VarDeclUnFoundError:
-        errs() << "CFGVisitor::Terminate_errors VarDeclUnFoundError";
-        return;
-    case ErrorType::CalleeUnFoundError:
-        errs() << "CFGVisitor::Terminate_errors CalleeUnFoundError";
-        return;
-    }
-    errs() << "CFGVisitor::Terminate_errors UnknownError";
-    return;
-}
 
-string CFGVisitor::create_name(string base)
+string CFGVisitor::CreateName(string base)
 {
     global_conflict_index++;
     string Name = base + to_string(global_conflict_index);
@@ -216,7 +193,10 @@ void CFGVisitor::DealWithVarDecl(VarDecl *vardecl, TransitionSystem &transystem)
 {
     VariableInfo var;
     if (vardecl == NULL)
-        Terminate_errors(ErrorType::VarDeclUnFoundError);
+    {
+        LOGWARN("Unexpected VariableDecl");
+        exit(-1);
+    }
     // Deal with pointer, pure numeric, arrays.
     QualType stmt_type = vardecl->getType();
     string var_name = vardecl->getName();
@@ -287,7 +267,10 @@ void CFGVisitor::DealWithVarDecl(VarDecl *vardecl, TransitionSystem &transystem)
         var.assign(var_name, vardecl->getInit(), stmt_type);
     }
     else if (stmt_type->isFloatingType())
-        Terminate_errors(ErrorType::FloatVarError);
+    {
+        LOGWARN("Unexpected FloatingType");
+        exit(-1);
+    }
     transystem.AddVars(var);
 }
 
@@ -362,7 +345,7 @@ void CFGVisitor::DealWithCallExpr(CallExpr *callexpr, TransitionSystem &transyst
             LOGINFO("Visit Function:" + FuncName);
             VisitFunctionDecl(CallFunction);
         }
-        return_value = create_name(FuncName + "_RetVal");
+        return_value = CreateName(FuncName + "_RetVal");
         vector<vector<Expr *>> function_dnf = FuncsDNF[FuncName];
         LOGINFO("print callfunction " + FuncName + " 's dnf:");
         PrintDNF(function_dnf);
@@ -617,7 +600,10 @@ bool CFGVisitor::VisitCallExpr(CallExpr *CE)
         return true;
     FunctionDecl *callee = CE->getDirectCallee();
     if (!callee)
-        Terminate_errors(ErrorType::CalleeUnFoundError);
+    {
+        LOGWARN("Unexpected CallFunction");
+        exit(-1);
+    }
     SourceManager &SM = context->getSourceManager();
     if (!SM.isInMainFile(callee->getLocation()))
         return true;
@@ -753,7 +739,7 @@ void CFGVisitor::AddComments(vector<ACSLComment *> RecComment)
     return;
 }
 
-void CFGVisitor::Dump_Annotated_file()
+void CFGVisitor::DumpAnnotatedFile()
 {
     int lineNumber = 0;
     string line;

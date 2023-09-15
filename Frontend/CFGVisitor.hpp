@@ -14,7 +14,7 @@
 #include "ACSLComment.hpp"
 #include "TransitionSystem.hpp"
 #include "Variable.hpp"
-
+#include "Library.hpp"
 #include <set>
 #include <vector>
 
@@ -34,7 +34,7 @@ public:
         Collect_All_Function,
         Main
     };
-    explicit CFGVisitor(ASTContext *context, VisitorState VS) : context(context), VS(VS), pp(context->getPrintingPolicy()) {}
+    explicit CFGVisitor(ASTContext *context, VisitorState VS) : context(context), VS(VS), pp(context->getPrintingPolicy()) { astcontext = context; }
     enum class ErrorType
     {
         FloatVarError,
@@ -53,19 +53,17 @@ public:
     bool VisitFunctionDecl(FunctionDecl *func);
     bool VisitVarDecl(VarDecl *var);
     void PrintStmtInfo(Stmt *stmt);
-    void Process_Verfied_Function(vector<vector<Expr*>>& ReturnDNF,FunctionDecl* func,string return_name, TransitionSystem &transystem);
-    void Dump_Annotated_file();
-    string create_name(string base);
-    Expr *PreprocessExpr(Expr *expr,TransitionSystem& transystem);
+    void DumpAnnotatedFile();
+    string CreateName(string base);
+    Expr *PreprocessExpr(Expr *expr, TransitionSystem &transystem);
 
 private:
-    bool DealWithStmt(Stmt *stmt, TransitionSystem &transystem,FunctionDecl* func);
+    bool DealWithStmt(Stmt *stmt, TransitionSystem &transystem, FunctionDecl *func);
     void DealWithCallExpr(CallExpr *call, TransitionSystem &transystem, string &return_value);
     void DealWithBinaryOp(BinaryOperator *stmt, TransitionSystem &transystem);
     void DealWithUnaryOp(UnaryOperator *stmt, TransitionSystem &transystem);
     void DealWithVarDecl(VarDecl *stmt, TransitionSystem &transystem);
     void DealWithFunctionDecl(FunctionDecl *stmt, TransitionSystem &transystem);
-    void Terminate_errors(enum ErrorType Errors);
     ASTContext *context;
     PrintingPolicy pp;
     VisitorState VS;

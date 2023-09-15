@@ -27,7 +27,7 @@ add_custom_command(
     COMMENT "Copying compile_commands.json to project root directory"
 )
 
-foreach(target Inv) # 替换为您的项目名称或实际目标列表
+foreach(target Inv)
     add_custom_command(TARGET ${target} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
         ${CMAKE_BINARY_DIR}/compile_commands.json

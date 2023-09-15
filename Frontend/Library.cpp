@@ -3,6 +3,7 @@
 #include <unordered_set>
 extern var_info *info;
 int GlobalIndexCount = 0;
+ASTContext *astcontext;
 void Log(const string &level, const string &function, int line, string msg)
 {
     outs() << "\n[" << level << " " << function << ":" << line << "] " << msg;

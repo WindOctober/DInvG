@@ -26,15 +26,15 @@
 #include "LinExpr.h"
 #include "Rational.h"
 
-LinTransform::LinTransform(int n, var_info* dual_info) {
-    initialize(n, dual_info);
+LinTransform::LinTransform(int n, var_info* dualInfo) {
+    initialize(n, dualInfo);
 }
 
 LinTransform::LinTransform() {
     n = 0;
 }
 
-int LinTransform::get_base() const {
+int LinTransform::getBase() const {
     int i;
     for (i = 0; i < n + 1; i++)
         if (lin[i] != 0)

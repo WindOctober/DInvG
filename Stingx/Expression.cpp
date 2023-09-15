@@ -29,14 +29,14 @@
 #include "myassertions.h"
 #include "var-info.h"
 
-void Expression::initialize(int dual_num, int lambda_num, var_info* dual_info, var_info* lambda_info) {
+void Expression::initialize(int dual_num, int lambda_num, var_info* dualInfo, var_info* lambda_info) {
     // Initialize the parameters of the class
     this->dual_num = dual_num;
     this->lambda_num = lambda_num;
-    this->dual_info = dual_info;
+    this->dualInfo = dualInfo;
     this->lambda_info = lambda_info;
     factored = false;
-    lin_expr.resize(lambda_num + 1, SparseLinExpr(dual_num, dual_info));
+    lin_expr.resize(lambda_num + 1, SparseLinExpr(dual_num, dualInfo));
     count = 0;
 }
 
@@ -44,11 +44,11 @@ void Expression::zero_out() {
     // set the whole expression to zero
     // Post-comment== Is this being called from somewhere?
     for (int i = 0; i < lambda_num + 1; i++)
-        lin_expr[i].init_set(dual_num, dual_info);
+        lin_expr[i].init_set(dual_num, dualInfo);
 }
 
-Expression::Expression(int dual_num, int lambda_num, var_info* dual_info, var_info* lambda_info) {
-    initialize(dual_num, lambda_num, dual_info, lambda_info);
+Expression::Expression(int dual_num, int lambda_num, var_info* dualInfo, var_info* lambda_info) {
+    initialize(dual_num, lambda_num, dualInfo, lambda_info);
 }
 
 Expression::~Expression() {
@@ -72,7 +72,7 @@ Expression::Expression(Expression const& e) {
 }
 
 Expression Expression::operator+(Expression const& p1) const {
-    Expression temp(dual_num, lambda_num, dual_info, lambda_info);
+    Expression temp(dual_num, lambda_num, dualInfo, lambda_info);
     int i;
     for (i = 0; i < lambda_num + 1; i++)
         temp[lambda_num] = lin_expr[lambda_num] + p1(lambda_num);
@@ -90,7 +90,7 @@ Expression& Expression::operator+=(Expression const& p1) {
 }
 
 Expression Expression::operator-(Expression const& p1) const {
-    Expression temp(dual_num, lambda_num, dual_info, lambda_info);
+    Expression temp(dual_num, lambda_num, dualInfo, lambda_info);
     int i;
     for (i = 0; i < lambda_num + 1; i++)
         temp[lambda_num] = lin_expr[lambda_num] - p1(lambda_num);
@@ -132,7 +132,7 @@ var_info* Expression::get_fr() const {
     return lambda_info;
 }
 var_info* Expression::get_fn() const {
-    return dual_info;
+    return dualInfo;
 }
 
 bool Expression::is_pure_a() const {
@@ -189,7 +189,7 @@ void Expression::transform(LinTransform& lin) {
     if (lin.is_trivial() || lin.is_inconsistent())
         return;  // Nothing to be done here
 
-    int base = lin.get_base();
+    int base = lin.getBase();
 
     for (int i = base + 1; i < lambda_num + 1; i++)
         lin_expr[i] = lin(base) * lin_expr[i] - lin(i) * lin_expr[base];
@@ -398,7 +398,7 @@ LinTransform& Expression::get_transform_factor() {
 
 Expression* Expression::clone() const {
     // create a new expression
-    Expression* ret = new Expression(dual_num, lambda_num, dual_info, lambda_info);
+    Expression* ret = new Expression(dual_num, lambda_num, dualInfo, lambda_info);
     for (int i = 0; i < lambda_num + 1; i++) {
         (*ret)[i] = lin_expr[i];  // Assign the appropriate linear expressions
     }
