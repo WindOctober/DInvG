@@ -24,7 +24,7 @@
 #include "Macro.h"
 
 extern int dimension;
-extern var_info *info, *dual_info, *lambda_info;
+extern var_info *info, *dualInfo, *lambda_info;
 extern vector<Location*>* loclist;
 extern vector<TransitionRelation*>* trlist;
 extern int get_index_of_transition(string name);
@@ -690,7 +690,7 @@ void Tree::prune_clumps_by_hierarchy_inclusion() {
 
     // initialize union
     for (vi = vcl.begin(); vi < vcl.end(); vi++) {
-        Location clumps_union(dimension, info, dual_info, lambda_info, "union_" + (*vi).get_name(),
+        Location clumps_union(dimension, info, dualInfo, lambda_info, "union_" + (*vi).get_name(),
                               target_index * (dimension + 1));
         tr_union.push_back(clumps_union);
     }
@@ -703,7 +703,7 @@ void Tree::prune_clumps_by_hierarchy_inclusion() {
     while (dth >= 0) {
         vk = tr_union.begin() + dth;
         Clump cl = vcl[dth];
-        C_Polyhedron clumps_poly(dual_info->get_dimension(), UNIVERSE);
+        C_Polyhedron clumps_poly(dualInfo->get_dimension(), UNIVERSE);
         int i = 0;
         for (i = 0; i < cl.get_count(); i++) {
             cout << endl << "to extract invariant";
@@ -1332,7 +1332,7 @@ vector<vector<int>> Tree::Merge(vector<vector<int>> sub_sequences1,
     int start = -1;
     int depth = hb;
     vector<int> sequence;
-    Clump invd_vp(dual_info);
+    Clump invd_vp(dualInfo);
     single_merge_sub_sequences_timer.restart();
     // Merge_recursive(two_sub_sequences, merged_sub_sequences, start, sequence,
     // initp, invd_vp, hb, lb);
@@ -1452,7 +1452,7 @@ vector<vector<int>> Tree::dfs_sub_sequences_traverse(int hb,
                                                      C_Polyhedron& initp) {
     cout << endl << "> > > Tree::dfs_sub_sequences_traverse()";
     vector<vector<int>> sub_sequences;
-    Clump invd_vp(dual_info);
+    Clump invd_vp(dualInfo);
     int depth = hb + 1;
     dfs_sub_sequences_traverse_recursive(sub_sequences, hb, lb, depth, initp,
                                          invd_vp);

@@ -46,9 +46,6 @@ ostream& print_polyhedron(ostream& in,
                           const var_info* info);
 // print only poly without prefix-symbol
 void print_pure_polyhedron(C_Polyhedron const& np, const var_info* info);
-// print only poly without prefix-symbol for array-invariants
-void print_pure_polyhedron_for_arrayinv(C_Polyhedron const& np,
-                                        const var_info* info);
 // print only poly without prefix-symbol in cout instead of cout
 
 ostream& print_clump(ostream& in, Clump const& cl, const var_info* info);

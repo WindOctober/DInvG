@@ -57,13 +57,13 @@ class InvariantMap {
      *   n_: dimensions
      *  nloc_ : # of locations
      *  vloc_: vector of location references
-     *  map_ration : the actual map
+     *  varCoef : the actual map
      */
     var_info* f_;
     int n_;
     int nloc_;
     vector<Location*> const& vloc_;
-    StringPolyMap map_ration;
+    StringPolyMap varCoef;
 
     // is there a location with name
     bool entry_exists(string const& name) const;
@@ -93,9 +93,9 @@ class InvariantMap {
 
     int get_num_locations() const { return nloc_; }
 
-    StringPolyMap const& get_map_reference() const { return map_ration; }
+    StringPolyMap const& get_map_reference() const { return varCoef; }
 
-    StringPolyMap& get_map_reference() { return map_ration; }
+    StringPolyMap& get_map_reference() { return varCoef; }
 
     // widen this wrt im CH79
     void H79_widening_assign(InvariantMap const& im);

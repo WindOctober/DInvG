@@ -71,14 +71,14 @@ class Context {
     vector<Expression> *eq_exprs, *ineq_exprs, *factors;
 
     Context* child1;
-    var_info *info, *dual_info, *lambda_info;
+    var_info *info, *dualInfo, *lambda_info;
 
     int vars_num, dual_num,
         lambda_num;  // No. of dimensions, dual dimensions, multipliers respectively
 
-    void initialize(var_info* info, var_info* dual_info, var_info* lambda_info);
+    void initialize(var_info* info, var_info* dualInfo, var_info* lambda_info);
     void initialize(var_info* info,
-                    var_info* dual_info,
+                    var_info* dualInfo,
                     var_info* lambda_info,
                     MatrixStore* equality_mat,
                     PolyStore* inequality_store,
@@ -114,9 +114,9 @@ class Context {
 
     //       1.7 Forming an invariant from a consistent leaf node
 
-    Context(var_info* info, var_info* dual_info, var_info* lambda_info);
+    Context(var_info* info, var_info* dualInfo, var_info* lambda_info);
     Context(var_info* info,
-            var_info* dual_info,
+            var_info* dualInfo,
             var_info* lambda_info,
             MatrixStore* equality_mat,
             PolyStore* inequality_store,
@@ -124,7 +124,7 @@ class Context {
             vector<Expression>* eq_exprs,
             vector<Expression>* ineq_exprs);
     Context(var_info* info,
-            var_info* dual_info,
+            var_info* dualInfo,
             var_info* lambda_info,
             MatrixStore* equality_mat,
             PolyStore* inequality_store,

@@ -45,7 +45,7 @@ class Clump {
     /*
      * dual_num = num of dual dimensions (depends on what mode the
      *                              analyzer is operated in )
-     * dual_info = var_info for dual -- standard pointer for printing purposes
+     * dualInfo = var_info for dual -- standard pointer for printing purposes
      *                            that should not be touched
      * poly_clump = vector of polyhedra
      *
@@ -56,7 +56,7 @@ class Clump {
      */
 
     int dual_num;
-    var_info* dual_info;
+    var_info* dualInfo;
     vector<C_Polyhedron> poly_clump;
     int gli;
 
@@ -66,9 +66,9 @@ class Clump {
     // added by Hongming - 2022/10/21
     void initialize();
     // Sriram - Aug 2004 - Old Code: PWC.
-    void initialize(var_info* dual_info);
+    void initialize(var_info* dualInfo);
     // added by Hongming - Sept 2021
-    void initialize(var_info* dual_info, string name, string category);
+    void initialize(var_info* dualInfo, string name, string category);
 
    public:
     // added by Hongming
@@ -84,8 +84,8 @@ class Clump {
     void replace_vp(vector<C_Polyhedron> new_vp);
 
     Clump();
-    Clump(var_info* dual_info);
-    Clump(var_info* dual_info, string name, string category);
+    Clump(var_info* dualInfo);
+    Clump(var_info* dualInfo, string name, string category);
 
     int get_count();
 

@@ -51,8 +51,8 @@ void MatrixStore::zero_out() {
     consistent = true;
 }
 
-void MatrixStore::init_set(int vars_num, var_info* dual_info) {
-    initialize(vars_num, dual_info);
+void MatrixStore::init_set(int vars_num, var_info* dualInfo) {
+    initialize(vars_num, dualInfo);
 }
 
 int MatrixStore::simplify(SparseLinExpr& expression) const {
@@ -65,11 +65,11 @@ int MatrixStore::simplify(SparseLinExpr& expression) const {
             if (expression(i) != 0) {
                 // Perform a reduction of the expression
                 for (j = 0; j < i; j++) {
-                    temp2 = (expression(i) * mat[i][j]) * mat[i][i].inv();
+                    temp2 = (expression(i) * mat[i][j]) * mat[i][i].inverse();
                     expression.subtract_coefficient(j, temp2);
                 }
                 for (j = i + 1; j < vars_num + 1; j++) {
-                    temp2 = (expression(i) * mat[i][j]) * mat[i][i].inv();
+                    temp2 = (expression(i) * mat[i][j]) * mat[i][i].inverse();
                     expression.subtract_coefficient(j, temp2);
                 }
                 expression.set_coefficient(i, 0);  // reset expression[i]
@@ -96,7 +96,7 @@ void MatrixStore::back_substitute(int lead) {
         if (mat[i][lead] != 0) {
             for (j = lead + 1; j < vars_num + 1; j++) {
                 temp1 = mat[i][j];
-                temp2 = mat[lead][j] * mat[i][lead] * (mat[lead][lead].inv());
+                temp2 = mat[lead][j] * mat[i][lead] * (mat[lead][lead].inverse());
                 mat[i][j] -= temp2;
             }
             mat[i][lead] = 0;

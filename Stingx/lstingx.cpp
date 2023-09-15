@@ -98,7 +98,7 @@ vector<int> target_prior;
 char err_str[100];
 extern int linenum;
 int dimension;
-var_info *info, *dual_info, *lambda_info;
+var_info *info, *dualInfo, *lambda_info;
 vector<Location*>* loclist;
 vector<TransitionRelation*>* trlist;
 Context* glc;  // The global context
@@ -214,7 +214,7 @@ void collect_invariants(C_Polyhedron& cpoly, C_Polyhedron& invd) {
      *  Collect invariants
      */
     vector<Location*>::iterator it;
-    invd = C_Polyhedron(dual_info->get_dimension(), UNIVERSE);
+    invd = C_Polyhedron(dualInfo->get_dimension(), UNIVERSE);
     it = loclist->begin();
     // cout<<endl<<"- In collect_invariants(), cpoly is : "<<endl<<"
     // "<<cpoly<<endl; Generator_System mgs = cpoly.minimized_generators();
@@ -234,7 +234,7 @@ void collect_invariants_for_one_location_by_eliminating(int index,
     //
     //  Collect invariants for initial
     //
-    invd = C_Polyhedron(dual_info->get_dimension(), UNIVERSE);
+    invd = C_Polyhedron(dualInfo->get_dimension(), UNIVERSE);
     //    Firstly, collect invariants for initial location by eliminating
     //      for initial *it, i.e. location,
     //      use cpoly to update *it->invariant and *it->invariant updates invd.
@@ -301,7 +301,7 @@ void collect_invariants_by_binary_eliminating(C_Polyhedron& cpoly,
      *  Collect invariants
      */
     vector<Location*>::iterator it;
-    invd = C_Polyhedron(dual_info->get_dimension(), UNIVERSE);
+    invd = C_Polyhedron(dualInfo->get_dimension(), UNIVERSE);
 
     binary_eliminating(cpoly, invd);
     global_binary_i = 0;
@@ -505,7 +505,7 @@ void collect_invariants_for_one_location_from_intra(vector<Clump>& vcl,
     // initialize
     int lid = loc_index;
     vector<vector<vector<vector<int>>>> target_sequences;
-    int dual_num = dual_info->get_dimension();
+    int dual_num = dualInfo->get_dimension();
     C_Polyhedron local_initp(dual_num, UNIVERSE);
 
     /*
@@ -568,7 +568,7 @@ void Initialize_before_Parser() {
     clump_prune_count = prune_count = 0;
     context_count = 0;
     lambda_info = new var_info();
-    dual_info = new var_info();
+    dualInfo = new var_info();
     loclist = new vector<Location*>();
     trlist = new vector<TransitionRelation*>();
     debug = 0;
@@ -666,27 +666,6 @@ void print_disjunctive_inv_before_program() {
             }
             print_pure_polyhedron((*it)->GetInv(),
                                   (*it)->get_var_info());
-            i++;
-        }
-    }
-    cout << endl << "\\---------------------------------------- ";
-    cout << endl;
-}
-
-void print_array_inv_before_program() {
-    cout << endl << "/---------------------------------------- ";
-    cout << endl << "| Array Invariants before Program: ";
-    cout << endl << "----------------------------------------- ";
-    int i = 0;
-    for (vector<Location*>::iterator it = loclist->begin(); it < loclist->end();
-         it++) {
-        if ((*it)->get_name() != EXIT_LOCATION &&
-            !(*it)->GetInv().is_empty()) {
-            if (i != 0) {
-                cout << endl << "\\/";
-            }
-            print_pure_polyhedron_for_arrayinv((*it)->GetInv(),
-                                               (*it)->get_var_info());
             i++;
         }
     }
@@ -965,7 +944,7 @@ void Compute_Invariant_Frontend(){
     Initialize();
     add_preloc_invariants_to_transitions();
     Create_Adjacency_Matrix_for_Location_and_Transition();
-    global_system = new System(info, dual_info, lambda_info);
+    global_system = new System(info, dualInfo, lambda_info);
 
     for (auto it = loclist->begin(); it < loclist->end(); it++) {
         global_system->add_location((*it));
@@ -974,7 +953,7 @@ void Compute_Invariant_Frontend(){
         global_system->add_transition((*it));
     }
     tt = new int[lambda_info->get_dimension()];
-    int dual_num = dual_info->get_dimension();
+    int dual_num = dualInfo->get_dimension();
     trivial = new C_Polyhedron(dual_num, UNIVERSE);
     for (auto it = loclist->begin(); it < loclist->end(); it++) {
         (*it)->add_to_trivial(trivial);
@@ -1074,20 +1053,19 @@ void Compute_Invariant_Frontend(){
 }
 #ifdef USE_LSTINGX_MAIN
 int main() {
-    //DONE: create a interface to connect the frontend and stingx.
     ios::sync_with_stdio(false);
     total_timer.restart();
     Initialize_before_Parser();
-
+    
     Scan_Input();
     add_preloc_invariants_to_transitions();
-
+    
     Print_Status_before_Solver();
     Print_Location_and_Transition();
 
     Create_Adjacency_Matrix_for_Location_and_Transition();
-    global_system = new System(info, dual_info, lambda_info);
-
+    global_system = new System(info, dualInfo, lambda_info);
+    
     for (auto it = loclist->begin(); it < loclist->end(); it++) {
         global_system->add_location((*it));
     }
@@ -1098,12 +1076,13 @@ int main() {
     if (num_context == 1) {
         //  output_file: **newdfs_sequences**
         //  dual_num
-        int dual_num = dual_info->get_dimension();
+        int dual_num = dualInfo->get_dimension();
         //  trivial
         trivial = new C_Polyhedron(dual_num, UNIVERSE);
         for (auto it = loclist->begin(); it < loclist->end(); it++) {
             (*it)->add_to_trivial(trivial);
         }
+       
         //  init_poly
         C_Polyhedron init_poly(dual_num, UNIVERSE);
         for (auto it = loclist->begin(); it < loclist->end(); it++) {
@@ -1183,14 +1162,12 @@ int main() {
 
     } else if (num_context == 2) {
         //  output_file: **newdfs_seq_propagation**
-        //  dual_num
-        int dual_num = dual_info->get_dimension();
-        //  trivial
+        int dual_num = dualInfo->get_dimension();
         trivial = new C_Polyhedron(dual_num, UNIVERSE);
         for (auto it = loclist->begin(); it < loclist->end(); it++) {
             (*it)->add_to_trivial(trivial);
         }
-        //  init_poly
+
         C_Polyhedron init_poly(dual_num, UNIVERSE);
         for (auto it = loclist->begin(); it < loclist->end(); it++) {
             (*it)->make_context();
@@ -1291,9 +1268,6 @@ int main() {
     Print_Location();
     if (djinv) {
         print_disjunctive_inv_before_program();
-    }
-    if (arrinv) {
-        print_array_inv_before_program();
     }
     Print_Status_after_Solver();
     if (inv_check) {
@@ -1433,7 +1407,7 @@ void Scan_Input() {
                 // cout<<loc_name<<" "<<loc_name.length()<<" "<<token<<endl;
                 if (!search_location((char*)loc_name.c_str(), &new_location)) {
                     new_location =
-                        new Location(info->get_dimension(), info, dual_info,
+                        new Location(info->get_dimension(), info, dualInfo,
                                      lambda_info, loc_name);
                     loclist->push_back(new_location);
                 } else {
@@ -1447,8 +1421,7 @@ void Scan_Input() {
                     new_location->set_polyhedron(new_poly);
                 }
                 if (new_poly && new_transition) {
-                    new_transition->set_relation(new_poly);
-                }
+                    new_transition->set_relation(new_poly); }
                 if (new_poly && invariant_location) {
                     invariant_location->set_invariant_polyhedron(new_poly);
                 }
@@ -1464,7 +1437,7 @@ void Scan_Input() {
                 if (!search_transition_relation((char*)transition_name.c_str(),
                                                 &new_transition)) {
                     new_transition = new TransitionRelation(
-                        info->get_dimension(), info, dual_info, lambda_info,
+                        info->get_dimension(), info, dualInfo, lambda_info,
                         transition_name);
                     trlist->push_back(new_transition);
                 } else {
@@ -1488,10 +1461,8 @@ void Scan_Input() {
                 } else {
                     new_transition->set_locs(loc_start, loc_start);
                 }
-                // cout<<transition_name<<" "<<loc_name_start<<"
-                // "<<loc_name_end<<endl;
-
-            } else if (regex_match(line, match, invariant_pattern)) {
+            } 
+            else if (regex_match(line, match, invariant_pattern)) {
                 if (new_poly && new_location) {
                     new_location->set_polyhedron(new_poly);
                 }

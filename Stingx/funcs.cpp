@@ -22,33 +22,17 @@
 #include "funcs.h"
 
 int gcd(int a, int b) {
-    if (a < 0)
-        a = -a;
-
-    if (b < 0)
-        b = -b;
-
-    if (a == 1 || a == 0 || a == b)
-        return a;
-
-    if (b == 1 || b == 0)
-        return b;
-
-    int y1 = a, y2 = b, y3 = b, y4 = 0;
-
-    while (y1 != y2) {
-        while (y1 > y2) {
-            y1 -= y2;
-            y4 += y3;
-        }
-        while (y2 > y1) {
-            y2 -= y1;
-            y3 += y4;
-        }
+    a = std::abs(a);
+    b = std::abs(b);
+    while (b != 0) {
+        int temp = b;
+        b = a % b;
+        a = temp;
     }
 
-    return y1;
+    return a;
 }
+
 
 long gcd(long a, long b) {
     if (a < 0)

@@ -13,6 +13,7 @@ core
 test.c
 result.c
 output.txt
+test/*
 
 # Prerequisites
 *.d

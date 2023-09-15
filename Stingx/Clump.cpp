@@ -31,14 +31,14 @@ extern int single_pre_prune_bang_count;
 void Clump::initialize() {
     gli = 0;
 }
-void Clump::initialize(var_info* dual_info) {
-    dual_num = dual_info->get_dimension();
-    this->dual_info = dual_info;
+void Clump::initialize(var_info* dualInfo) {
+    dual_num = dualInfo->get_dimension();
+    this->dualInfo = dualInfo;
     gli = 0;
 }
-void Clump::initialize(var_info* dual_info, string name, string category) {
-    dual_num = dual_info->get_dimension();
-    this->dual_info = dual_info;
+void Clump::initialize(var_info* dualInfo, string name, string category) {
+    dual_num = dualInfo->get_dimension();
+    this->dualInfo = dualInfo;
     gli = 0;
     this->name = name;
     this->category = category;
@@ -60,11 +60,11 @@ void Clump::replace_vp(vector<C_Polyhedron> new_vp) {
 Clump::Clump() {
     initialize();
 }
-Clump::Clump(var_info* dual_info) {
-    initialize(dual_info);
+Clump::Clump(var_info* dualInfo) {
+    initialize(dualInfo);
 }
-Clump::Clump(var_info* dual_info, string name, string category) {
-    initialize(dual_info, name, category);
+Clump::Clump(var_info* dualInfo, string name, string category) {
+    initialize(dualInfo, name, category);
 }
 
 int Clump::get_count() {

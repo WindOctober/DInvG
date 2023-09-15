@@ -46,10 +46,10 @@ extern int* tt;
 #define ZERO_ONE_FORBIDDEN 3
 #define ZERO_ONE_ALLOWED 4
 
-void Context::initialize(var_info* info, var_info* dual_info, var_info* lambda_info) {
+void Context::initialize(var_info* info, var_info* dualInfo, var_info* lambda_info) {
     context_count++;
     this->info = info;
-    this->dual_info = dual_info;
+    this->dualInfo = dualInfo;
     this->lambda_info = lambda_info;
 
     // vars_num= no. of primal dimensions
@@ -58,13 +58,13 @@ void Context::initialize(var_info* info, var_info* dual_info, var_info* lambda_i
 
     // dual_num=no. of dual dimensions
 
-    dual_num = dual_info->get_dimension();
+    dual_num = dualInfo->get_dimension();
 
     lambda_num = lambda_info->get_dimension();
 
     factors = new vector<Expression>();
-    equality_mat = new MatrixStore(dual_num, dual_info);
-    inequality_store = new PolyStore(dual_num, dual_info);
+    equality_mat = new MatrixStore(dual_num, dualInfo);
+    inequality_store = new PolyStore(dual_num, dualInfo);
     lambda_store = new DisequalityStore(lambda_num, lambda_info);
 
     eq_exprs = new vector<Expression>();
@@ -73,7 +73,7 @@ void Context::initialize(var_info* info, var_info* dual_info, var_info* lambda_i
 }
 
 void Context::initialize(var_info* info,
-                         var_info* dual_info,
+                         var_info* dualInfo,
                          var_info* lambda_info,
                          MatrixStore* equality_mat,
                          PolyStore* inequality_store,
@@ -81,12 +81,12 @@ void Context::initialize(var_info* info,
                          vector<Expression>* eq_exprs,
                          vector<Expression>* ineq_exprs) {
     this->info = info;
-    this->dual_info = dual_info;
+    this->dualInfo = dualInfo;
 
     context_count++;
     this->lambda_info = lambda_info;
     vars_num = info->get_dimension();
-    dual_num = dual_info->get_dimension();
+    dual_num = dualInfo->get_dimension();
     lambda_num = lambda_info->get_dimension();
 
     this->equality_mat = equality_mat;
@@ -99,30 +99,30 @@ void Context::initialize(var_info* info,
     check_consistent();
 }
 
-Context::Context(var_info* info, var_info* dual_info, var_info* lambda_info) {
-    initialize(info, dual_info, lambda_info);
+Context::Context(var_info* info, var_info* dualInfo, var_info* lambda_info) {
+    initialize(info, dualInfo, lambda_info);
 }
 
 Context::Context(var_info* info,
-                 var_info* dual_info,
+                 var_info* dualInfo,
                  var_info* lambda_info,
                  MatrixStore* equality_mat,
                  PolyStore* inequality_store,
                  DisequalityStore* lambda_store,
                  vector<Expression>* eq_exprs,
                  vector<Expression>* ineq_exprs) {
-    initialize(info, dual_info, lambda_info, equality_mat, inequality_store, lambda_store, eq_exprs, ineq_exprs);
+    initialize(info, dualInfo, lambda_info, equality_mat, inequality_store, lambda_store, eq_exprs, ineq_exprs);
 }
 
 Context::Context(var_info* info,
-                 var_info* dual_info,
+                 var_info* dualInfo,
                  var_info* lambda_info,
                  MatrixStore* equality_mat,
                  PolyStore* inequality_store,
                  DisequalityStore* lambda_store) {
     eq_exprs = new vector<Expression>();
     ineq_exprs = new vector<Expression>();
-    initialize(info, dual_info, lambda_info, equality_mat, inequality_store, lambda_store, eq_exprs, ineq_exprs);
+    initialize(info, dualInfo, lambda_info, equality_mat, inequality_store, lambda_store, eq_exprs, ineq_exprs);
 }
 
 void Context::add_equality_expression(Expression l) {
@@ -139,7 +139,7 @@ void Context::add_to_matrix_store(SparseLinExpr l) {
 
 void Context::add_to_matrix_store(Linear_Expression lin) {
     int i;
-    SparseLinExpr l(dual_num, dual_info);
+    SparseLinExpr l(dual_num, dualInfo);
     for (i = 0; i < dual_num; i++) {
         l.set_coefficient(i, handle_integers(lin.coefficient(Variable(i))));
     }
@@ -156,11 +156,10 @@ void Context::add_to_poly_store(Constraint cc) {
     int i;
     inequality_store->add_constraint(cc);
     if (cc.is_equality()) {
-        SparseLinExpr l(dual_num, dual_info);
+        SparseLinExpr l(dual_num, dualInfo);
         for (i = 0; i < dual_num; i++) {
             l.set_coefficient(i, handle_integers(cc.coefficient(Variable(i))));
         }
-
         l.set_coefficient(dual_num, handle_integers(cc.inhomogeneous_term()));
         equality_mat->add_constraint(l);
     }
@@ -196,7 +195,7 @@ void Context::add_transform_inequality(LinTransform l) {
 }
 
 Context* Context::clone() const {
-    // Some references like info,dual_info,lambda_info, invariant should be passed on
+    // Some references like info,dualInfo,lambda_info, invariant should be passed on
     // equality_mat,inequality_store,lambda_store,eq_exprs,ineq_exprs should be cloned so that they are not rewritten
     MatrixStore* ms1 = equality_mat->clone();
     PolyStore* ps1 = inequality_store->clone();
@@ -212,7 +211,7 @@ Context* Context::clone() const {
     for (it = ineq_exprs->begin(); it < ineq_exprs->end(); it++)
         ineqs1->push_back(Expression(*it));
 
-    return new Context(info, dual_info, lambda_info, ms1, ps1, ds1, eqs1, ineqs1);
+    return new Context(info, dualInfo, lambda_info, ms1, ps1, ds1, eqs1, ineqs1);
 }
 
 void Context::check_consistent() {
@@ -468,7 +467,6 @@ Expression& Context::choose_maximal_factor_equalities() {
                 "vector"
              << endl;
         cerr << "Exiting in Panic." << endl;
-        breakfn();
     }
 
     vector<Expression>::iterator it, vj;
@@ -501,7 +499,7 @@ bool Context::split_on_factor_equalities(LinTransform& lt) {
         split = true;
         DisequalityStore* ds1 = lambda_store->clone();
         child1 = new Context(
-            info, dual_info, lambda_info, equality_mat->clone(), inequality_store->clone(),
+            info, dualInfo, lambda_info, equality_mat->clone(), inequality_store->clone(),
             ds1);  // create a new context by cloning the appropriate stores
         // cout<<endl<<"- 1. Print Child Context: "<<endl<<(*child1)<<endl;
 
@@ -700,22 +698,6 @@ void Context::recursive_strategy(Clump& clump) {
     }
 }
 
-/*
-void Context::recursive_strategy(vector<Context *>* children){
-   // Can I be split?
-   if (inequality_store->is_trivial())
-      return;
-
-   int i= factorizing_strategy_equalities();
-   if (i==0){
-      split_01_strategy(children);
-   } else{
-      child1->recursive_strategy(children);
-      child2->recursive_strategy(children);
-   }
-
-}
-*/
 void Context::get_multiplier_counts() {
     int i;
 

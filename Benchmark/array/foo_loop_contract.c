@@ -12,7 +12,7 @@
   requires len <= SIZE;
   ensures \result == -1 ==> \forall integer i; 0 <= i < len ==> map[i] != key[i];
   ensures \result == 0 ==> \exists integer i; 0 <= i < len && map[i] == key[i];
-  assigns \nothing;
+  assigns \nothing;	
 @*/
 int foo(uint32_t *map, uint32_t *key, uint32_t len)
 {

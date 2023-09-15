@@ -51,7 +51,7 @@ using namespace Parma_Polyhedra_Library::IO_Operators;
 class Location {
    private:
     int vars_num;                  // the number of variables in the location
-    var_info *info, *dual_info, *lambda_info;  // the primal and dual var-infos
+    var_info *info, *dualInfo, *lambda_info;  // the primal and dual var-infos
     bool init_flag=false;           // has the initial condition been set
     string loc_name;            // name
     Context* context;             // the solver for intra-location transitions
@@ -87,14 +87,14 @@ class Location {
     // Initialize and form parametric coefficients for the invariant
     void initialize(int vars_num,
                     var_info* info,
-                    var_info* dual_info,
+                    var_info* dualInfo,
                     var_info* lambda_info,
                     C_Polyhedron* p,
                     string name);
     // Initialize but do not form new coefficients
     void initialize_without_populating(int vars_num,
                                        var_info* info,
-                                       var_info* dual_info,
+                                       var_info* dualInfo,
                                        var_info* lambda_info,
                                        C_Polyhedron* p,
                                        string name,
@@ -112,25 +112,25 @@ class Location {
    public:
     Location(int vars_num,
              var_info* info,
-             var_info* dual_info,
+             var_info* dualInfo,
              var_info* lambda_info,
              C_Polyhedron* p,
              string name);
 
-    Location(int vars_num, var_info* info, var_info* dual_info, var_info* lambda_info, string name);
+    Location(int vars_num, var_info* info, var_info* dualInfo, var_info* lambda_info, string name);
 
     // A location with preset var-infos and a given starting point
 
     Location(int vars_num,
              var_info* info,
-             var_info* dual_info,
+             var_info* dualInfo,
              var_info* lambda_info,
              string name,
              int left);
 
     Location(int vars_num,
              var_info* info,
-             var_info* dual_info,
+             var_info* dualInfo,
              var_info* lambda_info,
              C_Polyhedron* p,
              string name,

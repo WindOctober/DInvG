@@ -471,7 +471,7 @@ bool SparseLinExpr::equiv(SparseLinExpr const& l1, Rational& factor) const {
         return false;
     }
 
-    factor = ((*vi).second).inv() * ((*vj).second);
+    factor = ((*vi).second).inverse() * ((*vj).second);
 
     for (; vi != map_ration.end() && vj != mp.end(); ++vi, ++vj) {
         if ((vi->first != vj->first) ||

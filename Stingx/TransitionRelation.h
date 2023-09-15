@@ -53,7 +53,7 @@ extern int get_index_of_location(string loc_name);
 class TransitionRelation {
    private:
     int vars_num;
-    var_info *info, *dual_info, *lambda_info,
+    var_info *info, *dualInfo, *lambda_info,
         *fp;  // lambda_info is the var_info for non-linear multipliers
     Location *preloc, *postloc;
     // the actual transition relation as a 2n dimensional polyhedron
@@ -76,7 +76,7 @@ class TransitionRelation {
     int fired;
     void initialize(int vars_num,
                     var_info* info,
-                    var_info* dual_info,
+                    var_info* dualInfo,
                     var_info* lambda_info,
                     Location* preloc,
                     Location* postloc,
@@ -84,13 +84,13 @@ class TransitionRelation {
                     string name);
     void initialize(int vars_num,
                     var_info* info,
-                    var_info* dual_info,
+                    var_info* dualInfo,
                     var_info* lambda_info,
                     string name);
 
     void initialize_without_populating(int vars_num,
                                        var_info* info,
-                                       var_info* dual_info,
+                                       var_info* dualInfo,
                                        var_info* lambda_info,
                                        Location* preloc,
                                        Location* postloc,
@@ -99,7 +99,7 @@ class TransitionRelation {
                                        int index);
     void initialize_without_populating(int vars_num,
                                        var_info* info,
-                                       var_info* dual_info,
+                                       var_info* dualInfo,
                                        var_info* lambda_info,
                                        string name,
                                        int index);
@@ -109,12 +109,11 @@ class TransitionRelation {
     bool add_preservation_relation(Constraint const& cc);
     bool split_relation();  // if expression is of the for 'x-x , then add
 
-    void dualize_standard(C_Polyhedron& result) const;
 
    public:
     TransitionRelation(int vars_num,
                        var_info* info,
-                       var_info* dual_info,
+                       var_info* dualInfo,
                        var_info* lambda_info,
                        Location* preloc,
                        Location* postloc,
@@ -123,13 +122,13 @@ class TransitionRelation {
 
     TransitionRelation(int vars_num,
                        var_info* info,
-                       var_info* dual_info,
+                       var_info* dualInfo,
                        var_info* lambda_info,
                        string name);
 
     TransitionRelation(int vars_num,
                        var_info* info,
-                       var_info* dual_info,
+                       var_info* dualInfo,
                        var_info* lambda_info,
                        Location* preloc,
                        Location* postloc,
@@ -139,7 +138,7 @@ class TransitionRelation {
 
     TransitionRelation(int vars_num,
                        var_info* info,
-                       var_info* dual_info,
+                       var_info* dualInfo,
                        var_info* lambda_info,
                        string name,
                        int index);

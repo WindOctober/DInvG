@@ -26,7 +26,7 @@
 
 bool InvariantMap::entry_exists(string const& what) const {
     // check using STL routine
-    return (map_ration.find(what) != map_ration.end());
+    return (varCoef.find(what) != varCoef.end());
 }
 
 void InvariantMap::add_value_to_map(string const& what,
@@ -39,7 +39,7 @@ void InvariantMap::add_value_to_map(string const& what,
                      << what << " Already exists in the map" << endl);
 
     // now add it
-    map_ration.insert(StringPolyPair(what, poly));
+    varCoef.insert(StringPolyPair(what, poly));
 }
 
 InvariantMap::InvariantMap(var_info* info, vector<Location*> const& vloc)
@@ -69,8 +69,8 @@ C_Polyhedron& InvariantMap::operator[](Location const* l) {
 }
 
 C_Polyhedron& InvariantMap::operator[](string const& what) {
-    StringPolyMap::iterator vi = map_ration.find(what);
-    PRECONDITION((vi != map_ration.end()),
+    StringPolyMap::iterator vi = varCoef.find(what);
+    PRECONDITION((vi != varCoef.end()),
                  "InvariantMap::operator[] --> entry does not exist");
 
     return (*vi).second;
@@ -86,9 +86,9 @@ C_Polyhedron const& InvariantMap::operator()(Location const* l) const {
 }
 
 C_Polyhedron const& InvariantMap::operator()(string const& what) const {
-    StringPolyMap::const_iterator vi = map_ration.find(what);
+    StringPolyMap::const_iterator vi = varCoef.find(what);
 
-    PRECONDITION((vi != map_ration.end()),
+    PRECONDITION((vi != varCoef.end()),
                  "InvariantMap::operator() --> entry does not exist");
 
     return (*vi).second;
@@ -151,7 +151,7 @@ void InvariantMap::assign(InvariantMap const& im) {
 void InvariantMap::print(ostream& out) const {
     StringPolyMap::const_iterator vi;
 
-    for (vi = map_ration.begin(); vi != map_ration.end(); ++vi) {
+    for (vi = varCoef.begin(); vi != varCoef.end(); ++vi) {
         string const& what = (*vi).first;
         C_Polyhedron const& poly = (*vi).second;
 
@@ -167,7 +167,7 @@ void InvariantMap::print(ostream& out) const {
 bool InvariantMap::equals(InvariantMap const& im) const {
     StringPolyMap::const_iterator vi;
 
-    for (vi = map_ration.begin(); vi != map_ration.end(); ++vi) {
+    for (vi = varCoef.begin(); vi != varCoef.end(); ++vi) {
         string const& what = (*vi).first;
         C_Polyhedron const& poly1 = (*vi).second;
         C_Polyhedron const& poly2 = im(what);
