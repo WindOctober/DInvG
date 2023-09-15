@@ -71,10 +71,10 @@ var_info::var_info(var_info* f1, var_info* f2) {
         insert(f2->get_name(i));
 }
 
-var_info::var_info(var_info* lambda_info, vector<int> v1) {
-    // project out from lambda_info based on v
+var_info::var_info(var_info* lambdaInfo, vector<int> v1) {
+    // project out from lambdaInfo based on v
 
-    int n = lambda_info->get_dimension();
+    int n = lambdaInfo->get_dimension();
     dimension = 0;
     this->v = new vector<char*>();
 
@@ -84,13 +84,13 @@ var_info::var_info(var_info* lambda_info, vector<int> v1) {
         PRECONDITION(((*vi) >= 0 && (*vi) < n),
                      "var_info::var_info asked to project out of range");
 
-        insert(lambda_info->get_name(*vi));
+        insert(lambdaInfo->get_name(*vi));
     }
     return;
 }
 
-var_info::var_info(var_info const* lambda_info) {
-    if (!lambda_info){
+var_info::var_info(var_info const* lambdaInfo) {
+    if (!lambdaInfo){
         return;
     }
     int i;
@@ -98,8 +98,8 @@ var_info::var_info(var_info const* lambda_info) {
     this->v = new vector<char*>();
 
     this->dimension = 0;
-    for (i = 0; i < lambda_info->dimension; ++i) {
-        this->insert(lambda_info->get_name(i));
+    for (i = 0; i < lambdaInfo->dimension; ++i) {
+        this->insert(lambdaInfo->get_name(i));
     }
 }
 

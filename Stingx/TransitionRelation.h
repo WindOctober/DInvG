@@ -52,9 +52,9 @@ extern int get_index_of_location(string loc_name);
 
 class TransitionRelation {
    private:
-    int vars_num;
-    var_info *info, *dualInfo, *lambda_info,
-        *fp;  // lambda_info is the var_info for non-linear multipliers
+    int varsNum;
+    var_info *info, *dualInfo, *lambdaInfo,
+        *fp;  // lambdaInfo is the var_info for non-linear multipliers
     Location *preloc, *postloc;
     // the actual transition relation as a 2n dimensional polyhedron
     C_Polyhedron* trans_poly;
@@ -69,38 +69,38 @@ class TransitionRelation {
 
     int mult_left, mult_right, constraints_num;  // the range multipliers in its dual and the
                                     // number of constraint variables
-    int index;  // The index of the non-linear multiplier in lambda_info
+    int index;  // The index of the non-linear multiplier in lambdaInfo
 
     string name;
 
     int fired;
-    void initialize(int vars_num,
+    void initialize(int varsNum,
                     var_info* info,
                     var_info* dualInfo,
-                    var_info* lambda_info,
+                    var_info* lambdaInfo,
                     Location* preloc,
                     Location* postloc,
                     C_Polyhedron* rel,
                     string name);
-    void initialize(int vars_num,
+    void initialize(int varsNum,
                     var_info* info,
                     var_info* dualInfo,
-                    var_info* lambda_info,
+                    var_info* lambdaInfo,
                     string name);
 
-    void initialize_without_populating(int vars_num,
+    void InitWithoutPopulating(int varsNum,
                                        var_info* info,
                                        var_info* dualInfo,
-                                       var_info* lambda_info,
+                                       var_info* lambdaInfo,
                                        Location* preloc,
                                        Location* postloc,
                                        C_Polyhedron* rel,
                                        string name,
                                        int index);
-    void initialize_without_populating(int vars_num,
+    void InitWithoutPopulating(int varsNum,
                                        var_info* info,
                                        var_info* dualInfo,
-                                       var_info* lambda_info,
+                                       var_info* lambdaInfo,
                                        string name,
                                        int index);
 
@@ -111,35 +111,35 @@ class TransitionRelation {
 
 
    public:
-    TransitionRelation(int vars_num,
+    TransitionRelation(int varsNum,
                        var_info* info,
                        var_info* dualInfo,
-                       var_info* lambda_info,
+                       var_info* lambdaInfo,
                        Location* preloc,
                        Location* postloc,
                        C_Polyhedron* rel,
                        string name);
 
-    TransitionRelation(int vars_num,
+    TransitionRelation(int varsNum,
                        var_info* info,
                        var_info* dualInfo,
-                       var_info* lambda_info,
+                       var_info* lambdaInfo,
                        string name);
 
-    TransitionRelation(int vars_num,
+    TransitionRelation(int varsNum,
                        var_info* info,
                        var_info* dualInfo,
-                       var_info* lambda_info,
+                       var_info* lambdaInfo,
                        Location* preloc,
                        Location* postloc,
                        C_Polyhedron* rel,
                        string name,
                        int index);
 
-    TransitionRelation(int vars_num,
+    TransitionRelation(int varsNum,
                        var_info* info,
                        var_info* dualInfo,
-                       var_info* lambda_info,
+                       var_info* lambdaInfo,
                        string name,
                        int index);
 

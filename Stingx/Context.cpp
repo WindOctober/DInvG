@@ -46,26 +46,26 @@ extern int* tt;
 #define ZERO_ONE_FORBIDDEN 3
 #define ZERO_ONE_ALLOWED 4
 
-void Context::initialize(var_info* info, var_info* dualInfo, var_info* lambda_info) {
+void Context::initialize(var_info* info, var_info* dualInfo, var_info* lambdaInfo) {
     context_count++;
     this->info = info;
     this->dualInfo = dualInfo;
-    this->lambda_info = lambda_info;
+    this->lambdaInfo = lambdaInfo;
 
-    // vars_num= no. of primal dimensions
+    // varsNum= no. of primal dimensions
 
-    vars_num = info->get_dimension();
+    varsNum = info->get_dimension();
 
     // dual_num=no. of dual dimensions
 
     dual_num = dualInfo->get_dimension();
 
-    lambda_num = lambda_info->get_dimension();
+    lambda_num = lambdaInfo->get_dimension();
 
     factors = new vector<Expression>();
     equality_mat = new MatrixStore(dual_num, dualInfo);
     inequality_store = new PolyStore(dual_num, dualInfo);
-    lambda_store = new DisequalityStore(lambda_num, lambda_info);
+    lambda_store = new DisequalityStore(lambda_num, lambdaInfo);
 
     eq_exprs = new vector<Expression>();
     ineq_exprs = new vector<Expression>();
@@ -74,7 +74,7 @@ void Context::initialize(var_info* info, var_info* dualInfo, var_info* lambda_in
 
 void Context::initialize(var_info* info,
                          var_info* dualInfo,
-                         var_info* lambda_info,
+                         var_info* lambdaInfo,
                          MatrixStore* equality_mat,
                          PolyStore* inequality_store,
                          DisequalityStore* lambda_store,
@@ -84,10 +84,10 @@ void Context::initialize(var_info* info,
     this->dualInfo = dualInfo;
 
     context_count++;
-    this->lambda_info = lambda_info;
-    vars_num = info->get_dimension();
+    this->lambdaInfo = lambdaInfo;
+    varsNum = info->get_dimension();
     dual_num = dualInfo->get_dimension();
-    lambda_num = lambda_info->get_dimension();
+    lambda_num = lambdaInfo->get_dimension();
 
     this->equality_mat = equality_mat;
     this->inequality_store = inequality_store;
@@ -99,30 +99,30 @@ void Context::initialize(var_info* info,
     check_consistent();
 }
 
-Context::Context(var_info* info, var_info* dualInfo, var_info* lambda_info) {
-    initialize(info, dualInfo, lambda_info);
+Context::Context(var_info* info, var_info* dualInfo, var_info* lambdaInfo) {
+    initialize(info, dualInfo, lambdaInfo);
 }
 
 Context::Context(var_info* info,
                  var_info* dualInfo,
-                 var_info* lambda_info,
+                 var_info* lambdaInfo,
                  MatrixStore* equality_mat,
                  PolyStore* inequality_store,
                  DisequalityStore* lambda_store,
                  vector<Expression>* eq_exprs,
                  vector<Expression>* ineq_exprs) {
-    initialize(info, dualInfo, lambda_info, equality_mat, inequality_store, lambda_store, eq_exprs, ineq_exprs);
+    initialize(info, dualInfo, lambdaInfo, equality_mat, inequality_store, lambda_store, eq_exprs, ineq_exprs);
 }
 
 Context::Context(var_info* info,
                  var_info* dualInfo,
-                 var_info* lambda_info,
+                 var_info* lambdaInfo,
                  MatrixStore* equality_mat,
                  PolyStore* inequality_store,
                  DisequalityStore* lambda_store) {
     eq_exprs = new vector<Expression>();
     ineq_exprs = new vector<Expression>();
-    initialize(info, dualInfo, lambda_info, equality_mat, inequality_store, lambda_store, eq_exprs, ineq_exprs);
+    initialize(info, dualInfo, lambdaInfo, equality_mat, inequality_store, lambda_store, eq_exprs, ineq_exprs);
 }
 
 void Context::add_equality_expression(Expression l) {
@@ -195,7 +195,7 @@ void Context::add_transform_inequality(LinTransform l) {
 }
 
 Context* Context::clone() const {
-    // Some references like info,dualInfo,lambda_info, invariant should be passed on
+    // Some references like info,dualInfo,lambdaInfo, invariant should be passed on
     // equality_mat,inequality_store,lambda_store,eq_exprs,ineq_exprs should be cloned so that they are not rewritten
     MatrixStore* ms1 = equality_mat->clone();
     PolyStore* ps1 = inequality_store->clone();
@@ -211,7 +211,7 @@ Context* Context::clone() const {
     for (it = ineq_exprs->begin(); it < ineq_exprs->end(); it++)
         ineqs1->push_back(Expression(*it));
 
-    return new Context(info, dualInfo, lambda_info, ms1, ps1, ds1, eqs1, ineqs1);
+    return new Context(info, dualInfo, lambdaInfo, ms1, ps1, ds1, eqs1, ineqs1);
 }
 
 void Context::check_consistent() {
@@ -499,7 +499,7 @@ bool Context::split_on_factor_equalities(LinTransform& lt) {
         split = true;
         DisequalityStore* ds1 = lambda_store->clone();
         child1 = new Context(
-            info, dualInfo, lambda_info, equality_mat->clone(), inequality_store->clone(),
+            info, dualInfo, lambdaInfo, equality_mat->clone(), inequality_store->clone(),
             ds1);  // create a new context by cloning the appropriate stores
         // cout<<endl<<"- 1. Print Child Context: "<<endl<<(*child1)<<endl;
 
@@ -727,7 +727,7 @@ int Context::get_multiplier_status() {
     }
 
     bool zero_possible, one_possible;
-    LinTransform lt(lambda_num, lambda_info);
+    LinTransform lt(lambda_num, lambdaInfo);
 
     // now check  on each multiplier on how many unresolved instances are there
     get_multiplier_counts();
@@ -824,7 +824,7 @@ with 0 and 1
 
 
    // choose 0/1 values for the multiplier and expand
-   LinTransform lt(lambda_num,lambda_info);
+   LinTransform lt(lambda_num,lambdaInfo);
    lt[index]=1; // \mu{index}=0
 
    Context * child1, *child2;
@@ -895,7 +895,7 @@ void Context::split_01_strategy(Clump& clump) {
 
     // now go though all the multipliers for which zero or one is forbidden and
     // apply the remaining choose 0/1 values for the multiplier and expand
-    LinTransform lt(lambda_num, lambda_info);
+    LinTransform lt(lambda_num, lambdaInfo);
     Context* child1;
 
     for (i = 0; i < lambda_num; i++) {
@@ -999,7 +999,7 @@ void Context::split_01_strategy(vector<Location*>* loclist,
 
     // now go though all the multipliers for which zero or one is forbidden and
     // apply the remaining choose 0/1 values for the multiplier and expand
-    LinTransform lt(lambda_num, lambda_info);
+    LinTransform lt(lambda_num, lambdaInfo);
     Context* child1;
 
     for (i = 0; i < lambda_num; i++) {
@@ -1176,13 +1176,13 @@ Context::~Context() {
 }
 
 void Context::obtain_primal_polyhedron(int left, C_Polyhedron& result) {
-    PRECONDITION((result.space_dimension() == (unsigned)vars_num),
+    PRECONDITION((result.space_dimension() == (unsigned)varsNum),
                  " Polyhedron of wrong space dimension passed");
 
-    PRECONDITION((left >= 0 && left + vars_num + 1 <= dual_num),
+    PRECONDITION((left >= 0 && left + varsNum + 1 <= dual_num),
                  " Asked to primalize out of range");
 
-    // assume that result's space dimension is =vars_num
+    // assume that result's space dimension is =varsNum
 
     // obtain the generators of the polystore polyhedron
     reconcile_stores();
@@ -1195,12 +1195,12 @@ void Context::obtain_primal_polyhedron(int left, C_Polyhedron& result) {
     int i, j;
     for (it = gs.begin(); it != gs.end(); ++it) {
         ll *= 0;  // reset the linexpr
-        for (i = 0; i < vars_num; ++i) {
+        for (i = 0; i < varsNum; ++i) {
             j = handle_integers((*it).coefficient(Variable(left + i)));
             ll += j * Variable(i);
         }
 
-        ll += handle_integers((*it).coefficient(Variable(left + vars_num)));
+        ll += handle_integers((*it).coefficient(Variable(left + varsNum)));
 
         if ((*it).is_line())
             // ppl-v0.9
@@ -1241,13 +1241,13 @@ bool Context::obtain_transition_relation(int mult_index,
     //
     //
     // secondly all the constraints involving the multiplier should lie in the
-    // range [left.. left+vars_num] or else this will not work
+    // range [left.. left+varsNum] or else this will not work
     //
 
-    PRECONDITION((result.space_dimension() == (unsigned)(2 * vars_num)),
+    PRECONDITION((result.space_dimension() == (unsigned)(2 * varsNum)),
                  " result polyhedron not of the correct space dimension");
 
-    PRECONDITION((left >= 0 && left + vars_num + 1 <= dual_num),
+    PRECONDITION((left >= 0 && left + varsNum + 1 <= dual_num),
                  " Context::obtain_transtion_relation -- left1 out of range");
 
     //
@@ -1255,7 +1255,7 @@ bool Context::obtain_transition_relation(int mult_index,
     // also check if the polyhedron satisfies the constraints above
     //
 
-    C_Polyhedron temp(2 * vars_num + 2, UNIVERSE);
+    C_Polyhedron temp(2 * varsNum + 2, UNIVERSE);
     Linear_Expression ll;
 
     // vector<Expression>::iterator it;
@@ -1291,18 +1291,18 @@ bool Context::obtain_transition_relation(int mult_index,
 
     for (vgs = gs.begin(); vgs != gs.end(); ++vgs) {
         ll *= 0;
-        for (i = 0; i < vars_num; i++) {
+        for (i = 0; i < varsNum; i++) {
             j = -handle_integers((*vgs).coefficient(Variable(i)));
             ll += j * Variable(i);
         }
 
-        j = -handle_integers((*vgs).coefficient(Variable(vars_num)));
+        j = -handle_integers((*vgs).coefficient(Variable(varsNum)));
         ll += j;
-        for (i = 0; i < vars_num; i++) {
-            j = handle_integers((*vgs).coefficient(Variable(vars_num + 1 + i)));
-            ll += j * Variable(vars_num + i);
+        for (i = 0; i < varsNum; i++) {
+            j = handle_integers((*vgs).coefficient(Variable(varsNum + 1 + i)));
+            ll += j * Variable(varsNum + i);
         }
-        j = handle_integers((*vgs).coefficient(Variable(2 * vars_num + 1)));
+        j = handle_integers((*vgs).coefficient(Variable(2 * varsNum + 1)));
         ll += j;
 
         if ((*vgs).is_line())
@@ -1344,12 +1344,12 @@ bool Context::to_constraints_(int index,
             if (mc(i) != 0)
                 return false;
 
-        for (i = left + vars_num + 1; i < dual_num; ++i)
+        for (i = left + varsNum + 1; i < dual_num; ++i)
             if (mc(i) != 0)
                 return false;
 
         // now obtain fill in the constraints for muc
-        for (i = 0; i <= vars_num; ++i) {
+        for (i = 0; i <= varsNum; ++i) {
             j = mc(i + left).num();
 
             ll += j * Variable(i);
@@ -1361,15 +1361,15 @@ bool Context::to_constraints_(int index,
             if (mc(i) != 0)
                 return false;
 
-        for (i = left + vars_num + 1; i < dual_num; ++i)
+        for (i = left + varsNum + 1; i < dual_num; ++i)
             if (mc(i) != 0)
                 return false;
 
         // now obtain fill in the constraints for c
-        for (i = 0; i <= vars_num; ++i) {
+        for (i = 0; i <= varsNum; ++i) {
             j = mc(i + left).num();
 
-            ll += j * Variable(i + vars_num + 1);
+            ll += j * Variable(i + varsNum + 1);
         }
         if (ineq)
             result.add_constraint(ll >= 0);

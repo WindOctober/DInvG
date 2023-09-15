@@ -98,7 +98,7 @@ vector<int> target_prior;
 char err_str[100];
 extern int linenum;
 int dimension;
-var_info *info, *dualInfo, *lambda_info;
+var_info *info, *dualInfo, *lambdaInfo;
 vector<Location*>* loclist;
 vector<TransitionRelation*>* trlist;
 Context* glc;  // The global context
@@ -567,7 +567,7 @@ void Initialize_before_Parser() {
     inv_check = false;
     clump_prune_count = prune_count = 0;
     context_count = 0;
-    lambda_info = new var_info();
+    lambdaInfo = new var_info();
     dualInfo = new var_info();
     loclist = new vector<Location*>();
     trlist = new vector<TransitionRelation*>();
@@ -944,7 +944,7 @@ void Compute_Invariant_Frontend(){
     Initialize();
     add_preloc_invariants_to_transitions();
     Create_Adjacency_Matrix_for_Location_and_Transition();
-    global_system = new System(info, dualInfo, lambda_info);
+    global_system = new System(info, dualInfo, lambdaInfo);
 
     for (auto it = loclist->begin(); it < loclist->end(); it++) {
         global_system->add_location((*it));
@@ -952,7 +952,7 @@ void Compute_Invariant_Frontend(){
     for (auto it = trlist->begin(); it < trlist->end(); it++) {
         global_system->add_transition((*it));
     }
-    tt = new int[lambda_info->get_dimension()];
+    tt = new int[lambdaInfo->get_dimension()];
     int dual_num = dualInfo->get_dimension();
     trivial = new C_Polyhedron(dual_num, UNIVERSE);
     for (auto it = loclist->begin(); it < loclist->end(); it++) {
@@ -974,7 +974,7 @@ void Compute_Invariant_Frontend(){
     }
 
     for (auto it = loclist->begin(); it < loclist->end(); it++) {
-        (*it)->add_clump(clumps);
+        (*it)->AddClump(clumps);
         if (total_timer.compute_time_elapsed() >= time_limit) {
             cout << "Time is up!" << endl;
             break;
@@ -1064,7 +1064,7 @@ int main() {
     Print_Location_and_Transition();
 
     Create_Adjacency_Matrix_for_Location_and_Transition();
-    global_system = new System(info, dualInfo, lambda_info);
+    global_system = new System(info, dualInfo, lambdaInfo);
     
     for (auto it = loclist->begin(); it < loclist->end(); it++) {
         global_system->add_location((*it));
@@ -1072,7 +1072,7 @@ int main() {
     for (auto it = trlist->begin(); it < trlist->end(); it++) {
         global_system->add_transition((*it));
     }
-    tt = new int[lambda_info->get_dimension()];
+    tt = new int[lambdaInfo->get_dimension()];
     if (num_context == 1) {
         //  output_file: **newdfs_sequences**
         //  dual_num
@@ -1100,7 +1100,7 @@ int main() {
             }
         }
         for (auto it = loclist->begin(); it < loclist->end(); it++) {
-            (*it)->add_clump(clumps);
+            (*it)->AddClump(clumps);
             if (total_timer.compute_time_elapsed() >= time_limit) {
                 cout << "Time is up!" << endl;
                 break;
@@ -1183,7 +1183,7 @@ int main() {
         }
 
         for (auto it = loclist->begin(); it < loclist->end(); it++) {
-            (*it)->add_clump(clumps);
+            (*it)->AddClump(clumps);
             if (total_timer.compute_time_elapsed() >= time_limit) {
                 cout << "Time is up!" << endl;
                 break;
@@ -1391,7 +1391,7 @@ void Scan_Input() {
             }
             if (regex_match(line, match, loc_pattern)) {
                 if (new_poly && new_location) {
-                    new_location->set_polyhedron(new_poly);
+                    new_location->setPoly(new_poly);
                 }
                 if (new_poly && new_transition) {
                     new_transition->set_relation(new_poly);
@@ -1408,7 +1408,7 @@ void Scan_Input() {
                 if (!search_location((char*)loc_name.c_str(), &new_location)) {
                     new_location =
                         new Location(info->get_dimension(), info, dualInfo,
-                                     lambda_info, loc_name);
+                                     lambdaInfo, loc_name);
                     loclist->push_back(new_location);
                 } else {
                     cerr << "[ERROR] Multi-defined Location." << endl;
@@ -1418,7 +1418,7 @@ void Scan_Input() {
                        regex_match(line, match, self_trans_pattern)) {
                 stage = 2;
                 if (new_poly && new_location) {
-                    new_location->set_polyhedron(new_poly);
+                    new_location->setPoly(new_poly);
                 }
                 if (new_poly && new_transition) {
                     new_transition->set_relation(new_poly); }
@@ -1437,7 +1437,7 @@ void Scan_Input() {
                 if (!search_transition_relation((char*)transition_name.c_str(),
                                                 &new_transition)) {
                     new_transition = new TransitionRelation(
-                        info->get_dimension(), info, dualInfo, lambda_info,
+                        info->get_dimension(), info, dualInfo, lambdaInfo,
                         transition_name);
                     trlist->push_back(new_transition);
                 } else {
@@ -1464,7 +1464,7 @@ void Scan_Input() {
             } 
             else if (regex_match(line, match, invariant_pattern)) {
                 if (new_poly && new_location) {
-                    new_location->set_polyhedron(new_poly);
+                    new_location->setPoly(new_poly);
                 }
                 if (new_poly && new_transition) {
                     new_transition->set_relation(new_poly);

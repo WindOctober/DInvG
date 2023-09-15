@@ -43,7 +43,7 @@ using namespace Parma_Polyhedra_Library::IO_Operators;
 
 class MatrixStore {
    private:
-    // Represent the system $A x =b$, where A is a rational m x vars_num matrix and
+    // Represent the system $A x =b$, where A is a rational m x varsNum matrix and
     //  b is a mx 1 vector
     //
     // We need to use this as a "Constraint Store"
@@ -56,21 +56,21 @@ class MatrixStore {
     // The matrix A|b is an augmented matrix
     // such that A is kept in rref form..
     // It means Ax -b =0
-    // no need to have more than vars_num rows!
+    // no need to have more than varsNum rows!
 
     Rational** mat;
-    int vars_num;
+    int varsNum;
     var_info* info;
     bool consistent;
-    void initialize(int vars_num, var_info* info);
+    void initialize(int varsNum, var_info* info);
     void zero_out();
 
    public:
     MatrixStore();
 
-    MatrixStore(int vars_num, var_info* info);  // initialize the store
+    MatrixStore(int varsNum, var_info* info);  // initialize the store
 
-    void init_set(int vars_num, var_info* info);
+    void init_set(int varsNum, var_info* info);
 
     int simplify(SparseLinExpr& expression) const;  // Simplify an expression
 

@@ -71,15 +71,15 @@ class Context {
     vector<Expression> *eq_exprs, *ineq_exprs, *factors;
 
     Context* child1;
-    var_info *info, *dualInfo, *lambda_info;
+    var_info *info, *dualInfo, *lambdaInfo;
 
-    int vars_num, dual_num,
+    int varsNum, dual_num,
         lambda_num;  // No. of dimensions, dual dimensions, multipliers respectively
 
-    void initialize(var_info* info, var_info* dualInfo, var_info* lambda_info);
+    void initialize(var_info* info, var_info* dualInfo, var_info* lambdaInfo);
     void initialize(var_info* info,
                     var_info* dualInfo,
-                    var_info* lambda_info,
+                    var_info* lambdaInfo,
                     MatrixStore* equality_mat,
                     PolyStore* inequality_store,
                     DisequalityStore* lambda_store,
@@ -114,10 +114,10 @@ class Context {
 
     //       1.7 Forming an invariant from a consistent leaf node
 
-    Context(var_info* info, var_info* dualInfo, var_info* lambda_info);
+    Context(var_info* info, var_info* dualInfo, var_info* lambdaInfo);
     Context(var_info* info,
             var_info* dualInfo,
-            var_info* lambda_info,
+            var_info* lambdaInfo,
             MatrixStore* equality_mat,
             PolyStore* inequality_store,
             DisequalityStore* lambda_store,
@@ -125,7 +125,7 @@ class Context {
             vector<Expression>* ineq_exprs);
     Context(var_info* info,
             var_info* dualInfo,
-            var_info* lambda_info,
+            var_info* lambdaInfo,
             MatrixStore* equality_mat,
             PolyStore* inequality_store,
             DisequalityStore* lambda_store);
@@ -295,7 +295,7 @@ class Context {
 
     // collect constraints involving multiplier index in the result
     // as long as those constraints involve only variables from
-    // left.. left+vars_num
+    // left.. left+varsNum
 
     bool to_constraints_(int index,
                          int left,

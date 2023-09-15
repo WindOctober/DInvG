@@ -30,23 +30,23 @@
 #include "Rational.h"
 #include "SparseLinExpr.h"
 
-void ExpressionStore::initialize(int vars_num, int lambda_num, var_info* dualInfo, var_info* lambda_info) {
-    this->vars_num = vars_num;
+void ExpressionStore::initialize(int varsNum, int lambda_num, var_info* dualInfo, var_info* lambdaInfo) {
+    this->varsNum = varsNum;
     this->lambda_num = lambda_num;
     this->dualInfo = dualInfo;
-    this->lambda_info = lambda_info;
+    this->lambdaInfo = lambdaInfo;
 
     le_list = new vector<SparseLinExpr>();
     lt_list = new vector<LinTransform>();
     /*
-    m.init_set(vars_num,dualInfo);
+    m.init_set(varsNum,dualInfo);
     split_seq=new vector<LinTransform>();
     vl = new vector<Expression>();
     */
 }
 
-ExpressionStore::ExpressionStore(int vars_num, int lambda_num, var_info* dualInfo, var_info* lambda_info) {
-    initialize(vars_num, lambda_num, dualInfo, lambda_info);
+ExpressionStore::ExpressionStore(int varsNum, int lambda_num, var_info* dualInfo, var_info* lambdaInfo) {
+    initialize(varsNum, lambda_num, dualInfo, lambdaInfo);
 }
 
 bool ExpressionStore::AddExpression(Expression& exp) {
@@ -122,7 +122,7 @@ void ExpressionStore::simplify(MatrixStore const& m) {
     //   bool info=true;
     vector<Expression>::iterator vi;
     SparseLinExpr ll;
-    LinTransform lt(vars_num, dualInfo);
+    LinTransform lt(varsNum, dualInfo);
 
     //   while (info){
 

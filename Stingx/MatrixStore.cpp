@@ -26,41 +26,41 @@
 #include "var-info.h"
 
 MatrixStore::MatrixStore() {
-    vars_num = 0;
+    varsNum = 0;
     return;
 }
-void MatrixStore::initialize(int vars_num, var_info* info) {
-    this->vars_num = vars_num;
-    mat = new Rational*[vars_num];  // the last column is the $b$ augment
-    for (int i = 0; i < vars_num; i++)
-        mat[i] = new Rational[vars_num + 1];
+void MatrixStore::initialize(int varsNum, var_info* info) {
+    this->varsNum = varsNum;
+    mat = new Rational*[varsNum];  // the last column is the $b$ augment
+    for (int i = 0; i < varsNum; i++)
+        mat[i] = new Rational[varsNum + 1];
 
     zero_out();  // wipe the matrices clear!
     this->info = info;
     consistent = true;
 }
 
-MatrixStore::MatrixStore(int vars_num, var_info* info) {
-    initialize(vars_num, info);
+MatrixStore::MatrixStore(int varsNum, var_info* info) {
+    initialize(varsNum, info);
 }
 
 void MatrixStore::zero_out() {
-    for (int i = 0; i < vars_num; i++)
-        for (int j = 0; j < vars_num + 1; j++)
+    for (int i = 0; i < varsNum; i++)
+        for (int j = 0; j < varsNum + 1; j++)
             mat[i][j] = 0;
     consistent = true;
 }
 
-void MatrixStore::init_set(int vars_num, var_info* dualInfo) {
-    initialize(vars_num, dualInfo);
+void MatrixStore::init_set(int varsNum, var_info* dualInfo) {
+    initialize(varsNum, dualInfo);
 }
 
 int MatrixStore::simplify(SparseLinExpr& expression) const {
     // Use the guassian elimination type technique
     int i, j;
-    int lead = vars_num + 1;
+    int lead = varsNum + 1;
     Rational temp1, temp2;
-    for (i = 0; i < vars_num; i++) {
+    for (i = 0; i < varsNum; i++) {
         if (!(mat[i][i] == 0)) {
             if (expression(i) != 0) {
                 // Perform a reduction of the expression
@@ -68,7 +68,7 @@ int MatrixStore::simplify(SparseLinExpr& expression) const {
                     temp2 = (expression(i) * mat[i][j]) * mat[i][i].inverse();
                     expression.subtract_coefficient(j, temp2);
                 }
-                for (j = i + 1; j < vars_num + 1; j++) {
+                for (j = i + 1; j < varsNum + 1; j++) {
                     temp2 = (expression(i) * mat[i][j]) * mat[i][i].inverse();
                     expression.subtract_coefficient(j, temp2);
                 }
@@ -77,7 +77,7 @@ int MatrixStore::simplify(SparseLinExpr& expression) const {
         }
     }
 
-    for (i = 0; i < vars_num + 1; i++) {
+    for (i = 0; i < varsNum + 1; i++) {
         if (expression(i) != 0) {
             lead = i;
             break;
@@ -88,13 +88,13 @@ int MatrixStore::simplify(SparseLinExpr& expression) const {
 }
 
 void MatrixStore::back_substitute(int lead) {
-    if (lead >= vars_num || mat[lead][lead] == 0)
+    if (lead >= varsNum || mat[lead][lead] == 0)
         return;
     Rational temp1, temp2;
     int i, j;
     for (i = lead - 1; i >= 0; i--) {
         if (mat[i][lead] != 0) {
-            for (j = lead + 1; j < vars_num + 1; j++) {
+            for (j = lead + 1; j < varsNum + 1; j++) {
                 temp1 = mat[i][j];
                 temp2 = mat[lead][j] * mat[i][lead] * (mat[lead][lead].inverse());
                 mat[i][j] -= temp2;
@@ -111,8 +111,8 @@ bool MatrixStore::add_constraint(SparseLinExpr& expression) {
     int lead =
         simplify(expression);  // Identify what the expression simplifies to
 
-    if (lead >= vars_num) {
-        if (expression(vars_num) != 0) {
+    if (lead >= varsNum) {
+        if (expression(varsNum) != 0) {
             consistent = false;
             return false;
         } else
@@ -121,7 +121,7 @@ bool MatrixStore::add_constraint(SparseLinExpr& expression) {
 
     // else copy the constraint to the lead row
 
-    for (i = lead; i < vars_num + 1; i++)
+    for (i = lead; i < varsNum + 1; i++)
         mat[lead][i] = expression(i);
     back_substitute(lead);
     return true;
@@ -140,19 +140,19 @@ void MatrixStore::print() const {
     int i, j;
     bool some = false;
     cout << "├ ";
-    for (i = 0; i < vars_num; i++) {
+    for (i = 0; i < varsNum; i++) {
         if (mat[i][i] == 0)
             continue;
         some = true;
         cout << mat[i][i] << " * " << info->get_name(i);
-        for (j = i + 1; j < vars_num; j++) {
+        for (j = i + 1; j < varsNum; j++) {
             if (mat[i][j] == 0)
                 continue;
             cout << "+" << mat[i][j] << " * " << info->get_name(j);
         }
 
-        if (mat[i][vars_num] != 0) {
-            cout << " + " << mat[i][vars_num];
+        if (mat[i][varsNum] != 0) {
+            cout << " + " << mat[i][varsNum];
         }
         cout << " = 0" << endl;
     }
@@ -170,7 +170,7 @@ ostream& operator<<(ostream& os, MatrixStore const& p) {
     // print the constraints stored
     int i, j;
     bool some = false;
-    int vars_num = p.get_dim();
+    int varsNum = p.get_dim();
 
     var_info* info = p.get_info();
     Rational** mat = p.get_matrix();
@@ -178,19 +178,19 @@ ostream& operator<<(ostream& os, MatrixStore const& p) {
     if (!p.is_consistent())
         cout << "Inconsistent" << endl;
 
-    for (i = 0; i < vars_num; i++) {
+    for (i = 0; i < varsNum; i++) {
         if (mat[i][i] == 0)
             continue;
         some = true;
         os << "├ ";
         os << mat[i][i] << " * " << info->get_name(i);
-        for (j = i + 1; j < vars_num; j++) {
+        for (j = i + 1; j < varsNum; j++) {
             if (mat[i][j] == 0)
                 continue;
             os << "+" << mat[i][j] << " * " << info->get_name(j);
         }
-        if (mat[i][vars_num] != 0) {
-            os << " + " << mat[i][vars_num];
+        if (mat[i][varsNum] != 0) {
+            os << " + " << mat[i][varsNum];
         }
         os << " = 0" << endl;
     }
@@ -203,7 +203,7 @@ ostream& operator<<(ostream& os, MatrixStore const& p) {
 }
 
 int MatrixStore::get_dim() const {
-    return vars_num;
+    return varsNum;
 }
 var_info* MatrixStore::get_info() const {
     return info;
@@ -214,12 +214,12 @@ Rational** MatrixStore::get_matrix() const {
 }
 
 Constraint_System MatrixStore::to_constraint_system() const {
-    SparseLinExpr l(vars_num, info);
+    SparseLinExpr l(varsNum, info);
     int i, j;
     Constraint_System ret;
-    for (i = 0; i < vars_num; i++) {
-        l.set_coefficient(vars_num, mat[i][vars_num]);
-        for (j = 0; j < vars_num; j++) {
+    for (i = 0; i < varsNum; i++) {
+        l.set_coefficient(varsNum, mat[i][varsNum]);
+        for (j = 0; j < varsNum; j++) {
             l.set_coefficient(j, mat[i][j]);
         }
 
@@ -231,10 +231,10 @@ Constraint_System MatrixStore::to_constraint_system() const {
 
 MatrixStore* MatrixStore::clone() const {
     // clone this matrix store to obtain a pointer to a new instance
-    MatrixStore* ret = new MatrixStore(vars_num, info);
+    MatrixStore* ret = new MatrixStore(varsNum, info);
     int i, j;
-    for (i = 0; i < vars_num; i++)
-        for (j = 0; j < vars_num + 1; j++)
+    for (i = 0; i < varsNum; i++)
+        for (j = 0; j < varsNum + 1; j++)
             (*ret)(i, j) = mat[i][j];
 
     ret->set_consistent(consistent);
@@ -242,8 +242,8 @@ MatrixStore* MatrixStore::clone() const {
 }
 
 MatrixStore::~MatrixStore() {
-    for (int i = 0; i < vars_num; i++)
+    for (int i = 0; i < varsNum; i++)
         delete[] mat[i];
-    if (vars_num > 0)
+    if (varsNum > 0)
         delete[] mat;
 }

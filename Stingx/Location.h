@@ -50,9 +50,9 @@ using namespace Parma_Polyhedra_Library::IO_Operators;
 
 class Location {
    private:
-    int vars_num;                  // the number of variables in the location
-    var_info *info, *dualInfo, *lambda_info;  // the primal and dual var-infos
-    bool init_flag=false;           // has the initial condition been set
+    int varsNum;                  // the number of variables in the location
+    var_info *info, *dualInfo, *lambdaInfo;  // the primal and dual var-infos
+    bool initFlag=false;           // has the initial condition been set
     string loc_name;            // name
     Context* context;             // the solver for intra-location transitions
     C_Polyhedron* poly;        // the initial condition
@@ -78,24 +78,24 @@ class Location {
     Clump* disabled_clump;
 
     // has context been made
-    bool context_made;
+    bool contextReady;
 
     // the left-most index of the coefficient variable.. the coefficients for
-    // the parametric invariants for the location span the range [l.. l+vars_num]
-    int left_index;
+    // the parametric invariants for the location span the range [l.. l+varsNum]
+    int LIndex;
 
     // Initialize and form parametric coefficients for the invariant
-    void initialize(int vars_num,
+    void initialize(int varsNum,
                     var_info* info,
                     var_info* dualInfo,
-                    var_info* lambda_info,
+                    var_info* lambdaInfo,
                     C_Polyhedron* p,
                     string name);
     // Initialize but do not form new coefficients
-    void initialize_without_populating(int vars_num,
+    void InitWithoutPopulating(int varsNum,
                                        var_info* info,
                                        var_info* dualInfo,
-                                       var_info* lambda_info,
+                                       var_info* lambdaInfo,
                                        C_Polyhedron* p,
                                        string name,
                                        int left);
@@ -110,39 +110,39 @@ class Location {
     bool ppged_flag;
 
    public:
-    Location(int vars_num,
+    Location(int varsNum,
              var_info* info,
              var_info* dualInfo,
-             var_info* lambda_info,
+             var_info* lambdaInfo,
              C_Polyhedron* p,
              string name);
 
-    Location(int vars_num, var_info* info, var_info* dualInfo, var_info* lambda_info, string name);
+    Location(int varsNum, var_info* info, var_info* dualInfo, var_info* lambdaInfo, string name);
 
     // A location with preset var-infos and a given starting point
 
-    Location(int vars_num,
+    Location(int varsNum,
              var_info* info,
              var_info* dualInfo,
-             var_info* lambda_info,
+             var_info* lambdaInfo,
              string name,
              int left);
 
-    Location(int vars_num,
+    Location(int varsNum,
              var_info* info,
              var_info* dualInfo,
-             var_info* lambda_info,
+             var_info* lambdaInfo,
              C_Polyhedron* p,
              string name,
              int left);
 
     // set the initial polyhedron from q into p
-    void set_polyhedron(C_Polyhedron* q);
+    void setPoly(C_Polyhedron* q);
     // set the initial-value polyhedron from q to this
-    void set_initial(C_Polyhedron& q);
+    void setInitPoly(C_Polyhedron& q);
     bool has_initial();
 
-    void add_clump(vector<Clump>& vcl);
+    void AddClump(vector<Clump>& vcl);
     void make_context();
 
     void compute_dual_constraints();
@@ -157,7 +157,7 @@ class Location {
     bool matches(string name) const;
 
     C_Polyhedron const& get_poly_reference() const {
-        if (init_flag)
+        if (initFlag)
             return (*poly);
         cerr << " asked reference when poly is not set " << endl;
         abort();
@@ -186,12 +186,12 @@ class Location {
 
     Context* get_context();
 
-    bool initial_poly_set() const { return init_flag; }
+    bool initial_poly_set() const { return initFlag; }
 
     void force_polyset() {
         cerr << " Encountered a call to Location::force_poly_set()" << endl;
         abort();
-        init_flag = true;
+        initFlag = true;
     }
 
     C_Polyhedron& get_non_const_poly_reference() { return *poly; }

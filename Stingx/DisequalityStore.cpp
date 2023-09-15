@@ -21,33 +21,33 @@
 
 #include "DisequalityStore.h"
 
-void DisequalityStore::initialize(int vars_num, var_info* info) {
+void DisequalityStore::initialize(int varsNum, var_info* info) {
     //
     // initialize the store.
-    // with vars_num dimensions and var-info info
+    // with varsNum dimensions and var-info info
     // Question to self: why on earth could this not have been written in the
     // constructor itself. Learnt costly lesson :-)
     //
 
-    this->vars_num = vars_num;
+    this->varsNum = varsNum;
     this->info = info;
     vp = new vector<Linear_Expression>();
-    ineq_exprs = new C_Polyhedron(vars_num, UNIVERSE);
+    ineq_exprs = new C_Polyhedron(varsNum, UNIVERSE);
 
     // Automatically set all the variables to be positive
     // This is not part of the general semantics for this class
     // but this is useful anyway.
 
     int i;
-    for (i = 0; i < vars_num; i++)
+    for (i = 0; i < varsNum; i++)
         ineq_exprs->add_constraint(Variable(i) >= 0);
 
     // initial store is consistent
     incon = false;
 }
 
-DisequalityStore::DisequalityStore(int vars_num, var_info* info) {
-    initialize(vars_num, info);
+DisequalityStore::DisequalityStore(int varsNum, var_info* info) {
+    initialize(varsNum, info);
 }
 
 void DisequalityStore::check_consistent() {
@@ -136,7 +136,7 @@ bool DisequalityStore::is_consistent() const {
 }
 
 int DisequalityStore::get_dimension() const {
-    return vars_num;
+    return varsNum;
 }
 
 const var_info* DisequalityStore::get_var_info() const {
@@ -216,7 +216,7 @@ ostream& operator<<(ostream& in, DisequalityStore const& lambda_store) {
 DisequalityStore* DisequalityStore::clone() const {
     // clone the disequality store
     // create a new one
-    DisequalityStore* ret = new DisequalityStore(vars_num, info);
+    DisequalityStore* ret = new DisequalityStore(varsNum, info);
     // force set inequalities to ineq_exprs (by cloning ineq_exprs)
 
     ret->set_inequalities(ineq_exprs);
