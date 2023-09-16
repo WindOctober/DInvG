@@ -433,7 +433,7 @@ void Tree::Print_Prune_Tree(int depth, string weavedorbanged) {
         cout << endl << "( ";
         autoprint(ncl - 1, dth - 1);
         cout << "  ⋁  ";
-        for (int j = 0; j < get_clump(dth - 1).get_count(); j++) {
+        for (int j = 0; j < get_clump(dth - 1).getCount(); j++) {
             if (j == get_clump(dth - 1).get_gli() && dth > depth) {
                 cout << "[" << j << "]";
             } else {
@@ -468,7 +468,7 @@ void Tree::Print_Prune_Tree(int depth, int hb, int lb, string weavedorbanged) {
         cout << "  ⋁  ";
 
         for (int j = 0; j < get_max_clump_count(); j++) {
-            if (get_clump(dth - 1).get_count() - 1 < j) {
+            if (get_clump(dth - 1).getCount() - 1 < j) {
                 cout << "   ";
             } else if (lb <= dth - 1 && dth - 1 <= hb) {
                 if (j == get_clump(dth - 1).get_gli() && dth > depth) {
@@ -482,7 +482,7 @@ void Tree::Print_Prune_Tree(int depth, int hb, int lb, string weavedorbanged) {
         }
         /*
         // old version, without smart blank with print Prune Tree
-        for (int j = 0; j < get_clump(dth-1).get_count(); j++){
+        for (int j = 0; j < get_clump(dth-1).getCount(); j++){
             if (lb <= dth-1 && dth-1 <= hb){
                 if (j == get_clump(dth-1).get_gli() && dth > depth){
                     cout<<"["<<j<<"]";
@@ -537,7 +537,7 @@ void Tree::Print_Prune_Sequence_Tree(vector<int> sequence,
         cout << "  ⋁  ";
 
         for (int j = 0; j < get_max_clump_count(); j++) {
-            if (get_clump(dth - 1).get_count() - 1 < j) {
+            if (get_clump(dth - 1).getCount() - 1 < j) {
                 cout << "   ";
             } else if (j == sequence[i] && dth > depth) {
                 cout << "[" << j << "]";
@@ -547,7 +547,7 @@ void Tree::Print_Prune_Sequence_Tree(vector<int> sequence,
         }
         /*
         // old version, without smart blank with print Prune Tree
-        for (int j = 0; j < get_clump(dth-1).get_count(); j++){
+        for (int j = 0; j < get_clump(dth-1).getCount(); j++){
             if (j == sequence[i] && dth > depth){
                 cout<<"["<<j<<"]";
             }
@@ -591,7 +591,7 @@ void Tree::Print_Prune_Sequence_Tree(vector<int> sequence,
         cout << endl << "( ";
         autoprint(ncl - 1, dth - 1);
         cout << "  ⋁  ";
-        for (int j = 0; j < get_clump(dth - 1).get_count(); j++) {
+        for (int j = 0; j < get_clump(dth - 1).getCount(); j++) {
             if (lb <= dth - 1 && dth - 1 <= hb) {
                 if (j == sequence[i] && dth > depth) {
                     cout << "[" << j << "]";
@@ -703,12 +703,12 @@ void Tree::prune_clumps_by_hierarchy_inclusion() {
     while (dth >= 0) {
         vk = tr_union.begin() + dth;
         Clump cl = vcl[dth];
-        C_Polyhedron clumps_poly(dualInfo->get_dimension(), UNIVERSE);
+        C_Polyhedron clumps_poly(dualInfo->getDim(), UNIVERSE);
         int i = 0;
-        for (i = 0; i < cl.get_count(); i++) {
+        for (i = 0; i < cl.getCount(); i++) {
             cout << endl << "to extract invariant";
             (*vk).extract_invariant_for_one_location_by_eliminating(
-                cl.get_reference(i).minimized_constraints());
+                cl.getReference(i).minimized_constraints());
 
             cout << endl << "to update constraints";
             (*vk).update_dual_constraints(clumps_poly);
@@ -1344,7 +1344,7 @@ vector<vector<int>> Tree::Merge(vector<vector<int>> sub_sequences1,
 
     cout << endl
          << "| hb:" << hb << ", lb:" << lb
-         << ", weave_in_merge:" << invd_vp.get_count()
+         << ", weave_in_merge:" << invd_vp.getCount()
          << ", bang_in_merge:" << bang_count_in_merge
          << ", time:" << single_merge_sub_sequences_time;
     cout << endl
@@ -1407,7 +1407,7 @@ void Tree::Merge_recursive2(vector<vector<vector<int>>> two_sub_sequences,
         for (vector<int>::iterator it = s.begin(); it < s.end(); it++) {
             temp_s.push_back(*it);
             read_s.push_back(*it);
-            p.intersection_assign(get_clump(depth - index).get_reference(*it));
+            p.intersection_assign(get_clump(depth - index).getReference(*it));
             if (invd_vp.contains(p)) {
                 // Print_Prune_Sequence_Tree(read_s, depth-index, hb, lb,
                 // "Banged");
@@ -1458,7 +1458,7 @@ vector<vector<int>> Tree::dfs_sub_sequences_traverse(int hb,
                                          invd_vp);
 
     cout << endl
-         << "This sub_sequences invd_vp has weaved:" << invd_vp.get_count();
+         << "This sub_sequences invd_vp has weaved:" << invd_vp.getCount();
     cout << endl << "< < < Tree::dfs_sub_sequences_traverse()";
     return sub_sequences;
 }
@@ -1495,7 +1495,7 @@ void Tree::dfs_sub_sequences_traverse_recursive_based_on_StInG(
     get_clump(depth - 1).clear();
     while (get_clump(depth - 1).has_next()) {
         C_Polyhedron p(cpoly);
-        p.intersection_assign(get_clump(depth - 1).get_reference());
+        p.intersection_assign(get_clump(depth - 1).getReference());
         dfs_sub_sequences_traverse_recursive_based_on_StInG(
             sub_sequences, hb, lb, depth - 1, p, invd);
         if (backtrack_flag == true) {
@@ -1559,7 +1559,7 @@ void Tree::dfs_sub_sequences_traverse_recursive(
         // cout<<endl<<"depth:"<<depth<<", cpoly:";
         // cout<<endl<<cpoly;
         C_Polyhedron p(cpoly);
-        p.intersection_assign(get_clump(depth - 1).get_reference());
+        p.intersection_assign(get_clump(depth - 1).getReference());
         dfs_sub_sequences_traverse_recursive(sub_sequences, hb, lb, depth - 1,
                                              p, invd_vp);
         if (backtrack_flag == true) {
@@ -1585,7 +1585,7 @@ void Tree::dfs_sub_sequences_traverse_recursive(
 
 void Tree::collect_invariant_polys(C_Polyhedron& cpoly, Clump& invd_vp) {
     invd_vp.insert(cpoly);
-    cout << endl << "  invd_vp.size():" << invd_vp.get_count();
+    cout << endl << "  invd_vp.size():" << invd_vp.getCount();
 }
 
 void Tree::collect_sub_sequences(vector<vector<int>>& sub_sequences,
@@ -1630,7 +1630,7 @@ void Tree::collect_invariant_polys_and_sub_sequences(
     //  collect invd_vp
     vector<int> erase_index;
     erase_index = invd_vp.insert_with_erase_index(cpoly);
-    // cout<<endl<<"  invd_vp.size():"<<invd_vp.get_count();
+    // cout<<endl<<"  invd_vp.size():"<<invd_vp.getCount();
 
     //  add above collectors
     vector<int>::reverse_iterator vi;
@@ -1660,7 +1660,7 @@ void Tree::collect_invariant_polys_and_sub_sequences(
     //  collect invd_vp
     vector<int> erase_index;
     erase_index = invd_vp.insert_with_erase_index(cpoly);
-    cout << endl << "  invd_vp.size():" << invd_vp.get_count();
+    cout << endl << "  invd_vp.size():" << invd_vp.getCount();
 
     //  add above collectors
     vector<int>::reverse_iterator vi;
@@ -1760,7 +1760,7 @@ void Tree::dfs_sequences_traverse_recursive2(
         for (vector<int>::iterator it = s.begin(); it < s.end(); it++) {
             temp_s.push_back(*it);
             read_s.push_back(*it);
-            p.intersection_assign(get_clump(depth - index).get_reference(*it));
+            p.intersection_assign(get_clump(depth - index).getReference(*it));
             if (invd.contains(p)) {
                 bang_count++;
                 single_post_prune_bang_count++;

@@ -87,7 +87,7 @@ class LinExpr {
     bool operator==(LinExpr const& t) const;
 
     // mess around with count
-    int get_count() const { return count; }
+    int getCount() const { return count; }
     int reset_count();
     int count_up();
     int count_down();
@@ -114,7 +114,7 @@ class LinExpr {
     bool is_constant() const;
 
     // zero?
-    bool is_zero() const;
+    bool isZero() const;
 
     // destructor
     ~LinExpr();

@@ -71,7 +71,7 @@ vector<C_Polyhedron> Merge_Poly(vector<C_Polyhedron> &left_poly, vector<C_Polyhe
     {
         for (int j = 0; j < right_poly.size(); j++)
         {
-            C_Polyhedron poly(info->get_dimension(), UNIVERSE);
+            C_Polyhedron poly(info->getDim(), UNIVERSE);
             poly.add_constraints(left_poly[i].minimized_constraints());
             poly.add_constraints(right_poly[j].minimized_constraints());
             if (!poly.is_empty())

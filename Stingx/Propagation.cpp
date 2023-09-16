@@ -92,7 +92,7 @@ void propagate_invariants(C_Polyhedron& preloc_inv,
     //
     Constraint_System cs_preloc_inv = preloc_inv.minimized_constraints();
     C_Polyhedron ph = trans_relation;
-    int varsNum = (*loclist)[postloc_index]->get_dimension();
+    int varsNum = (*loclist)[postloc_index]->getDim();
     C_Polyhedron result;
 
     // following could be replaced by other projection-method or matrix-method
@@ -144,7 +144,7 @@ void propagation_invariants(C_Polyhedron& preloc_inv,
     //
     Constraint_System cs_preloc_inv = preloc_inv.minimized_constraints();
     C_Polyhedron ph = trans_relation;
-    int varsNum = (*loclist)[postloc_index]->get_dimension();
+    int varsNum = (*loclist)[postloc_index]->getDim();
     C_Polyhedron result;
 
     // following could be replaced by other projection-method or matrix-method
@@ -190,7 +190,7 @@ void propagate_from_inv_to_initval(C_Polyhedron& preloc_inv,
     //
     Constraint_System cs_preloc_inv = preloc_inv.minimized_constraints();
     C_Polyhedron ph = trans_relation;
-    int varsNum = (*loclist)[postloc_index]->get_dimension();
+    int varsNum = (*loclist)[postloc_index]->getDim();
     C_Polyhedron result;
 
     // following could be replaced by other projection-method or matrix-method
@@ -224,7 +224,7 @@ void propagate_from_inv_to_initval(C_Polyhedron& preloc_inv,
         cout << endl
          << "* Propagated Initial-value at "
          << (*loclist)[postloc_index]->get_name() << endl
-         << "  " << (*loclist)[postloc_index]->get_poly_reference();
+         << "  " << (*loclist)[postloc_index]->getPolyRef();
     // }
 }
 
@@ -282,7 +282,7 @@ C_Polyhedron propagation_from_inv_to_inv_by_transition(int trans_index) {
     //  Propagation
     Constraint_System cs_preloc_inv = preloc_inv.minimized_constraints();
     C_Polyhedron result = trans_relation;
-    int varsNum = (*loclist)[postloc_index]->get_dimension();
+    int varsNum = (*loclist)[postloc_index]->getDim();
     // following could be replaced by other projection-method or matrix-method
     result.add_constraints(cs_preloc_inv);
     if (debug_3)

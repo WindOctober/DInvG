@@ -54,12 +54,12 @@ var_info::var_info() {
     v = new vector<char*>();
 }
 
-int var_info::get_dimension() const {
+int var_info::getDim() const {
     return dimension;
 }
 
 var_info::var_info(var_info* f1, var_info* f2) {
-    int d1 = f1->get_dimension(), d2 = f2->get_dimension();
+    int d1 = f1->getDim(), d2 = f2->getDim();
     dimension = 0;
     v = new vector<char*>();
     int i;
@@ -74,7 +74,7 @@ var_info::var_info(var_info* f1, var_info* f2) {
 var_info::var_info(var_info* lambdaInfo, vector<int> v1) {
     // project out from lambdaInfo based on v
 
-    int n = lambdaInfo->get_dimension();
+    int n = lambdaInfo->getDim();
     dimension = 0;
     this->v = new vector<char*>();
 

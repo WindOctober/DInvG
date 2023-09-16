@@ -30,9 +30,9 @@
 #include "Rational.h"
 #include "SparseLinExpr.h"
 
-void ExpressionStore::initialize(int varsNum, int lambda_num, var_info* dualInfo, var_info* lambdaInfo) {
+void ExpressionStore::initialize(int varsNum, int lambdaNum, var_info* dualInfo, var_info* lambdaInfo) {
     this->varsNum = varsNum;
-    this->lambda_num = lambda_num;
+    this->lambdaNum = lambdaNum;
     this->dualInfo = dualInfo;
     this->lambdaInfo = lambdaInfo;
 
@@ -45,8 +45,8 @@ void ExpressionStore::initialize(int varsNum, int lambda_num, var_info* dualInfo
     */
 }
 
-ExpressionStore::ExpressionStore(int varsNum, int lambda_num, var_info* dualInfo, var_info* lambdaInfo) {
-    initialize(varsNum, lambda_num, dualInfo, lambdaInfo);
+ExpressionStore::ExpressionStore(int varsNum, int lambdaNum, var_info* dualInfo, var_info* lambdaInfo) {
+    initialize(varsNum, lambdaNum, dualInfo, lambdaInfo);
 }
 
 bool ExpressionStore::AddExpression(Expression& exp) {
@@ -81,13 +81,13 @@ void ExpressionStore::remove_trivial() {
     // vi;
     vector<Expression>::iterator vi;
     vi = vl->begin();
-    while (vi < vl->end() && (*vi).is_zero()) {
+    while (vi < vl->end() && (*vi).isZero()) {
         vl->erase(vi);
         vi = vl->begin();
     }
 
     for (; vi < vl->end(); vi++) {
-        if ((*vi).is_zero()) {
+        if ((*vi).isZero()) {
             vl->erase(vi);
             vi--;
         }
@@ -227,10 +227,10 @@ bool ExpressionStore::collect_factors() {
     cout << "Collecting Factors:" << endl;
 
     for (vj = le_list->begin(); vj < le_list->end(); vj++)
-        cout << (*vj) << "  Occurs " << (*vj).get_count() << endl;
+        cout << (*vj) << "  Occurs " << (*vj).getCount() << endl;
 
     for (vk = lt_list->begin(); vk < lt_list->end(); vk++)
-        cout << (*vk) << "  Occurs  " << (*vk).get_count() << endl;
+        cout << (*vk) << "  Occurs  " << (*vk).getCount() << endl;
 
     return some;
 }

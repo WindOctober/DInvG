@@ -103,7 +103,7 @@ class DisequalityStore {
     bool check_consistent(C_Polyhedron& t);
 
     // the dimension
-    int get_dimension() const;
+    int getDim() const;
     // the var_info
     const var_info* get_var_info() const;
     // cover function for print

@@ -169,16 +169,16 @@ bool check_guard(Expr *expr)
     }
 }
 
-Expr *Trans_LinExpr_to_Expr(Linear_Expression *lin_expr, string eliminate_var)
+Expr *Trans_LinExpr_to_Expr(Linear_Expression *linExpr, string eliminate_var)
 {
     Expr *res = NULL;
-    for (int i = 0; i < info->get_dimension(); i++)
+    for (int i = 0; i < info->getDim(); i++)
     {
         string var_name = info->get_name(i);
         Expr *rec_expr;
         if (var_name == eliminate_var)
             continue;
-        int coef = lin_expr->coefficient(Variable(i)).get_si();
+        int coef = linExpr->coefficient(Variable(i)).get_si();
         if (coef == 0)
             continue;
         rec_expr = createBinOp(createIntegerLiteral(abs(coef)), createDeclRefExpr(var_name), BO_Mul);
@@ -204,7 +204,7 @@ Expr *Trans_LinExpr_to_Expr(Linear_Expression *lin_expr, string eliminate_var)
 
 Linear_Expression *Trans_Expr_to_LinExpr(Expr *expr, enum TransformationType type, var_info *total_info)
 {
-    Linear_Expression *lin_expr = new Linear_Expression();
+    Linear_Expression *linExpr = new Linear_Expression();
     bool flag = (type == TransformationType::Primed);
     if (isa<BinaryOperator>(expr))
     {
@@ -213,13 +213,13 @@ Linear_Expression *Trans_Expr_to_LinExpr(Expr *expr, enum TransformationType typ
         {
             Linear_Expression *left_expr = Trans_Expr_to_LinExpr(binop->getLHS(), type, total_info);
             Linear_Expression *right_expr = Trans_Expr_to_LinExpr(binop->getRHS(), type, total_info);
-            *lin_expr = (*left_expr + *right_expr);
+            *linExpr = (*left_expr + *right_expr);
         }
         else if (binop->getOpcode() == BO_Sub)
         {
             Linear_Expression *left_expr = Trans_Expr_to_LinExpr(binop->getLHS(), type, total_info);
             Linear_Expression *right_expr = Trans_Expr_to_LinExpr(binop->getRHS(), type, total_info);
-            *lin_expr = (*left_expr - *right_expr);
+            *linExpr = (*left_expr - *right_expr);
         }
         else if (binop->getOpcode() == BO_Mul)
         {
@@ -229,17 +229,17 @@ Linear_Expression *Trans_Expr_to_LinExpr(Expr *expr, enum TransformationType typ
             if (left_expr->space_dimension() == 0)
             {
                 coef = left_expr->inhomogeneous_term();
-                *lin_expr = (coef * (*right_expr));
+                *linExpr = (coef * (*right_expr));
             }
             else if (right_expr->space_dimension() == 0)
             {
                 coef = right_expr->inhomogeneous_term();
-                *lin_expr = (coef * (*left_expr));
+                *linExpr = (coef * (*left_expr));
             }
             else
             {
                 outs() << "\n[Transform Warning:] Unexpected non-linear expression occur\n"
-                       << lin_expr;
+                       << linExpr;
                 exit(-1);
             }
         }
@@ -255,14 +255,14 @@ Linear_Expression *Trans_Expr_to_LinExpr(Expr *expr, enum TransformationType typ
         string var_name = decl->getDecl()->getNameAsString();
         int index = total_info->search(var_name.c_str());
         if (flag)
-            *lin_expr = Variable(index + total_info->get_dimension());
+            *linExpr = Variable(index + total_info->getDim());
         else
-            *lin_expr = Variable(index);
+            *linExpr = Variable(index);
     }
     else if (isa<ParenExpr>(expr))
     {
         ParenExpr *paren = dyn_cast<ParenExpr>(expr);
-        lin_expr = Trans_Expr_to_LinExpr(paren->getSubExpr(), type, total_info);
+        linExpr = Trans_Expr_to_LinExpr(paren->getSubExpr(), type, total_info);
     }
     else if (isa<IntegerLiteral>(expr))
     {
@@ -271,7 +271,7 @@ Linear_Expression *Trans_Expr_to_LinExpr(Expr *expr, enum TransformationType typ
         if (value <= numeric_limits<int>::max())
         {
             int intValue = static_cast<int>(value);
-            *lin_expr += intValue;
+            *linExpr += intValue;
         }
         else
         {
@@ -283,11 +283,11 @@ Linear_Expression *Trans_Expr_to_LinExpr(Expr *expr, enum TransformationType typ
         UnaryOperator *unop = dyn_cast<UnaryOperator>(expr);
         if (unop->getOpcode() == UO_Minus)
         {
-            *lin_expr -= *Trans_Expr_to_LinExpr(unop->getSubExpr(), type, total_info);
+            *linExpr -= *Trans_Expr_to_LinExpr(unop->getSubExpr(), type, total_info);
         }
         else if (unop->getOpcode() == UO_Plus)
         {
-            *lin_expr += *Trans_Expr_to_LinExpr(unop->getSubExpr(), type, total_info);
+            *linExpr += *Trans_Expr_to_LinExpr(unop->getSubExpr(), type, total_info);
         }
         else
         {
@@ -297,14 +297,14 @@ Linear_Expression *Trans_Expr_to_LinExpr(Expr *expr, enum TransformationType typ
     else if (isa<ImplicitCastExpr>(expr))
     {
         ImplicitCastExpr *implict = dyn_cast<ImplicitCastExpr>(expr);
-        lin_expr = Trans_Expr_to_LinExpr(implict->getSubExpr(), type, total_info);
+        linExpr = Trans_Expr_to_LinExpr(implict->getSubExpr(), type, total_info);
     }
     else
     {
         outs() << "\n[Transform ToLinExpr Warning:] Unexpected Expression Type: " << expr->getStmtClassName() << "\n";
         outs() << "\n[Warning:] Unexpected Expression: " << PrintExpr(expr) << "\n";
     }
-    return lin_expr;
+    return linExpr;
 }
 
 Expr *Trans_Constraint_to_Expr(Constraint constraint)
@@ -313,12 +313,12 @@ Expr *Trans_Constraint_to_Expr(Constraint constraint)
     ASTContext *Context = TransitionSystem::context;
     // Create an Expr for the linear expression part of the constraint.
     Expr *res = nullptr;
-    auto lin_expr = constraint.expression();
+    auto linExpr = constraint.expression();
     FPOptions default_options;
-    for (int i = 0; i < info->get_dimension(); i++)
+    for (int i = 0; i < info->getDim(); i++)
     {
         string name = info->get_name(i);
-        int coef = lin_expr.coefficient(Variable(i)).get_si();
+        int coef = linExpr.coefficient(Variable(i)).get_si();
         if (coef != 0)
         {
             // TODO: only allow unsigned int or unsigned int, special deal with char* or string.
@@ -343,7 +343,7 @@ Expr *Trans_Constraint_to_Expr(Constraint constraint)
         }
     }
 
-    Coefficient coef = lin_expr.inhomogeneous_term();
+    Coefficient coef = linExpr.inhomogeneous_term();
     int const_term = static_cast<int>(coef.get_si());
     if (const_term != 0)
     {
@@ -463,7 +463,7 @@ Constraint_System *TransExprtoConstraints(Expr *expr, enum TransformationType ty
                 var.assign(binop->getLHS(), binop->getRHS());
                 int index = total_info->search(var.getVarName().c_str());
                 if (type == TransformationType::Trans)
-                    index += total_info->get_dimension();
+                    index += total_info->getDim();
                 type = TransformationType::Origin;
                 Linear_Expression *left_expr = new Linear_Expression(Variable(index));
                 Linear_Expression *right_expr = Trans_Expr_to_LinExpr(binop->getRHS(), type, total_info);
@@ -903,7 +903,7 @@ vector<C_Polyhedron> ComputeInitPolys(unordered_set<string> &total_vars, Expr *c
     vector<C_Polyhedron> init_polys;
     for (int i = 0; i < DNF.size(); i++)
     {
-        C_Polyhedron *p = new C_Polyhedron(total_info->get_dimension(), UNIVERSE);
+        C_Polyhedron *p = new C_Polyhedron(total_info->getDim(), UNIVERSE);
         for (int j = 0; j < DNF[i].size(); j++)
         {
             if (CheckBreakFlag(DNF[i][j]))
@@ -1248,7 +1248,7 @@ void TransitionSystem::MergeIneqDNF(vector<vector<Expr *>> &dnf)
 //             if (count == 1)
 //             {
 //                 DeclRefExpr *left = createDeclRefExpr(rec_name);
-//                 Expr *right_expr = Trans_LinExpr_to_Expr(Trans_Expr_to_LinExpr(binop->getLHS(), TransformationType::Loc, info->get_dimension()), rec_name);
+//                 Expr *right_expr = Trans_LinExpr_to_Expr(Trans_Expr_to_LinExpr(binop->getLHS(), TransformationType::Loc, info->getDim()), rec_name);
 //                 dnf[i][j] = createBinOp(left, right_expr, BO_Assign);
 //             }
 //             else if (count > 1)
@@ -1289,7 +1289,7 @@ vector<vector<Expr *>> TransPolystoExprs(vector<C_Polyhedron *> poly, bool init_
         if (init_remove)
         {
             Variables_Set rec_set;
-            for (int i = 0; i < info->get_dimension(); i++)
+            for (int i = 0; i < info->getDim(); i++)
             {
                 string name = info->get_name(i);
                 if (name.find(INITSUFFIX) != name.npos)
@@ -1323,7 +1323,7 @@ vector<vector<Expr *>> TransPolystoExprs(vector<C_Polyhedron> poly, bool init_re
         if (init_remove)
         {
             Variables_Set rec_set;
-            for (int i = 0; i < info->get_dimension(); i++)
+            for (int i = 0; i < info->getDim(); i++)
             {
                 string name = info->get_name(i);
                 if (name.find(INITSUFFIX) != name.npos)
@@ -1517,7 +1517,7 @@ void TransitionSystem::deduplicate(vector<vector<Expr *>> &dnf)
     PrintDNF(dnf);
     for (int i = 0; i < dnf.size(); i++)
     {
-        C_Polyhedron *p = new C_Polyhedron(info->get_dimension(), UNIVERSE);
+        C_Polyhedron *p = new C_Polyhedron(info->getDim(), UNIVERSE);
         for (int j = 0; j < dnf[i].size(); j++)
         {
             LOGINFO(PrintExpr(dnf[i][j]));
@@ -1771,7 +1771,7 @@ void TransitionSystem::EliminatePath(var_info *total_info)
     PrintDNF();
     for (int i = 0; i < DNF.size(); i++)
     {
-        C_Polyhedron *p = new C_Polyhedron(total_info->get_dimension() * 2, UNIVERSE);
+        C_Polyhedron *p = new C_Polyhedron(total_info->getDim() * 2, UNIVERSE);
         for (int j = 0; j < DNF[i].size(); j++)
         {
             if (CheckBreakFlag(DNF[i][j]))
@@ -1823,17 +1823,17 @@ void TransitionSystem::InitializeLocTrans(int locsize, Expr *condition, var_info
         string locname = "Location_" + to_string(i);
         if (i == locsize - 1)
             locname = "le";
-        Location *loc = new Location(info->get_dimension(), info, dualInfo, lambdaInfo, locname);
+        Location *loc = new Location(info->getDim(), info, dualInfo, lambdaInfo, locname);
         loclist->push_back(loc);
     }
-    for (int i = 0; i < total_info->get_dimension(); i++)
+    for (int i = 0; i < total_info->getDim(); i++)
     {
         string name = total_info->get_name(i);
         for (auto function_name : MainFuncs)
         {
             if (name.find(function_name) != name.npos)
             {
-                project_set.insert(Variable(i + total_info->get_dimension()));
+                project_set.insert(Variable(i + total_info->getDim()));
             }
         }
     }
@@ -1846,7 +1846,7 @@ void TransitionSystem::InitializeLocTrans(int locsize, Expr *condition, var_info
         {
             string trans_name;
             C_Polyhedron *p;
-            p = new C_Polyhedron(total_info->get_dimension() * 2, UNIVERSE);
+            p = new C_Polyhedron(total_info->getDim() * 2, UNIVERSE);
             for (int index = 0; index < DNF[i].size(); index++)
                 if (!CheckBreakFlag(DNF[i][index]))
                     p->add_constraints(*TransExprtoConstraints(DNF[i][index], TransformationType::Trans, total_info));
@@ -1858,7 +1858,7 @@ void TransitionSystem::InitializeLocTrans(int locsize, Expr *condition, var_info
                     continue;
                 trans_name = "Exit_Transition_from_" + to_string(i) + "by breakstmt";
                 p->remove_space_dimensions(project_set);
-                TransitionRelation *trans = new TransitionRelation(info->get_dimension(), info, dualInfo, lambdaInfo, trans_name);
+                TransitionRelation *trans = new TransitionRelation(info->getDim(), info, dualInfo, lambdaInfo, trans_name);
                 trans->set_locs((*loclist)[i], (*loclist)[j]);
                 trans->set_relation(p);
                 trlist->push_back(trans);
@@ -1872,14 +1872,14 @@ void TransitionSystem::InitializeLocTrans(int locsize, Expr *condition, var_info
                     continue;
                 trans_name = "Transition_" + to_string(i) + "_" + to_string(j);
                 p->remove_space_dimensions(project_set);
-                TransitionRelation *trans = new TransitionRelation(info->get_dimension(), info, dualInfo, lambdaInfo, trans_name);
+                TransitionRelation *trans = new TransitionRelation(info->getDim(), info, dualInfo, lambdaInfo, trans_name);
                 trans->set_locs((*loclist)[i], (*loclist)[j]);
                 trans->set_relation(p);
                 trlist->push_back(trans);
             }
             else
             {
-                C_Polyhedron *q = new C_Polyhedron(total_info->get_dimension() * 2, UNIVERSE);
+                C_Polyhedron *q = new C_Polyhedron(total_info->getDim() * 2, UNIVERSE);
                 Expr *notExpr = NegateExpr(condition);
                 vector<vector<Expr *>> notcond;
                 vector<vector<Constraint_System *>> exit_guard;
@@ -1899,7 +1899,7 @@ void TransitionSystem::InitializeLocTrans(int locsize, Expr *condition, var_info
                     if (q->is_empty())
                         continue;
                     q->remove_space_dimensions(project_set);
-                    TransitionRelation *trans = new TransitionRelation(info->get_dimension(), info, dualInfo, lambdaInfo, trans_name);
+                    TransitionRelation *trans = new TransitionRelation(info->getDim(), info, dualInfo, lambdaInfo, trans_name);
                     trans->set_locs((*loclist)[i], (*loclist)[j]);
                     trans->set_relation(q);
                     trlist->push_back(trans);
@@ -2015,7 +2015,7 @@ vector<vector<Expr *>> TransitionSystem::OutLoop(Expr *cond, unordered_set<strin
     {
         total_info->search_and_insert((var + INITSUFFIX).c_str());
     }
-    for (int i = 0; i < total_info->get_dimension(); i++)
+    for (int i = 0; i < total_info->getDim(); i++)
     {
         string name = total_info->get_name(i);
         bool flag = false;
@@ -2043,7 +2043,7 @@ vector<vector<Expr *>> TransitionSystem::OutLoop(Expr *cond, unordered_set<strin
     bool flag = false;
     // vector<C_Polyhedron *> polys;
     // var_info* rec_info=new var_info;
-    // for(int i=0;i<total_info->get_dimension();i++)
+    // for(int i=0;i<total_info->getDim();i++)
     //     rec_info->insert(total_info->get_name(i));
     // Variables_Set rec_project;
     // for(int i=0;i<RemainDNF.size();i++){
@@ -2056,7 +2056,7 @@ vector<vector<Expr *>> TransitionSystem::OutLoop(Expr *cond, unordered_set<strin
     //     }
     // }
 
-    // for(int i=0;i<rec_info->get_dimension();i++){
+    // for(int i=0;i<rec_info->getDim();i++){
     //     string name=rec_info->get_name(i);
     //     if (name.find(INITSUFFIX)!=name.npos)
     //         rec_project.insert(Variable(i));
@@ -2069,7 +2069,7 @@ vector<vector<Expr *>> TransitionSystem::OutLoop(Expr *cond, unordered_set<strin
             flag = true;
         else
             continue;
-        // C_Polyhedron *p = new C_Polyhedron(rec_info->get_dimension(), UNIVERSE);
+        // C_Polyhedron *p = new C_Polyhedron(rec_info->getDim(), UNIVERSE);
         // for (int j = 0; j < RemainDNF[i].size(); j++)
         // {
         //     p->add_constraints(*TransExprtoConstraints(RemainDNF[i][j], TransformationType::Loc, rec_info));

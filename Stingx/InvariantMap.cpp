@@ -43,7 +43,7 @@ void InvariantMap::add_value_to_map(string const& what,
 }
 
 InvariantMap::InvariantMap(var_info* info, vector<Location*> const& vloc)
-    : f_(info), n_(info->get_dimension()), nloc_(vloc.size()), vloc_(vloc) {
+    : f_(info), n_(info->getDim()), nloc_(vloc.size()), vloc_(vloc) {
     // now construct the string map
     vector<Location*>::const_iterator vi;
 
@@ -51,7 +51,7 @@ InvariantMap::InvariantMap(var_info* info, vector<Location*> const& vloc)
     for (vi = vloc.begin(); vi < vloc.end(); ++vi) {
         // add the initial conditions if they exist, else add false.
         if ((*vi)->initial_poly_set())
-            add_value_to_map((*vi)->get_name(), (*vi)->get_poly_reference());
+            add_value_to_map((*vi)->get_name(), (*vi)->getPolyRef());
         else
             add_value_to_map((*vi)->get_name(), C_Polyhedron(n_, EMPTY));
     }
@@ -132,7 +132,7 @@ void InvariantMap::BHRZ03_widening_assign(InvariantMap const& im) {
 }
 
 void InvariantMap::assign(InvariantMap const& im) {
-    PRECONDITION(im.get_dimension() == n_,
+    PRECONDITION(im.getDim() == n_,
                  " InvariantMap::assign -- dimension mismatch");
 
     vector<Location*>::const_iterator vi;

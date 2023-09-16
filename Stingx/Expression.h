@@ -46,8 +46,8 @@
 using namespace std;
 
 class Expression {
-    // dual_num = no. of lin variables
-    // lambda_num = no. of non-linear variables
+    // dualNum = no. of lin variables
+    // lambdaNum = no. of non-linear variables
     // Operations include
     //     1. Construct
     //        1.1 Add two expressions
@@ -63,10 +63,10 @@ class Expression {
     //     6. Simplify an against a constraint store
 
 private:
-    int dual_num, lambda_num;           // the number of linear and multiplier variables resp.
+    int dualNum, lambdaNum;           // the number of linear and multiplier variables resp.
     var_info *dualInfo, *lambdaInfo;  // Mostly for printing purposes
 
-    vector<SparseLinExpr> lin_expr;  // An lambda_num+1 dimension array of linear expressions
+    vector<SparseLinExpr> linExpr;  // An lambdaNum+1 dimension array of linear expressions
 
     SparseLinExpr lin_fact;  // The linear factor
     LinTransform tr_fact;    // the transform factor
@@ -74,12 +74,12 @@ private:
     bool factored;
     int count;
 
-    void initialize(int dual_num, int lambda_num, var_info* dualInfo, var_info* lambdaInfo);
+    void initialize(int dualNum, int lambdaNum, var_info* dualInfo, var_info* lambdaInfo);
 
     void zero_out();
 
    public:
-    Expression(int dual_num, int lambda_num, var_info* dualInfo, var_info* lambdaInfo);
+    Expression(int dualNum, int lambdaNum, var_info* dualInfo, var_info* lambdaInfo);
     ~Expression();
     Expression(Expression const& e);
     Expression(Expression* e1, Expression* e2);
@@ -105,7 +105,7 @@ private:
     // of the factors among the other constraints
     void reset_count();
     void add_count(int i = 1);
-    int get_count();
+    int getCount();
 
     bool is_pure_a() const;  // Is the expression purely linear
     bool is_pure_b()
@@ -149,7 +149,7 @@ private:
     // is the expression a constant
     bool is_constant() const;
     // is it zero
-    bool is_zero() const;
+    bool isZero() const;
     // print factors of the expression
 
     void print_factors(ostream& os) const;

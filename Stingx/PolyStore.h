@@ -83,9 +83,9 @@ class PolyStore {
 
     // access stuff
     const C_Polyhedron& get_nnc_poly_reference() const;
-    C_Polyhedron& get_poly_reference();
+    C_Polyhedron& getPolyRef();
     var_info* get_var_info() const;
-    int get_dimension() const;
+    int getDim() const;
 
     // test containment
     bool contained(C_Polyhedron* pp);

@@ -35,7 +35,7 @@ void MatrixStore::initialize(int varsNum, var_info* info) {
     for (int i = 0; i < varsNum; i++)
         mat[i] = new Rational[varsNum + 1];
 
-    zero_out();  // wipe the matrices clear!
+    zero_out();
     this->info = info;
     consistent = true;
 }

@@ -169,7 +169,7 @@ void ACSLComment::deduplication()
     for (int i = 0; i < LoopInv.size(); i++)
     {
 
-        C_Polyhedron *p = new C_Polyhedron(int(info->get_dimension() / 2), UNIVERSE);
+        C_Polyhedron *p = new C_Polyhedron(int(info->getDim() / 2), UNIVERSE);
         for (int j = 0; j < LoopInv[i].size(); j++)
         {
             if (!CheckInitSuffix(LoopInv[i][j]))
