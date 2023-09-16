@@ -1,32 +1,28 @@
-variable [ x ]
+variable [ x x0 
+           n n0 ]
 
-Location l1
-  x = 0
-Location l2
-Location l3
+Location B1
+  x = 0 
+  n = n0 
+  n0 >= 1 
+  x <= n0 - 1 
 
-Transition t1_2: l1,l2,
-   x = 0
-   'x <= 50
-   'x = 49
+Location le 
 
-Transition t2_1: l2,l1, 
-   'x = 0
-   x <= 50
+Transition B1_B1_1: B1, 
+   x <= n - 1 
+  'x <= 'n - 1 
+  'x = x + 1 
+  'n = n 
+  'x0 = x0 
+  'n0 = n0 
 
-Transition t2_3: l2,l3,
-   'x = x + 3
-   'x >= 51
-   x <= 50
-
-Transition t2_2: l2,
-   'x = x + 3
-   'x <= 50
-   x <= 50
-
-Transition t3_2: l3,l2,
-   'x = x - 4
-   x >= 51
-   'x <= 50
+Transition B1_le_1: B1,le, 
+   x <= n - 1 
+  'x >= 'n 
+  'x = x + 1 
+  'n = n 
+  'x0 = x0 
+  'n0 = n0 
 
 end 

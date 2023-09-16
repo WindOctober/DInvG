@@ -96,8 +96,8 @@ private:
     SparseLinExpr operator()(int i) const;  // constant reference
 
     // accessors
-    int get_n() const;
-    int get_r() const;
+    int getVarNum() const;
+    int getLambdaNum() const;
     var_info* get_fr() const;
     var_info* get_fn() const;
 

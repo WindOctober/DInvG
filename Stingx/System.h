@@ -37,7 +37,6 @@
 #include "Context.h"
 #include "Expression.h"
 #include "ExpressionStore.h"
-#include "InvariantMap.h"
 #include "LinTransform.h"
 #include "Location.h"
 #include "Timer.h"
@@ -58,12 +57,10 @@ class System {
 
    private:
     // members are
-    //  f_, fd_, fr_ // the var-infos
+    //  varInfo, coefInfo, lambdaInfo // the var-infos
 
-    var_info *f_, *fd_, *fr_;
-
-    int n_, nd_, r_;
-
+    var_info *varInfo, *coefInfo, *lambdaInfo;
+    int varNum, coefNum, lamdaNum;
     long int propagation_time, widening_time;
 
     Context* glc_;
@@ -80,39 +77,26 @@ class System {
 
     void get_transition_info(System& s, Context& cc);
 
-    void do_some_propagation(InvariantMap& im);
-
 
    public:
-    System(var_info* f_, var_info* fd_, var_info* fr_);
-
+    System(var_info* varInfo, var_info* coefInfo, var_info* lambdaInfo);
     System(System& s, Context& cc);
 
-    void add_location(Location* loc);
-    void add_transition(TransitionRelation* trans);
+    void addLoc(Location* loc);
+    void addTrans(TransitionRelation* trans);
 
-    void compute_duals();
+    int getLocNum() const { return vloc.size(); }
+    int getTransNum() const { return vtrans.size(); }
 
-    // the inlines
-
-    int num_loc() const { return vloc.size(); }
-
-    int num_trans() const { return vtrans.size(); }
-
-    var_info* get_var_info() const { return f_; }
-
-    var_info* get_dual_var_info() const { return fd_; }
-
-    var_info* get_multiplier_var_info() const { return fr_; }
-
-    int get_n() const { return n_; }
-    int get_nd() const { return nd_; }
-
-    int get_r() const { return r_; }
+    var_info* getInfo() const { return varInfo; }
+    var_info* getCoefInfo() const { return coefInfo; }
+    var_info* getLambdaInfo() const { return lambdaInfo; }
+    int getVarNum() const { return varNum; }
+    int getCoefNum() const { return coefNum; }
+    int getLambdaNum() const { return lamdaNum; }
 
     // the non-inlines
-    void
-    update_dimensions();  // recompute the r_ and nd_ based on the information
+    void update_dimensions();  // recompute the lamdaNum and coefNum based on the information
     // void populate_multipliers();
 
     Location const& get_location(int i) const;
@@ -123,18 +107,10 @@ class System {
     TransitionRelation const& get_transition_relation(int i) const;
 
     void print(ostream& os) const;
-
     Context* get_context();
 
     void add_invariants_and_update(C_Polyhedron& pp, C_Polyhedron& dualp);
 
-    void obtain_trivial_polyhedron(C_Polyhedron& invd);
-
-    // compute bhrz03 and h79 invariants!
-
-    void compute_invariant(InvariantMap& im);
-
-    void compute_dual_invariant(InvariantMap& im);
 };
 
 ostream& operator<<(ostream& out, System const& sys);

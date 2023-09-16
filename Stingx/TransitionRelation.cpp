@@ -131,17 +131,17 @@ bool TransitionRelation::add_guard(Constraint const& constraint) {
     bool flag = true;
     // make sure the coefficients of primed part is zero.
     for (int i = varsNum; i < 2 * varsNum; ++i) {
-        flag = handle_integers(constraint.coefficient(Variable(i)), res);
+        flag = handleInt(constraint.coefficient(Variable(i)), res);
         if (res != 0 || !flag)
             return false;
     }
 
-    flag = handle_integers(constraint.inhomogeneous_term(), res);
+    flag = handleInt(constraint.inhomogeneous_term(), res);
 
     Linear_Expression ll(res);
 
     for (int i = 0; i < varsNum; ++i) {
-        flag &= handle_integers(constraint.coefficient(Variable(i)), res);
+        flag &= handleInt(constraint.coefficient(Variable(i)), res);
         ll += res * Variable(i);
     }
     if (flag) {
@@ -164,15 +164,15 @@ bool TransitionRelation::add_preservation_relation(Constraint const& cc) {
     bool flag = true;
     if (!cc.is_equality())
         return false;
-    flag = handle_integers(cc.inhomogeneous_term(), coef);
+    flag = handleInt(cc.inhomogeneous_term(), coef);
 
     if (!flag || coef != 0)
         return false;
 
     for (int i = 0; i < varsNum; ++i) {
-        flag &= handle_integers(cc.coefficient(Variable(i)), coef);
+        flag &= handleInt(cc.coefficient(Variable(i)), coef);
         flag &=
-            handle_integers(cc.coefficient(Variable(i + varsNum)), primed_coef);
+            handleInt(cc.coefficient(Variable(i + varsNum)), primed_coef);
         if (!flag)
             return false;
         if (coef == 0 && primed_coef == 0)
@@ -379,7 +379,7 @@ void TransitionRelation::ComputeIntraConsecConstraints(Context& context) {
             expr = Variable(i);  //\mu=1 to eliminate the secondary constraint.
             j = 0;
             for (it = constraints.begin(); it != constraints.end(); it++) {
-                expr += handle_integers((*it).coefficient(Variable(i))) *
+                expr += handleInt((*it).coefficient(Variable(i))) *
                         Variable(lambdaLStart + j);
                 j++;
             }
@@ -393,7 +393,7 @@ void TransitionRelation::ComputeIntraConsecConstraints(Context& context) {
             j = 0;
             for (it = constraints.begin(); it != constraints.end(); it++) {
                 expr +=
-                    handle_integers((*it).coefficient(Variable(varsNum + i))) *
+                    handleInt((*it).coefficient(Variable(varsNum + i))) *
                     Variable(lambdaLStart + j);
                 j++;
             }
@@ -405,7 +405,7 @@ void TransitionRelation::ComputeIntraConsecConstraints(Context& context) {
             j = 0;
             for (it = constraints.begin(); it != constraints.end(); it++) {
                 expr +=
-                    handle_integers((*it).coefficient(Variable(varsNum + i))) *
+                    handleInt((*it).coefficient(Variable(varsNum + i))) *
                     Variable(lambdaLStart + j);
                 j++;
             }
@@ -416,7 +416,7 @@ void TransitionRelation::ComputeIntraConsecConstraints(Context& context) {
         expr = Variable(varsNum);
         j = 0;
         for (it = constraints.begin(); it != constraints.end(); it++) {
-            expr += handle_integers((*it).inhomogeneous_term()) *
+            expr += handleInt((*it).inhomogeneous_term()) *
                     Variable(lambdaLStart + j);
             j++;
         }
@@ -454,13 +454,13 @@ void TransitionRelation::ComputeIntraConsecConstraints(Context& context) {
         LinExpr lexpr(coefNum, coefInfo);
         for (it = constraints.begin(); it != constraints.end(); ++it) {
             for (i = 0; i <= varsNum; i++)
-                e[index].set_coefficient(
+                e[index].setCoefficient(
                     preLIndex + i,
-                    handle_integers((*it).coefficient(Variable(i))));
+                    handleInt((*it).coefficient(Variable(i))));
 
             for (i = 0; i <= varsNum; i++)
-                e[lambdaNum].set_coefficient(postLIndex + i,
-                                             handle_integers((*it).coefficient(
+                e[lambdaNum].setCoefficient(postLIndex + i,
+                                             handleInt((*it).coefficient(
                                                  Variable(postLStart + i))));
 
             if ((*it).is_inequality())
@@ -474,12 +474,12 @@ void TransitionRelation::ComputeIntraConsecConstraints(Context& context) {
                 lexpr *= 0;
                 for (i = 0; i <= varsNum; i++)
                     lexpr[preLIndex + i] =
-                        handle_integers((*it).coefficient(Variable(i)));
-                lexpr[coefNum] = handle_integers((*it).inhomogeneous_term());
+                        handleInt((*it).coefficient(Variable(i)));
+                lexpr[coefNum] = handleInt((*it).inhomogeneous_term());
                 if ((*it).is_inequality())
-                    dispoly.add_constraint((lexpr.to_lin_expression()) >= 0);
+                    dispoly.add_constraint((lexpr.toLinExpression()) >= 0);
                 else if ((*it).is_equality())
-                    dispoly.add_constraint((lexpr.to_lin_expression()) == 0);
+                    dispoly.add_constraint((lexpr.toLinExpression()) == 0);
             }
             disableClump->insert(dispoly);
         }
@@ -524,7 +524,7 @@ void TransitionRelation::ComputeInterConsecConstraints(vector<Clump>& clumps) {
             j = 0;
             for (it = constraints.begin(); it != constraints.end(); it++) {
                 expr +=
-                    handle_integers((*it).coefficient(Variable(i))) *
+                    handleInt((*it).coefficient(Variable(i))) *
                     Variable(primed_offset + j);  // coefficient for \lambda_j
                 j++;
             }
@@ -538,7 +538,7 @@ void TransitionRelation::ComputeInterConsecConstraints(vector<Clump>& clumps) {
             j = 0;
             for (it = constraints.begin(); it != constraints.end(); it++) {
                 expr +=
-                    handle_integers((*it).coefficient(Variable(varsNum + i))) *
+                    handleInt((*it).coefficient(Variable(varsNum + i))) *
                     Variable(primed_offset + j);
                 j++;
             }
@@ -549,7 +549,7 @@ void TransitionRelation::ComputeInterConsecConstraints(vector<Clump>& clumps) {
             j = 0;
             for (it = constraints.begin(); it != constraints.end(); it++) {
                 expr +=
-                    handle_integers((*it).coefficient(Variable(varsNum + i))) *
+                    handleInt((*it).coefficient(Variable(varsNum + i))) *
                     Variable(primed_offset + j);  // coefficient for \lambda_j
                 j++;
             }
@@ -560,7 +560,7 @@ void TransitionRelation::ComputeInterConsecConstraints(vector<Clump>& clumps) {
         expr = Variable(varsNum);
         j = 0;
         for (it = constraints.begin(); it != constraints.end(); it++) {
-            expr += handle_integers((*it).inhomogeneous_term()) *
+            expr += handleInt((*it).inhomogeneous_term()) *
                     Variable(primed_offset + j);
             j++;
         }
@@ -599,16 +599,16 @@ void TransitionRelation::ComputeInterConsecConstraints(vector<Clump>& clumps) {
             for (it = constraints.begin(); it != constraints.end(); ++it) {
                 for (i = 0; i <= varsNum; i++) {
                     templateExpr[preLIndex + i] =
-                        handle_integers((*it).coefficient(Variable(i)));
-                    templateExpr[postLIndex + i] = handle_integers(
+                        handleInt((*it).coefficient(Variable(i)));
+                    templateExpr[postLIndex + i] = handleInt(
                         (*it).coefficient(Variable(offset + i)));
                 }
                 if ((*it).is_inequality())
                     polyhedron.add_constraint(
-                        (templateExpr.to_lin_expression()) >= 0);
+                        (templateExpr.toLinExpression()) >= 0);
                 else if ((*it).is_equality())
                     polyhedron.add_constraint(
-                        (templateExpr.to_lin_expression()) == 0);
+                        (templateExpr.toLinExpression()) == 0);
             }
             clump.insert(polyhedron);
         }
@@ -620,14 +620,14 @@ void TransitionRelation::ComputeInterConsecConstraints(vector<Clump>& clumps) {
             templateExpr *= 0;
             for (it = constraints.begin(); it != constraints.end(); ++it) {
                 for (i = 0; i <= varsNum; i++)
-                    templateExpr[postLIndex + i] = handle_integers(
+                    templateExpr[postLIndex + i] = handleInt(
                         (*it).coefficient(Variable(offset + i)));
                 if ((*it).is_inequality())
                     polyhedron.add_constraint(
-                        (templateExpr.to_lin_expression()) >= 0);
+                        (templateExpr.toLinExpression()) >= 0);
                 else if ((*it).is_equality())
                     polyhedron.add_constraint(
-                        (templateExpr.to_lin_expression()) == 0);
+                        (templateExpr.toLinExpression()) == 0);
             }
             clump.insert(polyhedron);
         }
@@ -642,18 +642,18 @@ void TransitionRelation::ComputeInterConsecConstraints(vector<Clump>& clumps) {
                 templateExpr *= 0;
                 for (i = 0; i <= varsNum; i++) {
                     templateExpr[preLIndex + i] =
-                        handle_integers((*it).coefficient(Variable(i)));
-                    templateExpr[postLIndex + i] = handle_integers(
+                        handleInt((*it).coefficient(Variable(i)));
+                    templateExpr[postLIndex + i] = handleInt(
                         (*it).coefficient(Variable(offset + i)));
                 }
                 templateExpr[coefNum] =
-                    handle_integers((*it).inhomogeneous_term());
+                    handleInt((*it).inhomogeneous_term());
                 if ((*it).is_inequality())
                     polyhedron.add_constraint(
-                        (templateExpr.to_lin_expression()) >= 0);
+                        (templateExpr.toLinExpression()) >= 0);
                 else if ((*it).is_equality())
                     polyhedron.add_constraint(
-                        (templateExpr.to_lin_expression()) == 0);
+                        (templateExpr.toLinExpression()) == 0);
             }
             clump.insert(polyhedron);
         }
@@ -726,17 +726,17 @@ ostream& operator<<(ostream& in, TransitionRelation const& t) {
        << " Post-Location:" << t.get_postloc_name() << endl;
     in << "Transition Relation: [[" << endl;
     in << "| " << endl;
-    print_polyhedron(in, t.get_relation(), ff);
+    printPolyhedron(in, t.get_relation(), ff);
     in << "| " << endl;
     in << "]]" << endl;
     in << "Guard: [[" << endl;
     in << "| " << endl;
-    print_polyhedron(in, t.get_guard_poly(), ff);
+    printPolyhedron(in, t.get_guard_poly(), ff);
     in << "| " << endl;
     in << "]]" << endl;
     in << "Update: [[" << endl;
     in << "| " << endl;
-    print_polyhedron(in, t.get_update_poly(), ff);
+    printPolyhedron(in, t.get_update_poly(), ff);
     in << "| " << endl;
     in << "]]" << endl;
     in << "Preserved: [[" << endl;

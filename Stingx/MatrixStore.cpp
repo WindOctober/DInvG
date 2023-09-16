@@ -72,7 +72,7 @@ int MatrixStore::simplify(SparseLinExpr& expression) const {
                     temp2 = (expression(i) * mat[i][j]) * mat[i][i].inverse();
                     expression.subtract_coefficient(j, temp2);
                 }
-                expression.set_coefficient(i, 0);  // reset expression[i]
+                expression.setCoefficient(i, 0);  // reset expression[i]
             }
         }
     }
@@ -127,7 +127,7 @@ bool MatrixStore::add_constraint(SparseLinExpr& expression) {
     return true;
 }
 
-bool MatrixStore::is_consistent() const {
+bool MatrixStore::isConsistent() const {
     return consistent;
 }
 
@@ -175,7 +175,7 @@ ostream& operator<<(ostream& os, MatrixStore const& p) {
     var_info* info = p.get_info();
     Rational** mat = p.get_matrix();
 
-    if (!p.is_consistent())
+    if (!p.isConsistent())
         cout << "Inconsistent" << endl;
 
     for (i = 0; i < varsNum; i++) {
@@ -218,9 +218,9 @@ Constraint_System MatrixStore::to_constraint_system() const {
     int i, j;
     Constraint_System ret;
     for (i = 0; i < varsNum; i++) {
-        l.set_coefficient(varsNum, mat[i][varsNum]);
+        l.setCoefficient(varsNum, mat[i][varsNum]);
         for (j = 0; j < varsNum; j++) {
-            l.set_coefficient(j, mat[i][j]);
+            l.setCoefficient(j, mat[i][j]);
         }
 
         ret.insert(l.get_constraint(TYPE_EQ));

@@ -331,7 +331,7 @@ int LinExpr::count_down() {
     return count--;
 }
 
-Linear_Expression LinExpr::to_lin_expression() const {
+Linear_Expression LinExpr::toLinExpression() const {
     int j = get_denominator_lcm();
     int num, den;
     num = lin[n].num();
@@ -345,9 +345,9 @@ Linear_Expression LinExpr::to_lin_expression() const {
     return l;
 }
 
-Constraint LinExpr::get_constraint(int ineq_type) const {
-    Linear_Expression l = to_lin_expression();
-    switch (ineq_type) {
+Constraint LinExpr::get_constraint(int ineqType) const {
+    Linear_Expression l = toLinExpression();
+    switch (ineqType) {
         case TYPE_LEQ:
             return l <= 0;
         case TYPE_EQ:
@@ -372,7 +372,7 @@ Rational LinExpr::evaluate(Generator const & g){
    Linear_Expression l1(g);
    int m;
    for(int i=0;i<n;i++){
-      m=handle_integers(l1.coefficient(Variable(i)));
+      m=handleInt(l1.coefficient(Variable(i)));
       ret=ret+ m* lin[i];
    }
    ret=ret+lin[n];
@@ -394,7 +394,7 @@ Rational LinExpr::evaluate(Generator const& g) {
 
     int m;
     for (int i = 0; i < n; i++) {
-        m = handle_integers(l1.coefficient(Variable(i)));
+        m = handleInt(l1.coefficient(Variable(i)));
         ret = ret + m * lin[i];
     }
     ret = ret + lin[n];

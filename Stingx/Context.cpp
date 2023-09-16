@@ -65,7 +65,7 @@ void Context::initialize(var_info* info,
 
     eqExprs = new vector<Expression>();
     ineqExprs = new vector<Expression>();
-    ConsistencyFlag = false;
+    InConsistency = false;
 }
 
 void Context::initialize(var_info* info,
@@ -139,10 +139,10 @@ void Context::insertMatStore(Linear_Expression lin) {
     int i;
     SparseLinExpr l(coefNum, coefInfo);
     for (i = 0; i < coefNum; i++) {
-        l.set_coefficient(i, handle_integers(lin.coefficient(Variable(i))));
+        l.setCoefficient(i, handleInt(lin.coefficient(Variable(i))));
     }
 
-    l.set_coefficient(coefNum, handle_integers(lin.inhomogeneous_term()));
+    l.setCoefficient(coefNum, handleInt(lin.inhomogeneous_term()));
     equalStore->add_constraint(l);
 }
 
@@ -157,9 +157,9 @@ void Context::insertPolyStore(Constraint constraint) {
     if (constraint.is_equality()) {
         SparseLinExpr l(coefNum, coefInfo);
         for (i = 0; i < coefNum; i++) {
-            l.set_coefficient(i, handle_integers(constraint.coefficient(Variable(i))));
+            l.setCoefficient(i, handleInt(constraint.coefficient(Variable(i))));
         }
-        l.set_coefficient(coefNum, handle_integers(constraint.inhomogeneous_term()));
+        l.setCoefficient(coefNum, handleInt(constraint.inhomogeneous_term()));
         equalStore->add_constraint(l);  // the constraint of equality.
     }
 
@@ -187,9 +187,9 @@ void Context::add_linear_inequality(SparseLinExpr l) {
     insertPolyStore(l);
 }
 
-void Context::add_transform_inequality(LinTransform l) {
+void Context::addIneqTransform(LinTransform l) {
     // Just add the transform as an expression into the disequality store
-    disequalStore->add_transform_inequality(l);
+    disequalStore->addIneqTransform(l);
     return;
 }
 
@@ -215,13 +215,13 @@ Context* Context::clone() const {
 }
 
 void Context::checkConsistent() {
-    ConsistencyFlag = !equalStore->is_consistent() || !polyStore->is_consistent() ||
-            !disequalStore->is_consistent();
+    InConsistency = !equalStore->isConsistent() || !polyStore->isConsistent() ||
+            !disequalStore->isConsistent();
 }
 
-bool Context::is_consistent() {
+bool Context::isConsistent() {
     checkConsistent();
-    return !ConsistencyFlag;
+    return !InConsistency;
 }
 
 /*
@@ -347,7 +347,7 @@ bool Context::move_constraints_inequalities() {
             flag = true;
             continue;
         } else if ((*it).is_pure_b()) {
-            add_transform_inequality((*it).convert_transform());
+            addIneqTransform((*it).convert_transform());
             ineqExprs->erase(it);
             it--;
             flag = true;
@@ -362,7 +362,6 @@ bool Context::move_constraints() {
     if (move_constraints_equalities() || move_constraints_inequalities()) {
         return true;
     }
-
     return false;
 }
 
@@ -411,7 +410,7 @@ void Context::simplify_repeat() {
     return;
 }
 
-bool Context::factor_occurs_equalities(LinTransform& t) {
+bool Context::checkFactorExists(LinTransform& t) {
     // check if the factor given by LinTransform already occurs
     // if so then increment the "count" of the expression
     vector<Expression>::iterator it;
@@ -426,7 +425,7 @@ bool Context::factor_occurs_equalities(LinTransform& t) {
     return false;
 }
 
-bool Context::collect_factors_equalities() {
+bool Context::checkFactorizable() {
     // Run factorize on all the expressions in eqExprs and then
     // Collect all the expressions that are factored into a single
     // vector factors
@@ -440,7 +439,7 @@ bool Context::collect_factors_equalities() {
             if (!isVisableEquals(temp)) {
                 (*it).drop_transform(temp);
             } else {
-                if (!factor_occurs_equalities(temp)) {
+                if (!checkFactorExists(temp)) {
                     (*it).resetCounter();
                     factors->push_back(*it);
                     flag = true;
@@ -451,12 +450,12 @@ bool Context::collect_factors_equalities() {
     return flag;
 }
 
-Expression& Context::choose_maximal_factor_equalities() {
+Expression& Context::getMaxFactor() {
     // assume that the vector factors is non-empty or else
     // an exception is to be thrown here.
 
     if (factors->empty()) {
-        cerr << " In Context::choose_maximal_factor_equalities()...." << endl
+        cerr << " In Context::getMaxFactor()...." << endl
              << endl;
         cerr << "Fatal Error: Asked to choose a maximal factor on an empty "
                 "factors "
@@ -515,7 +514,7 @@ bool Context::splitFactorEquals(LinTransform& lt) {
         }
         childClump->addTransform(lt);
         // KEY: Modify the "Father Context" to be the second child!
-        disequalStore->add_transform_negated(lt);
+        disequalStore->addNegTransform(lt);
         childClump->simplify_repeat();
         simplify_repeat();
     }
@@ -541,9 +540,11 @@ bool Context::factorizationSplit() {
     bool split = false;
     bool factorFlag;
     while (!split) {
-        factorFlag = collect_factors_equalities();
+        factorFlag = checkFactorizable();
         if (!factorFlag) return false;
-        Expression expr = choose_maximal_factor_equalities();
+        Expression expr = getMaxFactor();
+        cout<<expr<<endl;
+        cout<<"[note]"<<endl;
         split = splitFactorEquals(expr.getTransformFactor());
     }
 
@@ -1061,12 +1062,12 @@ bool Context::is_valid_generator(Generator const& g) {
     vector<Expression>::iterator it;
     for (it = eqExprs->begin(); it < eqExprs->end(); it++) {
         SparseLinExpr p((*it).to_transform(g));
-        ds1->add_constraint(p, TYPE_EQ);
+        ds1->addConstraint(p, TYPE_EQ);
     }
 
     for (it = ineqExprs->begin(); it < ineqExprs->end(); it++) {
         SparseLinExpr p((*it).to_transform(g));
-        ds1->add_constraint(p, TYPE_GEQ);
+        ds1->addConstraint(p, TYPE_GEQ);
     }
 
 #ifdef __DEBUG__D_
@@ -1076,7 +1077,7 @@ bool Context::is_valid_generator(Generator const& g) {
     cout << "----------------------------------" << endl;
 #endif
 
-    if (ds1->is_consistent()) {
+    if (ds1->isConsistent()) {
         // This could be a problem
         delete (ds1);
         return true;
@@ -1116,11 +1117,11 @@ void Context::obtain_primal_polyhedron(int left, C_Polyhedron& result) {
     for (it = gs.begin(); it != gs.end(); ++it) {
         ll *= 0;  // reset the linexpr
         for (i = 0; i < varsNum; ++i) {
-            j = handle_integers((*it).coefficient(Variable(left + i)));
+            j = handleInt((*it).coefficient(Variable(left + i)));
             ll += j * Variable(i);
         }
 
-        ll += handle_integers((*it).coefficient(Variable(left + varsNum)));
+        ll += handleInt((*it).coefficient(Variable(left + varsNum)));
 
         if ((*it).is_line())
             // ppl-v0.9
@@ -1212,17 +1213,17 @@ bool Context::obtain_transition_relation(int mult_index,
     for (vgs = gs.begin(); vgs != gs.end(); ++vgs) {
         ll *= 0;
         for (i = 0; i < varsNum; i++) {
-            j = -handle_integers((*vgs).coefficient(Variable(i)));
+            j = -handleInt((*vgs).coefficient(Variable(i)));
             ll += j * Variable(i);
         }
 
-        j = -handle_integers((*vgs).coefficient(Variable(varsNum)));
+        j = -handleInt((*vgs).coefficient(Variable(varsNum)));
         ll += j;
         for (i = 0; i < varsNum; i++) {
-            j = handle_integers((*vgs).coefficient(Variable(varsNum + 1 + i)));
+            j = handleInt((*vgs).coefficient(Variable(varsNum + 1 + i)));
             ll += j * Variable(varsNum + i);
         }
-        j = handle_integers((*vgs).coefficient(Variable(2 * varsNum + 1)));
+        j = handleInt((*vgs).coefficient(Variable(2 * varsNum + 1)));
         ll += j;
 
         if ((*vgs).is_line())

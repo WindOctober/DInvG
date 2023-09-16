@@ -96,7 +96,7 @@ class Context {
                                       int wtime,
                                       bool cutoff,
                                       Timer& one_timer);
-    bool ConsistencyFlag;
+    bool InConsistency;
     bool leaf;
 
    public:
@@ -145,14 +145,14 @@ class Context {
     void addTransform(LinTransform l);
 
     void add_linear_inequality(SparseLinExpr l);
-    void add_transform_inequality(LinTransform l);
+    void addIneqTransform(LinTransform l);
 
     Context* clone() const;
 
     void print(ostream& in) const;
 
     void checkConsistent();
-    bool is_consistent();
+    bool isConsistent();
 
     // bool is_leaf();
 
@@ -196,7 +196,7 @@ class Context {
     //       occuring factor for both the equality and the inequality
     //       expressions
 
-    bool collect_factors_equalities();  // factorize all the equalities and
+    bool checkFactorizable();  // factorize all the equalities and
                                         // return true if something factorizes
     // Also collect expressions that factor in a list
 
@@ -205,10 +205,10 @@ class Context {
 
     // Collect the expressions that factor in a list
 
-    bool factor_occurs_equalities(LinTransform& t);
+    bool checkFactorExists(LinTransform& t);
 
     Expression&
-    choose_maximal_factor_equalities();  // Choose an equality expression that
+    getMaxFactor();  // Choose an equality expression that
                                          // factorizes and with maximal number
                                          // of
     // occurrences of its factor.

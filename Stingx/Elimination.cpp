@@ -210,7 +210,7 @@ void eliminate_by_Farkas(C_Polyhedron& result, int lb) {
         int y[n_y] = {-999};
         // cout<<endl<<"[ ";
         for (dimension_type i = 0; i < g.space_dimension(); i++) {
-            handle_integers(g.coefficient(Variable(i)), y[i]);
+            handleInt(g.coefficient(Variable(i)), y[i]);
             // cout<<y[i]<<", ";
         }
         // cout<<"]";
@@ -376,7 +376,7 @@ void Project_by_Farkas(C_Polyhedron& result, int l, int r) {
         int y[n_y] = {-999};
         // cout<<endl<<"[ ";
         for (dimension_type i = 0; i < g.space_dimension(); i++) {
-            handle_integers(g.coefficient(Variable(i)), y[i]);
+            handleInt(g.coefficient(Variable(i)), y[i]);
             // cout<<y[i]<<", ";
         }
         // cout<<"]";
@@ -622,7 +622,7 @@ void Project_by_Kohler(C_Polyhedron& result, int l, int r) {
         int y[n_y_mixed_protected] = {-999};
         // cout<<endl<<"[ ";
         for (dimension_type i = 0; i < g.space_dimension(); i++) {
-            handle_integers(g.coefficient(Variable(i)), y[i]);
+            handleInt(g.coefficient(Variable(i)), y[i]);
             // cout<<y[i]<<", ";
         }
         // cout<<"]";

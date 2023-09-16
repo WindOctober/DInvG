@@ -150,8 +150,8 @@ class Location {
     void ComputeDualConstraints(C_Polyhedron& cc);  // the coef constraints
 
     int getDim() const;
-    const var_info* get_var_info() const;
-    const var_info* get_dual_var_info() const;
+    const var_info* getInfo() const;
+    const var_info* getCoefInfo() const;
     int getLIndex() const;
 
     bool matches(string name) const;

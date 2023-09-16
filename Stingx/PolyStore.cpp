@@ -40,9 +40,9 @@ void PolyStore::initialize(int varsNum, var_info* info) {
     make_trivial_polyhedron();
 }
 
-void PolyStore::add_constraint(SparseLinExpr const& l, int ineq_type) {
+void PolyStore::add_constraint(SparseLinExpr const& l, int ineqType) {
     // Build a linear expression corresponding to the expression p
-    Constraint cc = l.get_constraint(ineq_type);
+    Constraint cc = l.get_constraint(ineqType);
     p->add_constraint(cc);
 }
 
@@ -54,7 +54,7 @@ PolyStore::PolyStore(int varsNum, var_info* info) {
     initialize(varsNum, info);
 }
 
-bool PolyStore::is_consistent() const {
+bool PolyStore::isConsistent() const {
     return !(p->is_empty());
 }
 
@@ -119,7 +119,7 @@ void PolyStore::extract_linear_part(MatrixStore& m) const {
                     exit(1);
                 }
 
-                l.set_coefficient(i, (int)t.get_si());
+                l.setCoefficient(i, (int)t.get_si());
                 if (l(i) == 0) {
                 } else {
                     nonzero = true;
@@ -133,7 +133,7 @@ void PolyStore::extract_linear_part(MatrixStore& m) const {
                      << endl;
                 exit(1);
             }
-            l.set_coefficient(varsNum, (int)t.get_si());
+            l.setCoefficient(varsNum, (int)t.get_si());
             // bizarre code.. implement rational !=0 operator please.
             if (!(l(varsNum) == 0)) {
                 nonzero = true;
@@ -169,7 +169,7 @@ C_Polyhedron& PolyStore::getPolyRef() {
     return (*p);
 }
 
-var_info* PolyStore::get_var_info() const {
+var_info* PolyStore::getInfo() const {
     return info;
 }
 
@@ -181,7 +181,7 @@ ostream& operator<<(ostream& os, PolyStore const& p) {
 
     C_Polyhedron pp = p.get_nnc_poly_reference();
     Constraint_System cs = pp.minimized_constraints();
-    var_info* info = p.get_var_info();
+    var_info* info = p.getInfo();
 
     int i;
     Coefficient t;
@@ -194,11 +194,11 @@ ostream& operator<<(ostream& os, PolyStore const& p) {
 
         for (i = 0; i < varsNum; i++) {
             t = cc.coefficient(Variable(i));
-            l.set_coefficient(i, (int)t.get_si());
+            l.setCoefficient(i, (int)t.get_si());
         }
 
         t = cc.inhomogeneous_term();
-        l.set_coefficient(i, (int)t.get_si());
+        l.setCoefficient(i, (int)t.get_si());
 
         os << "├ ";
         os << l;  // Print the linear constraint

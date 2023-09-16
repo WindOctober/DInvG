@@ -4,7 +4,6 @@
 #include <string>
 #include <vector>
 #include "Elimination.h"
-#include "InvariantMap.h"
 #include "Location.h"
 #include "PolyUtils.h"
 #include "Propagation.h"
@@ -156,21 +155,6 @@ void print_status();
 
 void check_invariant_ok();
 void Scan_Input();
-
-void do_some_propagation() {
-    // try and fire each transition relation
-
-    vector<TransitionRelation*>::iterator it;
-    int fired_up = 0;
-    int ntrans = trlist->size();
-
-    while (fired_up < prop_steps * ntrans) {
-        for (it = trlist->begin(); it < trlist->end(); it++) {
-            (*it)->fire();
-            fired_up++;
-        }
-    }
-}
 
 int find_variable(char* what) {
     int i = info->search(what);
@@ -663,7 +647,7 @@ void print_disjunctive_inv_before_program() {
                 cout << endl << "\\/";
             }
             print_pure_polyhedron((*it)->GetInv(),
-                                  (*it)->get_var_info());
+                                  (*it)->getInfo());
             i++;
         }
     }
@@ -937,10 +921,10 @@ void Compute_Invariant_Frontend(){
     global_system = new System(info, coefInfo, lambdaInfo);
 
     for (auto it = loclist->begin(); it < loclist->end(); it++) {
-        global_system->add_location((*it));
+        global_system->addLoc((*it));
     }
     for (auto it = trlist->begin(); it < trlist->end(); it++) {
-        global_system->add_transition((*it));
+        global_system->addTrans((*it));
     }
     tt = new int[lambdaInfo->getDim()];
     int coefNum = coefInfo->getDim();
@@ -1057,10 +1041,10 @@ int main() {
     global_system = new System(info, coefInfo, lambdaInfo);
     
     for (auto it = loclist->begin(); it < loclist->end(); it++) {
-        global_system->add_location((*it));
+        global_system->addLoc((*it));
     }
     for (auto it = trlist->begin(); it < trlist->end(); it++) {
-        global_system->add_transition((*it));
+        global_system->addTrans((*it));
     }
     tt = new int[lambdaInfo->getDim()];
     if (num_context == 1) {

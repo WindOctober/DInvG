@@ -137,10 +137,10 @@ int Location::getDim() const {
     return varsNum;
 }
 
-const var_info* Location::get_var_info() const {
+const var_info* Location::getInfo() const {
     return info;
 }
-const var_info* Location::get_dual_var_info() const {
+const var_info* Location::getCoefInfo() const {
     return coefInfo;
 }
 int Location::getLIndex() const {
@@ -190,20 +190,20 @@ ostream& operator<<(ostream& in, Location const& l) {
     // details of the location should go in here
     int varsNum = l.getDim();
 
-    const var_info* info = l.get_var_info();
+    const var_info* info = l.getInfo();
     string name = l.get_name();
     // The rest to be completed later
     in << endl;
     in << "Location: " << name << endl;
     in << "# of variables: " << varsNum << endl;
     in << "「 l: " << l.getLIndex() << ", varsNum: " << varsNum
-       << ", coefNum: " << l.get_dual_var_info()->getDim() << " 」"
+       << ", coefNum: " << l.getCoefInfo()->getDim() << " 」"
        << endl;
 
     if (l.initial_poly_set()) {
         in << "Initial Condition: [[ " << endl;
         in << "| " << endl;
-        print_polyhedron(in, l.getPolyRef(), info);
+        printPolyhedron(in, l.getPolyRef(), info);
         in << "| " << endl;
         in << "]]" << endl;
     } else {
@@ -218,7 +218,7 @@ ostream& operator<<(ostream& in, Location const& l) {
     } else {
         in << "Invariant: [[ " << endl;
         in << "| " << endl;
-        print_polyhedron(in, l.GetInv(), info);
+        printPolyhedron(in, l.GetInv(), info);
         in << "| " << endl;
     }
     in << "]]" << endl;
@@ -305,7 +305,7 @@ void Location::ComputeDualConstraints(Context& cc) {
     // Now those are all the constraints.
 
 #ifdef __DEBUG__D_
-    print_polyhedron(cout, *result, coefInfo);
+    printPolyhedron(cout, *result, coefInfo);
 #endif
     result->remove_higher_space_dimensions(
         coefNum);  // Remove the excess dimensions to obtain a new Polyhedron
@@ -428,11 +428,11 @@ void Location::extract_invariant_from_generator(Generator const& g) {
     int c;
     bool flag = true;
     for (int i = 0; i < varsNum; i++) {
-        if (!handle_integers(lin.coefficient(Variable(LIndex + i)), c))
+        if (!handleInt(lin.coefficient(Variable(LIndex + i)), c))
             flag = false;
         lin1 += c * Variable(i);
     }
-    if (!handle_integers(lin.coefficient(Variable(LIndex + varsNum)), c))
+    if (!handleInt(lin.coefficient(Variable(LIndex + varsNum)), c))
         flag = false;
     lin1 += c;
 
@@ -465,13 +465,13 @@ void Location::solve_invariant_from_generator(Generator const& g) {
     int c;
     bool flag = true;
     for (int i = 0; i < varsNum; i++) {
-        if (!handle_integers(lin.coefficient(Variable(i)),
+        if (!handleInt(lin.coefficient(Variable(i)),
                              c)) {  // l+i turn to i
             flag = false;
         }
         lin1 += c * Variable(i);
     }
-    if (!handle_integers(lin.coefficient(Variable(varsNum)),
+    if (!handleInt(lin.coefficient(Variable(varsNum)),
                          c)) {  // l+varsNum turn to varsNum
         flag = false;
     }
@@ -661,7 +661,7 @@ void Location::extract_invariant_for_initial_by_recursive_eliminating(
         vector<int> y(constraint_num, -999);
         // cout<<endl<<"[ ";
         for (dimension_type i = 0; i < g.space_dimension(); i++) {
-            handle_integers(g.coefficient(Variable(i)), y[i]);
+            handleInt(g.coefficient(Variable(i)), y[i]);
             // cout<<y[i]<<", ";
         }
         // cout<<"]";
@@ -800,11 +800,11 @@ void Location::contains_test(C_Polyhedron& pp,
         int c;
         bool flag = true;
         for (int i = 0; i < varsNum; i++) {
-            if (!handle_integers(lin.coefficient(Variable(LIndex + i)), c))
+            if (!handleInt(lin.coefficient(Variable(LIndex + i)), c))
                 flag = false;
             lin1 += c * Variable(i);
         }
-        if (!handle_integers(lin.coefficient(Variable(LIndex + varsNum)),
+        if (!handleInt(lin.coefficient(Variable(LIndex + varsNum)),
                              c))
             flag = false;
         lin1 += c;
