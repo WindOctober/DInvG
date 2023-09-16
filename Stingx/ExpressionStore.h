@@ -85,7 +85,7 @@ class ExpressionStore {
 
     void remove_trivial();
 
-    // bool is_consistent();
+    // bool isConsistent();
 
     // bool dead_end();
 

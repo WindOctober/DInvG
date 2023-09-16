@@ -22,28 +22,14 @@
 #include "DisequalityStore.h"
 
 void DisequalityStore::initialize(int varsNum, var_info* info) {
-    //
-    // initialize the store.
-    // with varsNum dimensions and var-info info
-    // Question to self: why on earth could this not have been written in the
-    // constructor itself. Learnt costly lesson :-)
-    //
-
     this->varsNum = varsNum;
     this->info = info;
-    polys = new vector<Linear_Expression>();
+    disEquals = new vector<Linear_Expression>();
     ineqExprs = new C_Polyhedron(varsNum, UNIVERSE);
-
-    // Automatically set all the variables to be positive
-    // This is not part of the general semantics for this class
-    // but this is useful anyway.
-
     int i;
     for (i = 0; i < varsNum; i++)
         ineqExprs->add_constraint(Variable(i) >= 0);
-
-    // initial store is consistent
-    ConsistencyFlag = false;
+    InConsistency = false;
 }
 
 DisequalityStore::DisequalityStore(int varsNum, var_info* info) {
@@ -51,23 +37,23 @@ DisequalityStore::DisequalityStore(int varsNum, var_info* info) {
 }
 
 void DisequalityStore::checkConsistent() {
-    if (ConsistencyFlag)
+    if (InConsistency)
         return;
     // first check if ineqExprs is non-empty
     if (ineqExprs->is_empty()) {
-        ConsistencyFlag = true;
+        InConsistency = true;
         return;
     }
     Poly_Con_Relation includeRel = Poly_Con_Relation::is_included(), curRel(includeRel);
 
-    vector<Linear_Expression>::iterator it = polys->begin();
+    vector<Linear_Expression>::iterator it = disEquals->begin();
 
-    // iterate through polys
-    for (it = polys->begin(); it != polys->end(); ++it) {
+    // iterate through disEquals
+    for (it = disEquals->begin(); it != disEquals->end(); ++it) {
         // What is the relation between the ineqExprs and (*it)==0
         curRel = ineqExprs->relation_with((*it) == 0);
         if (curRel == includeRel) {
-            ConsistencyFlag = true;
+            InConsistency = true;
             break;
         }
     }
@@ -86,9 +72,9 @@ bool DisequalityStore::checkConsistent(C_Polyhedron& poly) {
     }
 
     Poly_Con_Relation rel1 = Poly_Con_Relation::is_included(), rel(rel1);
-    vector<Linear_Expression>::iterator it = polys->begin();
+    vector<Linear_Expression>::iterator it = disEquals->begin();
 
-    for (it = polys->begin(); it != polys->end(); ++it) {
+    for (it = disEquals->begin(); it != disEquals->end(); ++it) {
         // What is the relation between the ineqExprs and (*it)==0
         rel = poly.relation_with((*it) == 0);
 
@@ -100,182 +86,119 @@ bool DisequalityStore::checkConsistent(C_Polyhedron& poly) {
     return true;
 }
 
-void DisequalityStore::add_constraint(SparseLinExpr const& p, int ineq_type) {
-    // add a constraint
-
-    // if inconsistent .. then nothing to be done here.
-    if (ConsistencyFlag)
+void DisequalityStore::addConstraint(SparseLinExpr const& p, int ineqType) {
+    if (InConsistency)
         return;
-
     // if the inequality is a disequality .. puch it into
-    // polys after converting it to a linear expression a la PPL
-
-    if (ineq_type == TYPE_DIS) {
-        polys->push_back(p.to_lin_expression());
+    // disEquals after converting it to a linear expression a la PPL
+    if (ineqType == TYPE_DIS) {
+        disEquals->push_back(p.toLinExpression());
     } else {
-        ineqExprs->add_constraint(p.get_constraint(ineq_type));
+        ineqExprs->add_constraint(p.get_constraint(ineqType));
     }
-
-    // check if the whole new mess is consistent
     checkConsistent();
-    // return.
+    return;
 }
 
-bool DisequalityStore::is_consistent() const {
+bool DisequalityStore::isConsistent() const {
     // not inconsistent
-    return !ConsistencyFlag;
+    return !InConsistency;
 }
 
 int DisequalityStore::getDim() const {
     return varsNum;
 }
 
-const var_info* DisequalityStore::get_var_info() const {
+const var_info* DisequalityStore::getInfo() const {
     return info;
 }
 
-void DisequalityStore::print_constraints(ostream& in) const {
+void DisequalityStore::printConstraints(ostream& in) const {
     // print the whole thing out using ostream
 
-    if (ConsistencyFlag) {
+    if (InConsistency) {
         in << " Inconsistent Store" << endl;
-
-#ifdef __DEBUG__D_
-        in << "Test Message--" << endl;
-        print_polyhedron(in, *ineqExprs, info);
-        vector<Linear_Expression>::iterator it;
-
-        for (it = polys->begin(); it < polys->end(); it++) {
-            print_lin_expression(in, (*it), info);
-            in << " <> 0" << endl;
-        }
-        in << "Test message ends" << endl;
-#endif
         return;
     }
 
     in << "├ Consistent Store" << endl;
-
-    // print the polyhedron
-
-    print_polyhedron(in, *ineqExprs, info);
-
+    printPolyhedron(in, *ineqExprs, info);
     vector<Linear_Expression>::iterator it;
     // print the disequalities
-    for (it = polys->begin(); it < polys->end(); it++) {
+    for (it = disEquals->begin(); it < disEquals->end(); it++) {
         in << "├ ";
         print_lin_expression(in, (*it), info);
         in << " <> 0" << endl;
     }
-    // done
-
     in << endl;
+    return;
 }
 
 bool DisequalityStore::addTransform(LinTransform const& l) {
     // add l==0 after changing l to a linear expression a la PPL
-    Linear_Expression l1 = l.to_lin_expression();
+    Linear_Expression l1 = l.toLinExpression();
     ineqExprs->add_constraint(l1 == 0);
     checkConsistent();
-    return ConsistencyFlag;
+    return InConsistency;
 }
 
-bool DisequalityStore::add_transform_inequality(LinTransform const& l) {
-    // a la PPL
-    Linear_Expression l1 = l.to_lin_expression();
-    // add l>=0
+bool DisequalityStore::addIneqTransform(LinTransform const& l) {
+    Linear_Expression l1 = l.toLinExpression();
     ineqExprs->add_constraint(l1 >= 0);
     checkConsistent();
-    return ConsistencyFlag;
+    return InConsistency;
 }
 
-bool DisequalityStore::add_transform_negated(LinTransform const& l) {
-    // a la PPL
-    Linear_Expression l1 = l.to_lin_expression();
-    // add l1<> 0
-    polys->push_back(l1);
+bool DisequalityStore::addNegTransform(LinTransform const& l) {
+    Linear_Expression l1 = l.toLinExpression();
+    disEquals->push_back(l1);
     checkConsistent();
-    return ConsistencyFlag;
+    return InConsistency;
 }
 
 ostream& operator<<(ostream& in, DisequalityStore const& disequalStore) {
-    // print
-    disequalStore.print_constraints(in);
+    disequalStore.printConstraints(in);
     return in;
 }
 
 DisequalityStore* DisequalityStore::clone() const {
-    // clone the disequality store
-    // create a new one
     DisequalityStore* ret = new DisequalityStore(varsNum, info);
-    // force set inequalities to ineqExprs (by cloning ineqExprs)
-
-    ret->set_inequalities(ineqExprs);
-    // clone polys and force set
-    ret->set_disequalities(polys);
-
-    // recheck the consistency of ret or dump core
+    ret->setIneqPoly(ineqExprs);
+    ret->setDisEquals(disEquals);
     ret->checkConsistent();
-
-    // return the clone
     return ret;
 }
 
-void DisequalityStore::set_inequalities(C_Polyhedron const* p) {
-    // force set the inequalities
-    // Post comment: Why not use the copy constructor?
-
-    // iterate through constraints
-
+void DisequalityStore::setIneqPoly(C_Polyhedron const* p) {
     Constraint_System cs = p->minimized_constraints();
-    Constraint_System::const_iterator it;
-
-    // add the constraints one by one
-    for (it = cs.begin(); it != cs.end(); it++)
+    for (auto it = cs.begin(); it != cs.end(); it++)
         ineqExprs->add_constraint(*it);
-
-    // unnecessary actually.. but will do it anyways
     checkConsistent();
     return;
 }
 
-void DisequalityStore::set_disequalities(vector<SparseLinExpr>* polys) {
-    // each sparselinexpr requires conversion before addition
-
-    vector<SparseLinExpr>::iterator it;
-    // add the constraints one by one
-    for (it = polys->begin(); it < polys->end(); it++)
-        add_constraint((*it), TYPE_DIS);
-
+void DisequalityStore::setDisEquals(vector<SparseLinExpr>* disEquals) {
+    for (auto it = disEquals->begin(); it < disEquals->end(); it++)
+        addConstraint((*it), TYPE_DIS);
     checkConsistent();
 }
 
-void DisequalityStore::set_disequalities(vector<Linear_Expression> const* vp1) {
-    // a different format.. just directly clone
-
-    // vector<Linear_Expression>::iterator it;
-    delete (polys);
-    polys = new vector<Linear_Expression>(*vp1);
-
+void DisequalityStore::setDisEquals(vector<Linear_Expression> const* vp1) {
+    delete (disEquals);
+    disEquals = new vector<Linear_Expression>(*vp1);
     checkConsistent();
 }
 
 bool DisequalityStore::check_status_equalities(LinTransform& lt) {
     // check if adding lt==0 will create inconsistencies
     // First add lt==0 to the polyhedron and then check consistency
-
     // create a polyhedron poly with ineqExprs /\ l1 ==0
-
     C_Polyhedron poly(*ineqExprs);
-
-    Linear_Expression l1 = lt.to_lin_expression();
+    Linear_Expression l1 = lt.toLinExpression();
     poly.add_constraint(l1 == 0);
-
-    // check if things will remain consistent.
     return checkConsistent(poly);
 }
 
 DisequalityStore::~DisequalityStore() {
-    // the destructor
-    delete (polys);
+    delete (disEquals);
 }

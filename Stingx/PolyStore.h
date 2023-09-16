@@ -67,10 +67,10 @@ class PolyStore {
 
     // add constraints
 
-    void add_constraint(SparseLinExpr const& p, int ineq_type);
+    void add_constraint(SparseLinExpr const& p, int ineqType);
     void add_constraint(Constraint const& cc);
 
-    bool is_consistent() const;  // Check if the system is satisfiable
+    bool isConsistent() const;  // Check if the system is satisfiable
     bool is_trivial() const;     // Check if the system is trivial
 
     // push the linear equalities
@@ -84,7 +84,7 @@ class PolyStore {
     // access stuff
     const C_Polyhedron& get_nnc_poly_reference() const;
     C_Polyhedron& getPolyRef();
-    var_info* get_var_info() const;
+    var_info* getInfo() const;
     int getDim() const;
 
     // test containment

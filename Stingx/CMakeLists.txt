@@ -14,7 +14,6 @@ set(SRC_FILES
     Expression.cpp
     ExpressionStore.cpp
     funcs.cpp
-    InvariantMap.cpp
     LinExpr.cpp
     LinTransform.cpp
     Location.cpp

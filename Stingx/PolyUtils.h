@@ -41,7 +41,7 @@ using namespace std;
 using namespace Parma_Polyhedra_Library;
 using namespace Parma_Polyhedra_Library::IO_Operators;
 
-ostream& print_polyhedron(ostream& in,
+ostream& printPolyhedron(ostream& in,
                           C_Polyhedron const& np,
                           const var_info* info);
 // print only poly without prefix-symbol
@@ -55,8 +55,8 @@ ostream& print_lin_expression(ostream& in,
                               const var_info* info);
 void print_pure_lin_expression(Linear_Expression const& lp, const var_info* info);
 
-int handle_integers(Coefficient const& t);
-bool handle_integers(Coefficient const& t, int& result);
+int handleInt(Coefficient const& t);
+bool handleInt(Coefficient const& t, int& result);
 C_Polyhedron* add_dimensions_initial(
     C_Polyhedron* p,
     int what);  // add what dimensions to p at the beginning

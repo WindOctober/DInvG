@@ -86,7 +86,7 @@ class MatrixStore {
     void back_substitute(int l);
 
     // accessors
-    bool is_consistent() const;
+    bool isConsistent() const;
     void set_consistent(bool c);
 
     ~MatrixStore();

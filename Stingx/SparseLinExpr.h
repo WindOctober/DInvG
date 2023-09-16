@@ -54,17 +54,17 @@ class SparseLinExpr {
     // large and each expression uses a much smaller number of variables
     //
     // Each operation is going to be costlier. Here are the members
-    //  1. n_ is the number of variables (This could be varied dynamically).
+    //  1. varNum is the number of variables (This could be varied dynamically).
     //  2. map_ration is the map that maps a coefficient i to a rational.
     //     Semantics: If map_ration(i) is not found, then zero should be returned
-    //  3. f_ is a var_info that has the printing information for the variables
+    //  3. varInfo is a var_info that has the printing information for the variables
     //  4. count  (Added for the sake of maintaining consistency with an older
     //  implementation).
     //
 
-    int n_;
+    int varNum;
 
-    var_info* f_;
+    var_info* varInfo;
 
     IRMap map_ration;
 
@@ -89,10 +89,10 @@ class SparseLinExpr {
 
     void add_coefficient(int index, Rational const& what);
 
-    void set_coefficient(int index, Rational const& what);
+    void setCoefficient(int index, Rational const& what);
 
-    void set_coefficient(int index, int what) {
-        set_coefficient(index, Rational(what, 1));
+    void setCoefficient(int index, int what) {
+        setCoefficient(index, Rational(what, 1));
     }
 
     void subtract_coefficient(int index, Rational const& what);
@@ -128,7 +128,7 @@ class SparseLinExpr {
     int count_down() { return count_--; }
 
     bool check_variable_compatibility(var_info const* f1) const {
-        return (f1 == f_);
+        return (f1 == varInfo);
     }
 
     /*
@@ -139,8 +139,8 @@ class SparseLinExpr {
 
     Rational operator()(int i) const;
 
-    int get_dim() const { return n_; }
-    var_info* get_info() const { return f_; }
+    int get_dim() const { return varNum; }
+    var_info* get_info() const { return varInfo; }
 
     IRMap const& get_map() const { return map_ration; }
 
@@ -161,11 +161,11 @@ class SparseLinExpr {
     bool equiv(SparseLinExpr const& l1, Rational& factor) const;
 
     // convert to PPL format
-    Linear_Expression to_lin_expression() const;
+    Linear_Expression toLinExpression() const;
 
-    // obtain the constraint correspondint to the ineq_type . see global_types.h
+    // obtain the constraint correspondint to the ineqType . see global_types.h
     // for details
-    Constraint get_constraint(int ineq_type) const;
+    Constraint get_constraint(int ineqType) const;
 
     // evaluate the generator which provides the values for the variables
 

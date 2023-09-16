@@ -97,9 +97,9 @@ void ExpressionStore::remove_trivial() {
 }
 
 /*
-bool ExpressionStore::is_consistent(){
+bool ExpressionStore::isConsistent(){
 
-   if (!m.is_consistent()){
+   if (!m.isConsistent()){
       return false;
    }
 

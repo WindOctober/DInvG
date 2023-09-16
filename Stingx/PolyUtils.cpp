@@ -24,7 +24,7 @@
 #include "LinExpr.h"
 #include "Macro.h"
 #include "myassertions.h"
-ostream& print_polyhedron(ostream& in,
+ostream& printPolyhedron(ostream& in,
                           C_Polyhedron const& np,
                           const var_info* info) {
     if (np.is_universe()) {
@@ -71,13 +71,13 @@ ostream& print_polyhedron(ostream& in,
         flag = true;
 
         for (i = 0; i < n; i++) {
-            if (!handle_integers((*vi).coefficient(Variable(i)), j))
+            if (!handleInt((*vi).coefficient(Variable(i)), j))
                 flag = false;
 
             l[i] = j;
         }
 
-        if (!handle_integers((*vi).inhomogeneous_term(), j))
+        if (!handleInt((*vi).inhomogeneous_term(), j))
             flag = false;
 
         l[n] = j;
@@ -143,13 +143,13 @@ void print_pure_polyhedron(C_Polyhedron const& np, const var_info* info) {
         flag = true;
 
         for (i = 0; i < n; i++) {
-            if (!handle_integers((*vi).coefficient(Variable(i)), j))
+            if (!handleInt((*vi).coefficient(Variable(i)), j))
                 flag = false;
 
             l[i] = j;
         }
 
-        if (!handle_integers((*vi).inhomogeneous_term(), j))
+        if (!handleInt((*vi).inhomogeneous_term(), j))
             flag = false;
 
         l[n] = j;
@@ -207,11 +207,11 @@ ostream& print_clump(ostream& in, Clump const& cl, const var_info* info) {
         for (vi = cs.begin(); vi != cs.end(); ++vi) {
             flag = true;
             for (i = 0; i < n; i++) {
-                if (!handle_integers((*vi).coefficient(Variable(i)), j))
+                if (!handleInt((*vi).coefficient(Variable(i)), j))
                     flag = false;
                 l[i] = j;
             }
-            if (!handle_integers((*vi).inhomogeneous_term(), j))
+            if (!handleInt((*vi).inhomogeneous_term(), j))
                 flag = false;
             l[n] = j;
             if (flag) {
@@ -232,11 +232,11 @@ ostream& print_clump(ostream& in, Clump const& cl, const var_info* info) {
 }
 
 
-bool handle_integers(Coefficient const& t, int& res) {
+bool handleInt(Coefficient const& t, int& res) {
     bool ret = true;
 
     if (!t.fits_sint_p()) {
-        cout << "Fatal Warning from PolyUtils::handle_integers-- gmp integer "
+        cout << "Fatal Warning from PolyUtils::handleInt-- gmp integer "
                 "overflow"
              << endl;
         ret = false;
@@ -246,9 +246,9 @@ bool handle_integers(Coefficient const& t, int& res) {
     return ret;
 }
 
-int handle_integers(Coefficient const& t) {
+int handleInt(Coefficient const& t) {
     if (!t.fits_sint_p()) {
-        cout << "Fatal Warning from PolyUtils::handle_integers-- gmp integer "
+        cout << "Fatal Warning from PolyUtils::handleInt-- gmp integer "
                 "overflow"
              << endl;
         exit(1);
@@ -281,13 +281,13 @@ ostream& print_lin_expression(ostream& in,
     bool flag = true;
     int j;
     for (i = 0; i < n; i++) {
-        if (!handle_integers(lp.coefficient(Variable(i)), j))
+        if (!handleInt(lp.coefficient(Variable(i)), j))
             flag = false;
 
         l[i] = j;
     }
 
-    if (!handle_integers(lp.inhomogeneous_term(), j))
+    if (!handleInt(lp.inhomogeneous_term(), j))
         flag = false;
 
     l[n] = j;
@@ -321,13 +321,13 @@ void print_pure_lin_expression(Linear_Expression const& lp, const var_info* info
     bool flag = true;
     int j;
     for (i = 0; i < n; i++) {
-        if (!handle_integers(lp.coefficient(Variable(i)), j))
+        if (!handleInt(lp.coefficient(Variable(i)), j))
             flag = false;
 
         l[i] = j;
     }
 
-    if (!handle_integers(lp.inhomogeneous_term(), j))
+    if (!handleInt(lp.inhomogeneous_term(), j))
         flag = false;
 
     l[n] = j;

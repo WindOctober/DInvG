@@ -24,50 +24,50 @@
 #include "myassertions.h"
 
 System::System(var_info* info, var_info* coefInfo, var_info* lambdaInfo)
-    : f_(info),
-      fd_(coefInfo),
-      fr_(lambdaInfo),
-      n_(info->getDim()),
-      nd_(coefInfo->getDim()),
-      r_(lambdaInfo->getDim()),
+    : varInfo(info),
+      coefInfo(coefInfo),
+      lambdaInfo(lambdaInfo),
+      varNum(info->getDim()),
+      coefNum(coefInfo->getDim()),
+      lamdaNum(lambdaInfo->getDim()),
       context_computed_(false) {}
 
 System::System(System& s, Context& cc)
-    : f_(s.get_var_info()),
-      fd_(s.get_dual_var_info()),
-      fr_(s.get_multiplier_var_info()),
-      n_(f_->getDim()),
-      nd_(fd_->getDim()),
-      r_(fr_->getDim()),
+    : varInfo(s.getInfo()),
+      coefInfo(s.getCoefInfo()),
+      lambdaInfo(s.getLambdaInfo()),
+      varNum(varInfo->getDim()),
+      coefNum(coefInfo->getDim()),
+      lamdaNum(lambdaInfo->getDim()),
       context_computed_(false) {
     // now obtain location information from context
     get_location_info(s, cc);
     get_transition_info(s, cc);
 }
 
-void System::add_location(Location* loc) {
+void System::addLoc(Location* loc) {
     vloc.push_back(loc);
 }
 
-void System::add_transition(TransitionRelation* trans) {
+void System::addTrans(TransitionRelation* trans) {
     vtrans.push_back(trans);
 }
 
 void System::update_dimensions() {
-    n_ = f_->getDim();
-    nd_ = fd_->getDim();
-    r_ = fr_->getDim();
+    varNum = varInfo->getDim();
+    coefNum = coefInfo->getDim();
+    lamdaNum = lambdaInfo->getDim();
 }
 
 Location const& System::get_location(int index) const {
-    PRECONDITION((index >= 0 && index < num_loc()),
+    PRECONDITION((index >= 0 && index < getLocNum()),
                  "System::get_location-- index out of range");
     Location const* ll = vloc[index];
     return (*ll);
 }
 
 TransitionRelation const& System::get_transition_relation(int index) const {
-    PRECONDITION((index >= 0 && index < num_trans()),
+    PRECONDITION((index >= 0 && index < getTransNum()),
                  "System::get_transition_relation -- index out of range");
     TransitionRelation const* tt = vtrans[index];
     return (*tt);
@@ -102,7 +102,7 @@ void System::compute_initial_context() {
     if (context_computed_)
         delete (glc_);
 
-    glc_ = new Context(f_, fd_, fr_);
+    glc_ = new Context(varInfo, coefInfo, lambdaInfo);
 
     vector<Location*>::iterator vi;
     for (vi = vloc.begin(); vi != vloc.end(); ++vi) {
@@ -123,19 +123,19 @@ Context* System::get_context() {
 }
 
 void System::get_location_info(System& s, Context& cc) {
-    int nl = s.num_loc();
+    int nl = s.getLocNum();
     int i, j;
     for (i = 0; i < nl; ++i) {
         // obtain a new location
         Location const& lc = s.get_location(i);
         j = lc.getLIndex();
-        Location* newl = new Location(n_, f_, fd_, fr_, lc.get_name(), j);
+        Location* newl = new Location(varNum, varInfo, coefInfo, lambdaInfo, lc.get_name(), j);
 
         newl->force_polyset();
         C_Polyhedron& res = newl->get_non_const_poly_reference();
 
         cc.obtain_primal_polyhedron(j, res);
-        add_location(newl);
+        addLoc(newl);
     }
 
     // that should do it
@@ -163,7 +163,7 @@ Location* System::get_matching_location(string name) {
 }
 
 void System::get_transition_info(System& s, Context& cc) {
-    int nt = s.num_trans();
+    int nt = s.getTransNum();
     int i, j, l;
 
     Location *preloc, *postloc;
@@ -183,23 +183,23 @@ void System::get_transition_info(System& s, Context& cc) {
 
             res = new C_Polyhedron(tc.get_relation());
 
-            newt = new TransitionRelation(n_, f_, fd_, fr_, preloc, postloc,
+            newt = new TransitionRelation(varNum, varInfo, coefInfo, lambdaInfo, preloc, postloc,
                                           res, tc.get_name(), j);
-            add_transition(newt);
+            addTrans(newt);
             continue;
         } else if (pre == post) {
             preloc = get_matching_location(pre);
             l = preloc->getLIndex();
-            res = new C_Polyhedron(2 * n_);
+            res = new C_Polyhedron(2 * varNum);
 
             if (cc.obtain_transition_relation(j, l, *res) == false) {
                 delete (res);
                 delete (newt);
                 continue;
             }
-            newt = new TransitionRelation(n_, f_, fd_, fr_, preloc, preloc, res,
+            newt = new TransitionRelation(varNum, varInfo, coefInfo, lambdaInfo, preloc, preloc, res,
                                           tc.get_name(), j);
-            add_transition(newt);
+            addTrans(newt);
         }
     }
 }
@@ -210,78 +210,5 @@ void System::add_invariants_and_update(C_Polyhedron& pp, C_Polyhedron& dualp) {
         (*vi)->extract_invariants_and_update(pp, dualp);
     }
 
-    return;
-}
-
-void System::obtain_trivial_polyhedron(C_Polyhedron& invd) {
-    vector<Location*>::iterator vi;
-    for (vi = vloc.begin(); vi != vloc.end(); ++vi) {
-        (*vi)->add_to_trivial(invd);
-    }
-
-    return;
-}
-
-void System::do_some_propagation(InvariantMap& im) {
-    // iterate through transitions and carry out the propagation steps
-
-    vector<TransitionRelation*>::iterator vi;
-
-    for (vi = vtrans.begin(); vi < vtrans.end(); ++vi) {
-        TransitionRelation* tr = (*vi);
-        string const& preloc = tr->get_preloc_name();
-        string const& postloc = tr->get_postloc_name();
-
-        C_Polyhedron& p1 = im[preloc];
-        C_Polyhedron& p2 = im[postloc];
-
-        C_Polyhedron temp(n_, UNIVERSE);
-
-        tr->compute_post_new(&p1, temp);
-        p2.poly_hull_assign(temp);
-        // done
-    }
-}
-
-void System::compute_invariant(InvariantMap& im) {
-    // compute invariants by cousot halbwachs
-    //
-    //
-    // 1. perform propagation steps
-    // 2. perform widening steps
-    // print the results
-    //
-
-    bool termination = false;
-
-    propagation_time = widening_time = 0;
-
-    while (!termination) {
-        InvariantMap im1(im);  // use the copy constructor with trepidation
-
-        // Timer wrap for profiling.
-
-        // Propagation
-
-        Timer prop_timer;
-        do_some_propagation(im);  // close im under fwd propagation
-        prop_timer.stop();
-        propagation_time += prop_timer.compute_time_elapsed();
-
-        // widening
-        Timer widening_timer;
-        im.BHRZ03_widening_assign(im1);
-        widening_timer.stop();
-        widening_time += widening_timer.compute_time_elapsed();
-
-        termination = (im.equals(im1));
-    }
-
-    cout << "The computed invariant map is " << endl;
-    cout << im << endl;
-    cout << "Time spent propagating stuff: (0.01s) " << propagation_time
-         << endl;
-    cout << "Time spent widening stuff: (0.01s)" << widening_time << endl;
-    cout << endl << endl;
     return;
 }

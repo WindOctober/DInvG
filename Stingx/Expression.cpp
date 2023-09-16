@@ -62,14 +62,14 @@ Expression::~Expression() {
 }
 
 Expression::Expression(Expression* e1, Expression* e2) {
-    initialize(e1->get_n(), e1->get_r(), e1->get_fn(), e1->get_fr());
+    initialize(e1->getVarNum(), e1->getLambdaNum(), e1->get_fn(), e1->get_fr());
     int i;
     for (i = 0; i < lambdaNum + 1; i++)
         linExpr[i] = (*e1)[i] - (*e2)[i];
 }
 
 Expression::Expression(Expression const& e) {
-    initialize(e.get_n(), e.get_r(), e.get_fn(), e.get_fr());
+    initialize(e.getVarNum(), e.getLambdaNum(), e.get_fn(), e.get_fr());
     int i;
     for (i = 0; i < lambdaNum + 1; i++)
         linExpr[i] = e(i);
@@ -78,7 +78,7 @@ Expression::Expression(Expression const& e) {
 }
 
 Expression& Expression::operator=(Expression const& p1) {
-    // initialize(p1.get_n(),p1.get_r(),p1.get_fn(),p1.get_fr());
+    // initialize(p1.getVarNum(),p1.getLambdaNum(),p1.get_fn(),p1.get_fr());
     for (int i = 0; i < lambdaNum + 1; i++)
         linExpr[i] = p1(i);
 
@@ -93,10 +93,10 @@ SparseLinExpr Expression::operator()(int i) const {
     return linExpr[i];
 }
 
-int Expression::get_n() const {
+int Expression::getVarNum() const {
     return coefNum;
 }
-int Expression::get_r() const {
+int Expression::getLambdaNum() const {
     return lambdaNum;
 }
 var_info* Expression::get_fr() const {
@@ -128,7 +128,6 @@ bool Expression::is_pure_b() const {
 }
 
 SparseLinExpr& Expression::convert_linear() {
-    // Call if only the expression is pure a
     if (!is_pure_a()) {
         cerr << "Expression::convert_linear-- Asked to convert an expression "
                 "that "
@@ -137,8 +136,7 @@ SparseLinExpr& Expression::convert_linear() {
              << "Exiting in Panic.... " << endl;
         exit(1);
     }
-
-    return linExpr[lambdaNum];  // That does it
+    return linExpr[lambdaNum];
 }
 
 LinTransform Expression::convert_transform() const {
@@ -266,7 +264,7 @@ ostream& operator<<(ostream& os, Expression const& expr) {
     if (expr.is_factored()) {
         expr.print_factors(os);
     } else {
-        int lambdaNum = expr.get_r();
+        int lambdaNum = expr.getLambdaNum();
         var_info* lambdaInfo = expr.get_fr();
 
         os << lambdaInfo->get_name(0) << " * (" << expr(0) << " ) ";
@@ -359,7 +357,7 @@ void Expression::drop_transform(LinTransform& lt) {
 SparseLinExpr Expression::to_transform(Generator const& g) {
     SparseLinExpr ret(lambdaNum, lambdaInfo);
     for (int i = 0; i < lambdaNum + 1; i++) {
-        ret.set_coefficient(
+        ret.setCoefficient(
             i,
             linExpr[i].evaluate(
                 g));  // Evaluate the value of l[i] under the generator g

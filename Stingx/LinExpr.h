@@ -129,8 +129,8 @@ class LinExpr {
     bool equiv(LinExpr const& l1, Rational& factor) const;
 
     // convert to PPL representation.
-    Linear_Expression to_lin_expression() const;
-    Constraint get_constraint(int ineq_type) const;
+    Linear_Expression toLinExpression() const;
+    Constraint get_constraint(int ineqType) const;
 
     // with generator g providing valuations, eval.
     Rational evaluate(Generator const& g);

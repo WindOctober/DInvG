@@ -55,21 +55,21 @@ class DisequalityStore {
    private:
     /*
      * Class Members:
-     *    polys = a vector of disequalities.
+     *    disEquals = a vector of disequalities.
      *    ineqExprs = the inequalities
      *    varsNum = dimensionality
      *    info= information for printing
-     *   ConsistencyFlag = flag signifying inconsistent
+     *   InConsistency = flag signifying inconsistent
      */
 
-    vector<Linear_Expression>* polys;  // The vector of linear expressions  treated as disequalities
+    vector<Linear_Expression>* disEquals;  // The vector of linear expressions  treated as disequalities
 
     C_Polyhedron* ineqExprs;  // The inequalities of the system
 
     int varsNum;        // the dimensionality  of the system
     var_info* info;  // The information about variables
 
-    bool ConsistencyFlag;
+    bool InConsistency;
 
     void initialize(int varsNum, var_info* info);
     // check for consistency
@@ -80,18 +80,18 @@ class DisequalityStore {
     ~DisequalityStore();
 
     // add a constraint
-    // ineq_type has been #defined in global_types.h
+    // ineqType has been #defined in global_types.h
 
-    void add_constraint(SparseLinExpr const& p, int ineq_type);
+    void addConstraint(SparseLinExpr const& p, int ineqType);
 
     // force set the inequalities to p
-    void set_inequalities(C_Polyhedron const* p);
-    // force set the disequalities to those in polys
-    void set_disequalities(vector<SparseLinExpr>* polys);
+    void setIneqPoly(C_Polyhedron const* p);
+    // force set the disequalities to those in disEquals
+    void setDisEquals(vector<SparseLinExpr>* disEquals);
     // same as above support different format for expressions
-    void set_disequalities(vector<Linear_Expression> const* polys);
+    void setDisEquals(vector<Linear_Expression> const* disEquals);
 
-    bool is_consistent() const;
+    bool isConsistent() const;
 
     // check if the polyhedron t is consistent with the disequalities.
 
@@ -104,17 +104,17 @@ class DisequalityStore {
     // the dimension
     int getDim() const;
     // the var_info
-    const var_info* get_var_info() const;
+    const var_info* getInfo() const;
     // cover function for print
-    void print_constraints(ostream& in) const;
+    void printConstraints(ostream& in) const;
 
     // some utility functions for making life easier
     // add l == 0 with l in the transform representation
     bool addTransform(LinTransform const& l);
     // add l>=0
-    bool add_transform_inequality(LinTransform const& l);
+    bool addIneqTransform(LinTransform const& l);
     // add l<> 0
-    bool add_transform_negated(LinTransform const& l);
+    bool addNegTransform(LinTransform const& l);
     // Check if adding l==0 will create an inconsistent store.
     bool check_status_equalities(LinTransform& l);
 
