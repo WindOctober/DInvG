@@ -89,7 +89,7 @@ class InvariantMap {
 
     var_info* get_var_info() const { return f_; }
 
-    int get_dimension() const { return n_; }
+    int getDim() const { return n_; }
 
     int get_num_locations() const { return nloc_; }
 

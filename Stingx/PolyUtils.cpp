@@ -42,7 +42,7 @@ ostream& print_polyhedron(ostream& in,
     // Assume that info->dimension < the dimension of the polyhedron and that
     // info names the first info->dimension() dimensions of the polyhedron
     // The remaining will just receive some fake name, say "__A"-->"__Z"
-    int n = np.space_dimension(), nf = info->get_dimension(), i;
+    int n = np.space_dimension(), nf = info->getDim(), i;
     var_info* f2;
     char a[4] = {'_', '_', 'A', '\0'};
     if (nf >= n) {
@@ -114,7 +114,7 @@ void print_pure_polyhedron(C_Polyhedron const& np, const var_info* info) {
     // Assume that info->dimension < the dimension of the polyhedron and that
     // info names the first info->dimension() dimensions of the polyhedron
     // The remaining will just receive some fake name, say "__A"-->"__Z"
-    int n = np.space_dimension(), nf = info->get_dimension(), i;
+    int n = np.space_dimension(), nf = info->getDim(), i;
     var_info* f2;
     char a[4] = {'_', '_', 'A', '\0'};
     if (nf >= n) {
@@ -174,7 +174,7 @@ ostream& print_clump(ostream& in, Clump const& cl, const var_info* info) {
     // Assume that info->dimension < the dimension of the polyhedron and that
     // info names the first info->dimension() dimensions of the polyhedron
     // The remaining will just receive some fake name, say "__A"-->"__Z"
-    int n = cl.space_dimension(), nf = info->get_dimension(), i;
+    int n = cl.space_dimension(), nf = info->getDim(), i;
     var_info* f2;
     char a[4] = {'_', '_', 'A', '\0'};
     if (nf >= n) {
@@ -261,7 +261,7 @@ ostream& print_lin_expression(ostream& in,
                               Linear_Expression const& lp,
                               const var_info* info) {
     // print the linear expression lp using var_info info
-    int n = lp.space_dimension(), nf = info->get_dimension(), i;
+    int n = lp.space_dimension(), nf = info->getDim(), i;
     var_info* f2;
     char a[4] = {'_', '_', 'A', '\0'};
     if (nf >= n) {
@@ -301,7 +301,7 @@ ostream& print_lin_expression(ostream& in,
 
 void print_pure_lin_expression(Linear_Expression const& lp, const var_info* info) {
     // print the linear expression lp using var_info info
-    int n = lp.space_dimension(), nf = info->get_dimension(), i;
+    int n = lp.space_dimension(), nf = info->getDim(), i;
     var_info* f2;
     char a[4] = {'_', '_', 'A', '\0'};
     if (nf >= n) {
@@ -397,7 +397,7 @@ void dualize(C_Polyhedron const& p, C_Polyhedron& result) {
             result.add_constraint(Variable(n + 1 + j) >= 0);
         } else if ((*vi).type() == Constraint::STRICT_INEQUALITY) {
             cerr
-                << "Location::compute_dual_constraints -- Warning: Encountered "
+                << "Location::ComputeDualConstraints -- Warning: Encountered "
                    "Strict Inequality"
                 << endl;
             cerr << "                " << (*vi) << endl;

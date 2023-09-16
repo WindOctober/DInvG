@@ -142,21 +142,21 @@ class Location {
     void setInitPoly(C_Polyhedron& q);
     bool has_initial();
 
-    void AddClump(vector<Clump>& vcl);
+    void addClump(vector<Clump>& vcl);
     void make_context();
 
-    void compute_dual_constraints();
-    void compute_dual_constraints(Context& cc);       // the dual constraints
-    void compute_dual_constraints(C_Polyhedron& cc);  // the dual constraints
+    void ComputeDualConstraints();
+    void ComputeDualConstraints(Context& cc);       // the dual constraints
+    void ComputeDualConstraints(C_Polyhedron& cc);  // the dual constraints
 
-    int get_dimension() const;
+    int getDim() const;
     const var_info* get_var_info() const;
     const var_info* get_dual_var_info() const;
-    int get_range_left() const;
+    int getLIndex() const;
 
     bool matches(string name) const;
 
-    C_Polyhedron const& get_poly_reference() const {
+    C_Polyhedron const& getPolyRef() const {
         if (initFlag)
             return (*poly);
         cerr << " asked reference when poly is not set " << endl;
@@ -202,8 +202,8 @@ class Location {
 
     C_Polyhedron const& inv_poly_reference() const { return (*loc_inv); }
 
-    Clump* get_d_cl() { return disabled_clump; }
-    Clump const& get_d_cl_reference() const { return (*disabled_clump); }
+    Clump* getDisClump() { return disabled_clump; }
+    Clump const& getDisClumpRef() const { return (*disabled_clump); }
 
     // return the propagation_flag, which records whether this location has been
     // propagated in bfslist

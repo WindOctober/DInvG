@@ -26,7 +26,6 @@ bool print_tree;
 bool zero;
 bool one;
 bool falsepath;
-bool trsat;
 bool noexitpath;
 bool djinv;
 bool arrinv;
@@ -214,7 +213,7 @@ void collect_invariants(C_Polyhedron& cpoly, C_Polyhedron& invd) {
      *  Collect invariants
      */
     vector<Location*>::iterator it;
-    invd = C_Polyhedron(dualInfo->get_dimension(), UNIVERSE);
+    invd = C_Polyhedron(dualInfo->getDim(), UNIVERSE);
     it = loclist->begin();
     // cout<<endl<<"- In collect_invariants(), cpoly is : "<<endl<<"
     // "<<cpoly<<endl; Generator_System mgs = cpoly.minimized_generators();
@@ -234,7 +233,7 @@ void collect_invariants_for_one_location_by_eliminating(int index,
     //
     //  Collect invariants for initial
     //
-    invd = C_Polyhedron(dualInfo->get_dimension(), UNIVERSE);
+    invd = C_Polyhedron(dualInfo->getDim(), UNIVERSE);
     //    Firstly, collect invariants for initial location by eliminating
     //      for initial *it, i.e. location,
     //      use cpoly to update *it->invariant and *it->invariant updates invd.
@@ -251,10 +250,10 @@ void binary_eliminating(C_Polyhedron& cpoly, C_Polyhedron& invd) {
          << "(int)(cpoly.space_dimension()) :"
          << (int)(cpoly.space_dimension());
     cout << endl
-         << "( (*loclist)[0]->get_dimension()+1 ) : "
-         << ((*loclist)[0]->get_dimension() + 1);
+         << "( (*loclist)[0]->getDim()+1 ) : "
+         << ((*loclist)[0]->getDim() + 1);
     if ((int)(cpoly.space_dimension()) ==
-        ((*loclist)[0]->get_dimension() + 1)) {
+        ((*loclist)[0]->getDim() + 1)) {
         // cout<<endl<<"2.get here?";
         (*loclist)[global_binary_i]
             ->extract_invariants_and_update_by_binary_eliminating(cpoly, invd);
@@ -301,7 +300,7 @@ void collect_invariants_by_binary_eliminating(C_Polyhedron& cpoly,
      *  Collect invariants
      */
     vector<Location*>::iterator it;
-    invd = C_Polyhedron(dualInfo->get_dimension(), UNIVERSE);
+    invd = C_Polyhedron(dualInfo->getDim(), UNIVERSE);
 
     binary_eliminating(cpoly, invd);
     global_binary_i = 0;
@@ -344,10 +343,10 @@ void dfs_traverse_recursive(int depth,
         // cout<<endl<<"in while...next()";
         // cout<<endl<<"depth:"<<depth<<", cpoly:";
         // cout<<endl<<cpoly;
-        // cout<<endl<<"vcl["<<depth-1<<"].size():"<<vcl[depth-1].get_count();
+        // cout<<endl<<"vcl["<<depth-1<<"].size():"<<vcl[depth-1].getCount();
         C_Polyhedron p(cpoly);
         // Timer test_time_for_intersection;
-        p.intersection_assign(vcl[depth - 1].get_reference());
+        p.intersection_assign(vcl[depth - 1].getReference());
         // test_time_for_intersection.stop();
         // cout<<endl<<"- Intersection Time Taken (0.01s) =
         // "<<test_time_for_intersection.compute_time_elapsed()<<endl;
@@ -505,8 +504,8 @@ void collect_invariants_for_one_location_from_intra(vector<Clump>& vcl,
     // initialize
     int lid = loc_index;
     vector<vector<vector<vector<int>>>> target_sequences;
-    int dual_num = dualInfo->get_dimension();
-    C_Polyhedron local_initp(dual_num, UNIVERSE);
+    int dualNum = dualInfo->getDim();
+    C_Polyhedron local_initp(dualNum, UNIVERSE);
 
     /*
      * Generate Sequences
@@ -528,7 +527,7 @@ void collect_invariants_for_one_location_from_intra(vector<Clump>& vcl,
         vector<vector<vector<int>>> empty_sequences;
         target_sequences.push_back(empty_sequences);
     } else {
-        (*loclist)[lid]->compute_dual_constraints(local_initp);
+        (*loclist)[lid]->ComputeDualConstraints(local_initp);
         dfs_sequences_generation_traverse_for_one_location_from_intra(
             target_sequences, lid, vcl, local_initp);
     }
@@ -583,7 +582,6 @@ void Initialize_before_Parser() {
     global_sub_system_list = new vector<System*>();
     zero = one = true;
     falsepath = true;
-    trsat = true;
     noexitpath = true;
     djinv = true;
     arrinv = false;
@@ -614,7 +612,7 @@ void Initialize() {
     global_sub_system_list = new vector<System*>();
     zero = one = true;
     falsepath = true;
-    trsat = true;
+
     noexitpath = true;
     djinv = true;
     arrinv = false;
@@ -711,7 +709,6 @@ void Print_Status_before_Solver() {
     cout << "| Local invariants to be generated : " << zero << endl;
     cout << "| Increasing invariants to be generated : " << one << endl;
     cout << "| Falsepath to be enabled : " << falsepath << endl;
-    cout << "| Transition-sat to be enabled : " << trsat << endl;
     cout << "| Exit-Transition is computed : " << (!noexitpath) << endl;
     cout << "| Display Disjunctive Invariants : " << djinv << endl;
     cout << "| Display Array Invariants : " << arrinv << endl;
@@ -886,22 +883,15 @@ void Create_Adjacency_Matrix_for_Location_and_Transition() {
 
     int j = 0, j1 = 0;
     for (auto it = trlist->begin(); it < trlist->end(); it++) {
-        if (trsat) {
-            if (!(*it)->get_relation().is_empty()) {
-                location_matrix[get_index_of_location((*it)->get_preloc_name())]
-                               [get_index_of_location(
-                                    (*it)->get_postloc_name())]
-                                   .push_back(j);
-                j1++;
-            }
-            j++;
-        } else {
+        if (!(*it)->get_relation().is_empty()) {
             location_matrix[get_index_of_location((*it)->get_preloc_name())]
-                           [get_index_of_location((*it)->get_postloc_name())]
-                               .push_back(j);
+                            [get_index_of_location(
+                                (*it)->get_postloc_name())]
+                                .push_back(j);
             j1++;
-            j++;
         }
+        j++;
+
     }
 
     //  print the matrix
@@ -952,21 +942,21 @@ void Compute_Invariant_Frontend(){
     for (auto it = trlist->begin(); it < trlist->end(); it++) {
         global_system->add_transition((*it));
     }
-    tt = new int[lambdaInfo->get_dimension()];
-    int dual_num = dualInfo->get_dimension();
-    trivial = new C_Polyhedron(dual_num, UNIVERSE);
+    tt = new int[lambdaInfo->getDim()];
+    int dualNum = dualInfo->getDim();
+    trivial = new C_Polyhedron(dualNum, UNIVERSE);
     for (auto it = loclist->begin(); it < loclist->end(); it++) {
         (*it)->add_to_trivial(trivial);
     }
 
-    C_Polyhedron init_poly(dual_num, UNIVERSE);
+    C_Polyhedron init_poly(dualNum, UNIVERSE);
     for (auto it = loclist->begin(); it < loclist->end(); it++) {
         (*it)->make_context();
-        (*it)->compute_dual_constraints(init_poly);
+        (*it)->ComputeDualConstraints(init_poly);
     }
     vector<Clump> clumps;
     for (auto it = trlist->begin(); it < trlist->end(); it++) {
-        (*it)->compute_consecution_constraints(clumps);
+        (*it)->ComputeIntraConsecConstraints(clumps);
         if (total_timer.compute_time_elapsed() >= time_limit) {
             cout << "Time is up!" << endl;
             break;
@@ -974,7 +964,7 @@ void Compute_Invariant_Frontend(){
     }
 
     for (auto it = loclist->begin(); it < loclist->end(); it++) {
-        (*it)->AddClump(clumps);
+        (*it)->addClump(clumps);
         if (total_timer.compute_time_elapsed() >= time_limit) {
             cout << "Time is up!" << endl;
             break;
@@ -1072,35 +1062,35 @@ int main() {
     for (auto it = trlist->begin(); it < trlist->end(); it++) {
         global_system->add_transition((*it));
     }
-    tt = new int[lambdaInfo->get_dimension()];
+    tt = new int[lambdaInfo->getDim()];
     if (num_context == 1) {
         //  output_file: **newdfs_sequences**
-        //  dual_num
-        int dual_num = dualInfo->get_dimension();
+        //  dualNum
+        int dualNum = dualInfo->getDim();
         //  trivial
-        trivial = new C_Polyhedron(dual_num, UNIVERSE);
+        trivial = new C_Polyhedron(dualNum, UNIVERSE);
         for (auto it = loclist->begin(); it < loclist->end(); it++) {
             (*it)->add_to_trivial(trivial);
         }
        
         //  init_poly
-        C_Polyhedron init_poly(dual_num, UNIVERSE);
+        C_Polyhedron init_poly(dualNum, UNIVERSE);
         for (auto it = loclist->begin(); it < loclist->end(); it++) {
             (*it)->make_context();
-            (*it)->compute_dual_constraints(init_poly);
+            (*it)->ComputeDualConstraints(init_poly);
         }
         //  vcl
 
         vector<Clump> clumps;
         for (auto it = trlist->begin(); it < trlist->end(); it++) {
-            (*it)->compute_consecution_constraints(clumps);
+            (*it)->ComputeIntraConsecConstraints(clumps);
             if (total_timer.compute_time_elapsed() >= time_limit) {
                 cout << "Time is up!" << endl;
                 break;
             }
         }
         for (auto it = loclist->begin(); it < loclist->end(); it++) {
-            (*it)->AddClump(clumps);
+            (*it)->addClump(clumps);
             if (total_timer.compute_time_elapsed() >= time_limit) {
                 cout << "Time is up!" << endl;
                 break;
@@ -1161,21 +1151,20 @@ int main() {
         dfs_traverse_time = dfs_traverse_timer.compute_time_elapsed();
 
     } else if (num_context == 2) {
-        //  output_file: **newdfs_seq_propagation**
-        int dual_num = dualInfo->get_dimension();
-        trivial = new C_Polyhedron(dual_num, UNIVERSE);
+        int dualNum = dualInfo->getDim();
+        trivial = new C_Polyhedron(dualNum, UNIVERSE);
         for (auto it = loclist->begin(); it < loclist->end(); it++) {
             (*it)->add_to_trivial(trivial);
         }
 
-        C_Polyhedron init_poly(dual_num, UNIVERSE);
+        C_Polyhedron init_poly(dualNum, UNIVERSE);
         for (auto it = loclist->begin(); it < loclist->end(); it++) {
             (*it)->make_context();
-            (*it)->compute_dual_constraints(init_poly);
+            (*it)->ComputeDualConstraints(init_poly);
         }
         vector<Clump> clumps;
         for (auto it = trlist->begin(); it < trlist->end(); it++) {
-            (*it)->compute_consecution_constraints(clumps);
+            (*it)->ComputeIntraConsecConstraints(clumps);
             if (total_timer.compute_time_elapsed() >= time_limit) {
                 cout << "Time is up!" << endl;
                 break;
@@ -1183,7 +1172,7 @@ int main() {
         }
 
         for (auto it = loclist->begin(); it < loclist->end(); it++) {
-            (*it)->AddClump(clumps);
+            (*it)->addClump(clumps);
             if (total_timer.compute_time_elapsed() >= time_limit) {
                 cout << "Time is up!" << endl;
                 break;
@@ -1407,7 +1396,7 @@ void Scan_Input() {
                 // cout<<loc_name<<" "<<loc_name.length()<<" "<<token<<endl;
                 if (!search_location((char*)loc_name.c_str(), &new_location)) {
                     new_location =
-                        new Location(info->get_dimension(), info, dualInfo,
+                        new Location(info->getDim(), info, dualInfo,
                                      lambdaInfo, loc_name);
                     loclist->push_back(new_location);
                 } else {
@@ -1437,7 +1426,7 @@ void Scan_Input() {
                 if (!search_transition_relation((char*)transition_name.c_str(),
                                                 &new_transition)) {
                     new_transition = new TransitionRelation(
-                        info->get_dimension(), info, dualInfo, lambdaInfo,
+                        info->getDim(), info, dualInfo, lambdaInfo,
                         transition_name);
                     trlist->push_back(new_transition);
                 } else {
@@ -1487,9 +1476,9 @@ void Scan_Input() {
                 if (!new_poly) {
                     if (stage == 1)
                         new_poly =
-                            new C_Polyhedron(info->get_dimension(), UNIVERSE);
+                            new C_Polyhedron(info->getDim(), UNIVERSE);
                     else
-                        new_poly = new C_Polyhedron(2 * info->get_dimension(),
+                        new_poly = new C_Polyhedron(2 * info->getDim(),
                                                     UNIVERSE);
                 }
                 sregex_iterator it(line.begin(), line.end(), term_pattern);
@@ -1521,7 +1510,7 @@ void Scan_Input() {
                         }
                         Linear_Expression* res = new Linear_Expression(
                             abs(coef) *
-                            Variable(index + info->get_dimension()));
+                            Variable(index + info->getDim()));
                         if (!is_rhs) {
                             if (coef > 0)
                                 (*le) += (*res);
@@ -1594,7 +1583,7 @@ void Scan_Input() {
                         }
                         Linear_Expression* res = new Linear_Expression(
                             abs(coef) *
-                            Variable(index + info->get_dimension()));
+                            Variable(index + info->getDim()));
                         if (!is_rhs) {
                             if (coef > 0)
                                 (*le) += (*res);
@@ -1675,6 +1664,6 @@ void Scan_Input() {
             continue;
         }
     }
-    dimension = info->get_dimension();
+    dimension = info->getDim();
     exit(0);
 }

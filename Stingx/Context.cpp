@@ -52,20 +52,14 @@ void Context::initialize(var_info* info, var_info* dualInfo, var_info* lambdaInf
     this->dualInfo = dualInfo;
     this->lambdaInfo = lambdaInfo;
 
-    // varsNum= no. of primal dimensions
-
-    varsNum = info->get_dimension();
-
-    // dual_num=no. of dual dimensions
-
-    dual_num = dualInfo->get_dimension();
-
-    lambda_num = lambdaInfo->get_dimension();
+    varsNum = info->getDim();
+    dualNum = dualInfo->getDim();
+    lambdaNum = lambdaInfo->getDim();
 
     factors = new vector<Expression>();
-    equality_mat = new MatrixStore(dual_num, dualInfo);
-    inequality_store = new PolyStore(dual_num, dualInfo);
-    lambda_store = new DisequalityStore(lambda_num, lambdaInfo);
+    equality_mat = new MatrixStore(dualNum, dualInfo);
+    inequality_store = new PolyStore(dualNum, dualInfo);
+    lambda_store = new DisequalityStore(lambdaNum, lambdaInfo);
 
     eq_exprs = new vector<Expression>();
     ineq_exprs = new vector<Expression>();
@@ -85,9 +79,9 @@ void Context::initialize(var_info* info,
 
     context_count++;
     this->lambdaInfo = lambdaInfo;
-    varsNum = info->get_dimension();
-    dual_num = dualInfo->get_dimension();
-    lambda_num = lambdaInfo->get_dimension();
+    varsNum = info->getDim();
+    dualNum = dualInfo->getDim();
+    lambdaNum = lambdaInfo->getDim();
 
     this->equality_mat = equality_mat;
     this->inequality_store = inequality_store;
@@ -139,29 +133,29 @@ void Context::add_to_matrix_store(SparseLinExpr l) {
 
 void Context::add_to_matrix_store(Linear_Expression lin) {
     int i;
-    SparseLinExpr l(dual_num, dualInfo);
-    for (i = 0; i < dual_num; i++) {
+    SparseLinExpr l(dualNum, dualInfo);
+    for (i = 0; i < dualNum; i++) {
         l.set_coefficient(i, handle_integers(lin.coefficient(Variable(i))));
     }
 
-    l.set_coefficient(dual_num, handle_integers(lin.inhomogeneous_term()));
+    l.set_coefficient(dualNum, handle_integers(lin.inhomogeneous_term()));
     equality_mat->add_constraint(l);
 }
 
-void Context::add_to_poly_store(SparseLinExpr l) {
+void Context::insertPolyStore(SparseLinExpr l) {
     inequality_store->add_constraint(l, TYPE_GEQ);
 }
 
-void Context::add_to_poly_store(Constraint cc) {
+void Context::insertPolyStore(Constraint cc) {
     int i;
-    inequality_store->add_constraint(cc);
+    inequality_store->add_constraint(cc); // the constarint on coef of template derived from initial condition.
     if (cc.is_equality()) {
-        SparseLinExpr l(dual_num, dualInfo);
-        for (i = 0; i < dual_num; i++) {
+        SparseLinExpr l(dualNum, dualInfo);
+        for (i = 0; i < dualNum; i++) {
             l.set_coefficient(i, handle_integers(cc.coefficient(Variable(i))));
         }
-        l.set_coefficient(dual_num, handle_integers(cc.inhomogeneous_term()));
-        equality_mat->add_constraint(l);
+        l.set_coefficient(dualNum, handle_integers(cc.inhomogeneous_term()));
+        equality_mat->add_constraint(l);  //the constraint of equality.
     }
 
     return;
@@ -185,7 +179,7 @@ void Context::add_transform(LinTransform l) {
 }
 
 void Context::add_linear_inequality(SparseLinExpr l) {
-    add_to_poly_store(l);
+    insertPolyStore(l);
 }
 
 void Context::add_transform_inequality(LinTransform l) {
@@ -277,13 +271,13 @@ void Context::remove_trivial_inequalities() {
     vector<Expression>::iterator it;
     it = ineq_exprs->begin();
     // until we get to a non-trivial beginning expression
-    while (it < ineq_exprs->end() && (*it).is_zero()) {
+    while (it < ineq_exprs->end() && (*it).isZero()) {
         ineq_exprs->erase(ineq_exprs->begin());
         it = ineq_exprs->begin();
     }
 
     for (; it < ineq_exprs->end(); it++) {
-        if ((*it).is_zero()) {
+        if ((*it).isZero()) {
             ineq_exprs->erase(it);
             it--;
         }
@@ -295,13 +289,13 @@ void Context::remove_trivial_equalities() {
     vector<Expression>::iterator it;
     it = eq_exprs->begin();
     // until we get to a non-trivial beginning expression
-    while (it < eq_exprs->end() && (*it).is_zero()) {
+    while (it < eq_exprs->end() && (*it).isZero()) {
         eq_exprs->erase(eq_exprs->begin());
         it = eq_exprs->begin();
     }
 
     for (; it < eq_exprs->end(); it++) {
-        if ((*it).is_zero()) {
+        if ((*it).isZero()) {
             eq_exprs->erase(it);
             it--;
         }
@@ -474,7 +468,7 @@ Expression& Context::choose_maximal_factor_equalities() {
     it = factors->begin() + 1;
 
     while (it < factors->end()) {
-        if ((*it).get_count() > (*vj).get_count()) {
+        if ((*it).getCount() > (*vj).getCount()) {
             vj = it;
         }
         it++;
@@ -681,18 +675,16 @@ void Context::Convert_CNF_to_DNF_and_Print(vector<Location*>* loclist,
 void Context::recursive_strategy(Clump& clump) {
     bool flag = true;
     while (flag) {
-        if (clump.contains(inequality_store->get_poly_reference())) {
+        if (clump.contains(inequality_store->getPolyRef())) {
             prune_count++;
             return;
         }
         flag = factorizing_strategy_equalities();
         if (flag) {
-            // cout<<endl<<"- The Left Child Context: "<<endl; print(cout);
-            // cout<<endl<<"- The Right Child Context: "<<endl<<(*child1)<<endl;
             child1->recursive_strategy(clump);
             delete (child1);
         } else {
-            split_01_strategy(clump);  // contains process "clump.insert(inequality_store->get_poly_reference())";
+            split_01_strategy(clump);  // contains process "clump.insert(inequality_store->getPolyRef())";
             return;
         }
     }
@@ -701,7 +693,7 @@ void Context::recursive_strategy(Clump& clump) {
 void Context::get_multiplier_counts() {
     int i;
 
-    for (i = 0; i < lambda_num; i++)
+    for (i = 0; i < lambdaNum; i++)
         tt[i] = 0;
 
     vector<Expression>::iterator it;
@@ -727,17 +719,17 @@ int Context::get_multiplier_status() {
     }
 
     bool zero_possible, one_possible;
-    LinTransform lt(lambda_num, lambdaInfo);
+    LinTransform lt(lambdaNum, lambdaInfo);
 
     // now check  on each multiplier on how many unresolved instances are there
     get_multiplier_counts();
 
-    for (i = 0; i < lambda_num; i++) {
+    for (i = 0; i < lambdaNum; i++) {
         if (tt[i] == 0) {
             tt[i] = MULTIPLIER_RESOLVED;
         } else {
             lt[i] = 1;
-            lt[lambda_num] = 0;
+            lt[lambdaNum] = 0;
 
             // now test if zero and one are available
 
@@ -755,7 +747,7 @@ int Context::get_multiplier_status() {
 
             if (one) {  // Am I allowed a one instantiation
                 // check if \mu-1 =0 is viable
-                lt[lambda_num] = -1;
+                lt[lambdaNum] = -1;
                 if (is_viable_equalities(lt))
                     one_possible = true;
             }
@@ -772,7 +764,7 @@ int Context::get_multiplier_status() {
                     tt[i] = ZERO_ONE_FORBIDDEN;
             }
             lt[i] = 0;
-            lt[lambda_num] = 0;
+            lt[lambdaNum] = 0;
         }
     }
 
@@ -785,7 +777,7 @@ int Context::choose_unresolved_multiplier() {
 
     int i;
 
-    for (i = 0; i < lambda_num; i++)
+    for (i = 0; i < lambdaNum; i++)
         tt[i] = 0;
 
     vector<Expression>::iterator it;
@@ -802,7 +794,7 @@ int Context::choose_unresolved_multiplier() {
 
     int ret = NO_UNRESOLVED_MULTIPLIER, max = 0;
 
-    for (i = 0; i < lambda_num; i++) {
+    for (i = 0; i < lambdaNum; i++) {
         if (tt[i] > max) {
             ret = i;
             max = tt[i];
@@ -824,7 +816,7 @@ with 0 and 1
 
 
    // choose 0/1 values for the multiplier and expand
-   LinTransform lt(lambda_num,lambdaInfo);
+   LinTransform lt(lambdaNum,lambdaInfo);
    lt[index]=1; // \mu{index}=0
 
    Context * child1, *child2;
@@ -837,7 +829,7 @@ with 0 and 1
 
    }
 
-   lt[lambda_num]=Rational(-1,1);
+   lt[lambdaNum]=Rational(-1,1);
    if (is_viable_equalities(lt)){
       child2=this->clone();
       child2->add_transform(lt);
@@ -863,7 +855,7 @@ void Context::terminal_strategy(System& s, C_Polyhedron* dualp) {
 
     if (index == NO_UNRESOLVED_MULTIPLIER) {
         // now add the invariants and update dualp
-        s.add_invariants_and_update(inequality_store->get_poly_reference(), (*dualp));
+        s.add_invariants_and_update(inequality_store->getPolyRef(), (*dualp));
         return;  // nothing to be done
     }
 
@@ -889,25 +881,25 @@ void Context::split_01_strategy(Clump& clump) {
     int i;
     if (index == NO_UNRESOLVED_MULTIPLIER) {
         // now add the invariants and update dualp
-        clump.insert(inequality_store->get_poly_reference());
+        clump.insert(inequality_store->getPolyRef());
         return;  // nothing to be done
     }
 
     // now go though all the multipliers for which zero or one is forbidden and
     // apply the remaining choose 0/1 values for the multiplier and expand
-    LinTransform lt(lambda_num, lambdaInfo);
+    LinTransform lt(lambdaNum, lambdaInfo);
     Context* child1;
 
-    for (i = 0; i < lambda_num; i++) {
+    for (i = 0; i < lambdaNum; i++) {
         switch (tt[i]) {
             case ZERO_ONE_FORBIDDEN:
                 continue;
             case ZERO_FORBIDDEN:
                 lt[i] = 1;
-                lt[lambda_num] = -1;
+                lt[lambdaNum] = -1;
                 add_transform(lt);
                 lt[i] = 0;
-                lt[lambda_num] = 0;
+                lt[lambdaNum] = 0;
 
                 break;
 
@@ -924,14 +916,14 @@ void Context::split_01_strategy(Clump& clump) {
     simplify_repeat();
     index = get_multiplier_status();
     if (index == NO_UNRESOLVED_MULTIPLIER) {
-        clump.insert(inequality_store->get_poly_reference());
+        clump.insert(inequality_store->getPolyRef());
         return;  // nothing to be done
     }
     // now split on the remaining cases
-    for (i = 0; i < lambda_num; i++) {
+    for (i = 0; i < lambdaNum; i++) {
         if (tt[i] == ZERO_ONE_ALLOWED) {
             lt[i] = 1;
-            lt[lambda_num] = 0;
+            lt[lambdaNum] = 0;
             child1 = this->clone();
             child1->add_transform(lt);
             child1->simplify_repeat();
@@ -939,7 +931,7 @@ void Context::split_01_strategy(Clump& clump) {
             delete (child1);
 
             lt[i] = 1;
-            lt[lambda_num] = Rational(-1, 1);
+            lt[lambdaNum] = Rational(-1, 1);
             child1 = this->clone();
             child1->add_transform(lt);
             child1->simplify_repeat();
@@ -961,7 +953,7 @@ void Context::convert_to_polyhedron(C_Polyhedron & result, index ){
    // with just those dimensions that index is involved with
    //
 
-   PRECONDITION( result.space_dimension()== (unsigned) 2 * dual_num);
+   PRECONDITION( result.space_dimension()== (unsigned) 2 * dualNum);
 
    // first gather all the variables that the index variable relates
    // then gather all the constraints that the index variable has
@@ -988,10 +980,10 @@ void Context::split_01_strategy(vector<Location*>* loclist,
     int i;
     if (index == NO_UNRESOLVED_MULTIPLIER) {
         // now add the invariants and update dualp
-        (*dualp) = C_Polyhedron(dual_num, UNIVERSE);
+        (*dualp) = C_Polyhedron(dualNum, UNIVERSE);
         vector<Location*>::iterator it;
         for (it = loclist->begin(); it < loclist->end(); it++) {
-            (*it)->extract_invariants_and_update(inequality_store->get_poly_reference(),
+            (*it)->extract_invariants_and_update(inequality_store->getPolyRef(),
                                                  *dualp);
         }
         return;  // nothing to be done
@@ -999,19 +991,19 @@ void Context::split_01_strategy(vector<Location*>* loclist,
 
     // now go though all the multipliers for which zero or one is forbidden and
     // apply the remaining choose 0/1 values for the multiplier and expand
-    LinTransform lt(lambda_num, lambdaInfo);
+    LinTransform lt(lambdaNum, lambdaInfo);
     Context* child1;
 
-    for (i = 0; i < lambda_num; i++) {
+    for (i = 0; i < lambdaNum; i++) {
         switch (tt[i]) {
             case ZERO_ONE_FORBIDDEN:
                 continue;
             case ZERO_FORBIDDEN:
                 lt[i] = 1;
-                lt[lambda_num] = -1;
+                lt[lambdaNum] = -1;
                 add_transform(lt);
                 lt[i] = 0;
-                lt[lambda_num] = 0;
+                lt[lambdaNum] = 0;
 
                 break;
 
@@ -1029,16 +1021,16 @@ void Context::split_01_strategy(vector<Location*>* loclist,
     index = get_multiplier_status();
     if (index == NO_UNRESOLVED_MULTIPLIER) {
         // now add the invariants and update dualp
-        (*dualp) = C_Polyhedron(dual_num, UNIVERSE);
+        (*dualp) = C_Polyhedron(dualNum, UNIVERSE);
         vector<Location*>::iterator it;
         for (it = loclist->begin(); it < loclist->end(); it++) {
-            (*it)->extract_invariants_and_update(inequality_store->get_poly_reference(),
+            (*it)->extract_invariants_and_update(inequality_store->getPolyRef(),
                                                  *dualp);
         }
         return;  // nothing to be done
     }
     // now split on the remaining cases
-    for (i = 0; i < lambda_num; i++) {
+    for (i = 0; i < lambdaNum; i++) {
         if (tt[i] == ZERO_ONE_ALLOWED) {
             lt[i] = 1;
             child1 = this->clone();
@@ -1048,7 +1040,7 @@ void Context::split_01_strategy(vector<Location*>* loclist,
             delete (child1);
 
             lt[i] = 1;
-            lt[lambda_num] = Rational(-1, 1);
+            lt[lambdaNum] = Rational(-1, 1);
 
             child1 = this->clone();
             child1->add_transform(lt);
@@ -1179,7 +1171,7 @@ void Context::obtain_primal_polyhedron(int left, C_Polyhedron& result) {
     PRECONDITION((result.space_dimension() == (unsigned)varsNum),
                  " Polyhedron of wrong space dimension passed");
 
-    PRECONDITION((left >= 0 && left + varsNum + 1 <= dual_num),
+    PRECONDITION((left >= 0 && left + varsNum + 1 <= dualNum),
                  " Asked to primalize out of range");
 
     // assume that result's space dimension is =varsNum
@@ -1218,7 +1210,7 @@ void Context::obtain_primal_polyhedron(int left, C_Polyhedron& result) {
 }
 
 bool Context::is_multiplier_present(int index) {
-    PRECONDITION((index >= 0 && index < lambda_num),
+    PRECONDITION((index >= 0 && index < lambdaNum),
                  " Context::is_multiplier_present() --- Index out of range");
 
     vector<Expression>::iterator it;
@@ -1247,7 +1239,7 @@ bool Context::obtain_transition_relation(int mult_index,
     PRECONDITION((result.space_dimension() == (unsigned)(2 * varsNum)),
                  " result polyhedron not of the correct space dimension");
 
-    PRECONDITION((left >= 0 && left + varsNum + 1 <= dual_num),
+    PRECONDITION((left >= 0 && left + varsNum + 1 <= dualNum),
                  " Context::obtain_transtion_relation -- left1 out of range");
 
     //
@@ -1344,7 +1336,7 @@ bool Context::to_constraints_(int index,
             if (mc(i) != 0)
                 return false;
 
-        for (i = left + varsNum + 1; i < dual_num; ++i)
+        for (i = left + varsNum + 1; i < dualNum; ++i)
             if (mc(i) != 0)
                 return false;
 
@@ -1355,13 +1347,13 @@ bool Context::to_constraints_(int index,
             ll += j * Variable(i);
         }
 
-        mc = (*it)(lambda_num);
+        mc = (*it)(lambdaNum);
 
         for (i = 0; i < left; ++i)
             if (mc(i) != 0)
                 return false;
 
-        for (i = left + varsNum + 1; i < dual_num; ++i)
+        for (i = left + varsNum + 1; i < dualNum; ++i)
             if (mc(i) != 0)
                 return false;
 

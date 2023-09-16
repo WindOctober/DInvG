@@ -157,7 +157,7 @@ void PolyStore::add_linear_store(MatrixStore const& m) {
     p->add_constraints(cs);
 }
 
-int PolyStore::get_dimension() const {
+int PolyStore::getDim() const {
     return varsNum;
 }
 
@@ -165,7 +165,7 @@ const C_Polyhedron& PolyStore::get_nnc_poly_reference() const {
     return (*p);
 }
 
-C_Polyhedron& PolyStore::get_poly_reference() {
+C_Polyhedron& PolyStore::getPolyRef() {
     return (*p);
 }
 
@@ -175,7 +175,7 @@ var_info* PolyStore::get_var_info() const {
 
 ostream& operator<<(ostream& os, PolyStore const& p) {
     // print the contents of p into os
-    int varsNum = p.get_dimension();
+    int varsNum = p.getDim();
 
     os << "├ Polyhedral Constraint Store of Dimension " << varsNum << endl;
 

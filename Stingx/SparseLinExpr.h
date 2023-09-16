@@ -116,7 +116,7 @@ class SparseLinExpr {
 
     bool operator==(SparseLinExpr const& t) const;
 
-    int get_count() const { return count_; }
+    int getCount() const { return count_; }
 
     int reset_count() {
         int t = count_;
@@ -148,7 +148,7 @@ class SparseLinExpr {
     // could require a search on the entire expression
 
     bool is_constant() const;
-    bool is_zero() const { return (map_ration.size() == 0); }
+    bool isZero() const { return (map_ration.size() == 0); }
 
     // These are meant for factorizing out the common factors
     int get_denominator_lcm() const;

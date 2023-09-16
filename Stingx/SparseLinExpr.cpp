@@ -176,13 +176,13 @@ SparseLinExpr::SparseLinExpr() : n_(0), count_(1), info_set_(false) {}
 
 SparseLinExpr::SparseLinExpr(int n, var_info* info)
     : n_(n), f_(info), count_(1), info_set_(true) {
-    PRECONDITION(n <= f_->get_dimension(), " Not enough print info ");
+    PRECONDITION(n <= f_->getDim(), " Not enough print info ");
 }
 
 SparseLinExpr::SparseLinExpr(LinExpr const& ll)
     : n_(ll.get_dim()),
       f_(ll.get_info()),
-      count_(ll.get_count()),
+      count_(ll.getCount()),
       info_set_(true) {
     int i;
 
@@ -321,7 +321,7 @@ void SparseLinExpr::merge_assign(SparseLinExpr& ex2) {
 SparseLinExpr& SparseLinExpr::operator=(SparseLinExpr const& p1) {
     initialize(p1.get_dim(), p1.get_info());
 
-    count_ = p1.get_count();
+    count_ = p1.getCount();
 
     IRMap::const_iterator vi;
     IRMap const& mp = p1.get_map();
@@ -436,14 +436,14 @@ int SparseLinExpr::get_numerator_gcd() const {
 bool SparseLinExpr::equiv(SparseLinExpr const& l1, Rational& factor) const {
     // check if there is a factor such that factor * this = l1
 
-    if (l1.is_zero()) {
+    if (l1.isZero()) {
         factor = 0;
         return true;
     }
 
     // If l1 is zero and I am not, return false
 
-    if (is_zero())
+    if (isZero())
         return false;
 
     // now check if for each entry in me, the corresponding entry in l1 behaves
@@ -491,7 +491,7 @@ void SparseLinExpr::print(ostream& out) const {
 
     // print this stuff
 
-    if (is_zero()) {
+    if (isZero()) {
         out << " 0 ";
         return;
     }

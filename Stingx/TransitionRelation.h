@@ -57,7 +57,7 @@ class TransitionRelation {
         *fp;  // lambdaInfo is the var_info for non-linear multipliers
     Location *preloc, *postloc;
     // the actual transition relation as a 2n dimensional polyhedron
-    C_Polyhedron* trans_poly;
+    C_Polyhedron* transPoly;
 
     // structure of the transition relation
     // the structure in rel has been factored into , guard, update and preserved
@@ -156,18 +156,18 @@ class TransitionRelation {
     int get_firing_count();
     // TransitionRelation * compose( TransitionRelation * t);
 
-    void compute_consecution_constraints(Context& c);
+    void ComputeIntraConsecConstraints(Context& c);
 
-    void compute_consecution_constraints(vector<Clump>& vcl);
+    void ComputeIntraConsecConstraints(vector<Clump>& vcl);
 
-    void compute_consecution_01(vector<Clump>& vcl);
+    void ComputeInterConsecConstraints(vector<Clump>& vcl);
 
     void populate_multipliers();  // Compute the number of multipliers required
                                   // and add them to the constraint store
 
     bool fire();
 
-    int get_range_left() const;
+    int getLIndex() const;
     int get_range_right() const;
 
     int get_mult_index() const { return index; }

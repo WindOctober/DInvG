@@ -43,11 +43,11 @@ using namespace Parma_Polyhedra_Library::IO_Operators;
 class Clump {
    private:
     /*
-     * dual_num = num of dual dimensions (depends on what mode the
+     * dualNum = num of dual dimensions (depends on what mode the
      *                              analyzer is operated in )
-     * dual_info = var_info for dual -- standard pointer for printing purposes
+     * dualInfo = var_info for dual -- standard pointer for printing purposes
      *                            that should not be touched
-     * poly_clump = vector of polyhedra
+     * polysClump = vector of polyhedra
      *
      * gli = a pointer to some position in vp.. some sort of a poor
      *        man's iterator. In a future version, this will be made into a
@@ -55,48 +55,40 @@ class Clump {
      *
      */
 
-    int dual_num;
-    var_info* dual_info;
-    vector<C_Polyhedron> poly_clump;
+    int dualNum;
+    var_info* dualInfo;
+    vector<C_Polyhedron> polysClump;
     int gli;
 
     string name;
     string category;
 
-    // added by Hongming - 2022/10/21
     void initialize();
-    // Sriram - Aug 2004 - Old Code: PWC.
-    void initialize(var_info* dual_info);
-    // added by Hongming - Sept 2021
-    void initialize(var_info* dual_info, string name, string category);
+    void initialize(var_info* dualInfo);
+    void initialize(var_info* dualInfo, string name, string category);
 
    public:
-    // added by Hongming
     int get_gli();
     int size();
-    int space_dimension() const { return poly_clump[0].space_dimension(); }
+    int space_dimension() const { return polysClump[0].space_dimension(); }
 
-    // added by Hongming
-    void print_vector_of_poly();
+    void printPolys();
     const string& get_name() const;
     const string& get_category() const;
     const vector<C_Polyhedron>& get_vp() const;
     void replace_vp(vector<C_Polyhedron> new_vp);
 
     Clump();
-    Clump(var_info* dual_info);
-    Clump(var_info* dual_info, string name, string category);
+    Clump(var_info* dualInfo);
+    Clump(var_info* dualInfo, string name, string category);
 
-    int get_count();
+    int getCount();
 
     // Insert a polyhedron
     void insert(C_Polyhedron const& p);
-    //    added by Hongming
+
     vector<int> insert_with_erase_index(C_Polyhedron const& p);
 
-    // Remove any polyhedron that is contained inside dualp
-    // Sriram - Aug 2004 - Old Code: PWC.
-    // modified by Hongming - Dec 2021
     vector<int> prune_all(C_Polyhedron& dualp);
     vector<int> prune_target(C_Polyhedron& dualp, int target_gli);
 
@@ -110,8 +102,8 @@ class Clump {
 
     bool has_next();
 
-    C_Polyhedron& get_reference();
-    C_Polyhedron& get_reference(int index);
+    C_Polyhedron& getReference();
+    C_Polyhedron& getReference(int index);
 
     void next();
 };
@@ -120,7 +112,7 @@ inline int Clump::get_gli() {
     return gli;
 }
 inline int Clump::size() {
-    return poly_clump.size();
+    return polysClump.size();
 }
 
 inline const string& Clump::get_name() const {
@@ -132,7 +124,7 @@ inline const string& Clump::get_category() const {
 }
 
 inline const vector<C_Polyhedron>& Clump::get_vp() const {
-    return poly_clump;
+    return polysClump;
 }
 
 inline void Clump::clear() {
@@ -140,31 +132,31 @@ inline void Clump::clear() {
 }
 
 inline bool Clump::has_next() {
-    return (poly_clump.size() > 0) && (gli < (int)poly_clump.size());
+    return (polysClump.size() > 0) && (gli < (int)polysClump.size());
 }
 
-inline C_Polyhedron& Clump::get_reference() {
+inline C_Polyhedron& Clump::getReference() {
     if (gli < 0) {
         // This should not happen.
         // I suck.
         cerr << " Sloppy programming pays off.. Invariants could be lost!!"
              << endl;
-        return poly_clump[0];
+        return polysClump[0];
     }
 
-    return poly_clump[gli];
+    return polysClump[gli];
 }
 
-inline C_Polyhedron& Clump::get_reference(int index) {
+inline C_Polyhedron& Clump::getReference(int index) {
     if (index < 0) {
         // This should not happen.
         // I suck.
         cerr << " Sloppy programming pays off.. Invariants could be lost!!"
              << endl;
-        return poly_clump[0];
+        return polysClump[0];
     }
 
-    return poly_clump[index];
+    return polysClump[index];
 }
 
 inline void Clump::next() {

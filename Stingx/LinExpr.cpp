@@ -53,7 +53,7 @@ LinExpr::LinExpr(LinExpr const& ll) {
     return;
 }
 
-bool LinExpr::is_zero() const {
+bool LinExpr::isZero() const {
     for (int i = 0; i < n + 1; i++) {
         if (lin[i] != 0)
             return false;

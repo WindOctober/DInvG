@@ -27,18 +27,18 @@ System::System(var_info* info, var_info* dualInfo, var_info* lambdaInfo)
     : f_(info),
       fd_(dualInfo),
       fr_(lambdaInfo),
-      n_(info->get_dimension()),
-      nd_(dualInfo->get_dimension()),
-      r_(lambdaInfo->get_dimension()),
+      n_(info->getDim()),
+      nd_(dualInfo->getDim()),
+      r_(lambdaInfo->getDim()),
       context_computed_(false) {}
 
 System::System(System& s, Context& cc)
     : f_(s.get_var_info()),
       fd_(s.get_dual_var_info()),
       fr_(s.get_multiplier_var_info()),
-      n_(f_->get_dimension()),
-      nd_(fd_->get_dimension()),
-      r_(fr_->get_dimension()),
+      n_(f_->getDim()),
+      nd_(fd_->getDim()),
+      r_(fr_->getDim()),
       context_computed_(false) {
     // now obtain location information from context
     get_location_info(s, cc);
@@ -54,9 +54,9 @@ void System::add_transition(TransitionRelation* trans) {
 }
 
 void System::update_dimensions() {
-    n_ = f_->get_dimension();
-    nd_ = fd_->get_dimension();
-    r_ = fr_->get_dimension();
+    n_ = f_->getDim();
+    nd_ = fd_->getDim();
+    r_ = fr_->getDim();
 }
 
 Location const& System::get_location(int index) const {
@@ -106,12 +106,12 @@ void System::compute_initial_context() {
 
     vector<Location*>::iterator vi;
     for (vi = vloc.begin(); vi != vloc.end(); ++vi) {
-        (*vi)->compute_dual_constraints(*glc_);
+        (*vi)->ComputeDualConstraints(*glc_);
     }
 
     vector<TransitionRelation*>::iterator vj;
     for (vj = vtrans.begin(); vj != vtrans.end(); ++vj) {
-        (*vj)->compute_consecution_constraints(*glc_);
+        (*vj)->ComputeIntraConsecConstraints(*glc_);
     }
 }
 
@@ -128,7 +128,7 @@ void System::get_location_info(System& s, Context& cc) {
     for (i = 0; i < nl; ++i) {
         // obtain a new location
         Location const& lc = s.get_location(i);
-        j = lc.get_range_left();
+        j = lc.getLIndex();
         Location* newl = new Location(n_, f_, fd_, fr_, lc.get_name(), j);
 
         newl->force_polyset();
@@ -189,7 +189,7 @@ void System::get_transition_info(System& s, Context& cc) {
             continue;
         } else if (pre == post) {
             preloc = get_matching_location(pre);
-            l = preloc->get_range_left();
+            l = preloc->getLIndex();
             res = new C_Polyhedron(2 * n_);
 
             if (cc.obtain_transition_relation(j, l, *res) == false) {

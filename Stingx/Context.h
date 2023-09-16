@@ -73,8 +73,8 @@ class Context {
     Context* child1;
     var_info *info, *dualInfo, *lambdaInfo;
 
-    int varsNum, dual_num,
-        lambda_num;  // No. of dimensions, dual dimensions, multipliers respectively
+    int varsNum, dualNum,
+        lambdaNum;  // No. of dimensions, dual dimensions, multipliers respectively
 
     void initialize(var_info* info, var_info* dualInfo, var_info* lambdaInfo);
     void initialize(var_info* info,
@@ -136,9 +136,9 @@ class Context {
     void add_inequality_expression(Expression l);
     void add_to_matrix_store(SparseLinExpr l);
     void add_to_matrix_store(Linear_Expression l);
-    void add_to_poly_store(
+    void insertPolyStore(
         SparseLinExpr l);  // implicitly assumed to be the expression l > = 0
-    void add_to_poly_store(Constraint cc);  // Add the constraint directly to
+    void insertPolyStore(Constraint cc);  // Add the constraint directly to
                                             // the polystores polyhedron
 
     void add_linear_equality(SparseLinExpr l);

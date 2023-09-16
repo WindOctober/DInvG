@@ -53,7 +53,7 @@ class var_info {
 
     var_info(var_info* fr1, var_info* fr2);  // merge the two var_infos
 
-    int get_dimension() const;
+    int getDim() const;
 
     virtual vector<char*>* get_vector();
 

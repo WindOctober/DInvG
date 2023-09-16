@@ -135,7 +135,7 @@ bool DisequalityStore::is_consistent() const {
     return !incon;
 }
 
-int DisequalityStore::get_dimension() const {
+int DisequalityStore::getDim() const {
     return varsNum;
 }
 
