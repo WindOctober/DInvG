@@ -31,14 +31,14 @@ extern int single_pre_prune_bang_count;
 void Clump::initialize() {
     gli = 0;
 }
-void Clump::initialize(var_info* dualInfo) {
-    dualNum = dualInfo->getDim();
-    this->dualInfo = dualInfo;
+void Clump::initialize(var_info* coefInfo) {
+    coefNum = coefInfo->getDim();
+    this->coefInfo = coefInfo;
     gli = 0;
 }
-void Clump::initialize(var_info* dualInfo, string name, string category) {
-    dualNum = dualInfo->getDim();
-    this->dualInfo = dualInfo;
+void Clump::initialize(var_info* coefInfo, string name, string category) {
+    coefNum = coefInfo->getDim();
+    this->coefInfo = coefInfo;
     gli = 0;
     this->name = name;
     this->category = category;
@@ -60,11 +60,11 @@ void Clump::replace_vp(vector<C_Polyhedron> new_vp) {
 Clump::Clump() {
     initialize();
 }
-Clump::Clump(var_info* dualInfo) {
-    initialize(dualInfo);
+Clump::Clump(var_info* coefInfo) {
+    initialize(coefInfo);
 }
-Clump::Clump(var_info* dualInfo, string name, string category) {
-    initialize(dualInfo, name, category);
+Clump::Clump(var_info* coefInfo, string name, string category) {
+    initialize(coefInfo, name, category);
 }
 
 int Clump::getCount() {
@@ -143,7 +143,7 @@ vector<int> Clump::prune_target(C_Polyhedron& p, int target_gli) {
     vector<int>::iterator vi;
     cout << endl << "prune";
     int i = target_gli;
-    // for (i=0; i < (int) vp.size(); ++i){
+    // for (i=0; i < (int) polys.size(); ++i){
     if (p.contains(polysClump[i])) {
         clump_prune_count++;
         node_gli.push_back(i);

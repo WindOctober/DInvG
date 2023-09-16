@@ -23,12 +23,12 @@
 
 #include "myassertions.h"
 
-System::System(var_info* info, var_info* dualInfo, var_info* lambdaInfo)
+System::System(var_info* info, var_info* coefInfo, var_info* lambdaInfo)
     : f_(info),
-      fd_(dualInfo),
+      fd_(coefInfo),
       fr_(lambdaInfo),
       n_(info->getDim()),
-      nd_(dualInfo->getDim()),
+      nd_(coefInfo->getDim()),
       r_(lambdaInfo->getDim()),
       context_computed_(false) {}
 

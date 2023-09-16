@@ -43,20 +43,20 @@ using namespace Parma_Polyhedra_Library::IO_Operators;
 class Clump {
    private:
     /*
-     * dualNum = num of dual dimensions (depends on what mode the
+     * coefNum = num of coef dimensions (depends on what mode the
      *                              analyzer is operated in )
-     * dualInfo = var_info for dual -- standard pointer for printing purposes
+     * coefInfo = var_info for coef -- standard pointer for printing purposes
      *                            that should not be touched
      * polysClump = vector of polyhedra
      *
-     * gli = a pointer to some position in vp.. some sort of a poor
+     * gli = a pointer to some position in polys.. some sort of a poor
      *        man's iterator. In a future version, this will be made into a
      *        full fledged iterator. Do not see the need for that now.
      *
      */
 
-    int dualNum;
-    var_info* dualInfo;
+    int coefNum;
+    var_info* coefInfo;
     vector<C_Polyhedron> polysClump;
     int gli;
 
@@ -64,8 +64,8 @@ class Clump {
     string category;
 
     void initialize();
-    void initialize(var_info* dualInfo);
-    void initialize(var_info* dualInfo, string name, string category);
+    void initialize(var_info* coefInfo);
+    void initialize(var_info* coefInfo, string name, string category);
 
    public:
     int get_gli();
@@ -79,8 +79,8 @@ class Clump {
     void replace_vp(vector<C_Polyhedron> new_vp);
 
     Clump();
-    Clump(var_info* dualInfo);
-    Clump(var_info* dualInfo, string name, string category);
+    Clump(var_info* coefInfo);
+    Clump(var_info* coefInfo, string name, string category);
 
     int getCount();
 

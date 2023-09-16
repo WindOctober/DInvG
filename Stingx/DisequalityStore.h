@@ -55,26 +55,25 @@ class DisequalityStore {
    private:
     /*
      * Class Members:
-     *    vp = a vector of disequalities.
-     *    ineq_exprs = the inequalities
+     *    polys = a vector of disequalities.
+     *    ineqExprs = the inequalities
      *    varsNum = dimensionality
      *    info= information for printing
-     *   incon = flag signifying inconsistent
+     *   ConsistencyFlag = flag signifying inconsistent
      */
 
-    vector<Linear_Expression>*
-        vp;  // The vector of linear expressions  treated as disequalities
+    vector<Linear_Expression>* polys;  // The vector of linear expressions  treated as disequalities
 
-    C_Polyhedron* ineq_exprs;  // The inequalities of the system
+    C_Polyhedron* ineqExprs;  // The inequalities of the system
 
     int varsNum;        // the dimensionality  of the system
     var_info* info;  // The information about variables
 
-    bool incon;
+    bool ConsistencyFlag;
 
     void initialize(int varsNum, var_info* info);
     // check for consistency
-    void check_consistent();
+    void checkConsistent();
 
    public:
     DisequalityStore(int varsNum, var_info* info);
@@ -87,10 +86,10 @@ class DisequalityStore {
 
     // force set the inequalities to p
     void set_inequalities(C_Polyhedron const* p);
-    // force set the disequalities to those in vp
-    void set_disequalities(vector<SparseLinExpr>* vp);
+    // force set the disequalities to those in polys
+    void set_disequalities(vector<SparseLinExpr>* polys);
     // same as above support different format for expressions
-    void set_disequalities(vector<Linear_Expression> const* vp);
+    void set_disequalities(vector<Linear_Expression> const* polys);
 
     bool is_consistent() const;
 
@@ -100,7 +99,7 @@ class DisequalityStore {
     // if this happens then t is inconsistent. else t /\ disequalities here
     // are consistent.
 
-    bool check_consistent(C_Polyhedron& t);
+    bool checkConsistent(C_Polyhedron& t);
 
     // the dimension
     int getDim() const;
@@ -111,7 +110,7 @@ class DisequalityStore {
 
     // some utility functions for making life easier
     // add l == 0 with l in the transform representation
-    bool add_transform(LinTransform const& l);
+    bool addTransform(LinTransform const& l);
     // add l>=0
     bool add_transform_inequality(LinTransform const& l);
     // add l<> 0
@@ -124,6 +123,6 @@ class DisequalityStore {
     DisequalityStore* clone() const;
 };
 
-ostream& operator<<(ostream& in, DisequalityStore const& lambda_store);
+ostream& operator<<(ostream& in, DisequalityStore const& disequalStore);
 
 #endif

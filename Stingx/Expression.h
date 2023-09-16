@@ -46,7 +46,7 @@
 using namespace std;
 
 class Expression {
-    // dualNum = no. of lin variables
+    // coefNum = no. of lin variables
     // lambdaNum = no. of non-linear variables
     // Operations include
     //     1. Construct
@@ -63,23 +63,23 @@ class Expression {
     //     6. Simplify an against a constraint store
 
 private:
-    int dualNum, lambdaNum;           // the number of linear and multiplier variables resp.
-    var_info *dualInfo, *lambdaInfo;  // Mostly for printing purposes
+    int coefNum, lambdaNum;           // the number of linear and multiplier variables resp.
+    var_info *coefInfo, *lambdaInfo;  // Mostly for printing purposes
 
     vector<SparseLinExpr> linExpr;  // An lambdaNum+1 dimension array of linear expressions
 
-    SparseLinExpr lin_fact;  // The linear factor
-    LinTransform tr_fact;    // the transform factor
+    SparseLinExpr linFact;  // The linear factor
+    LinTransform transFact;    // the transform factor
 
     bool factored;
     int count;
 
-    void initialize(int dualNum, int lambdaNum, var_info* dualInfo, var_info* lambdaInfo);
+    void initialize(int coefNum, int lambdaNum, var_info* coefInfo, var_info* lambdaInfo);
 
     void zero_out();
 
    public:
-    Expression(int dualNum, int lambdaNum, var_info* dualInfo, var_info* lambdaInfo);
+    Expression(int coefNum, int lambdaNum, var_info* coefInfo, var_info* lambdaInfo);
     ~Expression();
     Expression(Expression const& e);
     Expression(Expression* e1, Expression* e2);
@@ -103,7 +103,7 @@ private:
 
     // Count to keep track of the freq of occurrence
     // of the factors among the other constraints
-    void reset_count();
+    void resetCounter();
     void add_count(int i = 1);
     int getCount();
 
@@ -117,8 +117,8 @@ private:
                                              // or else exception will be thrown
 
     // Call only if factorizable
-    SparseLinExpr& get_linear_factor();
-    LinTransform& get_transform_factor();
+    SparseLinExpr& getLinFactor();
+    LinTransform& getTransformFactor();
 
     // convert the generator to a linear expression
     // Post-comments: This line of research has been disabled will revive soon.

@@ -317,7 +317,7 @@ bool LinExpr::equiv(LinExpr const& l2, Rational& factor) const {
     return true;
 }
 
-int LinExpr::reset_count() {
+int LinExpr::resetCounter() {
     int t = count;
     count = 0;
     return t;

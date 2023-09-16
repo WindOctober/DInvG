@@ -97,7 +97,7 @@ vector<int> target_prior;
 char err_str[100];
 extern int linenum;
 int dimension;
-var_info *info, *dualInfo, *lambdaInfo;
+var_info *info, *coefInfo, *lambdaInfo;
 vector<Location*>* loclist;
 vector<TransitionRelation*>* trlist;
 Context* glc;  // The global context
@@ -213,7 +213,7 @@ void collect_invariants(C_Polyhedron& cpoly, C_Polyhedron& invd) {
      *  Collect invariants
      */
     vector<Location*>::iterator it;
-    invd = C_Polyhedron(dualInfo->getDim(), UNIVERSE);
+    invd = C_Polyhedron(coefInfo->getDim(), UNIVERSE);
     it = loclist->begin();
     // cout<<endl<<"- In collect_invariants(), cpoly is : "<<endl<<"
     // "<<cpoly<<endl; Generator_System mgs = cpoly.minimized_generators();
@@ -233,7 +233,7 @@ void collect_invariants_for_one_location_by_eliminating(int index,
     //
     //  Collect invariants for initial
     //
-    invd = C_Polyhedron(dualInfo->getDim(), UNIVERSE);
+    invd = C_Polyhedron(coefInfo->getDim(), UNIVERSE);
     //    Firstly, collect invariants for initial location by eliminating
     //      for initial *it, i.e. location,
     //      use cpoly to update *it->invariant and *it->invariant updates invd.
@@ -300,7 +300,7 @@ void collect_invariants_by_binary_eliminating(C_Polyhedron& cpoly,
      *  Collect invariants
      */
     vector<Location*>::iterator it;
-    invd = C_Polyhedron(dualInfo->getDim(), UNIVERSE);
+    invd = C_Polyhedron(coefInfo->getDim(), UNIVERSE);
 
     binary_eliminating(cpoly, invd);
     global_binary_i = 0;
@@ -504,8 +504,8 @@ void collect_invariants_for_one_location_from_intra(vector<Clump>& vcl,
     // initialize
     int lid = loc_index;
     vector<vector<vector<vector<int>>>> target_sequences;
-    int dualNum = dualInfo->getDim();
-    C_Polyhedron local_initp(dualNum, UNIVERSE);
+    int coefNum = coefInfo->getDim();
+    C_Polyhedron local_initp(coefNum, UNIVERSE);
 
     /*
      * Generate Sequences
@@ -567,7 +567,7 @@ void Initialize_before_Parser() {
     clump_prune_count = prune_count = 0;
     context_count = 0;
     lambdaInfo = new var_info();
-    dualInfo = new var_info();
+    coefInfo = new var_info();
     loclist = new vector<Location*>();
     trlist = new vector<TransitionRelation*>();
     debug = 0;
@@ -934,7 +934,7 @@ void Compute_Invariant_Frontend(){
     Initialize();
     add_preloc_invariants_to_transitions();
     Create_Adjacency_Matrix_for_Location_and_Transition();
-    global_system = new System(info, dualInfo, lambdaInfo);
+    global_system = new System(info, coefInfo, lambdaInfo);
 
     for (auto it = loclist->begin(); it < loclist->end(); it++) {
         global_system->add_location((*it));
@@ -943,13 +943,13 @@ void Compute_Invariant_Frontend(){
         global_system->add_transition((*it));
     }
     tt = new int[lambdaInfo->getDim()];
-    int dualNum = dualInfo->getDim();
-    trivial = new C_Polyhedron(dualNum, UNIVERSE);
+    int coefNum = coefInfo->getDim();
+    trivial = new C_Polyhedron(coefNum, UNIVERSE);
     for (auto it = loclist->begin(); it < loclist->end(); it++) {
         (*it)->add_to_trivial(trivial);
     }
 
-    C_Polyhedron init_poly(dualNum, UNIVERSE);
+    C_Polyhedron init_poly(coefNum, UNIVERSE);
     for (auto it = loclist->begin(); it < loclist->end(); it++) {
         (*it)->make_context();
         (*it)->ComputeDualConstraints(init_poly);
@@ -1054,7 +1054,7 @@ int main() {
     Print_Location_and_Transition();
 
     Create_Adjacency_Matrix_for_Location_and_Transition();
-    global_system = new System(info, dualInfo, lambdaInfo);
+    global_system = new System(info, coefInfo, lambdaInfo);
     
     for (auto it = loclist->begin(); it < loclist->end(); it++) {
         global_system->add_location((*it));
@@ -1065,16 +1065,16 @@ int main() {
     tt = new int[lambdaInfo->getDim()];
     if (num_context == 1) {
         //  output_file: **newdfs_sequences**
-        //  dualNum
-        int dualNum = dualInfo->getDim();
+        //  coefNum
+        int coefNum = coefInfo->getDim();
         //  trivial
-        trivial = new C_Polyhedron(dualNum, UNIVERSE);
+        trivial = new C_Polyhedron(coefNum, UNIVERSE);
         for (auto it = loclist->begin(); it < loclist->end(); it++) {
             (*it)->add_to_trivial(trivial);
         }
        
         //  init_poly
-        C_Polyhedron init_poly(dualNum, UNIVERSE);
+        C_Polyhedron init_poly(coefNum, UNIVERSE);
         for (auto it = loclist->begin(); it < loclist->end(); it++) {
             (*it)->make_context();
             (*it)->ComputeDualConstraints(init_poly);
@@ -1151,13 +1151,13 @@ int main() {
         dfs_traverse_time = dfs_traverse_timer.compute_time_elapsed();
 
     } else if (num_context == 2) {
-        int dualNum = dualInfo->getDim();
-        trivial = new C_Polyhedron(dualNum, UNIVERSE);
+        int coefNum = coefInfo->getDim();
+        trivial = new C_Polyhedron(coefNum, UNIVERSE);
         for (auto it = loclist->begin(); it < loclist->end(); it++) {
             (*it)->add_to_trivial(trivial);
         }
 
-        C_Polyhedron init_poly(dualNum, UNIVERSE);
+        C_Polyhedron init_poly(coefNum, UNIVERSE);
         for (auto it = loclist->begin(); it < loclist->end(); it++) {
             (*it)->make_context();
             (*it)->ComputeDualConstraints(init_poly);
@@ -1396,7 +1396,7 @@ void Scan_Input() {
                 // cout<<loc_name<<" "<<loc_name.length()<<" "<<token<<endl;
                 if (!search_location((char*)loc_name.c_str(), &new_location)) {
                     new_location =
-                        new Location(info->getDim(), info, dualInfo,
+                        new Location(info->getDim(), info, coefInfo,
                                      lambdaInfo, loc_name);
                     loclist->push_back(new_location);
                 } else {
@@ -1426,7 +1426,7 @@ void Scan_Input() {
                 if (!search_transition_relation((char*)transition_name.c_str(),
                                                 &new_transition)) {
                     new_transition = new TransitionRelation(
-                        info->getDim(), info, dualInfo, lambdaInfo,
+                        info->getDim(), info, coefInfo, lambdaInfo,
                         transition_name);
                     trlist->push_back(new_transition);
                 } else {

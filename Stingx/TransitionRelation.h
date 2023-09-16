@@ -53,7 +53,7 @@ extern int get_index_of_location(string loc_name);
 class TransitionRelation {
    private:
     int varsNum;
-    var_info *info, *dualInfo, *lambdaInfo,
+    var_info *info, *coefInfo, *lambdaInfo,
         *fp;  // lambdaInfo is the var_info for non-linear multipliers
     Location *preloc, *postloc;
     // the actual transition relation as a 2n dimensional polyhedron
@@ -67,7 +67,7 @@ class TransitionRelation {
 
     //
 
-    int mult_left, mult_right, constraints_num;  // the range multipliers in its dual and the
+    int mult_left, mult_right, constraints_num;  // the range multipliers in its coef and the
                                     // number of constraint variables
     int index;  // The index of the non-linear multiplier in lambdaInfo
 
@@ -76,7 +76,7 @@ class TransitionRelation {
     int fired;
     void initialize(int varsNum,
                     var_info* info,
-                    var_info* dualInfo,
+                    var_info* coefInfo,
                     var_info* lambdaInfo,
                     Location* preloc,
                     Location* postloc,
@@ -84,13 +84,13 @@ class TransitionRelation {
                     string name);
     void initialize(int varsNum,
                     var_info* info,
-                    var_info* dualInfo,
+                    var_info* coefInfo,
                     var_info* lambdaInfo,
                     string name);
 
     void InitWithoutPopulating(int varsNum,
                                        var_info* info,
-                                       var_info* dualInfo,
+                                       var_info* coefInfo,
                                        var_info* lambdaInfo,
                                        Location* preloc,
                                        Location* postloc,
@@ -99,7 +99,7 @@ class TransitionRelation {
                                        int index);
     void InitWithoutPopulating(int varsNum,
                                        var_info* info,
-                                       var_info* dualInfo,
+                                       var_info* coefInfo,
                                        var_info* lambdaInfo,
                                        string name,
                                        int index);
@@ -113,7 +113,7 @@ class TransitionRelation {
    public:
     TransitionRelation(int varsNum,
                        var_info* info,
-                       var_info* dualInfo,
+                       var_info* coefInfo,
                        var_info* lambdaInfo,
                        Location* preloc,
                        Location* postloc,
@@ -122,13 +122,13 @@ class TransitionRelation {
 
     TransitionRelation(int varsNum,
                        var_info* info,
-                       var_info* dualInfo,
+                       var_info* coefInfo,
                        var_info* lambdaInfo,
                        string name);
 
     TransitionRelation(int varsNum,
                        var_info* info,
-                       var_info* dualInfo,
+                       var_info* coefInfo,
                        var_info* lambdaInfo,
                        Location* preloc,
                        Location* postloc,
@@ -138,7 +138,7 @@ class TransitionRelation {
 
     TransitionRelation(int varsNum,
                        var_info* info,
-                       var_info* dualInfo,
+                       var_info* coefInfo,
                        var_info* lambdaInfo,
                        string name,
                        int index);
