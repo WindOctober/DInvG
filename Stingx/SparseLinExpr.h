@@ -118,7 +118,7 @@ class SparseLinExpr {
 
     int getCount() const { return count_; }
 
-    int reset_count() {
+    int resetCounter() {
         int t = count_;
         count_ = 0;
         return t;

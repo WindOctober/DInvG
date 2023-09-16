@@ -23,7 +23,7 @@
  * filename: Timer
  * Author: Sriram Sankaranarayanan
  * Comments: Stop watch timer for profiling code. Uses real-time. Please be
- * careful. Parallel processes will report more time. Ideal for dual processor
+ * careful. Parallel processes will report more time. Ideal for coef processor
  * machines.. I think. Post-comments: Too complicated for what I really need in
  * this release of the implementation. But I will just use it. Copyright: see
  * README file.

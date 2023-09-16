@@ -51,8 +51,8 @@ void MatrixStore::zero_out() {
     consistent = true;
 }
 
-void MatrixStore::init_set(int varsNum, var_info* dualInfo) {
-    initialize(varsNum, dualInfo);
+void MatrixStore::init_set(int varsNum, var_info* coefInfo) {
+    initialize(varsNum, coefInfo);
 }
 
 int MatrixStore::simplify(SparseLinExpr& expression) const {

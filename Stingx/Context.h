@@ -65,28 +65,28 @@ class Context {
     //    4. A set of expressions that are implicitly ==0
     //    5. A set of expressions that are implicitly >= 0
 
-    MatrixStore* equality_mat;
-    PolyStore* inequality_store;
-    DisequalityStore* lambda_store;
-    vector<Expression> *eq_exprs, *ineq_exprs, *factors;
+    MatrixStore* equalStore;
+    PolyStore* polyStore;
+    DisequalityStore* disequalStore;
+    vector<Expression> *eqExprs, *ineqExprs, *factors;
 
-    Context* child1;
-    var_info *info, *dualInfo, *lambdaInfo;
+    Context* childClump;
+    var_info *info, *coefInfo, *lambdaInfo;
 
-    int varsNum, dualNum,
-        lambdaNum;  // No. of dimensions, dual dimensions, multipliers respectively
+    int varsNum, coefNum,
+        lambdaNum;  // No. of dimensions, coef dimensions, multipliers respectively
 
-    void initialize(var_info* info, var_info* dualInfo, var_info* lambdaInfo);
+    void initialize(var_info* info, var_info* coefInfo, var_info* lambdaInfo);
     void initialize(var_info* info,
-                    var_info* dualInfo,
+                    var_info* coefInfo,
                     var_info* lambdaInfo,
-                    MatrixStore* equality_mat,
-                    PolyStore* inequality_store,
-                    DisequalityStore* lambda_store,
-                    vector<Expression>* eq_exprs,
-                    vector<Expression>* ineq_exprs);
+                    MatrixStore* equalStore,
+                    PolyStore* polyStore,
+                    DisequalityStore* disequalStore,
+                    vector<Expression>* eqExprs,
+                    vector<Expression>* ineqExprs);
 
-    void recursive_strategy(vector<Location*>* loclist,
+    void RecursiveSplit(vector<Location*>* loclist,
                             C_Polyhedron* dual_poly,
                             int wtime,
                             bool cutoff,
@@ -96,12 +96,12 @@ class Context {
                                       int wtime,
                                       bool cutoff,
                                       Timer& one_timer);
-    bool incon;
+    bool ConsistencyFlag;
     bool leaf;
 
    public:
     // added by Hongming
-    PolyStore* Get_PolyStore() { return (inequality_store); }
+    PolyStore* Get_PolyStore() { return (polyStore); }
 
     // Operations include
     //    1. Creation and Organization of the context
@@ -114,35 +114,35 @@ class Context {
 
     //       1.7 Forming an invariant from a consistent leaf node
 
-    Context(var_info* info, var_info* dualInfo, var_info* lambdaInfo);
+    Context(var_info* info, var_info* coefInfo, var_info* lambdaInfo);
     Context(var_info* info,
-            var_info* dualInfo,
+            var_info* coefInfo,
             var_info* lambdaInfo,
-            MatrixStore* equality_mat,
-            PolyStore* inequality_store,
-            DisequalityStore* lambda_store,
-            vector<Expression>* eq_exprs,
-            vector<Expression>* ineq_exprs);
+            MatrixStore* equalStore,
+            PolyStore* polyStore,
+            DisequalityStore* disequalStore,
+            vector<Expression>* eqExprs,
+            vector<Expression>* ineqExprs);
     Context(var_info* info,
-            var_info* dualInfo,
+            var_info* coefInfo,
             var_info* lambdaInfo,
-            MatrixStore* equality_mat,
-            PolyStore* inequality_store,
-            DisequalityStore* lambda_store);
+            MatrixStore* equalStore,
+            PolyStore* polyStore,
+            DisequalityStore* disequalStore);
 
     ~Context();
 
-    void add_equality_expression(Expression l);
-    void add_inequality_expression(Expression l);
-    void add_to_matrix_store(SparseLinExpr l);
-    void add_to_matrix_store(Linear_Expression l);
+    void addEqExpr(Expression l);
+    void addIneqExpr(Expression l);
+    void insertMatStore(SparseLinExpr l);
+    void insertMatStore(Linear_Expression l);
     void insertPolyStore(
         SparseLinExpr l);  // implicitly assumed to be the expression l > = 0
     void insertPolyStore(Constraint cc);  // Add the constraint directly to
                                             // the polystores polyhedron
 
     void add_linear_equality(SparseLinExpr l);
-    void add_transform(LinTransform l);
+    void addTransform(LinTransform l);
 
     void add_linear_inequality(SparseLinExpr l);
     void add_transform_inequality(LinTransform l);
@@ -151,7 +151,7 @@ class Context {
 
     void print(ostream& in) const;
 
-    void check_consistent();
+    void checkConsistent();
     bool is_consistent();
 
     // bool is_leaf();
@@ -170,7 +170,7 @@ class Context {
     void
     remove_trivial_inequalities();  // remove trivial inequalities in the store
     void remove_trivial();          // call this instead to remove the trivial
-                                    // expressions in the stores eq_exprs and ineq_exprs
+                                    // expressions in the stores eqExprs and ineqExprs
 
     // Move linear expressions into the stores
 
@@ -217,13 +217,13 @@ class Context {
     //       expressions and if no factors then doing the same on the
     //       inequalities
 
-    bool is_viable_equalities(
+    bool isVisableEquals(
         LinTransform& lt);  // is the transform viable as a proper factor?
 
-    bool split_on_factor_equalities(
+    bool splitFactorEquals(
         LinTransform& lt);  // Split into two children contexts if possible
 
-    bool factorizing_strategy_equalities();  // a cover function to split.
+    bool factorizationSplit();  // a cover function to split.
                                             // Returns the number of children
                                             // created  0.. or 2.
 
@@ -242,9 +242,9 @@ class Context {
     bool is_simplifiable_context();
     // Check if the context is simplifiable
 
-    void recursive_strategy(System& s, C_Polyhedron* dual_poly);
+    void RecursiveSplit(System& s, C_Polyhedron* dual_poly);
 
-    void recursive_strategy(vector<Location*>* loclist,
+    void RecursiveSplit(vector<Location*>* loclist,
                             C_Polyhedron* dual_poly,
                             int wtime = 1000,
                             bool cutoff = true);
@@ -254,7 +254,7 @@ class Context {
                                       bool cutoff = true);
     // A recursive strategy function
 
-    void recursive_strategy(Clump& clist);
+    void RecursiveSplit(Clump& clist);
     // A recursive strategy function
 
     void terminal_strategy(System& s, C_Polyhedron* dual_poly);

@@ -56,17 +56,17 @@ class ExpressionStore {
     /*  vl = set of expressions
      *  varsNum= no of dimensions
      *  lambdaNum = no. of multipliers
-     *  dualInfo, lambdaInfo = printing information for varsNum, lambdaNum variables.
+     *  coefInfo, lambdaInfo = printing information for varsNum, lambdaNum variables.
      */
 
     vector<Expression>* vl;
     int varsNum, lambdaNum;
-    var_info *dualInfo, *lambdaInfo;
+    var_info *coefInfo, *lambdaInfo;
 
     vector<LinTransform>* lt_list;
     vector<SparseLinExpr>* le_list;
 
-    void initialize(int varsNum, int lambdaNum, var_info* dualInfo, var_info* lambdaInfo);
+    void initialize(int varsNum, int lambdaNum, var_info* coefInfo, var_info* lambdaInfo);
     vector<SparseLinExpr>::iterator lin_expr_collected(
         SparseLinExpr const& l) const;
     vector<LinTransform>::iterator lin_transform_collected(
@@ -77,11 +77,11 @@ class ExpressionStore {
     // vector<LinTransform> * split_seq;
 
    public:
-    ExpressionStore(int varsNum, int lambdaNum, var_info* dualInfo, var_info* lambdaInfo);
+    ExpressionStore(int varsNum, int lambdaNum, var_info* coefInfo, var_info* lambdaInfo);
 
     bool AddExpression(Expression& exp);
 
-    void add_transform(LinTransform lt);
+    void addTransform(LinTransform lt);
 
     void remove_trivial();
 

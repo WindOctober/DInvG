@@ -88,7 +88,7 @@ class LinExpr {
 
     // mess around with count
     int getCount() const { return count; }
-    int reset_count();
+    int resetCounter();
     int count_up();
     int count_down();
 

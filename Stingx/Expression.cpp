@@ -29,17 +29,17 @@
 #include "myassertions.h"
 #include "var-info.h"
 
-void Expression::initialize(int dualNum,
+void Expression::initialize(int coefNum,
                             int lambdaNum,
-                            var_info* dualInfo,
+                            var_info* coefInfo,
                             var_info* lambdaInfo) {
     // Initialize the parameters of the class
-    this->dualNum = dualNum;
+    this->coefNum = coefNum;
     this->lambdaNum = lambdaNum;
-    this->dualInfo = dualInfo;
+    this->coefInfo = coefInfo;
     this->lambdaInfo = lambdaInfo;
     factored = false;
-    linExpr.resize(lambdaNum + 1, SparseLinExpr(dualNum, dualInfo));
+    linExpr.resize(lambdaNum + 1, SparseLinExpr(coefNum, coefInfo));
     count = 0;
 }
 
@@ -47,14 +47,14 @@ void Expression::zero_out() {
     // set the whole expression to zero
     // Post-comment== Is this being called from somewhere?
     for (int i = 0; i < lambdaNum + 1; i++)
-        linExpr[i].init_set(dualNum, dualInfo);
+        linExpr[i].init_set(coefNum, coefInfo);
 }
 
-Expression::Expression(int dualNum,
+Expression::Expression(int coefNum,
                        int lambdaNum,
-                       var_info* dualInfo,
+                       var_info* coefInfo,
                        var_info* lambdaInfo) {
-    initialize(dualNum, lambdaNum, dualInfo, lambdaInfo);
+    initialize(coefNum, lambdaNum, coefInfo, lambdaInfo);
 }
 
 Expression::~Expression() {
@@ -77,41 +77,6 @@ Expression::Expression(Expression const& e) {
         factorize();
 }
 
-Expression Expression::operator+(Expression const& p1) const {
-    Expression temp(dualNum, lambdaNum, dualInfo, lambdaInfo);
-    int i;
-    for (i = 0; i < lambdaNum + 1; i++)
-        temp[lambdaNum] = linExpr[lambdaNum] + p1(lambdaNum);
-
-    return temp;
-}
-
-Expression& Expression::operator+=(Expression const& p1) {
-    int i;
-
-    for (i = 0; i < lambdaNum + 1; i++)
-        linExpr[lambdaNum] += p1(lambdaNum);
-
-    return *this;
-}
-
-Expression Expression::operator-(Expression const& p1) const {
-    Expression temp(dualNum, lambdaNum, dualInfo, lambdaInfo);
-    int i;
-    for (i = 0; i < lambdaNum + 1; i++)
-        temp[lambdaNum] = linExpr[lambdaNum] - p1(lambdaNum);
-
-    return temp;
-}
-
-Expression& Expression::operator-=(Expression const& p1) {
-    int i;
-    for (i = 0; i < lambdaNum + 1; i++)
-        linExpr[lambdaNum] -= p1(lambdaNum);
-
-    return *this;
-}
-
 Expression& Expression::operator=(Expression const& p1) {
     // initialize(p1.get_n(),p1.get_r(),p1.get_fn(),p1.get_fr());
     for (int i = 0; i < lambdaNum + 1; i++)
@@ -129,7 +94,7 @@ SparseLinExpr Expression::operator()(int i) const {
 }
 
 int Expression::get_n() const {
-    return dualNum;
+    return coefNum;
 }
 int Expression::get_r() const {
     return lambdaNum;
@@ -138,7 +103,7 @@ var_info* Expression::get_fr() const {
     return lambdaInfo;
 }
 var_info* Expression::get_fn() const {
-    return dualInfo;
+    return coefInfo;
 }
 
 bool Expression::is_pure_a() const {
@@ -186,7 +151,7 @@ LinTransform Expression::convert_transform() const {
     SparseLinExpr temp;
 
     for (int i = 0; i < lambdaNum + 1; i++) {
-        tmp[i] = (linExpr[i])(dualNum);  // set it to a constant
+        tmp[i] = (linExpr[i])(coefNum);  // set it to a constant
     }
     return tmp;
 }
@@ -196,9 +161,9 @@ void Expression::transform(LinTransform& lin) {
         return;  // Nothing to be done here
 
     int base = lin.getBase();
-
+    assert(lin(base)==1);
     for (int i = base + 1; i < lambdaNum + 1; i++)
-        linExpr[i] = lin(base) * linExpr[i] - lin(i) * linExpr[base];
+        linExpr[i] = linExpr[i] - lin(i) * linExpr[base];
 
     linExpr[base] *= 0;  // kill the base
                           // That completes the transformation
@@ -294,7 +259,7 @@ bool Expression::is_factored() const {
 }
 
 void Expression::print_factors(ostream& os) const {
-    os << " ( " << tr_fact << " ) * ( " << lin_fact << " ) ";
+    os << " ( " << transFact << " ) * ( " << linFact << " ) ";
 }
 ostream& operator<<(ostream& os, Expression const& expr) {
     os << "├ ";
@@ -323,7 +288,7 @@ bool Expression::factorize() {
     }
 
     if (i >= lambdaNum + 1)
-        return false;  // DO NOT ALLOW THIS TO HAPPEN
+        return false;
     // DETECT trivial terms and take them out
     j = i;
     LinTransform t(lambdaNum, lambdaInfo);
@@ -335,24 +300,24 @@ bool Expression::factorize() {
         t[i] = factor;
     }
 
-    tr_fact = t;
-    lin_fact = linExpr[j];
+    transFact = t; // NOTE: j 所在的位置就是 \mu所在的位置，所以这里的系数是1，t记录的就是(\mu - a) \alpha中的 \mu和a前面的系数
+    linFact = linExpr[j]; //NOTE : 记录的是\alpha，也就是后面的对应系数的表达式。
 
     factored = true;
     return true;
 }
 
-SparseLinExpr& Expression::get_linear_factor() {
-    return lin_fact;
+SparseLinExpr& Expression::getLinFactor() {
+    return linFact;
 }
 
-LinTransform& Expression::get_transform_factor() {
-    return tr_fact;
+LinTransform& Expression::getTransformFactor() {
+    return transFact;
 }
 
 Expression* Expression::clone() const {
     // create a new expression
-    Expression* ret = new Expression(dualNum, lambdaNum, dualInfo, lambdaInfo);
+    Expression* ret = new Expression(coefNum, lambdaNum, coefInfo, lambdaInfo);
     for (int i = 0; i < lambdaNum + 1; i++) {
         (*ret)[i] = linExpr[i];  // Assign the appropriate linear expressions
     }
@@ -361,7 +326,7 @@ Expression* Expression::clone() const {
     return ret;
 }
 
-void Expression::reset_count() {
+void Expression::resetCounter() {
     count = 0;
 }
 
@@ -376,8 +341,7 @@ int Expression::getCount() {
 bool Expression::transform_matches(LinTransform& lt) {
     if (!factorize())
         return false;
-
-    return (lt == tr_fact);
+    return (lt == transFact);
 }
 
 void Expression::drop_transform(LinTransform& lt) {
@@ -386,7 +350,7 @@ void Expression::drop_transform(LinTransform& lt) {
         for (i = 0; i < lambdaNum; i++)
             linExpr[i] *= 0;
 
-        linExpr[lambdaNum] = lin_fact;
+        linExpr[lambdaNum] = linFact;
         factored = false;
     }
     return;

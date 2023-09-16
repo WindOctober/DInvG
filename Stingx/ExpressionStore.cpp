@@ -30,23 +30,23 @@
 #include "Rational.h"
 #include "SparseLinExpr.h"
 
-void ExpressionStore::initialize(int varsNum, int lambdaNum, var_info* dualInfo, var_info* lambdaInfo) {
+void ExpressionStore::initialize(int varsNum, int lambdaNum, var_info* coefInfo, var_info* lambdaInfo) {
     this->varsNum = varsNum;
     this->lambdaNum = lambdaNum;
-    this->dualInfo = dualInfo;
+    this->coefInfo = coefInfo;
     this->lambdaInfo = lambdaInfo;
 
     le_list = new vector<SparseLinExpr>();
     lt_list = new vector<LinTransform>();
     /*
-    m.init_set(varsNum,dualInfo);
+    m.init_set(varsNum,coefInfo);
     split_seq=new vector<LinTransform>();
     vl = new vector<Expression>();
     */
 }
 
-ExpressionStore::ExpressionStore(int varsNum, int lambdaNum, var_info* dualInfo, var_info* lambdaInfo) {
-    initialize(varsNum, lambdaNum, dualInfo, lambdaInfo);
+ExpressionStore::ExpressionStore(int varsNum, int lambdaNum, var_info* coefInfo, var_info* lambdaInfo) {
+    initialize(varsNum, lambdaNum, coefInfo, lambdaInfo);
 }
 
 bool ExpressionStore::AddExpression(Expression& exp) {
@@ -68,7 +68,7 @@ void ExpressionStore::add_linear_expression(SparseLinExpr  exp){
 }
 */
 
-void ExpressionStore::add_transform(LinTransform lt) {
+void ExpressionStore::addTransform(LinTransform lt) {
     vector<Expression>::iterator vi;
 
     for (vi = vl->begin(); vi < vl->end(); vi++) {
@@ -122,7 +122,7 @@ void ExpressionStore::simplify(MatrixStore const& m) {
     //   bool info=true;
     vector<Expression>::iterator vi;
     SparseLinExpr ll;
-    LinTransform lt(varsNum, dualInfo);
+    LinTransform lt(varsNum, coefInfo);
 
     //   while (info){
 
@@ -144,7 +144,7 @@ void ExpressionStore::simplify(MatrixStore const& m) {
        } else if ((*vi).is_pure_b()){
        info=true;
        lt=(*vi).convert_transform();
-       add_transform(lt);
+       addTransform(lt);
        cout<<"Adding Linear Transform "<<lt<<endl;
        }
 
@@ -209,18 +209,18 @@ bool ExpressionStore::collect_factors() {
     for (vi = vl->begin(); vi < vl->end(); vi++) {
         if ((*vi).factorize()) {
             some = true;
-            vj = lin_expr_collected((*vi).get_linear_factor());
+            vj = lin_expr_collected((*vi).getLinFactor());
             if (vj < le_list->end())
                 (*vj).count_up();
             else
-                le_list->push_back((*vi).get_linear_factor());
+                le_list->push_back((*vi).getLinFactor());
 
-            vk = lin_transform_collected((*vi).get_transform_factor());
+            vk = lin_transform_collected((*vi).getTransformFactor());
 
             if (vk < lt_list->end())
                 (*vk).count_up();
             else
-                lt_list->push_back((*vi).get_transform_factor());
+                lt_list->push_back((*vi).getTransformFactor());
         }
     }
 

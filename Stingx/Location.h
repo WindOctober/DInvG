@@ -25,7 +25,7 @@
  * Comments:
  * A location contains information about a location.
  * Information includes outgoing transitions
- * The location specific dual variables are all kept in
+ * The location specific coef variables are all kept in
  * a var-info created for that purpose
  * a range of indices [l,r) is specified over that locations specific
  * variables
@@ -51,7 +51,7 @@ using namespace Parma_Polyhedra_Library::IO_Operators;
 class Location {
    private:
     int varsNum;                  // the number of variables in the location
-    var_info *info, *dualInfo, *lambdaInfo;  // the primal and dual var-infos
+    var_info *info, *coefInfo, *lambdaInfo;  // the primal and coef var-infos
     bool initFlag=false;           // has the initial condition been set
     string loc_name;            // name
     Context* context;             // the solver for intra-location transitions
@@ -87,14 +87,14 @@ class Location {
     // Initialize and form parametric coefficients for the invariant
     void initialize(int varsNum,
                     var_info* info,
-                    var_info* dualInfo,
+                    var_info* coefInfo,
                     var_info* lambdaInfo,
                     C_Polyhedron* p,
                     string name);
     // Initialize but do not form new coefficients
     void InitWithoutPopulating(int varsNum,
                                        var_info* info,
-                                       var_info* dualInfo,
+                                       var_info* coefInfo,
                                        var_info* lambdaInfo,
                                        C_Polyhedron* p,
                                        string name,
@@ -112,25 +112,25 @@ class Location {
    public:
     Location(int varsNum,
              var_info* info,
-             var_info* dualInfo,
+             var_info* coefInfo,
              var_info* lambdaInfo,
              C_Polyhedron* p,
              string name);
 
-    Location(int varsNum, var_info* info, var_info* dualInfo, var_info* lambdaInfo, string name);
+    Location(int varsNum, var_info* info, var_info* coefInfo, var_info* lambdaInfo, string name);
 
     // A location with preset var-infos and a given starting point
 
     Location(int varsNum,
              var_info* info,
-             var_info* dualInfo,
+             var_info* coefInfo,
              var_info* lambdaInfo,
              string name,
              int left);
 
     Location(int varsNum,
              var_info* info,
-             var_info* dualInfo,
+             var_info* coefInfo,
              var_info* lambdaInfo,
              C_Polyhedron* p,
              string name,
@@ -146,8 +146,8 @@ class Location {
     void make_context();
 
     void ComputeDualConstraints();
-    void ComputeDualConstraints(Context& cc);       // the dual constraints
-    void ComputeDualConstraints(C_Polyhedron& cc);  // the dual constraints
+    void ComputeDualConstraints(Context& cc);       // the coef constraints
+    void ComputeDualConstraints(C_Polyhedron& cc);  // the coef constraints
 
     int getDim() const;
     const var_info* get_var_info() const;
