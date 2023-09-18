@@ -61,7 +61,7 @@ class var_info {
 
     virtual int search(const char* what) const;
 
-    virtual char* get_name(int dimension) const;
+    virtual char* getName(int dimension) const;
 
     void to_array_invariant();  // convert and store an array-inv-format
 

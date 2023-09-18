@@ -674,7 +674,7 @@ void TransitionRelation::ComputeInterConsecConstraints(vector<Clump>& clumps) {
 
 void TransitionRelation::ComputeIntraConsecConstraints(vector<Clump>& clumps) {
     // First make up a context and add the initiation constraints to it
-    if (preloc->get_name() != postloc->get_name()) {
+    if (preloc->getName() != postloc->getName()) {
         ComputeInterConsecConstraints(clumps);
         return;
     }
@@ -697,16 +697,16 @@ int TransitionRelation::get_range_right() const {
     return mult_right;
 }
 
-const string& TransitionRelation::get_name() const {
+const string& TransitionRelation::getName() const {
     return name;
 }
 
 const string& TransitionRelation::get_preloc_name() const {
-    return preloc->get_name();
+    return preloc->getName();
 }
 
 const string& TransitionRelation::get_postloc_name() const {
-    return postloc->get_name();
+    return postloc->getName();
 }
 
 const C_Polyhedron& TransitionRelation::get_relation() const {
@@ -721,7 +721,7 @@ ostream& operator<<(ostream& in, TransitionRelation const& t) {
     // Just print the transition relation
     var_info const* ff = t.get_varinfo();
 
-    in << "Transition Relation: " << t.get_name() << endl;
+    in << "Transition Relation: " << t.getName() << endl;
     in << "Pre-Location:" << t.get_preloc_name() << "  "
        << " Post-Location:" << t.get_postloc_name() << endl;
     in << "Transition Relation: [[" << endl;
@@ -745,12 +745,12 @@ ostream& operator<<(ostream& in, TransitionRelation const& t) {
     set<int>::iterator vxx;
     for (vxx = st.begin(); vxx != st.end(); ++vxx) {
         in << "├ ";
-        in << " " << ff->get_name((*vxx)) << endl;
+        in << " " << ff->getName((*vxx)) << endl;
     }
     in << "| " << endl;
     in << "]]" << endl;
     in << endl;
-    in << "- Transition Relation " << t.get_name() << " Ends" << endl;
+    in << "- Transition Relation " << t.getName() << " Ends" << endl;
     in << "----------------------------- " << endl;
     return in;
 }

@@ -64,11 +64,11 @@ var_info::var_info(var_info* f1, var_info* f2) {
     v = new vector<char*>();
     int i;
     for (i = 0; i < d1; ++i) {
-        insert(f1->get_name(i));
+        insert(f1->getName(i));
     }
 
     for (i = 0; i < d2; ++i)
-        insert(f2->get_name(i));
+        insert(f2->getName(i));
 }
 
 var_info::var_info(var_info* lambdaInfo, vector<int> v1) {
@@ -84,7 +84,7 @@ var_info::var_info(var_info* lambdaInfo, vector<int> v1) {
         PRECONDITION(((*vi) >= 0 && (*vi) < n),
                      "var_info::var_info asked to project out of range");
 
-        insert(lambdaInfo->get_name(*vi));
+        insert(lambdaInfo->getName(*vi));
     }
     return;
 }
@@ -99,7 +99,7 @@ var_info::var_info(var_info const* lambdaInfo) {
 
     this->dimension = 0;
     for (i = 0; i < lambdaInfo->dimension; ++i) {
-        this->insert(lambdaInfo->get_name(i));
+        this->insert(lambdaInfo->getName(i));
     }
 }
 
@@ -132,7 +132,7 @@ int var_info::search(const char* what) const {
     return VAR_NOT_FOUND;
 }
 
-char* var_info::get_name(int dim) const {
+char* var_info::getName(int dim) const {
     PRECONDITION(dim >= 0 && dim < dimension, " Invalid dimension");
     return (*v)[dim];
 }
@@ -165,9 +165,9 @@ var_info* var_info::prime() {
     int i;
 
     for (i = 0; i < dimension; i++)
-        v1->insert(get_name(i));
+        v1->insert(getName(i));
     for (i = 0; i < dimension; i++)
-        v1->insert(get_name(i), 1);
+        v1->insert(getName(i), 1);
     return v1;
 }
 
@@ -202,7 +202,7 @@ void var_info::print_dimensions(ostream& out, set<int> const& what) const {
             ((*vi) >= 0 && (*vi) < dimension),
             "var_info::print_dimensions --> asked to print out of range");
 
-        out << get_name((*vi)) << "  ,";
+        out << getName((*vi)) << "  ,";
         ++j;
         if (j % 20 == 0)
             out << endl;

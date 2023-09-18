@@ -156,15 +156,16 @@ LinTransform Expression::convert_transform() const {
 
 void Expression::transform(LinTransform& lin) {
     if (lin.is_trivial() || lin.is_inconsistent())
-        return;  // Nothing to be done here
+        return;
 
     int base = lin.getBase();
-    assert(lin(base)==1);
+    assert(lin(base) == 1);
     for (int i = base + 1; i < lambdaNum + 1; i++)
         linExpr[i] = linExpr[i] - lin(i) * linExpr[base];
+    //TODO: 确定这里是否需要修改，为什么除了lambdaNum还会有其他不为0的地方。
 
     linExpr[base] *= 0;  // kill the base
-                          // That completes the transformation
+                         // That completes the transformation
 }
 
 void Expression::simplify(MatrixStore const& c) {
@@ -267,9 +268,9 @@ ostream& operator<<(ostream& os, Expression const& expr) {
         int lambdaNum = expr.getLambdaNum();
         var_info* lambdaInfo = expr.get_fr();
 
-        os << lambdaInfo->get_name(0) << " * (" << expr(0) << " ) ";
+        os << lambdaInfo->getName(0) << " * (" << expr(0) << " ) ";
         for (int i = 1; i < lambdaNum; i++) {
-            os << " + " << lambdaInfo->get_name(i) << " * ( " << expr(i)
+            os << " + " << lambdaInfo->getName(i) << " * ( " << expr(i)
                << " ) ";
         }
 
@@ -298,8 +299,11 @@ bool Expression::factorize() {
         t[i] = factor;
     }
 
-    transFact = t; // NOTE: j 所在的位置就是 \mu所在的位置，所以这里的系数是1，t记录的就是(\mu - a) \alpha中的 \mu和a前面的系数
-    linFact = linExpr[j]; //NOTE : 记录的是\alpha，也就是后面的对应系数的表达式。
+    transFact = t;  // NOTE: j 所在的位置就是
+                    // \mu所在的位置，所以这里的系数是1，t记录的就是(\mu - a)
+                    // \alpha中的 \mu和a前面的系数
+    linFact =
+        linExpr[j];  // NOTE : 记录的是\alpha，也就是后面的对应系数的表达式。
 
     factored = true;
     return true;

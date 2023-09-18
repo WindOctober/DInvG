@@ -182,7 +182,7 @@ void Location::populate_coefficients() {
     coefInfo->insert(dual_variable.c_str());
 }
 
-string const& Location::get_name() const {
+string const& Location::getName() const {
     return loc_name;
 }
 
@@ -191,7 +191,7 @@ ostream& operator<<(ostream& in, Location const& l) {
     int varsNum = l.getDim();
 
     const var_info* info = l.getInfo();
-    string name = l.get_name();
+    string name = l.getName();
     // The rest to be completed later
     in << endl;
     in << "Location: " << name << endl;
@@ -200,7 +200,7 @@ ostream& operator<<(ostream& in, Location const& l) {
        << ", coefNum: " << l.getCoefInfo()->getDim() << " 」"
        << endl;
 
-    if (l.initial_poly_set()) {
+    if (l.getInitFlag()) {
         in << "Initial Condition: [[ " << endl;
         in << "| " << endl;
         printPolyhedron(in, l.getPolyRef(), info);

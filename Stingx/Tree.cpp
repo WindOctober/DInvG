@@ -56,20 +56,20 @@ extern void Clear_Location_Invariant();
 extern void Print_Location();
 extern bool print_tree;
 
-void Tree::initialize(vector<Clump>& outer_vcl) {
-    this->vcl = outer_vcl;
+void Tree::initialize(vector<Clump>& clumps) {
+    this->clumps = clumps;
 }
 
 Tree::Tree() {
     ;
 }
 
-Tree::Tree(vector<Clump>& outer_vcl) {
-    initialize(outer_vcl);
+Tree::Tree(vector<Clump>& clumps) {
+    initialize(clumps);
 }
 
-void Tree::set_tree(vector<Clump>& outer_vcl) {
-    initialize(outer_vcl);
+void Tree::set_tree(vector<Clump>& clumps) {
+    initialize(clumps);
 }
 
 void Tree::set_ra(int amount) {
@@ -91,7 +91,7 @@ void Tree::set_max_clump_count() {
     int max = -1;
     vector<Clump>::iterator vi;
 
-    for (vi = vcl.begin(); vi < vcl.end(); vi++) {
+    for (vi = clumps.begin(); vi < clumps.end(); vi++) {
         if (vi->size() > max) {
             max = vi->size();
         }
@@ -100,234 +100,234 @@ void Tree::set_max_clump_count() {
     max_clump_count = max;
 }
 
-void Tree::Original_Prior(vector<Clump>& outer_vcl) {
+void Tree::Original_Prior(vector<Clump>& clumps) {
     // copy from "prior2"
 
-    vector<int> related_location_index;
-    vector<int> unrelated_location_index;
-    vector<int> related_transition_index;
-    vector<int> unrelated_transition_index;
-    vector<int> target_prior_index;
+    vector<int> relatedLocIndex;
+    vector<int> unrelatedLocIndex;
+    vector<int> relatedTransIndex;
+    vector<int> unrelatedTransIndex;
+    vector<int> targetIndex;
 
-    string target = (*loclist)[target_index]->get_name();
+    string target = (*loclist)[target_index]->getName();
     int transition_index;
     string tr_preloc_name, tr_postloc_name;
 
     vector<Clump>::iterator vi;
 
     int j = 0;
-    for (vi = outer_vcl.begin(); vi < outer_vcl.end(); vi++) {
+    for (vi = clumps.begin(); vi < clumps.end(); vi++) {
         if (vi->get_category() == "Transition") {
-            transition_index = get_index_of_transition(vi->get_name());
+            transition_index = get_index_of_transition(vi->getName());
             tr_preloc_name = (*trlist)[transition_index]->get_preloc_name();
             tr_postloc_name = (*trlist)[transition_index]->get_postloc_name();
             if (tr_preloc_name == target || tr_postloc_name == target) {
-                related_transition_index.push_back(j);
+                relatedTransIndex.push_back(j);
             } else {
-                unrelated_transition_index.push_back(j);
+                unrelatedTransIndex.push_back(j);
             }
         } else if (vi->get_category() == "Location") {
-            if (vi->get_name() == target) {
-                related_location_index.push_back(j);
+            if (vi->getName() == target) {
+                relatedLocIndex.push_back(j);
             } else {
-                unrelated_location_index.push_back(j);
+                unrelatedLocIndex.push_back(j);
             }
         }
         j++;
     }
 
-    set_ra(related_location_index.size());
-    set_er(related_transition_index.size());
-    set_unra(unrelated_location_index.size());
-    set_uner(unrelated_transition_index.size());
+    set_ra(relatedLocIndex.size());
+    set_er(relatedTransIndex.size());
+    set_unra(unrelatedLocIndex.size());
+    set_uner(unrelatedTransIndex.size());
 
-    target_prior_index.insert(target_prior_index.end(),
-                              unrelated_location_index.begin(),
-                              unrelated_location_index.end());
-    target_prior_index.insert(target_prior_index.end(),
-                              unrelated_transition_index.begin(),
-                              unrelated_transition_index.end());
-    target_prior_index.insert(target_prior_index.end(),
-                              related_transition_index.begin(),
-                              related_transition_index.end());
-    target_prior_index.insert(target_prior_index.end(),
-                              related_location_index.begin(),
-                              related_location_index.end());
+    targetIndex.insert(targetIndex.end(),
+                              unrelatedLocIndex.begin(),
+                              unrelatedLocIndex.end());
+    targetIndex.insert(targetIndex.end(),
+                              unrelatedTransIndex.begin(),
+                              unrelatedTransIndex.end());
+    targetIndex.insert(targetIndex.end(),
+                              relatedTransIndex.begin(),
+                              relatedTransIndex.end());
+    targetIndex.insert(targetIndex.end(),
+                              relatedLocIndex.begin(),
+                              relatedLocIndex.end());
 
     vector<Clump> ordered_vcl;
-    for (int i = 0; i < outer_vcl.size(); i++) {
-        ordered_vcl.push_back(outer_vcl[target_prior_index[i]]);
+    for (int i = 0; i < clumps.size(); i++) {
+        ordered_vcl.push_back(clumps[targetIndex[i]]);
     }
 
-    // modify reason: outer_vcl is original vcl
+    // modify reason: clumps is original clumps
     // set_tree(ordered_vcl);
-    set_tree(outer_vcl);
+    set_tree(clumps);
 }
 
-void Tree::Reorder_Target_Prior_1(vector<Clump>& outer_vcl) {
+void Tree::Reorder_Target_Prior_1(vector<Clump>& clumps) {
     vector<int> first_index;
     vector<int> second_index;
-    string target = (*loclist)[target_index]->get_name();
+    string target = (*loclist)[target_index]->getName();
     int transition_index;
     string tr_preloc_name, tr_postloc_name;
-    int related_location_index = 0, related_transition_index = 0,
-        unrelated_location_index = 0, unrelated_transition_index = 0;
+    int relatedLocIndex = 0, relatedTransIndex = 0,
+        unrelatedLocIndex = 0, unrelatedTransIndex = 0;
 
     vector<Clump>::iterator vi;
 
     int j = 0;
-    for (vi = outer_vcl.begin(); vi < outer_vcl.end(); vi++) {
+    for (vi = clumps.begin(); vi < clumps.end(); vi++) {
         if (vi->get_category() == "Transition") {
-            transition_index = get_index_of_transition(vi->get_name());
+            transition_index = get_index_of_transition(vi->getName());
             tr_preloc_name = (*trlist)[transition_index]->get_preloc_name();
             tr_postloc_name = (*trlist)[transition_index]->get_postloc_name();
             if (tr_preloc_name == target || tr_postloc_name == target) {
                 first_index.push_back(j);
-                related_transition_index++;
+                relatedTransIndex++;
             } else {
                 second_index.push_back(j);
-                unrelated_transition_index++;
+                unrelatedTransIndex++;
             }
         } else if (vi->get_category() == "Location") {
-            if (vi->get_name() == target) {
+            if (vi->getName() == target) {
                 first_index.push_back(j);
-                related_location_index++;
+                relatedLocIndex++;
             } else {
                 second_index.push_back(j);
-                unrelated_location_index++;
+                unrelatedLocIndex++;
             }
         }
         j++;
     }
 
-    set_ra(related_location_index);
-    set_er(related_transition_index);
-    set_unra(unrelated_location_index);
-    set_uner(unrelated_transition_index);
+    set_ra(relatedLocIndex);
+    set_er(relatedTransIndex);
+    set_unra(unrelatedLocIndex);
+    set_uner(unrelatedTransIndex);
 
     second_index.insert(second_index.end(), first_index.begin(),
                         first_index.end());
 
     vector<Clump> ordered_vcl;
-    for (int i = 0; i < outer_vcl.size(); i++) {
-        ordered_vcl.push_back(outer_vcl[second_index[i]]);
+    for (int i = 0; i < clumps.size(); i++) {
+        ordered_vcl.push_back(clumps[second_index[i]]);
     }
 
     set_tree(ordered_vcl);
 }
 
-void Tree::Reorder_Target_Prior_2(vector<Clump>& outer_vcl) {
-    vector<int> related_location_index;
-    vector<int> unrelated_location_index;
-    vector<int> related_transition_index;
-    vector<int> unrelated_transition_index;
-    vector<int> target_prior_index;
+void Tree::Reorder_Target_Prior_2(vector<Clump>& clumps) {
+    vector<int> relatedLocIndex;
+    vector<int> unrelatedLocIndex;
+    vector<int> relatedTransIndex;
+    vector<int> unrelatedTransIndex;
+    vector<int> targetIndex;
 
-    string target = (*loclist)[target_index]->get_name();
+    string target = (*loclist)[target_index]->getName();
     int transition_index;
     string tr_preloc_name, tr_postloc_name;
 
     vector<Clump>::iterator vi;
 
     int j = 0;
-    for (vi = outer_vcl.begin(); vi < outer_vcl.end(); vi++) {
+    for (vi = clumps.begin(); vi < clumps.end(); vi++) {
         if (vi->get_category() == "Transition") {
-            transition_index = get_index_of_transition(vi->get_name());
+            transition_index = get_index_of_transition(vi->getName());
             tr_preloc_name = (*trlist)[transition_index]->get_preloc_name();
             tr_postloc_name = (*trlist)[transition_index]->get_postloc_name();
             if (tr_preloc_name == target || tr_postloc_name == target) {
-                related_transition_index.push_back(j);
+                relatedTransIndex.push_back(j);
             } else {
-                unrelated_transition_index.push_back(j);
+                unrelatedTransIndex.push_back(j);
             }
         } else if (vi->get_category() == "Location") {
-            if (vi->get_name() == target) {
-                related_location_index.push_back(j);
+            if (vi->getName() == target) {
+                relatedLocIndex.push_back(j);
             } else {
-                unrelated_location_index.push_back(j);
+                unrelatedLocIndex.push_back(j);
             }
         }
         j++;
     }
 
-    set_ra(related_location_index.size());
-    set_er(related_transition_index.size());
-    set_unra(unrelated_location_index.size());
-    set_uner(unrelated_transition_index.size());
+    set_ra(relatedLocIndex.size());
+    set_er(relatedTransIndex.size());
+    set_unra(unrelatedLocIndex.size());
+    set_uner(unrelatedTransIndex.size());
 
-    target_prior_index.insert(target_prior_index.end(),
-                              unrelated_location_index.begin(),
-                              unrelated_location_index.end());
-    target_prior_index.insert(target_prior_index.end(),
-                              unrelated_transition_index.begin(),
-                              unrelated_transition_index.end());
-    target_prior_index.insert(target_prior_index.end(),
-                              related_transition_index.begin(),
-                              related_transition_index.end());
-    target_prior_index.insert(target_prior_index.end(),
-                              related_location_index.begin(),
-                              related_location_index.end());
+    targetIndex.insert(targetIndex.end(),
+                              unrelatedLocIndex.begin(),
+                              unrelatedLocIndex.end());
+    targetIndex.insert(targetIndex.end(),
+                              unrelatedTransIndex.begin(),
+                              unrelatedTransIndex.end());
+    targetIndex.insert(targetIndex.end(),
+                              relatedTransIndex.begin(),
+                              relatedTransIndex.end());
+    targetIndex.insert(targetIndex.end(),
+                              relatedLocIndex.begin(),
+                              relatedLocIndex.end());
 
     vector<Clump> ordered_vcl;
-    for (int i = 0; i < outer_vcl.size(); i++) {
-        ordered_vcl.push_back(outer_vcl[target_prior_index[i]]);
+    for (int i = 0; i < clumps.size(); i++) {
+        ordered_vcl.push_back(clumps[targetIndex[i]]);
     }
 
     set_tree(ordered_vcl);
 }
 
-void Tree::Reorder_Target_Prior_3(vector<Clump>& outer_vcl) {
-    vector<int> related_location_index;
-    vector<int> unrelated_location_index;
-    vector<int> related_transition_index;
-    vector<int> unrelated_transition_index;
-    vector<int> target_prior_index;
+void Tree::Reorder_Target_Prior_3(vector<Clump>& clumps) {
+    vector<int> relatedLocIndex;
+    vector<int> unrelatedLocIndex;
+    vector<int> relatedTransIndex;
+    vector<int> unrelatedTransIndex;
+    vector<int> targetIndex;
 
-    string target = (*loclist)[target_index]->get_name();
+    string target = (*loclist)[target_index]->getName();
     int transition_index;
     string tr_preloc_name, tr_postloc_name;
 
     vector<Clump>::iterator vi;
 
     int j = 0;
-    for (vi = outer_vcl.begin(); vi < outer_vcl.end(); vi++) {
+    for (vi = clumps.begin(); vi < clumps.end(); vi++) {
         if (vi->get_category() == "Transition") {
-            transition_index = get_index_of_transition(vi->get_name());
+            transition_index = get_index_of_transition(vi->getName());
             tr_preloc_name = (*trlist)[transition_index]->get_preloc_name();
             tr_postloc_name = (*trlist)[transition_index]->get_postloc_name();
             if (tr_preloc_name == target || tr_postloc_name == target) {
-                related_transition_index.push_back(j);
+                relatedTransIndex.push_back(j);
             } else {
-                unrelated_transition_index.push_back(j);
+                unrelatedTransIndex.push_back(j);
             }
         } else if (vi->get_category() == "Location") {
-            if (vi->get_name() == target) {
-                related_location_index.push_back(j);
+            if (vi->getName() == target) {
+                relatedLocIndex.push_back(j);
             } else {
-                unrelated_location_index.push_back(j);
+                unrelatedLocIndex.push_back(j);
             }
         }
         j++;
     }
 
-    set_ra(related_location_index.size());
-    set_er(related_transition_index.size());
-    set_unra(unrelated_location_index.size());
-    set_uner(unrelated_transition_index.size());
+    set_ra(relatedLocIndex.size());
+    set_er(relatedTransIndex.size());
+    set_unra(unrelatedLocIndex.size());
+    set_uner(unrelatedTransIndex.size());
 
     // ***
     // reinter -> reintra -> unintra -> uninter
     // ***
     // depth min(i.e. 0)
     /*
-    target_prior_index.insert(target_prior_index.end(),
-    unrelated_transition_index.begin(), unrelated_transition_index.end());
-    target_prior_index.insert(target_prior_index.end(),
-    unrelated_location_index.begin(), unrelated_location_index.end());
-    target_prior_index.insert(target_prior_index.end(),
-    related_location_index.begin(), related_location_index.end());
-    target_prior_index.insert(target_prior_index.end(),
-    related_transition_index.begin(), related_transition_index.end());
+    targetIndex.insert(targetIndex.end(),
+    unrelatedTransIndex.begin(), unrelatedTransIndex.end());
+    targetIndex.insert(targetIndex.end(),
+    unrelatedLocIndex.begin(), unrelatedLocIndex.end());
+    targetIndex.insert(targetIndex.end(),
+    relatedLocIndex.begin(), relatedLocIndex.end());
+    targetIndex.insert(targetIndex.end(),
+    relatedTransIndex.begin(), relatedTransIndex.end());
     */
     // depth max
 
@@ -335,79 +335,79 @@ void Tree::Reorder_Target_Prior_3(vector<Clump>& outer_vcl) {
     // reintra -> unintra -> reinter -> uninter
     // ***
     // depth min(i.e. 0)
-    target_prior_index.insert(target_prior_index.end(),
-                              unrelated_transition_index.begin(),
-                              unrelated_transition_index.end());
-    target_prior_index.insert(target_prior_index.end(),
-                              related_transition_index.begin(),
-                              related_transition_index.end());
-    target_prior_index.insert(target_prior_index.end(),
-                              unrelated_location_index.begin(),
-                              unrelated_location_index.end());
-    target_prior_index.insert(target_prior_index.end(),
-                              related_location_index.begin(),
-                              related_location_index.end());
+    targetIndex.insert(targetIndex.end(),
+                              unrelatedTransIndex.begin(),
+                              unrelatedTransIndex.end());
+    targetIndex.insert(targetIndex.end(),
+                              relatedTransIndex.begin(),
+                              relatedTransIndex.end());
+    targetIndex.insert(targetIndex.end(),
+                              unrelatedLocIndex.begin(),
+                              unrelatedLocIndex.end());
+    targetIndex.insert(targetIndex.end(),
+                              relatedLocIndex.begin(),
+                              relatedLocIndex.end());
     // depth max
 
     vector<Clump> ordered_vcl;
-    for (int i = 0; i < outer_vcl.size(); i++) {
-        ordered_vcl.push_back(outer_vcl[target_prior_index[i]]);
+    for (int i = 0; i < clumps.size(); i++) {
+        ordered_vcl.push_back(clumps[targetIndex[i]]);
     }
 
     set_tree(ordered_vcl);
 }
 
-void Tree::extract_vcl_for_one_location_about_intra(vector<Clump>& outer_vcl) {
-    vector<int> related_location_index;
-    vector<int> unrelated_location_index;
-    vector<int> related_transition_index;
-    vector<int> unrelated_transition_index;
-    vector<int> target_prior_index;
+void Tree::extract_vcl_for_one_location_about_intra(vector<Clump>& clumps) {
+    vector<int> relatedLocIndex;
+    vector<int> unrelatedLocIndex;
+    vector<int> relatedTransIndex;
+    vector<int> unrelatedTransIndex;
+    vector<int> targetIndex;
 
-    string target = (*loclist)[target_index]->get_name();
+    string target = (*loclist)[target_index]->getName();
     int transition_index;
     string tr_preloc_name, tr_postloc_name;
 
     vector<Clump>::iterator vi;
 
     int j = 0;
-    for (vi = outer_vcl.begin(); vi < outer_vcl.end(); vi++) {
+    for (vi = clumps.begin(); vi < clumps.end(); vi++) {
         if (vi->get_category() == "Transition") {
-            transition_index = get_index_of_transition(vi->get_name());
+            transition_index = get_index_of_transition(vi->getName());
             tr_preloc_name = (*trlist)[transition_index]->get_preloc_name();
             tr_postloc_name = (*trlist)[transition_index]->get_postloc_name();
             if (tr_preloc_name == target || tr_postloc_name == target) {
-                related_transition_index.push_back(j);
+                relatedTransIndex.push_back(j);
             } else {
-                unrelated_transition_index.push_back(j);
+                unrelatedTransIndex.push_back(j);
             }
         } else if (vi->get_category() == "Location") {
-            if (vi->get_name() == target) {
-                related_location_index.push_back(j);
+            if (vi->getName() == target) {
+                relatedLocIndex.push_back(j);
             } else {
-                unrelated_location_index.push_back(j);
+                unrelatedLocIndex.push_back(j);
             }
         }
         j++;
     }
 
-    set_ra(related_location_index.size());
-    set_er(related_transition_index.size());
-    set_unra(unrelated_location_index.size());
-    set_uner(unrelated_transition_index.size());
+    set_ra(relatedLocIndex.size());
+    set_er(relatedTransIndex.size());
+    set_unra(unrelatedLocIndex.size());
+    set_uner(unrelatedTransIndex.size());
 
-    target_prior_index.insert(target_prior_index.end(),
-                              related_location_index.begin(),
-                              related_location_index.end());
+    targetIndex.insert(targetIndex.end(),
+                              relatedLocIndex.begin(),
+                              relatedLocIndex.end());
 
     vector<Clump> ordered_vcl;
     int rlid;
-    if (target_prior_index.size() == 1) {
-        rlid = target_prior_index[0];
+    if (targetIndex.size() == 1) {
+        rlid = targetIndex[0];
     } else {
         cout << endl << "Error: There are more than one related location index";
     }
-    ordered_vcl.push_back(outer_vcl[rlid]);
+    ordered_vcl.push_back(clumps[rlid]);
 
     set_tree(ordered_vcl);
 }
@@ -441,7 +441,7 @@ void Tree::Print_Prune_Tree(int depth, string weavedorbanged) {
             }
         }
         cout << " --  " << get_clump(dth - 1).get_category();
-        cout << ":: " << get_clump(dth - 1).get_name();
+        cout << ":: " << get_clump(dth - 1).getName();
     }
 }
 
@@ -507,7 +507,7 @@ void Tree::Print_Prune_Tree(int depth, int hb, int lb, string weavedorbanged) {
         } else {
             cout << "Neither Location nor Transition!!!";
         }
-        cout << ":: " << get_clump(dth - 1).get_name();
+        cout << ":: " << get_clump(dth - 1).getName();
     }
 }
 
@@ -560,7 +560,7 @@ void Tree::Print_Prune_Sequence_Tree(vector<int> sequence,
              << counter.get_pst_pbc_about_location_and_depth(get_target_index(),
                                                              dth - 1);
         cout << " --  " << get_clump(dth - 1).get_category();
-        cout << ":: " << get_clump(dth - 1).get_name();
+        cout << ":: " << get_clump(dth - 1).getName();
         i++;
     }
 }
@@ -603,7 +603,7 @@ void Tree::Print_Prune_Sequence_Tree(vector<int> sequence,
             }
         }
         cout << " --  " << get_clump(dth - 1).get_category();
-        cout << ":: " << get_clump(dth - 1).get_name();
+        cout << ":: " << get_clump(dth - 1).getName();
         if (lb <= dth - 1 && dth - 1 <= hb) {
             i++;
         }
@@ -616,8 +616,8 @@ void Tree::prune_node_self_inspection(int target_index, C_Polyhedron& invd) {
 
     store_clumps_gli();
     clear_pruned_node();
-    // for (; dth>=0/*vcl.size()-ra-er*/; dth--){
-    vi = vcl.begin() + dth;
+    // for (; dth>=0/*clumps.size()-ra-er*/; dth--){
+    vi = clumps.begin() + dth;
     // vector<int> node_gli = (*vi).prune_all(invd);
     vector<int> node_gli = (*vi).prune_target(invd, clumps_gli[dth]);
     if (node_gli.size()) {
@@ -628,12 +628,12 @@ void Tree::prune_node_self_inspection(int target_index, C_Polyhedron& invd) {
     store_conflict_node();
     dth = first_conflict;
     while (dth-- > 0) {
-        vi = vcl.begin() + dth;
+        vi = clumps.begin() + dth;
         (*vi).clear();
         cout << endl
              << "depth: " << dth
              << ", clear_lower_gli, gli : " << (*vi).get_gli() << " "
-             << (*vi).get_category() << "::" << (*vi).get_name();
+             << (*vi).get_category() << "::" << (*vi).getName();
     }
 }
 
@@ -674,7 +674,7 @@ void Tree::store_clumps_gli() {
     // vector<int> new_clumps_gli;
     clumps_gli.clear();
     for (dth = 0; dth < size(); dth++) {
-        vi = vcl.begin() + dth;
+        vi = clumps.begin() + dth;
         clumps_gli.push_back((*vi).get_gli());
     }
     // clumps_gli = new_clumps_gli;
@@ -689,8 +689,8 @@ void Tree::prune_clumps_by_hierarchy_inclusion() {
     vector<Location>::iterator vk;
 
     // initialize union
-    for (vi = vcl.begin(); vi < vcl.end(); vi++) {
-        Location clumps_union(dimension, info, coefInfo, lambdaInfo, "union_" + (*vi).get_name(),
+    for (vi = clumps.begin(); vi < clumps.end(); vi++) {
+        Location clumps_union(dimension, info, coefInfo, lambdaInfo, "union_" + (*vi).getName(),
                               target_index * (dimension + 1));
         tr_union.push_back(clumps_union);
     }
@@ -702,7 +702,7 @@ void Tree::prune_clumps_by_hierarchy_inclusion() {
     int dth = tr_union.size() - 1;
     while (dth >= 0) {
         vk = tr_union.begin() + dth;
-        Clump cl = vcl[dth];
+        Clump cl = clumps[dth];
         C_Polyhedron clumps_poly(coefInfo->getDim(), UNIVERSE);
         int i = 0;
         for (i = 0; i < cl.getCount(); i++) {
@@ -713,7 +713,7 @@ void Tree::prune_clumps_by_hierarchy_inclusion() {
             cout << endl << "to update constraints";
             (*vk).update_dual_constraints(clumps_poly);
         }
-        cout << endl << "dth: " << dth << ", " << (*vk).get_name();
+        cout << endl << "dth: " << dth << ", " << (*vk).getName();
         cout << endl << "this union of clumps poly: " << clumps_poly;
         dth--;
     }
@@ -768,7 +768,7 @@ vector<vector<vector<int>>> Tree::divide_by_target_relation_based_on_StInG(
     cout << endl << "> > > Tree::divide_by_target_relation_based_on_StInG()";
     vector<vector<vector<int>>> sequences;
 
-    int ncl = vcl.size();
+    int ncl = clumps.size();
     vector<pair<int, int>> length_bound;
     vector<pair<int, int>>::iterator it;
     length_bound.push_back(make_pair(ncl - 1, ncl - ra - er + 0));
@@ -806,7 +806,7 @@ vector<vector<vector<int>>> Tree::no_divide_for_test(C_Polyhedron& initp) {
     cout << endl << "> > > Tree::no_divide_for_test()";
     vector<vector<vector<int>>> sequences;
 
-    int ncl = vcl.size();
+    int ncl = clumps.size();
     vector<pair<int, int>> length_bound;
     vector<pair<int, int>>::iterator it;
     length_bound.push_back(make_pair(ncl - 1, 0));
@@ -844,7 +844,7 @@ vector<vector<vector<int>>> Tree::divide_by_target_relation(
     cout << endl << "> > > Tree::divide_by_target_relation()";
     vector<vector<vector<int>>> sequences;
 
-    int ncl = vcl.size();
+    int ncl = clumps.size();
     vector<pair<int, int>> length_bound;
     vector<pair<int, int>>::iterator it;
     length_bound.push_back(make_pair(ncl - 1, ncl - ra - er + 0));
@@ -874,7 +874,7 @@ vector<vector<vector<int>>> Tree::one_per_group(C_Polyhedron& initp) {
     cout << endl << "> > > Tree::one_per_group()";
     vector<vector<vector<int>>> sequences;
 
-    int ncl = vcl.size();
+    int ncl = clumps.size();
     vector<pair<int, int>> length_bound;
     vector<pair<int, int>>::iterator it;
 
@@ -908,7 +908,7 @@ vector<vector<vector<int>>> Tree::two_per_group(C_Polyhedron& initp) {
     cout << endl << "> > > Tree::two_per_group()";
     vector<vector<vector<int>>> sequences;
 
-    int ncl = vcl.size();
+    int ncl = clumps.size();
     vector<pair<int, int>> length_bound;
     vector<pair<int, int>>::iterator it;
     if (ncl % 2 == 0) {
@@ -950,7 +950,7 @@ vector<vector<vector<int>>> Tree::three_per_group(C_Polyhedron& initp) {
     cout << endl << "> > > Tree::three_per_group()";
     vector<vector<vector<int>>> sequences;
 
-    int ncl = vcl.size();
+    int ncl = clumps.size();
     vector<pair<int, int>> length_bound;
     vector<pair<int, int>>::iterator it;
 
@@ -988,7 +988,7 @@ vector<vector<vector<int>>> Tree::four_per_group(C_Polyhedron& initp) {
     cout << endl << "> > > Tree::four_per_group()";
     vector<vector<vector<int>>> sequences;
 
-    int ncl = vcl.size();
+    int ncl = clumps.size();
     vector<pair<int, int>> length_bound;
     vector<pair<int, int>>::iterator it;
 
@@ -1027,7 +1027,7 @@ vector<vector<vector<int>>> Tree::divide_target_into_double(
     cout << endl << "> > > Tree::divide_target_into_double()";
     vector<vector<vector<int>>> sequences;
 
-    int ncl = vcl.size();
+    int ncl = clumps.size();
     vector<pair<int, int>> length_bound;
     vector<pair<int, int>>::iterator it;
     int i;
@@ -1071,7 +1071,7 @@ vector<vector<vector<int>>> Tree::divide_by_inter_transition(
     cout << endl << "> > > Tree::divide_by_inter_transition()";
     vector<vector<vector<int>>> sequences;
 
-    int ncl = vcl.size();
+    int ncl = clumps.size();
     vector<pair<int, int>> length_bound;
     vector<pair<int, int>>::iterator it;
     int i;
@@ -1111,7 +1111,7 @@ vector<vector<vector<int>>> Tree::divide_prior2_into_four(C_Polyhedron& initp) {
     cout << endl << "> > > Tree::divide_prior2_into_four()";
     vector<vector<vector<int>>> sequences;
 
-    int ncl = vcl.size();
+    int ncl = clumps.size();
     vector<pair<int, int>> length_bound;
     vector<pair<int, int>>::iterator it;
     int i;
@@ -1164,8 +1164,8 @@ vector<vector<vector<int>>> Tree::merge_sub_sequences(
 
     if (sequences.size() > 2) {
         vector<vector<vector<int>>>::iterator it;
-        int hb = vcl.size() - 1;
-        int lb = vcl.size();
+        int hb = clumps.size() - 1;
+        int lb = clumps.size();
         if (sequences.size() % 2 == 0) {
             for (it = sequences.begin(); it < sequences.end(); it = it + 2) {
                 hb = hb;
@@ -1212,13 +1212,13 @@ vector<vector<vector<int>>> Tree::merge_target_sub_sequences(
     cout << endl << "| sequences.size(): " << sequences.size();
 
     vector<vector<vector<int>>> merged_sequences;
-    int ncl = vcl.size();
+    int ncl = clumps.size();
     int target_index = ncl - (ra + er) - 1;
 
     if (sequences.size() > 2) {
         vector<vector<vector<int>>>::iterator it;
-        int hb = vcl.size() - 1;
-        int lb = vcl.size();
+        int hb = clumps.size() - 1;
+        int lb = clumps.size();
         for (it = sequences.begin();
              hb > target_index && it < sequences.end() - 1; it = it + 2) {
             hb = hb;
@@ -1252,8 +1252,8 @@ vector<vector<vector<int>>> Tree::merge_first_sub_sequences(
 
     if (sequences.size() > 2) {
         vector<vector<vector<int>>>::iterator it;
-        int hb = vcl.size() - 1;
-        int lb = vcl.size();
+        int hb = clumps.size() - 1;
+        int lb = clumps.size();
         it = sequences.begin();
         // for (it=sequences.begin(); hb>target_index && it<sequences.end()-1;
         // it=it+2){
@@ -1679,7 +1679,7 @@ void Tree::dfs_sequences_traverse(vector<vector<vector<int>>> sequences,
 
     int start = -1;
     vector<int> sequence;
-    int depth = vcl.size() - 1;
+    int depth = clumps.size() - 1;
     dfs_sequences_traverse_recursive2(sequence, sequences, start, depth, initp,
                                       invd);
 

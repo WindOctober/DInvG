@@ -129,7 +129,7 @@ void System::get_location_info(System& s, Context& cc) {
         // obtain a new location
         Location const& lc = s.get_location(i);
         j = lc.getLIndex();
-        Location* newl = new Location(varNum, varInfo, coefInfo, lambdaInfo, lc.get_name(), j);
+        Location* newl = new Location(varNum, varInfo, coefInfo, lambdaInfo, lc.getName(), j);
 
         newl->force_polyset();
         C_Polyhedron& res = newl->get_non_const_poly_reference();
@@ -184,7 +184,7 @@ void System::get_transition_info(System& s, Context& cc) {
             res = new C_Polyhedron(tc.get_relation());
 
             newt = new TransitionRelation(varNum, varInfo, coefInfo, lambdaInfo, preloc, postloc,
-                                          res, tc.get_name(), j);
+                                          res, tc.getName(), j);
             addTrans(newt);
             continue;
         } else if (pre == post) {
@@ -198,7 +198,7 @@ void System::get_transition_info(System& s, Context& cc) {
                 continue;
             }
             newt = new TransitionRelation(varNum, varInfo, coefInfo, lambdaInfo, preloc, preloc, res,
-                                          tc.get_name(), j);
+                                          tc.getName(), j);
             addTrans(newt);
         }
     }

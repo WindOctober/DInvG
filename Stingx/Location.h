@@ -142,7 +142,7 @@ class Location {
     void setInitPoly(C_Polyhedron& q);
     bool has_initial();
 
-    void addClump(vector<Clump>& vcl);
+    void addClump(vector<Clump>& clumps);
     void make_context();
 
     void ComputeDualConstraints();
@@ -186,7 +186,7 @@ class Location {
 
     Context* get_context();
 
-    bool initial_poly_set() const { return initFlag; }
+    bool getInitFlag() const { return initFlag; }
 
     void force_polyset() {
         cerr << " Encountered a call to Location::force_poly_set()" << endl;
@@ -251,7 +251,7 @@ class Location {
         C_Polyhedron& pp,
         C_Polyhedron& dualp);
 
-    string const& get_name() const;
+    string const& getName() const;
 
     void populate_coefficients();  // compute the coefficients required and add
                                    // them to the constraint store

@@ -48,11 +48,11 @@ ostream& printPolyhedron(ostream& in,
     if (nf >= n) {
         f2 = new var_info();
         for (i = 0; i < n; i++)
-            f2->insert(info->get_name(i));
+            f2->insert(info->getName(i));
     } else {
         f2 = new var_info();
         for (i = 0; i < nf; i++)
-            f2->insert(info->get_name(i));
+            f2->insert(info->getName(i));
         for (i = nf; i < n; i++) {
             a[2] = 'A' + i - nf;
             f2->insert(a);
@@ -120,11 +120,11 @@ void print_pure_polyhedron(C_Polyhedron const& np, const var_info* info) {
     if (nf >= n) {
         f2 = new var_info();
         for (i = 0; i < n; i++)
-            f2->insert(info->get_name(i));
+            f2->insert(info->getName(i));
     } else {
         f2 = new var_info();
         for (i = 0; i < nf; i++)
-            f2->insert(info->get_name(i));
+            f2->insert(info->getName(i));
         for (i = nf; i < n; i++) {
             a[2] = 'A' + i - nf;
             f2->insert(a);
@@ -180,11 +180,11 @@ ostream& print_clump(ostream& in, Clump const& cl, const var_info* info) {
     if (nf >= n) {
         f2 = new var_info();
         for (i = 0; i < n; i++)
-            f2->insert(info->get_name(i));
+            f2->insert(info->getName(i));
     } else {
         f2 = new var_info();
         for (i = 0; i < nf; i++)
-            f2->insert(info->get_name(i));
+            f2->insert(info->getName(i));
         for (i = nf; i < n; i++) {
             a[2] = 'A' + i - nf;
             f2->insert(a);
@@ -267,11 +267,11 @@ ostream& print_lin_expression(ostream& in,
     if (nf >= n) {
         f2 = new var_info();
         for (i = 0; i < n; i++)
-            f2->insert(info->get_name(i));
+            f2->insert(info->getName(i));
     } else {
         f2 = new var_info();
         for (i = 0; i < nf; i++)
-            f2->insert(info->get_name(i));
+            f2->insert(info->getName(i));
         for (i = nf; i < n; i++) {
             a[2] = 'A' + i - nf;
             f2->insert(a);
@@ -307,11 +307,11 @@ void print_pure_lin_expression(Linear_Expression const& lp, const var_info* info
     if (nf >= n) {
         f2 = new var_info();
         for (i = 0; i < n; i++)
-            f2->insert(info->get_name(i));
+            f2->insert(info->getName(i));
     } else {
         f2 = new var_info();
         for (i = 0; i < nf; i++)
-            f2->insert(info->get_name(i));
+            f2->insert(info->getName(i));
         for (i = nf; i < n; i++) {
             a[2] = 'A' + i - nf;
             f2->insert(a);

@@ -123,6 +123,6 @@ class DisequalityStore {
     DisequalityStore* clone() const;
 };
 
-ostream& operator<<(ostream& in, DisequalityStore const& disequalStore);
+ostream& operator<<(ostream& in, DisequalityStore const& LambdaStore);
 
 #endif

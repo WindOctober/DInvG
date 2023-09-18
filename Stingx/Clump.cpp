@@ -133,7 +133,7 @@ vector<int> Clump::prune_all(C_Polyhedron& p) {
             gli--;
         }
     }
-    cout << " " << get_category() << "::" << get_name();
+    cout << " " << get_category() << "::" << getName();
 
     return node_gli;
 }
@@ -156,7 +156,7 @@ vector<int> Clump::prune_target(C_Polyhedron& p, int target_gli) {
             gli--;
         }
     }
-    cout << " " << get_category() << "::" << get_name();
+    cout << " " << get_category() << "::" << getName();
 
     return node_gli;
 }

@@ -28,7 +28,7 @@ extern vector<int> get_intertid_from_prelid(int prelid);
 extern vector<int> get_intertid_from_prelid_without_some(int prelid,
                                                          string some);
 extern vector<int> get_intertid_to_postlid(int postlid);
-extern void collect_invariants_for_one_location_from_intra(vector<Clump>& vcl,
+extern void collect_invariants_for_one_location_from_intra(vector<Clump>& clumps,
                                                            int loc_index);
 extern vector<Location*>* loclist;
 extern vector<TransitionRelation*>* trlist;
@@ -41,9 +41,9 @@ void push_back_alltrans_from_location(int loc_index,
     vector<int>::iterator trans_index;
     cout << endl
          << "+ Push back all transitions from location:: "
-         << (*loclist)[loc_index]->get_name();
+         << (*loclist)[loc_index]->getName();
 
-    cout << endl << "+ " << (*loclist)[loc_index]->get_name() << ": ";
+    cout << endl << "+ " << (*loclist)[loc_index]->getName() << ": ";
     for (int j = 0; j < loclist_size; j++) {
         cout << "[";
         for (vector<int>::iterator it = location_matrix[loc_index][j].begin();
@@ -60,7 +60,7 @@ void push_back_alltrans_from_location(int loc_index,
                 trans_bfslist.push_back(*it);
             }
         }
-        cout << "]->" << (*loclist)[j]->get_name() << ";  ";
+        cout << "]->" << (*loclist)[j]->getName() << ";  ";
     }
     cout << endl << "+ " << trans_bfslist.size() << " transitions [";
     for (vector<int>::iterator i = trans_bfslist.begin();
@@ -77,7 +77,7 @@ void push_back_alltrans_from_transition(int propagate_trans_index,
     int post_location_index = get_index_of_location(post_location_name);
     cout << endl
          << "- Push back all transitions from transition:: "
-         << (*trlist)[propagate_trans_index]->get_name();
+         << (*trlist)[propagate_trans_index]->getName();
     cout << endl << "- Post Location Name: " << post_location_name;
     push_back_alltrans_from_location(post_location_index, trans_bfslist);
 }
@@ -129,7 +129,7 @@ void propagate_invariants(C_Polyhedron& preloc_inv,
     */
     cout << endl
          << "* Propagated Invariant at "
-         << (*loclist)[postloc_index]->get_name() << endl
+         << (*loclist)[postloc_index]->getName() << endl
          << "  " << (*loclist)[postloc_index]->GetInv();
 }
 
@@ -173,7 +173,7 @@ void propagation_invariants(C_Polyhedron& preloc_inv,
 
     cout << endl
          << "* Propagated Invariant at "
-         << (*loclist)[postloc_index]->get_name() << endl
+         << (*loclist)[postloc_index]->getName() << endl
          << "  " << result;
 
     p = result;
@@ -223,13 +223,13 @@ void propagate_from_inv_to_initval(C_Polyhedron& preloc_inv,
 
         cout << endl
          << "* Propagated Initial-value at "
-         << (*loclist)[postloc_index]->get_name() << endl
+         << (*loclist)[postloc_index]->getName() << endl
          << "  " << (*loclist)[postloc_index]->getPolyRef();
     // }
 }
 
 void propagate_from_inv_to_inv_by_transition(int trans_index) {
-    string trans_name = (*trlist)[trans_index]->get_name();
+    string trans_name = (*trlist)[trans_index]->getName();
     string preloc_name = (*trlist)[trans_index]->get_preloc_name();
     string postloc_name = (*trlist)[trans_index]->get_postloc_name();
     int preloc_index = get_index_of_location(preloc_name);
@@ -256,7 +256,7 @@ void propagate_from_inv_to_inv_by_transition(int trans_index) {
 }
 
 C_Polyhedron propagation_from_inv_to_inv_by_transition(int trans_index) {
-    string trans_name = (*trlist)[trans_index]->get_name();
+    string trans_name = (*trlist)[trans_index]->getName();
     string preloc_name = (*trlist)[trans_index]->get_preloc_name();
     string postloc_name = (*trlist)[trans_index]->get_postloc_name();
     int preloc_index = get_index_of_location(preloc_name);
@@ -300,14 +300,14 @@ C_Polyhedron propagation_from_inv_to_inv_by_transition(int trans_index) {
 
     cout << endl
          << "* Propagated Invariant at "
-         << (*loclist)[postloc_index]->get_name() << endl
+         << (*loclist)[postloc_index]->getName() << endl
          << "  " << result;
 
     return result;
 }
 
 void propagate_from_inv_to_initval_by_transition(int trans_index) {
-    string trans_name = (*trlist)[trans_index]->get_name();
+    string trans_name = (*trlist)[trans_index]->getName();
     string preloc_name = (*trlist)[trans_index]->get_preloc_name();
     string postloc_name = (*trlist)[trans_index]->get_postloc_name();
     int preloc_index = get_index_of_location(preloc_name);
@@ -349,19 +349,19 @@ void propagate_invariants_from_initial_location_to_all_others() {
         if (debug_3) {
             cout << endl
                  << "- target_index: " << target_index
-                 << ", Location::" << (*loclist)[target_index]->get_name();
+                 << ", Location::" << (*loclist)[target_index]->getName();
         }
         bool has_initial_poly_set =
-            (*loclist)[target_index]->initial_poly_set();
+            (*loclist)[target_index]->getInitFlag();
         if (!has_initial_poly_set) {
             cout << endl
                  << "- NO. No initial condition in Location::"
-                 << (*loclist)[target_index]->get_name();
+                 << (*loclist)[target_index]->getName();
         } else {
             initloc_index = target_index;
             cout << endl
                  << "- YES! Initial Location:: "
-                 << (*loclist)[target_index]->get_name();
+                 << (*loclist)[target_index]->getName();
         }
     }
     // mark "have invariants or not"-flag at each location
@@ -411,22 +411,22 @@ vector<int> get_initial_lid() {
     vector<int> initial_lid;
 
     for (int id = 0;
-         id < loclist_size && (*loclist)[id]->get_name() != EXIT_LOCATION;
+         id < loclist_size && (*loclist)[id]->getName() != EXIT_LOCATION;
          id++) {
         if (debug_3) {
             cout << endl
                  << "- id: " << id
-                 << ", Location::" << (*loclist)[id]->get_name();
+                 << ", Location::" << (*loclist)[id]->getName();
         }
         bool has_initial = (*loclist)[id]->has_initial();
         if (!has_initial) {
             cout << endl
                  << "- NO. No initial condition in Location::"
-                 << (*loclist)[id]->get_name();
+                 << (*loclist)[id]->getName();
         } else {
             initial_lid.push_back(id);
             cout << endl
-                 << "- YES! Initial Location:: " << (*loclist)[id]->get_name();
+                 << "- YES! Initial Location:: " << (*loclist)[id]->getName();
         }
     }
 
@@ -457,12 +457,12 @@ bool has_empty_ppg_flag_except_exit() {
     bool all_ppg_flag = true;
 
     for (int id = 0;
-         id < loclist_size && (*loclist)[id]->get_name() != EXIT_LOCATION;
+         id < loclist_size && (*loclist)[id]->getName() != EXIT_LOCATION;
          id++) {
         if (debug_3) {
             cout << endl
                  << "* id: " << id
-                 << ", Location::" << (*loclist)[id]->get_name()
+                 << ", Location::" << (*loclist)[id]->getName()
                  << ", ppg_flag: " << (*loclist)[id]->get_ppg_flag();
         }
 
@@ -506,7 +506,7 @@ vector<int> get_ppging_lid() {
     int loclist_size = loclist->size();
 
     for (int id = 0;
-         id < loclist_size && (*loclist)[id]->get_name() != EXIT_LOCATION;
+         id < loclist_size && (*loclist)[id]->getName() != EXIT_LOCATION;
          id++) {
         if ((*loclist)[id]->get_ppging_flag()) {
             ppging_lid.push_back(id);
@@ -534,7 +534,7 @@ vector<int> get_ppged_lid() {
     int loclist_size = loclist->size();
 
     for (int id = 0;
-         id < loclist_size && (*loclist)[id]->get_name() != EXIT_LOCATION;
+         id < loclist_size && (*loclist)[id]->getName() != EXIT_LOCATION;
          id++) {
         if ((*loclist)[id]->get_ppged_flag()) {
             ppged_lid.push_back(id);
@@ -554,7 +554,7 @@ vector<int> get_exitic_tid(int exit_lid) {
         if (!(*loclist)[pre_lid]->get_ppg_flag()) {
             cout << endl
                  << "id: " << pre_lid << ", Location "
-                 << (*loclist)[pre_lid]->get_name()
+                 << (*loclist)[pre_lid]->getName()
                  << ", ppg_flag is false, erase one of the exitic_tid";
             it = exitic_tid.erase(it);
             it--;
@@ -564,7 +564,7 @@ vector<int> get_exitic_tid(int exit_lid) {
     return exitic_tid;
 }
 
-void compute_invariants_by_propagation_with_farkas(vector<Clump>& vcl) {
+void compute_invariants_by_propagation_with_farkas(vector<Clump>& clumps) {
     // initialize before propagation
     int loclist_size = loclist->size();
     vector<int>::iterator it;
@@ -626,7 +626,7 @@ void compute_invariants_by_propagation_with_farkas(vector<Clump>& vcl) {
         if (ppged_lid.size() == 1) {
             int lid = ppged_lid[0];
             // 2.1 FARKAS compute invariant
-            collect_invariants_for_one_location_from_intra(vcl, lid);
+            collect_invariants_for_one_location_from_intra(clumps, lid);
             // 2.2 TURN-ON ppging-flag
             (*loclist)[lid]->ppging_flag_betrue();
             // 2.3 TURN-ON ppg-flag

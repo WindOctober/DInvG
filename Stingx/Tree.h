@@ -45,8 +45,8 @@ using namespace Parma_Polyhedra_Library::IO_Operators;
 
 class Tree {
    private:
-    vector<Clump> vcl;
-    void initialize(vector<Clump>& outer_vcl);
+    vector<Clump> clumps;
+    void initialize(vector<Clump>& clumps);
     int ra;    // related location(intra)
     int er;    // related transition(inter)
     int unra;  // un-related location(intra)
@@ -61,8 +61,8 @@ class Tree {
 
    public:
     Tree();
-    Tree(vector<Clump>& outer_vcl);
-    void set_tree(vector<Clump>& outer_vcl);
+    Tree(vector<Clump>& clumps);
+    void set_tree(vector<Clump>& clumps);
     vector<Clump>& get_tree();
     int size();
     void set_ra(int amount);
@@ -78,11 +78,11 @@ class Tree {
     int get_target_index();
     int get_max_clump_count();
     Clump& get_clump(int depth);
-    void Original_Prior(vector<Clump>& outer_vcl);
-    void Reorder_Target_Prior_1(vector<Clump>& outer_vcl);
-    void Reorder_Target_Prior_2(vector<Clump>& outer_vcl);
-    void Reorder_Target_Prior_3(vector<Clump>& outer_vcl);
-    void extract_vcl_for_one_location_about_intra(vector<Clump>& outer_vcl);
+    void Original_Prior(vector<Clump>& clumps);
+    void Reorder_Target_Prior_1(vector<Clump>& clumps);
+    void Reorder_Target_Prior_2(vector<Clump>& clumps);
+    void Reorder_Target_Prior_3(vector<Clump>& clumps);
+    void extract_vcl_for_one_location_about_intra(vector<Clump>& clumps);
     void Print_Prune_Tree(int depth, string weavedorbanged);
     void Print_Prune_Tree(int depth, int hb, int lb, string weavedorbanged);
     void Print_Prune_Sequence_Tree(vector<int> sequence,
@@ -208,11 +208,11 @@ class Tree {
 };
 
 inline vector<Clump>& Tree::get_tree() {
-    return vcl;
+    return clumps;
 }
 
 inline int Tree::size() {
-    return vcl.size();
+    return clumps.size();
 }
 
 inline int Tree::get_ra() {
@@ -235,7 +235,7 @@ inline int Tree::get_max_clump_count() {
 }
 
 inline Clump& Tree::get_clump(int depth) {
-    return vcl[depth];
+    return clumps[depth];
 }
 
 inline void Tree::clear_pruned_node() {

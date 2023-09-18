@@ -156,8 +156,8 @@ bool DisequalityStore::addNegTransform(LinTransform const& l) {
     return InConsistency;
 }
 
-ostream& operator<<(ostream& in, DisequalityStore const& disequalStore) {
-    disequalStore.printConstraints(in);
+ostream& operator<<(ostream& in, DisequalityStore const& LambdaStore) {
+    LambdaStore.printConstraints(in);
     return in;
 }
 
