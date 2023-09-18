@@ -502,7 +502,7 @@ void SparseLinExpr::print(ostream& out) const {
 
     IRMap::const_iterator vi = map_ration.begin();
 
-    out << (*vi).second << " * " << varInfo->get_name((*vi).first);
+    out << (*vi).second << " * " << varInfo->getName((*vi).first);
     vi++;
     for (; vi != map_ration.end(); ++vi) {
         INVARIANT(((*vi).second != 0),
@@ -512,7 +512,7 @@ void SparseLinExpr::print(ostream& out) const {
             out << " + ";
 
         if (vi->first < varNum)
-            out << (*vi).second << " * " << varInfo->get_name((*vi).first);
+            out << (*vi).second << " * " << varInfo->getName((*vi).first);
         else
             out << (*vi).second;
     }

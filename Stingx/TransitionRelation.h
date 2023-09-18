@@ -158,9 +158,9 @@ class TransitionRelation {
 
     void ComputeIntraConsecConstraints(Context& c);
 
-    void ComputeIntraConsecConstraints(vector<Clump>& vcl);
+    void ComputeIntraConsecConstraints(vector<Clump>& clumps);
 
-    void ComputeInterConsecConstraints(vector<Clump>& vcl);
+    void ComputeInterConsecConstraints(vector<Clump>& clumps);
 
     void populate_multipliers();  // Compute the number of multipliers required
                                   // and add them to the constraint store
@@ -172,7 +172,7 @@ class TransitionRelation {
 
     int get_mult_index() const { return index; }
     bool matches(string& info) const;
-    const string& get_name() const;
+    const string& getName() const;
 
     const string& get_preloc_name() const;
     const int get_preloc_index() const {

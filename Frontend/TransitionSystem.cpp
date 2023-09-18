@@ -174,7 +174,7 @@ Expr *Trans_LinExpr_to_Expr(Linear_Expression *linExpr, string eliminate_var)
     Expr *res = NULL;
     for (int i = 0; i < info->getDim(); i++)
     {
-        string var_name = info->get_name(i);
+        string var_name = info->getName(i);
         Expr *rec_expr;
         if (var_name == eliminate_var)
             continue;
@@ -317,7 +317,7 @@ Expr *Trans_Constraint_to_Expr(Constraint constraint)
     FPOptions default_options;
     for (int i = 0; i < info->getDim(); i++)
     {
-        string name = info->get_name(i);
+        string name = info->getName(i);
         int coef = linExpr.coefficient(Variable(i)).get_si();
         if (coef != 0)
         {
@@ -1291,7 +1291,7 @@ vector<vector<Expr *>> TransPolystoExprs(vector<C_Polyhedron *> poly, bool init_
             Variables_Set rec_set;
             for (int i = 0; i < info->getDim(); i++)
             {
-                string name = info->get_name(i);
+                string name = info->getName(i);
                 if (name.find(INITSUFFIX) != name.npos)
                     rec_set.insert(Variable(i));
             }
@@ -1325,7 +1325,7 @@ vector<vector<Expr *>> TransPolystoExprs(vector<C_Polyhedron> poly, bool init_re
             Variables_Set rec_set;
             for (int i = 0; i < info->getDim(); i++)
             {
-                string name = info->get_name(i);
+                string name = info->getName(i);
                 if (name.find(INITSUFFIX) != name.npos)
                     rec_set.insert(Variable(i));
             }
@@ -1828,7 +1828,7 @@ void TransitionSystem::InitializeLocTrans(int locsize, Expr *condition, var_info
     }
     for (int i = 0; i < total_info->getDim(); i++)
     {
-        string name = total_info->get_name(i);
+        string name = total_info->getName(i);
         for (auto function_name : MainFuncs)
         {
             if (name.find(function_name) != name.npos)
@@ -2017,7 +2017,7 @@ vector<vector<Expr *>> TransitionSystem::OutLoop(Expr *cond, unordered_set<strin
     }
     for (int i = 0; i < total_info->getDim(); i++)
     {
-        string name = total_info->get_name(i);
+        string name = total_info->getName(i);
         bool flag = false;
         for (auto function_name : MainFuncs)
         {
@@ -2044,7 +2044,7 @@ vector<vector<Expr *>> TransitionSystem::OutLoop(Expr *cond, unordered_set<strin
     // vector<C_Polyhedron *> polys;
     // var_info* rec_info=new var_info;
     // for(int i=0;i<total_info->getDim();i++)
-    //     rec_info->insert(total_info->get_name(i));
+    //     rec_info->insert(total_info->getName(i));
     // Variables_Set rec_project;
     // for(int i=0;i<RemainDNF.size();i++){
     //     for(int j=0;j<RemainDNF[i].size();j++){
@@ -2057,7 +2057,7 @@ vector<vector<Expr *>> TransitionSystem::OutLoop(Expr *cond, unordered_set<strin
     // }
 
     // for(int i=0;i<rec_info->getDim();i++){
-    //     string name=rec_info->get_name(i);
+    //     string name=rec_info->getName(i);
     //     if (name.find(INITSUFFIX)!=name.npos)
     //         rec_project.insert(Variable(i));
     // }

@@ -144,11 +144,11 @@ void MatrixStore::print() const {
         if (mat[i][i] == 0)
             continue;
         some = true;
-        cout << mat[i][i] << " * " << info->get_name(i);
+        cout << mat[i][i] << " * " << info->getName(i);
         for (j = i + 1; j < varsNum; j++) {
             if (mat[i][j] == 0)
                 continue;
-            cout << "+" << mat[i][j] << " * " << info->get_name(j);
+            cout << "+" << mat[i][j] << " * " << info->getName(j);
         }
 
         if (mat[i][varsNum] != 0) {
@@ -183,11 +183,11 @@ ostream& operator<<(ostream& os, MatrixStore const& p) {
             continue;
         some = true;
         os << "├ ";
-        os << mat[i][i] << " * " << info->get_name(i);
+        os << mat[i][i] << " * " << info->getName(i);
         for (j = i + 1; j < varsNum; j++) {
             if (mat[i][j] == 0)
                 continue;
-            os << "+" << mat[i][j] << " * " << info->get_name(j);
+            os << "+" << mat[i][j] << " * " << info->getName(j);
         }
         if (mat[i][varsNum] != 0) {
             os << " + " << mat[i][varsNum];

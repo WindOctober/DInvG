@@ -228,147 +228,33 @@ void collect_invariants_for_one_location_by_eliminating(int index,
     return;
 }
 
-void binary_eliminating(C_Polyhedron& cpoly, C_Polyhedron& invd) {
-    // cout<<endl<<"1.get here?";
-    cout << endl
-         << "(int)(cpoly.space_dimension()) :"
-         << (int)(cpoly.space_dimension());
-    cout << endl
-         << "( (*loclist)[0]->getDim()+1 ) : "
-         << ((*loclist)[0]->getDim() + 1);
-    if ((int)(cpoly.space_dimension()) ==
-        ((*loclist)[0]->getDim() + 1)) {
-        // cout<<endl<<"2.get here?";
-        (*loclist)[global_binary_i]
-            ->extract_invariants_and_update_by_binary_eliminating(cpoly, invd);
-        global_binary_i++;
-        cout << endl << "global_binary_i : " << global_binary_i;
-        return;
-    }
-    // cout<<endl<<"9.get here?";
-
-    C_Polyhedron p_left = cpoly;
-    C_Polyhedron p_right = cpoly;
-    C_Polyhedron* cpoly_left =
-        new C_Polyhedron(cpoly.space_dimension(), UNIVERSE);
-    *cpoly_left = p_left;
-    C_Polyhedron* cpoly_right =
-        new C_Polyhedron(cpoly.space_dimension(), UNIVERSE);
-    //*cpoly_right = swap2_index_and_divide_from(cpoly,
-    // cpoly.space_dimension()/2);
-    *cpoly_right = p_right;
-    // cout<<endl<<"1.get here?";
-
-    int l = 0;
-    int m = cpoly.space_dimension() / 2;
-    int h = cpoly.space_dimension();
-    Project_by_Kohler(*cpoly_left, l, m);
-    Project_by_Kohler(*cpoly_right, m, h);
-    // cout<<endl<<"2.get here?";
-
-    binary_eliminating(*cpoly_left, invd);
-    // cout<<endl<<"3.get here?";
-    delete (cpoly_left);
-    // cout<<endl<<"4.get here?";
-    binary_eliminating(*cpoly_right, invd);
-    // cout<<endl<<"5.get here?";
-    delete (cpoly_right);
-    // cout<<endl<<"6.get here?";
-
-    return;
-}
-
-void collect_invariants_by_binary_eliminating(C_Polyhedron& cpoly,
-                                              C_Polyhedron& invd) {
-    /*
-     *  Collect invariants
-     */
-    vector<Location*>::iterator it;
-    invd = C_Polyhedron(coefInfo->getDim(), UNIVERSE);
-
-    binary_eliminating(cpoly, invd);
-    global_binary_i = 0;
-
-    return;
-}
-
-void dfs_traverse_recursive(int depth,
-                            vector<Clump>& vcl,
-                            C_Polyhedron& cpoly,
-                            C_Polyhedron& invd) {
-    if (invd.contains(cpoly)) {
-        bang_count++;
-        return;
-    }
-
-    if (depth == 0) {
-        weave_count++;
-        cout << endl << "/-----------------------------";
-        collect_timer.restart();
-        collect_invariants(cpoly, invd);
-        cout << endl << "- Have Collected " << weave_count << " invariant(s) ";
-        collect_timer.stop();
-        cout << endl
-             << "- The collect_invariants Time Taken (0.01s) = "
-             << collect_timer.compute_time_elapsed() << endl;
-        collect_time = collect_time + collect_timer.compute_time_elapsed();
-        cout << endl << "\\-----------------------------" << endl;
-        //    prune_clumps(vcl);
-        return;
-    }
-
-    if (weave_timer.compute_time_elapsed() >= time_limit) {
-        cout << "Time is up!" << endl;
-        return;
-    }
-
-    vcl[depth - 1].clear();
-    while (vcl[depth - 1].has_next()) {
-        // cout<<endl<<"in while...next()";
-        // cout<<endl<<"depth:"<<depth<<", cpoly:";
-        // cout<<endl<<cpoly;
-        // cout<<endl<<"vcl["<<depth-1<<"].size():"<<vcl[depth-1].getCount();
-        C_Polyhedron p(cpoly);
-        // Timer test_time_for_intersection;
-        p.intersection_assign(vcl[depth - 1].getReference());
-        // test_time_for_intersection.stop();
-        // cout<<endl<<"- Intersection Time Taken (0.01s) =
-        // "<<test_time_for_intersection.compute_time_elapsed()<<endl;
-
-        dfs_traverse_recursive(depth - 1, vcl, p, invd);
-
-        vcl[depth - 1].next();
-    }
-    return;
-}
-
 void dfs_sequences_generation_traverse(
     vector<vector<vector<vector<int>>>>& target_sequences,
     int index,
-    vector<Clump>& vcl,
+    vector<Clump>& clumps,
     C_Polyhedron& init_poly) {
     Tree tr = Tree();
     tr.set_target_index(index);
 
-    for (auto it = vcl.begin(); it < vcl.end(); it++) {
+    for (auto it = clumps.begin(); it < clumps.end(); it++) {
         (*it).clear();
     }
 
     cout << endl
          << endl
-         << "/ Start to solve Location " << (*loclist)[index]->get_name();
+         << "/ Start to solve Location " << (*loclist)[index]->getName();
     if (tree_prior == "no_prior") {
         cout << endl << "/ Using no_prior";
-        tr.Original_Prior(vcl);
+        tr.Original_Prior(clumps);
     } else if (tree_prior == "target_prior1") {
         cout << endl << "/ Using target_prior1";
-        tr.Reorder_Target_Prior_1(vcl);
+        tr.Reorder_Target_Prior_1(clumps);
     } else if (tree_prior == "target_prior2") {
         cout << endl << "/ Using target_prior2";
-        tr.Reorder_Target_Prior_2(vcl);
+        tr.Reorder_Target_Prior_2(clumps);
     } else if (tree_prior == "target_prior3") {
         cout << endl << "/ Using target_prior3";
-        tr.Reorder_Target_Prior_3(vcl);
+        tr.Reorder_Target_Prior_3(clumps);
     } else {
         cout << endl << "Wrong Type: " << tree_prior;
     }
@@ -384,21 +270,21 @@ void dfs_sequences_generation_traverse(
 void dfs_sequences_generation_traverse_for_one_location_from_intra(
     vector<vector<vector<vector<int>>>>& target_sequences,
     int index,
-    vector<Clump>& vcl,
+    vector<Clump>& clumps,
     C_Polyhedron& init_poly) {
     // C_Polyhedron invd(*trivial);
     Tree tr = Tree();  // empty tree
     tr.set_target_index(index);
     vector<Clump>::iterator it;
-    for (it = vcl.begin(); it < vcl.end(); it++) {
+    for (it = clumps.begin(); it < clumps.end(); it++) {
         (*it).clear();
     }
 
     cout << endl
          << endl
-         << "/ Start to solve Location " << (*loclist)[index]->get_name();
-    // extract only-one-vcl which is intra-transition about this location
-    tr.extract_vcl_for_one_location_about_intra(vcl);
+         << "/ Start to solve Location " << (*loclist)[index]->getName();
+    // extract only-one-clumps which is intra-transition about this location
+    tr.extract_vcl_for_one_location_about_intra(clumps);
 
     tr.set_max_clump_count();
 
@@ -409,39 +295,39 @@ void dfs_sequences_generation_traverse_for_one_location_from_intra(
 
     cout << endl << "\\ Generate Sequences";
     cout << endl
-         << "\\ End to solve Location " << (*loclist)[index]->get_name();
+         << "\\ End to solve Location " << (*loclist)[index]->getName();
 }
 
 void dfs_sequences_traverse_for_one_location_by_eliminating(
     vector<vector<vector<int>>> sequences,
     int index,
-    vector<Clump>& vcl,
+    vector<Clump>& clumps,
     C_Polyhedron& init_poly) {
     C_Polyhedron invd(*trivial);
     Tree tr = Tree();  // empty tree
     tr.set_target_index(index);
     // int ncl=0;
     vector<Clump>::iterator it;
-    for (it = vcl.begin(); it < vcl.end(); it++) {
+    for (it = clumps.begin(); it < clumps.end(); it++) {
         // ncl++;
         (*it).clear();
     }
 
     cout << endl
          << endl
-         << "/ Start to solve Location " << (*loclist)[index]->get_name();
+         << "/ Start to solve Location " << (*loclist)[index]->getName();
     if (tree_prior == "no_prior") {
         cout << endl << "/ Using no_prior";
-        tr.Original_Prior(vcl);
+        tr.Original_Prior(clumps);
     } else if (tree_prior == "target_prior1") {
         cout << endl << "/ Using target_prior1";
-        tr.Reorder_Target_Prior_1(vcl);
+        tr.Reorder_Target_Prior_1(clumps);
     } else if (tree_prior == "target_prior2") {
         cout << endl << "/ Using target_prior2";
-        tr.Reorder_Target_Prior_2(vcl);
+        tr.Reorder_Target_Prior_2(clumps);
     } else if (tree_prior == "target_prior3") {
         cout << endl << "/ Using target_prior3";
-        tr.Reorder_Target_Prior_3(vcl);
+        tr.Reorder_Target_Prior_3(clumps);
     } else {
         cout << endl << "Wrong Type: " << tree_prior;
     }
@@ -456,21 +342,21 @@ void dfs_sequences_traverse_for_one_location_by_eliminating(
 void dfs_sequences_traverse_for_one_location_from_intra_by_eliminating(
     vector<vector<vector<int>>> sequences,
     int index,
-    vector<Clump>& vcl,
+    vector<Clump>& clumps,
     C_Polyhedron& init_poly) {
     C_Polyhedron invd(*trivial);
     Tree tr = Tree();  // empty tree
     tr.set_target_index(index);
     vector<Clump>::iterator it;
-    for (it = vcl.begin(); it < vcl.end(); it++) {
+    for (it = clumps.begin(); it < clumps.end(); it++) {
         (*it).clear();
     }
 
     cout << endl
          << endl
-         << "/ Start to solve Location " << (*loclist)[index]->get_name();
-    // extract only-one-vcl which is intra-transition about this location
-    tr.extract_vcl_for_one_location_about_intra(vcl);
+         << "/ Start to solve Location " << (*loclist)[index]->getName();
+    // extract only-one-clumps which is intra-transition about this location
+    tr.extract_vcl_for_one_location_about_intra(clumps);
 
     tr.set_max_clump_count();
 
@@ -479,11 +365,11 @@ void dfs_sequences_traverse_for_one_location_from_intra_by_eliminating(
 
     cout << endl << "\\ Read(Traverse) Sequences";
     cout << endl
-         << "\\ End to solve Location " << (*loclist)[index]->get_name();
+         << "\\ End to solve Location " << (*loclist)[index]->getName();
 }
 
 // compute invariants by farkas for this one location from intra-transition
-void collect_invariants_for_one_location_from_intra(vector<Clump>& vcl,
+void collect_invariants_for_one_location_from_intra(vector<Clump>& clumps,
                                                     int loc_index) {
     // initialize
     int lid = loc_index;
@@ -498,22 +384,22 @@ void collect_invariants_for_one_location_from_intra(vector<Clump>& vcl,
         cout << endl;
         cout << endl
              << "- id (Generate Sequences): " << lid
-             << ", Location::" << (*loclist)[lid]->get_name();
+             << ", Location::" << (*loclist)[lid]->getName();
     }
     single_pre_prune_bang_count = 0;
-    counter.set_location_index_and_init_depth(lid, vcl.size());
+    counter.set_location_index_and_init_depth(lid, clumps.size());
     // compute invariants by using initial-value and intra-transition
     bool has_initial_polyset = (*loclist)[lid]->has_initial();
     if (!has_initial_polyset) {
         cout << endl
              << "- ( !has_initial_polyset ) in Location::"
-             << (*loclist)[lid]->get_name();
+             << (*loclist)[lid]->getName();
         vector<vector<vector<int>>> empty_sequences;
         target_sequences.push_back(empty_sequences);
     } else {
         (*loclist)[lid]->ComputeDualConstraints(local_initp);
         dfs_sequences_generation_traverse_for_one_location_from_intra(
-            target_sequences, lid, vcl, local_initp);
+            target_sequences, lid, clumps, local_initp);
     }
 
     /*
@@ -526,7 +412,7 @@ void collect_invariants_for_one_location_from_intra(vector<Clump>& vcl,
     if (!has_initial_polyset) {
         cout << endl
              << "- ( !has_initial_polyset ) in Location::"
-             << (*loclist)[lid]->get_name();
+             << (*loclist)[lid]->getName();
     } else {
         vector<vector<vector<int>>> sequences;
         if (target_sequences.size() == 1) {
@@ -535,7 +421,7 @@ void collect_invariants_for_one_location_from_intra(vector<Clump>& vcl,
             cout << endl << "Error: There are more than one sequences";
         }
         dfs_sequences_traverse_for_one_location_from_intra_by_eliminating(
-            sequences, lid, vcl, local_initp);
+            sequences, lid, clumps, local_initp);
     }
 
     return;
@@ -641,7 +527,7 @@ void print_disjunctive_inv_before_program() {
     int i = 0;
     for (vector<Location*>::iterator it = loclist->begin(); it < loclist->end();
          it++) {
-        if ((*it)->get_name() != EXIT_LOCATION &&
+        if ((*it)->getName() != EXIT_LOCATION &&
             !(*it)->GetInv().is_empty()) {
             if (i != 0) {
                 cout << endl << "\\/";
@@ -709,7 +595,7 @@ void Print_Status_after_Solver() {
     cout << "| # of Contexts generated = " << context_count << endl;
     cout << "|" << endl;
 
-    cout << "| # of pruned vcl in intra-transition = " << prune_count << endl;
+    cout << "| # of pruned clumps in intra-transition = " << prune_count << endl;
     cout << "| # of pruned nodes by self inspection = " << clump_prune_count
          << ", Time = " << prune_nodes_time << endl;
     cout << "| # of pruned by backtracking = " << backtrack_count
@@ -775,7 +661,7 @@ int get_index_of_location(string loc_name) {
     int i = 0;
     for (vector<Location*>::iterator it = loclist->begin(); it < loclist->end();
          it++) {
-        if ((*it)->get_name() == loc_name) {
+        if ((*it)->getName() == loc_name) {
             return i;
         }
         i++;
@@ -787,7 +673,7 @@ int get_index_of_transition(string name) {
     int i = 0;
     for (vector<TransitionRelation*>::iterator it = trlist->begin();
          it < trlist->end(); it++) {
-        if ((*it)->get_name() == name) {
+        if ((*it)->getName() == name) {
             return i;
         }
         i++;
@@ -886,14 +772,14 @@ void Create_Adjacency_Matrix_for_Location_and_Transition() {
     cout << endl << "----------------------------- ";
     cout << endl << "| [#] is transition_index";
     for (int i = 0; i < loclist_size; i++) {
-        cout << endl << "| " << (*loclist)[i]->get_name() << ": ";
+        cout << endl << "| " << (*loclist)[i]->getName() << ": ";
         for (int j = 0; j < loclist_size; j++) {
             cout << "[";
             for (vector<int>::iterator it = location_matrix[i][j].begin();
                  it < location_matrix[i][j].end(); it++) {
                 cout << " " << *it << " ";
             }
-            cout << "]->" << (*loclist)[j]->get_name() << ";  ";
+            cout << "]->" << (*loclist)[j]->getName() << ";  ";
         }
     }
     cout << endl << "----------------------------- ";
@@ -904,7 +790,7 @@ void Create_Adjacency_Matrix_for_Location_and_Transition() {
 void Clear_Location_Invariant() {
     for (auto it = loclist->begin(); it < loclist->end(); it++) {
         cout << endl
-             << "- Location " << (*it)->get_name() << ": initialize invariant";
+             << "- Location " << (*it)->getName() << ": initialize invariant";
         (*it)->initialize_invariant();
     }
 }
@@ -969,11 +855,11 @@ void Compute_Invariant_Frontend(){
         single_dfs_sequences_generation_timer.restart();
 
         // only compute invariants at initial location
-        bool init_poly_flag = (*loclist)[index]->initial_poly_set();
+        bool init_poly_flag = (*loclist)[index]->getInitFlag();
         if (!init_poly_flag) {
             cout << endl
                     << "- ( !init_poly_flag ) in Location::"
-                    << (*loclist)[index]->get_name();
+                    << (*loclist)[index]->getName();
             vector<vector<vector<int>>> empty_sequences;
             target_sequences.push_back(empty_sequences);
         } else {
@@ -995,11 +881,11 @@ void Compute_Invariant_Frontend(){
         single_dfs_sequences_traverse_timer.restart();
 
         // only compute invariants at initial location
-        bool init_poly_flag = (*loclist)[index]->initial_poly_set();
+        bool init_poly_flag = (*loclist)[index]->getInitFlag();
         if (!init_poly_flag) {
             cout << endl
                     << "- ( !init_poly_flag ) in Location::"
-                    << (*loclist)[index]->get_name();
+                    << (*loclist)[index]->getName();
         } else {
             vector<vector<vector<int>>> sequences = target_sequences[index];
             dfs_sequences_traverse_for_one_location_by_eliminating(
@@ -1063,7 +949,7 @@ int main() {
             (*it)->make_context();
             (*it)->ComputeDualConstraints(init_poly);
         }
-        //  vcl
+        //  clumps
 
         vector<Clump> clumps;
         for (auto it = trlist->begin(); it < trlist->end(); it++) {
@@ -1080,7 +966,8 @@ int main() {
                 break;
             }
         }
-
+        cout<<"[note]"<<endl;
+        cout<<clumps.size()<<endl;
         /*
          * The main body of CNF-to-DNF Conversion
          *   dfs_sequences_generation_traverse
@@ -1177,11 +1064,11 @@ int main() {
             single_dfs_sequences_generation_timer.restart();
 
             // only compute invariants at initial location
-            bool init_poly_flag = (*loclist)[index]->initial_poly_set();
+            bool init_poly_flag = (*loclist)[index]->getInitFlag();
             if (!init_poly_flag) {
                 cout << endl
                      << "- ( !init_poly_flag ) in Location::"
-                     << (*loclist)[index]->get_name();
+                     << (*loclist)[index]->getName();
                 vector<vector<vector<int>>> empty_sequences;
                 target_sequences.push_back(empty_sequences);
             } else {
@@ -1203,11 +1090,11 @@ int main() {
             single_dfs_sequences_traverse_timer.restart();
 
             // only compute invariants at initial location
-            bool init_poly_flag = (*loclist)[index]->initial_poly_set();
+            bool init_poly_flag = (*loclist)[index]->getInitFlag();
             if (!init_poly_flag) {
                 cout << endl
                      << "- ( !init_poly_flag ) in Location::"
-                     << (*loclist)[index]->get_name();
+                     << (*loclist)[index]->getName();
             } else {
                 vector<vector<vector<int>>> sequences = target_sequences[index];
                 dfs_sequences_traverse_for_one_location_by_eliminating(

@@ -73,7 +73,7 @@ class Clump {
     int space_dimension() const { return polysClump[0].space_dimension(); }
 
     void printPolys();
-    const string& get_name() const;
+    const string& getName() const;
     const string& get_category() const;
     const vector<C_Polyhedron>& get_vp() const;
     void replace_vp(vector<C_Polyhedron> new_vp);
@@ -115,7 +115,7 @@ inline int Clump::size() {
     return polysClump.size();
 }
 
-inline const string& Clump::get_name() const {
+inline const string& Clump::getName() const {
     return name;
 }
 

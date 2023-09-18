@@ -204,12 +204,12 @@ void LinExpr::print(ostream& os) const {
             continue;
         if (!sp) {
             sp = true;
-            os << lin[j] << " * " << info->get_name(j) << " ";
+            os << lin[j] << " * " << info->getName(j) << " ";
         } else {
             if (!(lin[j] < 0))
                 os << " + ";
 
-            os << lin[j] << " * " << info->get_name(j) << " ";
+            os << lin[j] << " * " << info->getName(j) << " ";
         }
     }
     if (lin[n] == 0)

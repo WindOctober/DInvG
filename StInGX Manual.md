@@ -145,7 +145,7 @@ Invariant: [[
 | Status after Solver: 
 ----------------------------- 
 | # of Contexts generated = 23
-| # pruned by inclusion tests in vcl = 10
+| # pruned by inclusion tests in clumps = 10
 | # pruned in Clump.cc = 0
 | # of invariants *weav*ed = 7
 | The collect_invariant Time Taken (0.01s) = 0

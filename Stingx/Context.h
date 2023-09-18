@@ -67,7 +67,7 @@ class Context {
 
     MatrixStore* equalStore;
     PolyStore* polyStore;
-    DisequalityStore* disequalStore;
+    DisequalityStore* LambdaStore;
     vector<Expression> *eqExprs, *ineqExprs, *factors;
 
     Context* childClump;
@@ -82,7 +82,7 @@ class Context {
                     var_info* lambdaInfo,
                     MatrixStore* equalStore,
                     PolyStore* polyStore,
-                    DisequalityStore* disequalStore,
+                    DisequalityStore* LambdaStore,
                     vector<Expression>* eqExprs,
                     vector<Expression>* ineqExprs);
 
@@ -120,7 +120,7 @@ class Context {
             var_info* lambdaInfo,
             MatrixStore* equalStore,
             PolyStore* polyStore,
-            DisequalityStore* disequalStore,
+            DisequalityStore* LambdaStore,
             vector<Expression>* eqExprs,
             vector<Expression>* ineqExprs);
     Context(var_info* info,
@@ -128,7 +128,7 @@ class Context {
             var_info* lambdaInfo,
             MatrixStore* equalStore,
             PolyStore* polyStore,
-            DisequalityStore* disequalStore);
+            DisequalityStore* LambdaStore);
 
     ~Context();
 
