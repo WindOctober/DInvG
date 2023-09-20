@@ -143,7 +143,7 @@ class Location {
     bool isInitLoc();
 
     void addClump(vector<Clump>& clumps);
-    void make_context();
+    void makeContext();
 
     void ComputeDualConstraints();
     void ComputeDualConstraints(Context& cc);       // the coef constraints
@@ -238,8 +238,8 @@ class Location {
 
     void populate_coefficients();  // compute the coefficients required and add
                                    // them to the constraint store
-    void add_to_trivial(C_Polyhedron* trivial);
-    void add_to_trivial(C_Polyhedron& trivial);
+    void addTrivial(C_Polyhedron* trivial);
+    void addTrivial(C_Polyhedron& trivial);
 
     void initialize_invariant();
     void extract_invariant_from_generator(Generator_System const& g);

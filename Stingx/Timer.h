@@ -64,7 +64,7 @@ class Timer {
 
     void stop();  // stop the timer
 
-    long int compute_time_elapsed();
+    long int getElapsedTime();
 
     void restart();     // restart the timer
     bool is_time_up();  // is the time up

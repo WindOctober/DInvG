@@ -145,7 +145,7 @@ int bang_count_in_merge;
 Counter counter;
 bool searchLoc(char* w, Location** m);
 bool searchTransRel(char* w, TransitionRelation** m);
-void add_preloc_invariants_to_transitions();
+void addPreInvtoTrans();
 void print_status();
 
 void check_invariant_ok();
@@ -206,7 +206,7 @@ void dfs_sequences_generation_traverse(
     vector<vector<vector<vector<int>>>>& target_sequences,
     int index,
     vector<Clump>& clumps,
-    C_Polyhedron& init_poly) {
+    C_Polyhedron& initPoly) {
     Tree tr = Tree();
     tr.set_target_index(index);
 
@@ -237,7 +237,7 @@ void dfs_sequences_generation_traverse(
 
     cout << endl << "/ Generate Sequences";
     vector<vector<vector<int>>> sequences;
-    sequences = tr.sequences_generation(some_per_group, init_poly);
+    sequences = tr.sequences_generation(some_per_group, initPoly);
     target_sequences.push_back(sequences);
 }
 
@@ -245,7 +245,7 @@ void dfs_sequences_generation_traverse_for_one_location_from_intra(
     vector<vector<vector<vector<int>>>>& target_sequences,
     int index,
     vector<Clump>& clumps,
-    C_Polyhedron& init_poly) {
+    C_Polyhedron& initPoly) {
     // C_Polyhedron invd(*trivial);
     Tree tr = Tree();  // empty tree
     tr.set_target_index(index);
@@ -264,7 +264,7 @@ void dfs_sequences_generation_traverse_for_one_location_from_intra(
 
     cout << endl << "/ Generate Sequences";
     vector<vector<vector<int>>> sequences;
-    sequences = tr.sequences_generation("one_per_group", init_poly);
+    sequences = tr.sequences_generation("one_per_group", initPoly);
     target_sequences.push_back(sequences);
 
     cout << endl << "\\ Generate Sequences";
@@ -276,7 +276,7 @@ void dfs_sequences_traverse_for_one_location_by_eliminating(
     vector<vector<vector<int>>> sequences,
     int index,
     vector<Clump>& clumps,
-    C_Polyhedron& init_poly) {
+    C_Polyhedron& initPoly) {
     C_Polyhedron invd(*trivial);
     Tree tr = Tree();  // empty tree
     tr.set_target_index(index);
@@ -310,14 +310,14 @@ void dfs_sequences_traverse_for_one_location_by_eliminating(
     // tr.prune_clumps_by_hierarchy_inclusion();
     // cout<<endl;
     cout << endl << "/ Read(Traverse) Sequences";
-    tr.dfs_sequences_traverse(sequences, init_poly, invd);
+    tr.dfs_sequences_traverse(sequences, initPoly, invd);
 }
 
 void dfs_sequences_traverse_for_one_location_from_intra_by_eliminating(
     vector<vector<vector<int>>> sequences,
     int index,
     vector<Clump>& clumps,
-    C_Polyhedron& init_poly) {
+    C_Polyhedron& initPoly) {
     C_Polyhedron invd(*trivial);
     Tree tr = Tree();  // empty tree
     tr.set_target_index(index);
@@ -335,7 +335,7 @@ void dfs_sequences_traverse_for_one_location_from_intra_by_eliminating(
     tr.set_max_clump_count();
 
     cout << endl << "/ Read(Traverse) Sequences";
-    tr.dfs_sequences_traverse(sequences, init_poly, invd);
+    tr.dfs_sequences_traverse(sequences, initPoly, invd);
 
     cout << endl << "\\ Read(Traverse) Sequences";
     cout << endl
@@ -501,7 +501,7 @@ void PrintInvInExitLoc() {
     cout << endl;
 }
 
-void Print_Status_before_Solver() {
+void PrintStatusBeforeSolving() {
     cout << endl;
     cout << "/----------------------------- " << endl;
     cout << "| Status before Solver: " << endl;
@@ -585,7 +585,7 @@ void Print_Status_after_Solver() {
             << endl;
     cout << "|" << endl;
 
-    cout << "| TOTAL Time = " << total_timer.compute_time_elapsed() << endl;
+    cout << "| TOTAL Time = " << total_timer.getElapsedTime() << endl;
     cout << "\\----------------------------- " << endl;
 }
 
@@ -701,7 +701,7 @@ void Clear_Location_Invariant() {
 void Compute_Invariant_Frontend(){
     total_timer.restart();
     Initialize();
-    add_preloc_invariants_to_transitions();
+    addPreInvtoTrans();
     CreateAdjMat();
     globalSys = new System(info, coefInfo, lambdaInfo);
 
@@ -715,18 +715,18 @@ void Compute_Invariant_Frontend(){
     int coefNum = coefInfo->getDim();
     trivial = new C_Polyhedron(coefNum, UNIVERSE);
     for (auto it = loclist->begin(); it < loclist->end(); it++) {
-        (*it)->add_to_trivial(trivial);
+        (*it)->addTrivial(trivial);
     }
 
-    C_Polyhedron init_poly(coefNum, UNIVERSE);
+    C_Polyhedron initPoly(coefNum, UNIVERSE);
     for (auto it = loclist->begin(); it < loclist->end(); it++) {
-        (*it)->make_context();
-        (*it)->ComputeDualConstraints(init_poly);
+        (*it)->makeContext();
+        (*it)->ComputeDualConstraints(initPoly);
     }
     vector<Clump> clumps;
     for (auto it = transList->begin(); it < transList->end(); it++) {
         (*it)->ComputeIntraConsecConstraints(clumps);
-        if (total_timer.compute_time_elapsed() >= time_limit) {
+        if (total_timer.getElapsedTime() >= time_limit) {
             cout << "Time is up!" << endl;
             break;
         }
@@ -734,7 +734,7 @@ void Compute_Invariant_Frontend(){
 
     for (auto it = loclist->begin(); it < loclist->end(); it++) {
         (*it)->addClump(clumps);
-        if (total_timer.compute_time_elapsed() >= time_limit) {
+        if (total_timer.getElapsedTime() >= time_limit) {
             cout << "Time is up!" << endl;
             break;
         }
@@ -748,21 +748,21 @@ void Compute_Invariant_Frontend(){
         single_dfs_sequences_generation_timer.restart();
 
         // only compute invariants at initial location
-        bool init_poly_flag = (*loclist)[index]->getInitFlag();
-        if (!init_poly_flag) {
+        bool initLocFlag = (*loclist)[index]->getInitFlag();
+        if (!initLocFlag) {
             cout << endl
-                    << "- ( !init_poly_flag ) in Location::"
+                    << "- ( !initLocFlag ) in Location::"
                     << (*loclist)[index]->getName();
             vector<vector<vector<int>>> empty_sequences;
             target_sequences.push_back(empty_sequences);
         } else {
             dfs_sequences_generation_traverse(target_sequences, index,
-                                                clumps, init_poly);
+                                                clumps, initPoly);
         }
 
         single_dfs_sequences_generation_timer.stop();
         vector_single_dfs_sequences_generation_time.push_back(
-            single_dfs_sequences_generation_timer.compute_time_elapsed());
+            single_dfs_sequences_generation_timer.getElapsedTime());
         vector_single_pre_prune_bang_count.push_back(
             single_pre_prune_bang_count);
     }
@@ -774,27 +774,27 @@ void Compute_Invariant_Frontend(){
         single_dfs_sequences_traverse_timer.restart();
 
         // only compute invariants at initial location
-        bool init_poly_flag = (*loclist)[index]->getInitFlag();
-        if (!init_poly_flag) {
+        bool initLocFlag = (*loclist)[index]->getInitFlag();
+        if (!initLocFlag) {
             cout << endl
-                    << "- ( !init_poly_flag ) in Location::"
+                    << "- ( !initLocFlag ) in Location::"
                     << (*loclist)[index]->getName();
         } else {
             vector<vector<vector<int>>> sequences = target_sequences[index];
             dfs_sequences_traverse_for_one_location_by_eliminating(
-                sequences, index, clumps, init_poly);
+                sequences, index, clumps, initPoly);
         }
 
         single_dfs_sequences_traverse_timer.stop();
         vector_single_dfs_sequences_traverse_time.push_back(
-            single_dfs_sequences_traverse_timer.compute_time_elapsed());
+            single_dfs_sequences_traverse_timer.getElapsedTime());
         vector_single_weave_count.push_back(single_weave_count);
         vector_single_collect_time.push_back(single_collect_time);
         vector_single_post_prune_bang_count.push_back(
             single_post_prune_bang_count);
     }
     dfs_traverse_timer.stop();
-    dfs_traverse_time = dfs_traverse_timer.compute_time_elapsed();
+    dfs_traverse_time = dfs_traverse_timer.getElapsedTime();
 
     compute_invariants_by_propagation_with_farkas(clumps);
     PrintLocs();
@@ -810,12 +810,12 @@ int main() {
     total_timer.restart();
     Initialize_before_Parser();
     ScanInput();
-    add_preloc_invariants_to_transitions();
+    addPreInvtoTrans();
     
-    Print_Status_before_Solver();
+    PrintStatusBeforeSolving();
     PrintLocsTrans();
-
     CreateAdjMat();
+
     globalSys = new System(info, coefInfo, lambdaInfo);
     
     for (auto it = loclist->begin(); it < loclist->end(); it++) {
@@ -828,18 +828,18 @@ int main() {
     int coefNum = coefInfo->getDim();
     trivial = new C_Polyhedron(coefNum, UNIVERSE);
     for (auto it = loclist->begin(); it < loclist->end(); it++) {
-        (*it)->add_to_trivial(trivial);
+        (*it)->addTrivial(trivial);
     }
 
-    C_Polyhedron init_poly(coefNum, UNIVERSE);
+    C_Polyhedron initPoly(coefNum, UNIVERSE);
     for (auto it = loclist->begin(); it < loclist->end(); it++) {
-        (*it)->make_context();
-        (*it)->ComputeDualConstraints(init_poly);
+        (*it)->makeContext();
+        (*it)->ComputeDualConstraints(initPoly);
     }
     vector<Clump> clumps;
     for (auto it = transList->begin(); it < transList->end(); it++) {
         (*it)->ComputeIntraConsecConstraints(clumps);
-        if (total_timer.compute_time_elapsed() >= time_limit) {
+        if (total_timer.getElapsedTime() >= time_limit) {
             cout << "Time is up!" << endl;
             break;
         }
@@ -847,7 +847,7 @@ int main() {
 
     for (auto it = loclist->begin(); it < loclist->end(); it++) {
         (*it)->addClump(clumps);
-        if (total_timer.compute_time_elapsed() >= time_limit) {
+        if (total_timer.getElapsedTime() >= time_limit) {
             cout << "Time is up!" << endl;
             break;
         }
@@ -862,21 +862,21 @@ int main() {
         single_dfs_sequences_generation_timer.restart();
 
         // only compute invariants at initial location
-        bool init_poly_flag = (*loclist)[index]->getInitFlag();
-        if (!init_poly_flag) {
+        bool initLocFlag = (*loclist)[index]->getInitFlag();
+        if (!initLocFlag) {
             cout << endl
-                    << "- ( !init_poly_flag ) in Location::"
+                    << "- ( !initLocFlag ) in Location::"
                     << (*loclist)[index]->getName();
             vector<vector<vector<int>>> empty_sequences;
             target_sequences.push_back(empty_sequences);
         } else {
             dfs_sequences_generation_traverse(target_sequences, index,
-                                                clumps, init_poly);
+                                                clumps, initPoly);
         }
 
         single_dfs_sequences_generation_timer.stop();
         vector_single_dfs_sequences_generation_time.push_back(
-            single_dfs_sequences_generation_timer.compute_time_elapsed());
+            single_dfs_sequences_generation_timer.getElapsedTime());
         vector_single_pre_prune_bang_count.push_back(
             single_pre_prune_bang_count);
     }
@@ -888,27 +888,27 @@ int main() {
         single_dfs_sequences_traverse_timer.restart();
 
         // only compute invariants at initial location
-        bool init_poly_flag = (*loclist)[index]->getInitFlag();
-        if (!init_poly_flag) {
+        bool initLocFlag = (*loclist)[index]->getInitFlag();
+        if (!initLocFlag) {
             cout << endl
-                    << "- ( !init_poly_flag ) in Location::"
+                    << "- ( !initLocFlag ) in Location::"
                     << (*loclist)[index]->getName();
         } else {
             vector<vector<vector<int>>> sequences = target_sequences[index];
             dfs_sequences_traverse_for_one_location_by_eliminating(
-                sequences, index, clumps, init_poly);
+                sequences, index, clumps, initPoly);
         }
 
         single_dfs_sequences_traverse_timer.stop();
         vector_single_dfs_sequences_traverse_time.push_back(
-            single_dfs_sequences_traverse_timer.compute_time_elapsed());
+            single_dfs_sequences_traverse_timer.getElapsedTime());
         vector_single_weave_count.push_back(single_weave_count);
         vector_single_collect_time.push_back(single_collect_time);
         vector_single_post_prune_bang_count.push_back(
             single_post_prune_bang_count);
     }
     dfs_traverse_timer.stop();
-    dfs_traverse_time = dfs_traverse_timer.compute_time_elapsed();
+    dfs_traverse_time = dfs_traverse_timer.getElapsedTime();
 
     /*
         * The main body of Propagation
@@ -941,7 +941,7 @@ void collect_generators(vector<Context*>* children, Generator_System& g) {
     }
 }
 
-void add_preloc_invariants_to_transitions() {
+void addPreInvtoTrans() {
     vector<TransitionRelation*>::iterator it;
     for (it = transList->begin(); it < transList->end(); ++it) {
         (*it)->addPreInv();

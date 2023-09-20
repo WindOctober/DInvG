@@ -1225,7 +1225,7 @@ vector<vector<int>> Tree::Merge(vector<vector<int>> sub_sequences1,
                      depth, initp, invd_vp, hb, lb);
     single_merge_sub_sequences_timer.stop();
     int single_merge_sub_sequences_time =
-        single_merge_sub_sequences_timer.compute_time_elapsed();
+        single_merge_sub_sequences_timer.getElapsedTime();
 
     cout << endl
          << "| hb:" << hb << ", lb:" << lb
@@ -1262,7 +1262,7 @@ void Tree::Merge_recursive2(vector<vector<vector<int>>> two_sub_sequences,
         cout << endl
              << "- The collect_invariant_polys_and_sub_sequences Time Taken "
                 "(0.01s) = "
-             << collect_timer.compute_time_elapsed();
+             << collect_timer.getElapsedTime();
         // cout<<endl<<"\\-----------------------------"<<endl;
         return;
     }
@@ -1342,7 +1342,7 @@ void Tree::dfs_sub_sequences_traverse_recursive(
     int depth,
     C_Polyhedron& cpoly,
     Clump& invd_vp) {
-    if (total_timer.compute_time_elapsed() >= total_time) {
+    if (total_timer.getElapsedTime() >= total_time) {
         cout << endl << "Time is up!";
         return;
     }
@@ -1503,7 +1503,7 @@ void Tree::dfs_sequences_traverse_recursive2(
     int depth,
     C_Polyhedron& cpoly,
     C_Polyhedron& invd) {
-    if (total_timer.compute_time_elapsed() >= total_time) {
+    if (total_timer.getElapsedTime() >= total_time) {
         cout << endl << "Time is up!";
         return;
     }
@@ -1529,10 +1529,10 @@ void Tree::dfs_sequences_traverse_recursive2(
         collect_timer.stop();
         cout << endl
              << "- The collect_invariants Time Taken (0.01s) = "
-             << collect_timer.compute_time_elapsed();
-        collect_time = collect_time + collect_timer.compute_time_elapsed();
+             << collect_timer.getElapsedTime();
+        collect_time = collect_time + collect_timer.getElapsedTime();
         single_collect_time =
-            single_collect_time + collect_timer.compute_time_elapsed();
+            single_collect_time + collect_timer.getElapsedTime();
         cout << endl << "------------------------------";
         cout << endl << "- cpoly: " << endl << "  " << cpoly;
         cout << endl << "- invd: " << endl << "  " << invd;

@@ -595,7 +595,7 @@ void Context::RecursiveSplit(vector<Location*>* loclist,
                                  Timer& one_timer) {
     int i = 1;
 
-    if (timed && one_timer.compute_time_elapsed() >= wtime) {
+    if (timed && one_timer.getElapsedTime() >= wtime) {
         cerr << "Time is up" << endl;
         return;
     }
@@ -622,7 +622,7 @@ void Context::Convert_CNF_to_DNF_and_Print(vector<Location*>* loclist,
                                            bool timed,
                                            Timer& one_timer) {
     int i = 1;
-    if (timed && one_timer.compute_time_elapsed() >= wtime) {
+    if (timed && one_timer.getElapsedTime() >= wtime) {
         cerr << "Time is up" << endl;
         return;
     }
@@ -901,7 +901,7 @@ void Context::splitZeroOneCase(vector<Location*>* loclist,
     // choose an unresolved multiplier and create two children by instantiating
     // with 0 and 1 as long as these instantiations are allowed
 
-    if (timed && one_timer.compute_time_elapsed() >= wtime) {
+    if (timed && one_timer.getElapsedTime() >= wtime) {
         cerr << "Time is up" << endl;
         return;
     }

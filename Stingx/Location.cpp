@@ -80,7 +80,7 @@ Context* Location::getContext() {
     return context;
 }
 
-void Location::make_context() {
+void Location::makeContext() {
     context = new Context(info, coefInfo, lambdaInfo);
     contextReady = true;
 }
@@ -317,7 +317,7 @@ void Location::ComputeDualConstraints(Context& cc) {
     return;
 }
 
-void Location::ComputeDualConstraints(C_Polyhedron& init_poly) {
+void Location::ComputeDualConstraints(C_Polyhedron& initPoly) {
     // solution for the time being
     // Just build a polyhedron with the right coefficient variables
     //   and adding dimensions for the multipliers
@@ -404,7 +404,7 @@ void Location::ComputeDualConstraints(C_Polyhedron& init_poly) {
         }
     }
 
-    init_poly.intersection_assign(result);
+    initPoly.intersection_assign(result);
 
     cout << endl
          << "< < < Location::ComputeDualConstraints(), Location: " << locName
@@ -720,13 +720,13 @@ void Location::extract_invariant_for_initial_by_recursive_eliminating(
     return;
 }
 
-void Location::add_to_trivial(C_Polyhedron* trivial) {
+void Location::addTrivial(C_Polyhedron* trivial) {
     for (int i = 0; i < varsNum; i++)
         trivial->add_constraint(Variable(LIndex + i) == 0);
     return;
 }
 
-void Location::add_to_trivial(C_Polyhedron& trivial) {
+void Location::addTrivial(C_Polyhedron& trivial) {
     // add c_l=0
     for (int i = 0; i < varsNum; i++)
         // trivial.add_constraint_and_minimize(Variable(l+i)==0);
