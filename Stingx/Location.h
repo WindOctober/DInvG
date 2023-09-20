@@ -53,7 +53,7 @@ class Location {
     int varsNum;                  // the number of variables in the location
     var_info *info, *coefInfo, *lambdaInfo;  // the primal and coef var-infos
     bool initFlag=false;           // has the initial condition been set
-    string loc_name;            // name
+    string locName;            // name
     Context* context;             // the solver for intra-location transitions
     C_Polyhedron* poly;        // the initial condition
     // If there is none, then initialized to false
@@ -72,7 +72,7 @@ class Location {
     bool vp_inv_flag;
 
     // A pre-assigned invariant that i will use to strengthen transitions.
-    C_Polyhedron* loc_inv;
+    C_Polyhedron* preInv;
 
     // A vector of polyhedra stores the disabled-path condition
     Clump* disabled_clump;
@@ -140,7 +140,7 @@ class Location {
     void setPoly(C_Polyhedron* q);
     // set the initial-value polyhedron from q to this
     void setInitPoly(C_Polyhedron& q);
-    bool has_initial();
+    bool isInitLoc();
 
     void addClump(vector<Clump>& clumps);
     void make_context();
@@ -163,7 +163,7 @@ class Location {
         abort();
     }
 
-    C_Polyhedron& invariant_reference() { return (*invariant); }
+    C_Polyhedron& getInvRef() { return (*invariant); }
     C_Polyhedron const& GetInv() const { return *invariant; }
     void invariant_intersected_with(C_Polyhedron& what) {
         invariant->intersection_assign(what);
@@ -184,7 +184,7 @@ class Location {
 
     C_Polyhedron* get_initial();
 
-    Context* get_context();
+    Context* getContext();
 
     bool getInitFlag() const { return initFlag; }
 
@@ -197,41 +197,24 @@ class Location {
     C_Polyhedron& get_non_const_poly_reference() { return *poly; }
 
     void set_invariant_polyhedron(C_Polyhedron* what) {
-        loc_inv->intersection_assign((*what));
+        preInv->intersection_assign((*what));
     }
 
-    C_Polyhedron const& inv_poly_reference() const { return (*loc_inv); }
+    C_Polyhedron const& getPreInvRef() const { return (*preInv); }
 
     Clump* getDisClump() { return disabled_clump; }
     Clump const& getDisClumpRef() const { return (*disabled_clump); }
 
-    // return the propagation_flag, which records whether this location has been
-    // propagated in bfslist
     bool get_ppg_flag() const { return propagation_flag; }
-    // set the propagation_flag to be true, which records whether this location
-    // has been propagated in bfslist
     void ppg_flag_betrue() { propagation_flag = true; }
-    // set the propagation_flag to be false, which records whether this location
-    // has been propagated in bfslist
     void ppg_flag_befalse() { propagation_flag = false; }
-
-    // return ppging_flag, which records whether this location has propagating
-    // to others
+    
     bool get_ppging_flag() const { return ppging_flag; }
-    // set ppging_flag to be true, which records whether this location has
-    // propagating to others
     void ppging_flag_betrue() { ppging_flag = true; }
-    // set ppging_flag to be false, which records whether this location has
-    // propagating to others
     void ppging_flag_befalse() { ppging_flag = false; }
-    // return ppged_flag, which records whether this location has been
-    // propagated by others
+
     bool get_ppged_flag() const { return ppged_flag; }
-    // set ppged_flag to be true, which records whether this location has been
-    // propagated by others
     void ppged_flag_betrue() { ppged_flag = true; }
-    // set ppged_flag to be false, which records whether this location has been
-    // propagated by others
     void ppged_flag_befalse() { ppged_flag = false; }
 
     void extract_invariants_and_update(C_Polyhedron& pp, C_Polyhedron& dualp);
@@ -242,7 +225,7 @@ class Location {
         C_Polyhedron& preloc_inv,
         C_Polyhedron& trans_rel /*, C_Polyhedron & dualp*/);
     void contains_test(C_Polyhedron& pp,
-                       C_Polyhedron& loc_inv,
+                       C_Polyhedron& preInv,
                        C_Polyhedron& trans_rel);
     void extract_invariants_and_update_for_initial_by_recursive_eliminating(
         C_Polyhedron& pp,

@@ -107,7 +107,7 @@ class System {
     TransitionRelation const& get_transition_relation(int i) const;
 
     void print(ostream& os) const;
-    Context* get_context();
+    Context* getContext();
 
     void add_invariants_and_update(C_Polyhedron& pp, C_Polyhedron& dualp);
 

@@ -77,8 +77,8 @@ class MatrixStore {
     // add a constraint from a SparseLinExpr
     bool add_constraint(SparseLinExpr& expression);
 
-    int get_dim() const;
-    var_info* get_info() const;
+    int getDim() const;
+    var_info* getInfo() const;
     Rational** get_matrix() const;
     void print() const;
     Rational& operator()(int i, int j);

@@ -139,8 +139,8 @@ class SparseLinExpr {
 
     Rational operator()(int i) const;
 
-    int get_dim() const { return varNum; }
-    var_info* get_info() const { return varInfo; }
+    int getDim() const { return varNum; }
+    var_info* getInfo() const { return varInfo; }
 
     IRMap const& get_map() const { return map_ration; }
 
@@ -151,9 +151,9 @@ class SparseLinExpr {
     bool isZero() const { return (map_ration.size() == 0); }
 
     // These are meant for factorizing out the common factors
-    int get_denominator_lcm() const;
+    int getDenLcm() const;
 
-    int get_numerator_gcd() const;
+    int getNumGcd() const;
 
     // is there a factor such that this expression
     // is equivalent to l1 upto that multiplying factor?

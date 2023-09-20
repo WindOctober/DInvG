@@ -51,7 +51,7 @@ Try in the following command:
 ```
 - Initialize_before_Parser doing...Done!
 
-- Scan_Input doing...
+- ScanInput doing...
 argc: 1
 argv: ./lstingx
 Done!

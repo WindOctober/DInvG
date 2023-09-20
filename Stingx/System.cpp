@@ -115,7 +115,7 @@ void System::compute_initial_context() {
     }
 }
 
-Context* System::get_context() {
+Context* System::getContext() {
     if (!context_computed_)
         compute_initial_context();
 
@@ -166,30 +166,30 @@ void System::get_transition_info(System& s, Context& cc) {
     int nt = s.getTransNum();
     int i, j, l;
 
-    Location *preloc, *postloc;
+    Location *preLoc, *postLoc;
     C_Polyhedron* res;
     for (i = 0; i < nt; ++i) {
         TransitionRelation const& tc = s.get_transition_relation(i);
         j = tc.get_mult_index();
-        string pre = tc.get_preloc_name();
-        string post = tc.get_postloc_name();
+        string pre = tc.getPreLocName();
+        string post = tc.getPostLocName();
         TransitionRelation* newt;
         // 1. obtain matching location.. they better be there
         // 2. compute and set the relation
 
         if (pre != post) {
-            preloc = get_matching_location(pre);
-            postloc = get_matching_location(post);
+            preLoc = get_matching_location(pre);
+            postLoc = get_matching_location(post);
 
-            res = new C_Polyhedron(tc.get_relation());
+            res = new C_Polyhedron(tc.getTransRel());
 
-            newt = new TransitionRelation(varNum, varInfo, coefInfo, lambdaInfo, preloc, postloc,
+            newt = new TransitionRelation(varNum, varInfo, coefInfo, lambdaInfo, preLoc, postLoc,
                                           res, tc.getName(), j);
             addTrans(newt);
             continue;
         } else if (pre == post) {
-            preloc = get_matching_location(pre);
-            l = preloc->getLIndex();
+            preLoc = get_matching_location(pre);
+            l = preLoc->getLIndex();
             res = new C_Polyhedron(2 * varNum);
 
             if (cc.obtain_transition_relation(j, l, *res) == false) {
@@ -197,7 +197,7 @@ void System::get_transition_info(System& s, Context& cc) {
                 delete (newt);
                 continue;
             }
-            newt = new TransitionRelation(varNum, varInfo, coefInfo, lambdaInfo, preloc, preloc, res,
+            newt = new TransitionRelation(varNum, varInfo, coefInfo, lambdaInfo, preLoc, preLoc, res,
                                           tc.getName(), j);
             addTrans(newt);
         }

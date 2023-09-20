@@ -32,7 +32,6 @@ extern bool zero;
 extern bool one;
 extern int prune_count;
 extern int context_count;
-extern int num_context;
 extern vector<System*>* global_sub_system_list;
 void breakfn();
 
@@ -612,7 +611,7 @@ void Context::RecursiveSplit(vector<Location*>* loclist,
             childClump->RecursiveSplit(loclist, dualp, wtime, timed, one_timer);
             delete (childClump);
         } else {
-            split_01_strategy(loclist, dualp, wtime, timed, one_timer);
+            splitZeroOneCase(loclist, dualp, wtime, timed, one_timer);
             return;
         }
     }
@@ -640,7 +639,7 @@ void Context::Convert_CNF_to_DNF_and_Print(vector<Location*>* loclist,
             childClump->Convert_CNF_to_DNF_and_Print(loclist, dualp, wtime, timed,
                                                  one_timer);
         } else {
-            split_01_strategy(loclist, dualp, wtime, timed, one_timer);
+            splitZeroOneCase(loclist, dualp, wtime, timed, one_timer);
             return;
         }
     }
@@ -664,7 +663,7 @@ void Context::RecursiveSplit(Clump& clump) {
             childClump->RecursiveSplit(clump);
             delete (childClump);
         } else {
-            split_01_strategy(clump);  // contains process
+            splitZeroOneCase(clump);  // contains process
             return;
         }
     }
@@ -814,7 +813,7 @@ void Context::terminal_strategy(System& s, C_Polyhedron* dualp) {
     return;
 }
 
-void Context::split_01_strategy(Clump& clump) {
+void Context::splitZeroOneCase(Clump& clump) {
     // choose an unresolved multiplier and create two children by instantiating
     // with 0 and 1 as long as these instantiations are allowed
 
@@ -894,7 +893,7 @@ void Context::split_01_strategy(Clump& clump) {
     return;
 }
 
-void Context::split_01_strategy(vector<Location*>* loclist,
+void Context::splitZeroOneCase(vector<Location*>* loclist,
                                 C_Polyhedron* dualp,
                                 int wtime,
                                 bool timed,

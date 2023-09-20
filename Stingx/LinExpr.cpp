@@ -47,7 +47,7 @@ void LinExpr::clear_out() {
 }
 
 LinExpr::LinExpr(LinExpr const& ll) {
-    initialize(ll.get_dim(), ll.get_info());
+    initialize(ll.getDim(), ll.getInfo());
     for (int i = 0; i < n + 1; i++)
         lin[i] = ll(i);
     return;
@@ -136,7 +136,7 @@ LinExpr& LinExpr::operator=(LinExpr const& p1) {
     // erase lin
     lin.erase(lin.begin(), lin.end());
     // reset
-    initialize(p1.get_dim(), p1.get_info());  // reinitialize
+    initialize(p1.getDim(), p1.getInfo());  // reinitialize
     // assign
     for (int i = 0; i < n + 1; i++)
         lin[i] = p1(i);
@@ -145,8 +145,8 @@ LinExpr& LinExpr::operator=(LinExpr const& p1) {
 }
 
 LinExpr operator*(int j, LinExpr const& p1) {
-    int n = p1.get_dim();
-    var_info* info = p1.get_info();
+    int n = p1.getDim();
+    var_info* info = p1.getInfo();
     LinExpr tmp(n, info);
     for (int i = 0; i < n + 1; i++)
         tmp[i] = p1(i) * j;
@@ -155,8 +155,8 @@ LinExpr operator*(int j, LinExpr const& p1) {
 }
 
 LinExpr operator*(LinExpr const& p1, Rational const& i) {
-    int n = p1.get_dim();
-    var_info* info = p1.get_info();
+    int n = p1.getDim();
+    var_info* info = p1.getInfo();
     LinExpr tmp(n, info);
     for (int j = 0; j < n + 1; j++)
         tmp[j] = i * p1(j);
@@ -165,8 +165,8 @@ LinExpr operator*(LinExpr const& p1, Rational const& i) {
 }
 
 LinExpr operator*(Rational const& i, LinExpr const& p1) {
-    int n = p1.get_dim();
-    var_info* info = p1.get_info();
+    int n = p1.getDim();
+    var_info* info = p1.getInfo();
     LinExpr tmp(n, info);
     for (int j = 0; j < n + 1; j++)
         tmp[j] = i * p1(j);
@@ -223,53 +223,19 @@ void LinExpr::print(ostream& os) const {
     return;
 }
 
-void LinExpr::print_in_arrinv() const {
-    int j;
-    bool sp = false;
-    info->to_array_invariant();
-
-    if (is_constant() && lin[n] == 0) {
-        cout << "0";
-        return;
-    }
-
-    for (j = 0; j < n; ++j) {
-        if (lin[j] == 0)
-            continue;
-        if (!sp) {
-            sp = true;
-            cout << lin[j] << " * " << info->get_arr_name(j) << " ";
-        } else {
-            if (!(lin[j] < 0))
-                cout << "+";
-
-            cout << lin[j] << " * " << info->get_arr_name(j) << " ";
-        }
-    }
-    if (lin[n] == 0)
-        return;
-
-    if (!(lin[n] < 0))
-        cout << " + ";
-
-    cout << lin[n];
-
-    return;
-}
-
 ostream& operator<<(ostream& os, LinExpr const& expr) {
     expr.print(os);
     return os;
 }
 
-int LinExpr::get_dim() const {
+int LinExpr::getDim() const {
     return n;
 }
-var_info* LinExpr::get_info() const {
+var_info* LinExpr::getInfo() const {
     return info;
 }
 
-int LinExpr::get_denominator_lcm() const {
+int LinExpr::getDenLcm() const {
     int run = 1, j;
     for (int i = 0; i < n + 1; i++) {
         if ((j = lin[i].den()) != 0)  // Zero denominators are catastrophical..
@@ -278,7 +244,7 @@ int LinExpr::get_denominator_lcm() const {
     return run;
 }
 
-int LinExpr::get_numerator_gcd() const {
+int LinExpr::getNumGcd() const {
     bool first_number_seen = false;
 
     int run = 1, j;
@@ -295,22 +261,22 @@ int LinExpr::get_numerator_gcd() const {
     return run;
 }
 
-bool LinExpr::equiv(LinExpr const& l2, Rational& factor) const {
+bool LinExpr::equiv(LinExpr const& tempExpr, Rational& factor) const {
     // Check if there is a multiplying factor such that  c * this =  l_2
-    // Assert l2!=0
+    // Assert tempExpr!=0
 
     int i = 0;
 
     while (i < n + 1 && lin[i] == 0) {
-        if (l2(i) != 0)
+        if (tempExpr(i) != 0)
             return false;
         i++;
     }
 
-    factor = l2(i) * lin[i].inverse();
+    factor = tempExpr(i) * lin[i].inverse();
 
     while (i < n + 1) {
-        if (factor * lin[i] != l2(i))
+        if (factor * lin[i] != tempExpr(i))
             return false;
         i++;
     }
@@ -332,7 +298,7 @@ int LinExpr::count_down() {
 }
 
 Linear_Expression LinExpr::toLinExpression() const {
-    int j = get_denominator_lcm();
+    int j = getDenLcm();
     int num, den;
     num = lin[n].num();
     den = lin[n].den();

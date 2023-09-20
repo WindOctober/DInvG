@@ -180,8 +180,8 @@ SparseLinExpr::SparseLinExpr(int n, var_info* info)
 }
 
 SparseLinExpr::SparseLinExpr(LinExpr const& ll)
-    : varNum(ll.get_dim()),
-      varInfo(ll.get_info()),
+    : varNum(ll.getDim()),
+      varInfo(ll.getInfo()),
       count_(ll.getCount()),
       info_set_(true) {
     int i;
@@ -199,7 +199,7 @@ SparseLinExpr SparseLinExpr::operator+(SparseLinExpr const& p1) const {
     // remove it in later versions
     //
 
-    PRECONDITION((p1.get_dim() == varNum),
+    PRECONDITION((p1.getDim() == varNum),
                  " SparseLinExpr::operator+ : trying to "
                  "add expressions of different size?");
 
@@ -238,7 +238,7 @@ SparseLinExpr SparseLinExpr::operator-(SparseLinExpr const& p1) const {
     // remove it in later versions
     //
 
-    PRECONDITION((p1.get_dim() == varNum),
+    PRECONDITION((p1.getDim() == varNum),
                  " SparseLinExpr::operator+ : trying to "
                  "add expressions of different size?");
 
@@ -273,7 +273,7 @@ SparseLinExpr SparseLinExpr::operator-(SparseLinExpr const& p1) const {
 
 SparseLinExpr& SparseLinExpr::operator+=(SparseLinExpr const& sl) {
     PRECONDITION(
-        (sl.get_dim() == varNum),
+        (sl.getDim() == varNum),
         "SparseLinExpr::operator+=  -- addition over incompatible dimensions");
 
     IRMap::const_iterator vj;
@@ -287,7 +287,7 @@ SparseLinExpr& SparseLinExpr::operator+=(SparseLinExpr const& sl) {
 
 SparseLinExpr& SparseLinExpr::operator-=(SparseLinExpr const& sl) {
     PRECONDITION(
-        (sl.get_dim() == varNum),
+        (sl.getDim() == varNum),
         "SparseLinExpr::operator-= subtraction over incompatible dimensions");
 
     IRMap::const_iterator vj;
@@ -301,7 +301,7 @@ SparseLinExpr& SparseLinExpr::operator-=(SparseLinExpr const& sl) {
 }
 
 void SparseLinExpr::merge_assign(SparseLinExpr& ex2) {
-    int n2 = ex2.get_dim(), n1 = varNum;
+    int n2 = ex2.getDim(), n1 = varNum;
     //
     // I am not creating a new var_info
     // any attempt to print this may not go well
@@ -319,7 +319,7 @@ void SparseLinExpr::merge_assign(SparseLinExpr& ex2) {
 }
 
 SparseLinExpr& SparseLinExpr::operator=(SparseLinExpr const& p1) {
-    initialize(p1.get_dim(), p1.get_info());
+    initialize(p1.getDim(), p1.getInfo());
 
     count_ = p1.getCount();
 
@@ -395,7 +395,7 @@ bool SparseLinExpr::is_constant() const {
     return false;
 }
 
-int SparseLinExpr::get_denominator_lcm() const {
+int SparseLinExpr::getDenLcm() const {
     IRMap::const_iterator vi;
     IRPair pir;
     int run = 1;
@@ -411,7 +411,7 @@ int SparseLinExpr::get_denominator_lcm() const {
     return run;
 }
 
-int SparseLinExpr::get_numerator_gcd() const {
+int SparseLinExpr::getNumGcd() const {
     int run = 1;
     bool first_number_seen = false;
 
@@ -564,7 +564,7 @@ SparseLinExpr operator*(int i, SparseLinExpr const& p1) {
 }
 
 Linear_Expression SparseLinExpr::toLinExpression() const {
-    int j = get_denominator_lcm();
+    int j = getDenLcm();
     int num, den;
 
     num = get_coefficient(varNum).num();

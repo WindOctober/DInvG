@@ -110,9 +110,6 @@ class Tree {
     vector<vector<vector<int>>> sequences_generation(
         string divide_into_sections,
         C_Polyhedron& initp);
-    vector<vector<vector<int>>> divide_by_target_relation_based_on_StInG(
-        C_Polyhedron& initp);
-    vector<vector<vector<int>>> no_divide_for_test(C_Polyhedron& initp);
     vector<vector<vector<int>>> divide_by_target_relation(C_Polyhedron& initp);
     vector<vector<vector<int>>> one_per_group(C_Polyhedron& initp);
     vector<vector<vector<int>>> two_per_group(C_Polyhedron& initp);
@@ -153,20 +150,10 @@ class Tree {
     // read_and_collect_a_sequence(vector<vector<int>> & merged_sub_sequences,
     // vector<int> sequence, C_Polyhedron cpoly, Clump & invd_vp, int hb, int
     // lb);
-    vector<vector<int>> dfs_sub_sequences_traverse_based_on_StInG(
-        int hb,
-        int lb,
-        C_Polyhedron& initp);
     vector<vector<int>> dfs_sub_sequences_traverse(int hb,
                                                    int lb,
                                                    C_Polyhedron& initp);
-    void dfs_sub_sequences_traverse_recursive_based_on_StInG(
-        vector<vector<int>>& sub_sequences,
-        int hb,
-        int lb,
-        int depth,
-        C_Polyhedron& cpoly,
-        C_Polyhedron& invd);
+
     void dfs_sub_sequences_traverse_recursive(
         vector<vector<int>>& sub_sequences,
         int hb,

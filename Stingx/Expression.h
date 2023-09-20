@@ -131,9 +131,9 @@ private:
     void simplify(MatrixStore const& c);
 
     // get the lcm of all the denominators
-    int get_denominator_lcm() const;
+    int getDenLcm() const;
     // get the gcd of all the numerators
-    int get_numerator_gcd() const;
+    int getNumGcd() const;
 
     void adjust();
 

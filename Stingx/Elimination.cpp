@@ -24,7 +24,6 @@
 #include "Macro.h"
 
 extern string projection;
-extern int debug_3;
 
 void repack_constraints_based_on_protection(
     Constraint_System& cs,
@@ -719,13 +718,10 @@ void Project(C_Polyhedron& result, int l, int r) {
     // cout<<endl<<"Which Projection Strategy: ";
 
     if (projection == "kohler_improvement_eliminate_c") {
-        // cout<<"Choose Kohler Projection";
         Project_by_Kohler(result, l, r);
     } else if (projection == "farkas_eliminate_c") {
-        // cout<<"Choose Farkas Projection";
         Project_by_Farkas(result, l, r);
     } else if (projection == "foumot_eliminate_c") {
-        // cout<<"Choose FouMot Projection";
         Project_by_FouMot(result, l, r);
     } else {
         cout << endl << "Wrong Type: " << projection << endl;
@@ -853,9 +849,6 @@ C_Polyhedron swap_index_and_divide_from(C_Polyhedron& ph, int index) {
     // cout<<endl<<"cs: "<<endl<<cs;
     Linear_Expression lin(0);
     Constraint_System::const_iterator vi;
-    if (debug_3) {
-        cout << endl << "* Swap-index: " << index;
-    }
     for (vi = cs.begin(); vi != cs.end(); vi++) {
         lin = Linear_Expression(0);
         for (int i = 0; i < ph.space_dimension(); i++) {

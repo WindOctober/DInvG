@@ -170,9 +170,9 @@ ostream& operator<<(ostream& os, MatrixStore const& p) {
     // print the constraints stored
     int i, j;
     bool some = false;
-    int varsNum = p.get_dim();
+    int varsNum = p.getDim();
 
-    var_info* info = p.get_info();
+    var_info* info = p.getInfo();
     Rational** mat = p.get_matrix();
 
     if (!p.isConsistent())
@@ -202,10 +202,10 @@ ostream& operator<<(ostream& os, MatrixStore const& p) {
     return os;
 }
 
-int MatrixStore::get_dim() const {
+int MatrixStore::getDim() const {
     return varsNum;
 }
-var_info* MatrixStore::get_info() const {
+var_info* MatrixStore::getInfo() const {
     return info;
 }
 
