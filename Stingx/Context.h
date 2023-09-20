@@ -268,13 +268,13 @@ class Context {
     void get_multiplier_counts();
     int get_multiplier_status();
 
-    void split_01_strategy(vector<Location*>* loclist,
+    void splitZeroOneCase(vector<Location*>* loclist,
                            C_Polyhedron* dual_poly,
                            int wtime,
                            bool timed,
                            Timer& one_timer);
 
-    void split_01_strategy(Clump& clist);
+    void splitZeroOneCase(Clump& clist);
 
     //
     // From a partial context.. go back to a transition system

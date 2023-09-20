@@ -71,7 +71,7 @@ var_info::var_info(var_info* f1, var_info* f2) {
         insert(f2->getName(i));
 }
 
-var_info::var_info(var_info* lambdaInfo, vector<int> v1) {
+var_info::var_info(var_info* lambdaInfo, vector<int> tempInfo) {
     // project out from lambdaInfo based on v
 
     int n = lambdaInfo->getDim();
@@ -80,7 +80,7 @@ var_info::var_info(var_info* lambdaInfo, vector<int> v1) {
 
     vector<int>::iterator vi;
     int i;
-    for (i = 0, vi = v1.begin(); vi < v1.end(); ++vi, ++i) {
+    for (i = 0, vi = tempInfo.begin(); vi < tempInfo.end(); ++vi, ++i) {
         PRECONDITION(((*vi) >= 0 && (*vi) < n),
                      "var_info::var_info asked to project out of range");
 
@@ -137,38 +137,16 @@ char* var_info::getName(int dim) const {
     return (*v)[dim];
 }
 
-void var_info::to_array_invariant() {
-    vector<string>::iterator i;
-    vector<char*>::iterator j;
-    // copy v into arr_v
-    for (j = v->begin(); j != v->end(); j++) {
-        arr_v.push_back(*j);
-    }
-    // replace in arr_v
-    for (i = arr_v.begin(); i != arr_v.end(); i++) {
-        replace_all(*i, "_l_", "[");
-        replace_all(*i, "_r_", "]");
-        replace_all(*i, "_X_", "*");
-        replace_all(*i, "_t_", "+");
-        replace_all(*i, "_z_", "-");
-    }
-}
-
-string var_info::get_arr_name(int dim) const {
-    PRECONDITION(dim >= 0 && dim < dimension, " Invalid dimension");
-    return (arr_v)[dim];
-}
-
 
 var_info* var_info::prime() {
-    var_info* v1 = new var_info();
+    var_info* tempInfo = new var_info();
     int i;
 
     for (i = 0; i < dimension; i++)
-        v1->insert(getName(i));
+        tempInfo->insert(getName(i));
     for (i = 0; i < dimension; i++)
-        v1->insert(getName(i), 1);
-    return v1;
+        tempInfo->insert(getName(i), 1);
+    return tempInfo;
 }
 
 void var_info::print(ostream& out) const {

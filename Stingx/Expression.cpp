@@ -213,21 +213,21 @@ bool Expression::is_inconsistent() const {
     return false;
 }
 
-int Expression::get_denominator_lcm() const {
+int Expression::getDenLcm() const {
     int run = 1, j;
     for (int i = 0; i < lambdaNum + 1; i++) {
-        if ((j = linExpr[i].get_denominator_lcm()) != 0)
+        if ((j = linExpr[i].getDenLcm()) != 0)
             run = lcm(run, j);
     }
     return run;
 }
 
-int Expression::get_numerator_gcd() const {
+int Expression::getNumGcd() const {
     bool first_number_seen = false;
 
     int run = 1, j;
     for (int i = 0; i < lambdaNum + 1; i++) {
-        if ((j = linExpr[i].get_numerator_gcd()) != 0) {
+        if ((j = linExpr[i].getNumGcd()) != 0) {
             if (first_number_seen)
                 run = gcd(run, j);
             else {
@@ -240,7 +240,7 @@ int Expression::get_numerator_gcd() const {
 }
 
 void Expression::adjust() {
-    int i = get_denominator_lcm(), j = get_numerator_gcd();
+    int i = getDenLcm(), j = getNumGcd();
     if (j == 0)
         return;  // Nothing much to be done here.. constraint should not have
                  // been there.

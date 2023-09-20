@@ -47,7 +47,7 @@ using namespace std;
 using namespace Parma_Polyhedra_Library;
 using namespace Parma_Polyhedra_Library::IO_Operators;
 
-extern int get_index_of_location(string loc_name);
+extern int getLocIndex(string locName);
 
 
 class TransitionRelation {
@@ -55,7 +55,7 @@ class TransitionRelation {
     int varsNum;
     var_info *info, *coefInfo, *lambdaInfo,
         *fp;  // lambdaInfo is the var_info for non-linear multipliers
-    Location *preloc, *postloc;
+    Location *preLoc, *postLoc;
     // the actual transition relation as a 2n dimensional polyhedron
     C_Polyhedron* transPoly;
 
@@ -67,19 +67,17 @@ class TransitionRelation {
 
     //
 
-    int mult_left, mult_right, constraints_num;  // the range multipliers in its coef and the
+    int constraints_num;  // the range multipliers in its coef and the
                                     // number of constraint variables
     int index;  // The index of the non-linear multiplier in lambdaInfo
 
     string name;
-
-    int fired;
     void initialize(int varsNum,
                     var_info* info,
                     var_info* coefInfo,
                     var_info* lambdaInfo,
-                    Location* preloc,
-                    Location* postloc,
+                    Location* preLoc,
+                    Location* postLoc,
                     C_Polyhedron* rel,
                     string name);
     void initialize(int varsNum,
@@ -92,8 +90,8 @@ class TransitionRelation {
                                        var_info* info,
                                        var_info* coefInfo,
                                        var_info* lambdaInfo,
-                                       Location* preloc,
-                                       Location* postloc,
+                                       Location* preLoc,
+                                       Location* postLoc,
                                        C_Polyhedron* rel,
                                        string name,
                                        int index);
@@ -115,8 +113,8 @@ class TransitionRelation {
                        var_info* info,
                        var_info* coefInfo,
                        var_info* lambdaInfo,
-                       Location* preloc,
-                       Location* postloc,
+                       Location* preLoc,
+                       Location* postLoc,
                        C_Polyhedron* rel,
                        string name);
 
@@ -130,8 +128,8 @@ class TransitionRelation {
                        var_info* info,
                        var_info* coefInfo,
                        var_info* lambdaInfo,
-                       Location* preloc,
-                       Location* postloc,
+                       Location* preLoc,
+                       Location* postLoc,
                        C_Polyhedron* rel,
                        string name,
                        int index);
@@ -143,18 +141,15 @@ class TransitionRelation {
                        string name,
                        int index);
 
-    void set_locs(Location* preloc, Location* postloc);
+    void set_locs(Location* preLoc, Location* postLoc);
     void set_relation(C_Polyhedron* rel);
 
-    void compute_constraints_num();
+    void ResetConstraintsNum();
 
     void strengthen(const C_Polyhedron* p);
 
     void compute_post(const C_Polyhedron* p, C_Polyhedron& q) const;
     void compute_post_new(const C_Polyhedron* p, C_Polyhedron& q) const;
-
-    int get_firing_count();
-    // TransitionRelation * compose( TransitionRelation * t);
 
     void ComputeIntraConsecConstraints(Context& c);
 
@@ -165,32 +160,26 @@ class TransitionRelation {
     void populate_multipliers();  // Compute the number of multipliers required
                                   // and add them to the constraint store
 
-    bool fire();
-
-    int getLIndex() const;
-    int get_range_right() const;
-
     int get_mult_index() const { return index; }
     bool matches(string& info) const;
     const string& getName() const;
 
-    const string& get_preloc_name() const;
+    const string& getPreLocName() const;
     const int get_preloc_index() const {
-        return get_index_of_location(get_preloc_name());
+        return getLocIndex(getPreLocName());
     }
-    const string& get_postloc_name() const;
+    const string& getPostLocName() const;
     const int get_postloc_index() const {
-        return get_index_of_location(get_postloc_name());
+        return getLocIndex(getPostLocName());
     }
 
-    // add a pre-assigned invariant (i.e. Location::loc_inv) that used to
+    // add a pre-assigned invariant (i.e. Location::preInv) that used to
     // strengthen transitions
-    void add_preloc_invariant();
+    void addPreInv();
 
-    const C_Polyhedron& get_relation() const;
-    C_Polyhedron& get_non_const_relation();
+    const C_Polyhedron& getTransRel() const;
 
-    const var_info* get_varinfo() const;
+    const var_info* getInfo() const;
 
     C_Polyhedron const& get_guard_poly() const { return (*guard); }
 

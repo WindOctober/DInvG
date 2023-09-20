@@ -50,19 +50,19 @@ void push_back_alltrans_from_location(int loc_index,
 void push_back_alltrans_from_transition(int propagate_trans_index,
                                         vector<int>& trans_bfslist);
 
-// propagate invariants from preloc into postloc by projection or matrix-method
+// propagate invariants from preLoc into postLoc by projection or matrix-method
 void propagate_invariants(C_Polyhedron& preloc_inv,
                           C_Polyhedron& trans_relation,
                           int postloc_index);
 
-// propagate invariants from preloc into postloc by projection or matrix-method
+// propagate invariants from preLoc into postLoc by projection or matrix-method
 // return the C_Polyhedron::propagation-result
 void propagation_invariants(C_Polyhedron& preloc_inv,
                             C_Polyhedron& trans_relation,
                             int postloc_index,
                             C_Polyhedron& p);
 
-// propagate the preloc's invariants into postloc's initial-value by projection
+// propagate the preLoc's invariants into postLoc's initial-value by projection
 // or matrix-method
 void propagate_from_inv_to_initval(C_Polyhedron& preloc_inv,
                                    C_Polyhedron& trans_relation,
@@ -110,7 +110,7 @@ vector<int> get_ppging_tid();
 // computed invariants by farkas
 vector<int> get_ppged_lid();
 
-// return the transition-index which postloc is exit-loction
+// return the transition-index which postLoc is exit-loction
 // exit-incoming, i.e. towards to exit
 vector<int> get_exitic_tid();
 

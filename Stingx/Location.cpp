@@ -40,8 +40,8 @@ void Location::initialize(int varsNum,
     this->coefInfo = coefInfo;
     this->lambdaInfo = lambdaInfo;
     this->poly = p;
-    this->loc_name = name;
-    this->loc_inv = new C_Polyhedron(varsNum, UNIVERSE);
+    this->locName = name;
+    this->preInv = new C_Polyhedron(varsNum, UNIVERSE);
     this->disabled_clump = new Clump(coefInfo, name, "Location");
     populate_coefficients();
     invariant = new C_Polyhedron(varsNum, UNIVERSE);
@@ -64,8 +64,8 @@ void Location::InitWithoutPopulating(int varsNum,
     this->coefInfo = coefInfo;
     this->lambdaInfo = lambdaInfo;
     this->poly = p;
-    this->loc_name = name;
-    this->loc_inv = new C_Polyhedron(varsNum, UNIVERSE);
+    this->locName = name;
+    this->preInv = new C_Polyhedron(varsNum, UNIVERSE);
     this->disabled_clump = new Clump(coefInfo, name, "Location");
     LIndex = LIndex;
     invariant = new C_Polyhedron(varsNum, UNIVERSE);
@@ -76,7 +76,7 @@ void Location::InitWithoutPopulating(int varsNum,
     vp_inv_flag = false;
 }
 
-Context* Location::get_context() {
+Context* Location::getContext() {
     return context;
 }
 
@@ -129,7 +129,7 @@ C_Polyhedron* Location::get_initial() {
     return poly;
 }
 
-bool Location::has_initial() {
+bool Location::isInitLoc() {
     return initFlag;
 }
 
@@ -155,11 +155,11 @@ void Location::addClump(vector<Clump>& clumps) {
     Clump disClump = getDisClumpRef();
     // ***
     cout << endl
-         << "> > > Location::" << loc_name << " already has clump with "
+         << "> > > Location::" << locName << " already has clump with "
          << disClump.getCount() << " Polyhedra...";
     context->RecursiveSplit(disClump);
     cout << endl
-         << "> > > Location::" << loc_name
+         << "> > > Location::" << locName
          << " altogether pushing back clump with " << disClump.getCount()
          << " Polyhedra...";
 
@@ -168,22 +168,22 @@ void Location::addClump(vector<Clump>& clumps) {
 }
 
 bool Location::matches(string nam) const {
-    return (loc_name == nam);
+    return (locName == nam);
 }
 
 void Location::populate_coefficients() {
     LIndex = coefInfo->getDim();
     string dual_variable;
     for (int i = 0; i < varsNum; i++) {
-        dual_variable = "c_" + loc_name + "_" + int_to_str(i);
+        dual_variable = "c_" + locName + "_" + int_to_str(i);
         coefInfo->insert(dual_variable.c_str());
     }
-    dual_variable = "d_" + loc_name;
+    dual_variable = "d_" + locName;
     coefInfo->insert(dual_variable.c_str());
 }
 
 string const& Location::getName() const {
-    return loc_name;
+    return locName;
 }
 
 ostream& operator<<(ostream& in, Location const& l) {
@@ -327,7 +327,7 @@ void Location::ComputeDualConstraints(C_Polyhedron& init_poly) {
 
     cout << endl;
     cout << endl
-         << "> > > Location::ComputeDualConstraints(), Location: " << loc_name
+         << "> > > Location::ComputeDualConstraints(), Location: " << locName
          << "'s Initialization";
 
     // nothing to be done if polyhedra not set
@@ -335,11 +335,11 @@ void Location::ComputeDualConstraints(C_Polyhedron& init_poly) {
         // the pointer p should be initialized with "new Polyhedron"
         //    the p->is_empty() means that p hasn't initialized yet.
         cout << endl
-             << "< < < Initial-Value is empty in Location::" << loc_name;
+             << "< < < Initial-Value is empty in Location::" << locName;
         return;
     }
     if (!initFlag) {
-        cout << endl << "< < < ( !polyset ) in Location::" << loc_name;
+        cout << endl << "< < < ( !polyset ) in Location::" << locName;
         return;
     }
 
@@ -407,7 +407,7 @@ void Location::ComputeDualConstraints(C_Polyhedron& init_poly) {
     init_poly.intersection_assign(result);
 
     cout << endl
-         << "< < < Location::ComputeDualConstraints(), Location: " << loc_name
+         << "< < < Location::ComputeDualConstraints(), Location: " << locName
          << "'s Initialization";
     return;
 }
@@ -533,7 +533,7 @@ void Location::propagate_invariants_for_except_initial_by_propagation(
     C_Polyhedron ph = trans_rel;
     C_Polyhedron result;
 
-    // ph.intersection_assign(loc_inv);// Aborted: terminate called after
+    // ph.intersection_assign(preInv);// Aborted: terminate called after
     // throwing an instance of 'std::invalid_argument', what():
     // PPL::C_Polyhedron::intersection_assign(y): this->space_dimension() == 4,
     // y.space_dimension() == 2.
@@ -552,7 +552,7 @@ void Location::propagate_invariants_for_except_initial_by_propagation(
     Linear_Expression lin_inv(0);
     */
     cout << endl
-         << "* Propagated Invariant at " << loc_name << endl
+         << "* Propagated Invariant at " << locName << endl
          << "  " << *invariant;
 }
 
@@ -574,7 +574,7 @@ void Location::extract_invariant_for_initial_by_recursive_eliminating(
     Generator_System::const_iterator vj;
     cout << endl
          << "In extract_invariant_for_initial_by_recursive_eliminating(), 「 "
-         << loc_name << ", l: " << LIndex << ", varsNum: " << varsNum
+         << locName << ", l: " << LIndex << ", varsNum: " << varsNum
          << ", coefNum: " << coefNum << " 」" << endl;
     cout << "- - Currently, the number of variables in Ax<=b is : "
          << pre_cs.space_dimension();
@@ -736,7 +736,7 @@ void Location::add_to_trivial(C_Polyhedron& trivial) {
 
 void Location::extract_invariants_and_update(C_Polyhedron& pp,
                                              C_Polyhedron& dualp) {
-    cout << endl << "For location: " << loc_name;
+    cout << endl << "For location: " << locName;
     cout << endl
          << "「 l: " << LIndex << ", varsNum: " << varsNum
          << ", coefNum: " << coefInfo->getDim() << " 」";
@@ -752,18 +752,13 @@ void Location::extract_invariants_and_update_for_one_location_by_eliminating(
     // cout<<endl<<"- Before
     // extract_invariant_for_one_location_by_eliminating()"; cout<<endl;
     int coefNum = coefInfo->getDim();
-    cout << endl << "For location: " << loc_name;
+    cout << endl << "For location: " << locName;
     cout << endl
          << "「 l: " << LIndex << ", varsNum: " << varsNum
          << ", coefNum: " << coefNum << " 」";
     // cout<<endl<<"C_Polyhedron & pp is "<<endl<<"    "<<pp;
-    if (projection == "no_projection") {
-        cout << endl << "Do not use projection";
-        extract_invariant_from_generator(pp.minimized_generators());
-    } else {
-        extract_invariant_for_one_location_by_eliminating(
-            pp.minimized_constraints());
-    }
+    extract_invariant_for_one_location_by_eliminating(
+        pp.minimized_constraints());
     update_dual_constraints(dualp);
 }
 
@@ -771,7 +766,7 @@ void Location::
     propagate_invariants_and_update_for_except_initial_by_propagation(
         C_Polyhedron& preloc_inv,
         C_Polyhedron& trans_rel /*, C_Polyhedron & dualp*/) {
-    cout << endl << "= Doing Propagation at Location " << loc_name;
+    cout << endl << "= Doing Propagation at Location " << locName;
     cout << endl << "= Location invariant " << endl << "  " << preloc_inv;
     cout << endl << "= Transition relation " << endl << "  " << trans_rel;
     propagate_invariants_for_except_initial_by_propagation(preloc_inv,
@@ -780,7 +775,7 @@ void Location::
 }
 
 void Location::contains_test(C_Polyhedron& pp,
-                             C_Polyhedron& loc_inv,
+                             C_Polyhedron& preInv,
                              C_Polyhedron& trans_rel) {
     cout << endl << "Start contains test";
     C_Polyhedron inv_extracted(invariant->space_dimension(), UNIVERSE);
@@ -826,9 +821,9 @@ void Location::contains_test(C_Polyhedron& pp,
     }
 
     C_Polyhedron inv_propagated(invariant->space_dimension(), UNIVERSE);
-    Constraint_System cs_loc_inv = loc_inv.minimized_constraints();
+    Constraint_System cs_loc_inv = preInv.minimized_constraints();
     C_Polyhedron ph = trans_rel;
-    // loc_inv.intersection_assign(trans_rel);
+    // preInv.intersection_assign(trans_rel);
     ph.add_constraints(cs_loc_inv);
     // cout<<endl<<"ph.space_dimension: "<<ph.space_dimension();
     // cout<<endl<<"After refine "<<endl<<"   "<<ph;

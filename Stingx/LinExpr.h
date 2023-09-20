@@ -104,8 +104,8 @@ class LinExpr {
     Rational operator()(int i) const;
 
     // access members
-    int get_dim() const;
-    var_info* get_info() const;
+    int getDim() const;
+    var_info* getInfo() const;
 
     // disabled
     // vector<Rational> & get_array();
@@ -121,8 +121,8 @@ class LinExpr {
 
     // scale this up to make all coeffs integer.
     // for use in converting to Linear_Expression.
-    int get_denominator_lcm() const;
-    int get_numerator_gcd() const;
+    int getDenLcm() const;
+    int getNumGcd() const;
 
     // Is it the case that factor * l1 = this for some factor.
     // output parameter factor.
@@ -136,8 +136,6 @@ class LinExpr {
     Rational evaluate(Generator const& g);
     // pretty print.
     void print(ostream& os) const;
-    // print in array invariant format
-    void print_in_arrinv() const;
 };
 
 // to print my beautiful Lin Exprs

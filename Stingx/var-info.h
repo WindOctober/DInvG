@@ -63,10 +63,6 @@ class var_info {
 
     virtual char* getName(int dimension) const;
 
-    void to_array_invariant();  // convert and store an array-inv-format
-
-    string get_arr_name(int dimension) const;
-
     virtual var_info* prime();
 
     virtual int search_and_insert(const char* what);

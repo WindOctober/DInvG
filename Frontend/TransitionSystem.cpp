@@ -8,7 +8,7 @@
 #include <unordered_set>
 extern var_info *info, *coefInfo, *lambdaInfo;
 extern vector<Location *> *loclist;
-extern vector<TransitionRelation *> *trlist;
+extern vector<TransitionRelation *> *transList;
 extern unordered_set<string> global_vars;
 extern set<string> MainFuncs;
 vector<ArrIndex> ArrayIndex;
@@ -1861,7 +1861,7 @@ void TransitionSystem::InitializeLocTrans(int locsize, Expr *condition, var_info
                 TransitionRelation *trans = new TransitionRelation(info->getDim(), info, coefInfo, lambdaInfo, trans_name);
                 trans->set_locs((*loclist)[i], (*loclist)[j]);
                 trans->set_relation(p);
-                trlist->push_back(trans);
+                transList->push_back(trans);
                 continue;
             }
             if (j != locsize - 1)
@@ -1875,7 +1875,7 @@ void TransitionSystem::InitializeLocTrans(int locsize, Expr *condition, var_info
                 TransitionRelation *trans = new TransitionRelation(info->getDim(), info, coefInfo, lambdaInfo, trans_name);
                 trans->set_locs((*loclist)[i], (*loclist)[j]);
                 trans->set_relation(p);
-                trlist->push_back(trans);
+                transList->push_back(trans);
             }
             else
             {
@@ -1902,7 +1902,7 @@ void TransitionSystem::InitializeLocTrans(int locsize, Expr *condition, var_info
                     TransitionRelation *trans = new TransitionRelation(info->getDim(), info, coefInfo, lambdaInfo, trans_name);
                     trans->set_locs((*loclist)[i], (*loclist)[j]);
                     trans->set_relation(q);
-                    trlist->push_back(trans);
+                    transList->push_back(trans);
                 }
             }
         }
@@ -1937,10 +1937,10 @@ void TransitionSystem::ComputeInv(Expr *condition, unordered_set<string> vars_in
             if (j == locsize - 1)
                 continue;
             loclist = new vector<Location *>();
-            trlist = new vector<TransitionRelation *>();
+            transList = new vector<TransitionRelation *>();
             InitializeLocTrans(locsize, condition, total_info);
             (*loclist)[j]->setInitPoly(init_polys[i]);
-            Print_Location_and_Transition();
+            PrintLocsTrans();
             Compute_Invariant_Frontend();
             vector<C_Polyhedron> LoopInv = (*loclist)[locsize - 1]->get_vp_inv().get_vp();
             invariant = ConnectDNF(invariant, TransPolystoExprs(LoopInv, true));
@@ -1954,7 +1954,7 @@ void TransitionSystem::ComputeInv(Expr *condition, unordered_set<string> vars_in
             }
             // PrintDNF(TransPolystoExprs(LoopInv));
             LoopComment->add_invariant(TransPolystoExprs(LoopInv, true), true);
-            delete loclist, trlist;
+            delete loclist, transList;
         }
     }
     InequalityDNF = invariant;
