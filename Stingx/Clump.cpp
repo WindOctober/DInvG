@@ -26,7 +26,7 @@
 
 extern int clump_prune_count;
 extern int bang_count;
-extern int single_pre_prune_bang_count;
+extern int singlePrePrune;
 
 void Clump::initialize() {
     gli = 0;
@@ -104,7 +104,7 @@ vector<int> Clump::insert_with_erase_index(C_Polyhedron const& p) {
                  << "th poly is erased by next poly in back-prune";
             erase_index.push_back(i);
             bang_count++;
-            single_pre_prune_bang_count++;
+            singlePrePrune++;
         }
     }
     for (vi = erase_index.rbegin(); vi < erase_index.rend(); vi++) {

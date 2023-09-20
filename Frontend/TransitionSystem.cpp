@@ -7,7 +7,7 @@
 #include <regex>
 #include <unordered_set>
 extern var_info *info, *coefInfo, *lambdaInfo;
-extern vector<Location *> *loclist;
+extern vector<Location *> *locList;
 extern vector<TransitionRelation *> *transList;
 extern unordered_set<string> global_vars;
 extern set<string> MainFuncs;
@@ -1824,7 +1824,7 @@ void TransitionSystem::InitializeLocTrans(int locsize, Expr *condition, var_info
         if (i == locsize - 1)
             locname = "le";
         Location *loc = new Location(info->getDim(), info, coefInfo, lambdaInfo, locname);
-        loclist->push_back(loc);
+        locList->push_back(loc);
     }
     for (int i = 0; i < total_info->getDim(); i++)
     {
@@ -1859,7 +1859,7 @@ void TransitionSystem::InitializeLocTrans(int locsize, Expr *condition, var_info
                 trans_name = "Exit_Transition_from_" + to_string(i) + "by breakstmt";
                 p->remove_space_dimensions(project_set);
                 TransitionRelation *trans = new TransitionRelation(info->getDim(), info, coefInfo, lambdaInfo, trans_name);
-                trans->set_locs((*loclist)[i], (*loclist)[j]);
+                trans->set_locs((*locList)[i], (*locList)[j]);
                 trans->set_relation(p);
                 transList->push_back(trans);
                 continue;
@@ -1873,7 +1873,7 @@ void TransitionSystem::InitializeLocTrans(int locsize, Expr *condition, var_info
                 trans_name = "Transition_" + to_string(i) + "_" + to_string(j);
                 p->remove_space_dimensions(project_set);
                 TransitionRelation *trans = new TransitionRelation(info->getDim(), info, coefInfo, lambdaInfo, trans_name);
-                trans->set_locs((*loclist)[i], (*loclist)[j]);
+                trans->set_locs((*locList)[i], (*locList)[j]);
                 trans->set_relation(p);
                 transList->push_back(trans);
             }
@@ -1900,7 +1900,7 @@ void TransitionSystem::InitializeLocTrans(int locsize, Expr *condition, var_info
                         continue;
                     q->remove_space_dimensions(project_set);
                     TransitionRelation *trans = new TransitionRelation(info->getDim(), info, coefInfo, lambdaInfo, trans_name);
-                    trans->set_locs((*loclist)[i], (*loclist)[j]);
+                    trans->set_locs((*locList)[i], (*locList)[j]);
                     trans->set_relation(q);
                     transList->push_back(trans);
                 }
@@ -1936,13 +1936,13 @@ void TransitionSystem::ComputeInv(Expr *condition, unordered_set<string> vars_in
             // DONE: remove useless result.
             if (j == locsize - 1)
                 continue;
-            loclist = new vector<Location *>();
+            locList = new vector<Location *>();
             transList = new vector<TransitionRelation *>();
             InitializeLocTrans(locsize, condition, total_info);
-            (*loclist)[j]->setInitPoly(init_polys[i]);
+            (*locList)[j]->setInitPoly(init_polys[i]);
             PrintLocsTrans();
             Compute_Invariant_Frontend();
-            vector<C_Polyhedron> LoopInv = (*loclist)[locsize - 1]->get_vp_inv().get_vp();
+            vector<C_Polyhedron> LoopInv = (*locList)[locsize - 1]->get_vp_inv().get_vp();
             invariant = ConnectDNF(invariant, TransPolystoExprs(LoopInv, true));
             // PrintDNF(TransPolystoExprs(LoopInv));
             LoopComment->add_invariant(TransPolystoExprs(LoopInv, true), true);
@@ -1950,11 +1950,11 @@ void TransitionSystem::ComputeInv(Expr *condition, unordered_set<string> vars_in
 
             for (int index = 0; index < locsize - 1; index++)
             {
-                LoopInv.push_back((*loclist)[index]->GetInv());
+                LoopInv.push_back((*locList)[index]->GetInv());
             }
             // PrintDNF(TransPolystoExprs(LoopInv));
             LoopComment->add_invariant(TransPolystoExprs(LoopInv, true), true);
-            delete loclist, transList;
+            delete locList, transList;
         }
     }
     InequalityDNF = invariant;
