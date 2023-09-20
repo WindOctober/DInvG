@@ -86,12 +86,12 @@ class Context {
                     vector<Expression>* eqExprs,
                     vector<Expression>* ineqExprs);
 
-    void RecursiveSplit(vector<Location*>* loclist,
+    void RecursiveSplit(vector<Location*>* locList,
                             C_Polyhedron* dual_poly,
                             int wtime,
                             bool cutoff,
                             Timer& one_timer);
-    void Convert_CNF_to_DNF_and_Print(vector<Location*>* loclist,
+    void Convert_CNF_to_DNF_and_Print(vector<Location*>* locList,
                                       C_Polyhedron* dual_poly,
                                       int wtime,
                                       bool cutoff,
@@ -244,11 +244,11 @@ class Context {
 
     void RecursiveSplit(System& s, C_Polyhedron* dual_poly);
 
-    void RecursiveSplit(vector<Location*>* loclist,
+    void RecursiveSplit(vector<Location*>* locList,
                             C_Polyhedron* dual_poly,
                             int wtime = 1000,
                             bool cutoff = true);
-    void Convert_CNF_to_DNF_and_Print(vector<Location*>* loclist,
+    void Convert_CNF_to_DNF_and_Print(vector<Location*>* locList,
                                       C_Polyhedron* dual_poly,
                                       int wtime = 1000,
                                       bool cutoff = true);
@@ -268,7 +268,7 @@ class Context {
     void get_multiplier_counts();
     int get_multiplier_status();
 
-    void splitZeroOneCase(vector<Location*>* loclist,
+    void splitZeroOneCase(vector<Location*>* locList,
                            C_Polyhedron* dual_poly,
                            int wtime,
                            bool timed,

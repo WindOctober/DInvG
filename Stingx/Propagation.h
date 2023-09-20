@@ -115,6 +115,6 @@ vector<int> get_ppged_lid();
 vector<int> get_exitic_tid();
 
 // compute other invariants by propagation with Farkas
-void compute_invariants_by_propagation_with_farkas(vector<Clump>& clumps);
+void InvPropagation(vector<Clump>& clumps);
 
 #endif

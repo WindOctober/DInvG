@@ -572,23 +572,23 @@ void Context::RecursiveSplit(System& s, C_Polyhedron* dualp) {
     }
 }
 
-void Context::RecursiveSplit(vector<Location*>* loclist,
+void Context::RecursiveSplit(vector<Location*>* locList,
                                  C_Polyhedron* dualp,
                                  int wtime,
                                  bool timed) {
     Timer one_timer;
-    RecursiveSplit(loclist, dualp, wtime, timed, one_timer);
+    RecursiveSplit(locList, dualp, wtime, timed, one_timer);
 }
 
-void Context::Convert_CNF_to_DNF_and_Print(vector<Location*>* loclist,
+void Context::Convert_CNF_to_DNF_and_Print(vector<Location*>* locList,
                                            C_Polyhedron* dualp,
                                            int wtime,
                                            bool timed) {
     Timer one_timer;
-    Convert_CNF_to_DNF_and_Print(loclist, dualp, wtime, timed, one_timer);
+    Convert_CNF_to_DNF_and_Print(locList, dualp, wtime, timed, one_timer);
 }
 
-void Context::RecursiveSplit(vector<Location*>* loclist,
+void Context::RecursiveSplit(vector<Location*>* locList,
                                  C_Polyhedron* dualp,
                                  int wtime,
                                  bool timed,
@@ -608,15 +608,15 @@ void Context::RecursiveSplit(vector<Location*>* loclist,
         i = factorizationSplit();
 
         if (i > 0) {
-            childClump->RecursiveSplit(loclist, dualp, wtime, timed, one_timer);
+            childClump->RecursiveSplit(locList, dualp, wtime, timed, one_timer);
             delete (childClump);
         } else {
-            splitZeroOneCase(loclist, dualp, wtime, timed, one_timer);
+            splitZeroOneCase(locList, dualp, wtime, timed, one_timer);
             return;
         }
     }
 }
-void Context::Convert_CNF_to_DNF_and_Print(vector<Location*>* loclist,
+void Context::Convert_CNF_to_DNF_and_Print(vector<Location*>* locList,
                                            C_Polyhedron* dualp,
                                            int wtime,
                                            bool timed,
@@ -636,10 +636,10 @@ void Context::Convert_CNF_to_DNF_and_Print(vector<Location*>* loclist,
             // cout<<endl<<"- The Left Child Context: "<<endl;
             // print(cout);
             // cout<<endl<<"- The Right Child Context: "<<endl<<(*childClump)<<endl;
-            childClump->Convert_CNF_to_DNF_and_Print(loclist, dualp, wtime, timed,
+            childClump->Convert_CNF_to_DNF_and_Print(locList, dualp, wtime, timed,
                                                  one_timer);
         } else {
-            splitZeroOneCase(loclist, dualp, wtime, timed, one_timer);
+            splitZeroOneCase(locList, dualp, wtime, timed, one_timer);
             return;
         }
     }
@@ -893,7 +893,7 @@ void Context::splitZeroOneCase(Clump& clump) {
     return;
 }
 
-void Context::splitZeroOneCase(vector<Location*>* loclist,
+void Context::splitZeroOneCase(vector<Location*>* locList,
                                 C_Polyhedron* dualp,
                                 int wtime,
                                 bool timed,
@@ -912,7 +912,7 @@ void Context::splitZeroOneCase(vector<Location*>* loclist,
         // now add the invariants and update dualp
         (*dualp) = C_Polyhedron(coefNum, UNIVERSE);
         vector<Location*>::iterator it;
-        for (it = loclist->begin(); it < loclist->end(); it++) {
+        for (it = locList->begin(); it < locList->end(); it++) {
             (*it)->extract_invariants_and_update(polyStore->getPolyRef(),
                                                  *dualp);
         }
@@ -953,7 +953,7 @@ void Context::splitZeroOneCase(vector<Location*>* loclist,
         // now add the invariants and update dualp
         (*dualp) = C_Polyhedron(coefNum, UNIVERSE);
         vector<Location*>::iterator it;
-        for (it = loclist->begin(); it < loclist->end(); it++) {
+        for (it = locList->begin(); it < locList->end(); it++) {
             (*it)->extract_invariants_and_update(polyStore->getPolyRef(),
                                                  *dualp);
         }
@@ -966,7 +966,7 @@ void Context::splitZeroOneCase(vector<Location*>* loclist,
             childClump = this->clone();
             childClump->addTransform(lt);
             childClump->simplify_repeat();
-            childClump->RecursiveSplit(loclist, dualp, wtime, timed, one_timer);
+            childClump->RecursiveSplit(locList, dualp, wtime, timed, one_timer);
             delete (childClump);
 
             lt[i] = 1;
@@ -975,7 +975,7 @@ void Context::splitZeroOneCase(vector<Location*>* loclist,
             childClump = this->clone();
             childClump->addTransform(lt);
             childClump->simplify_repeat();
-            childClump->RecursiveSplit(loclist, dualp, wtime, timed, one_timer);
+            childClump->RecursiveSplit(locList, dualp, wtime, timed, one_timer);
             delete (childClump);
 
             break;
