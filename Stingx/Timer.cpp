@@ -77,7 +77,7 @@ void Timer::start(int how_much) {
     initialize(true, how_much);  // timer now actually initialized
 }
 
-long int Timer::compute_time_elapsed() {
+long int Timer::getElapsedTime() {
     if (!alarm && !running)
         return time_elapsed;
 
@@ -92,7 +92,7 @@ long int Timer::compute_time_elapsed() {
 void Timer::stop() {
     if (!alarm) {
         if (running) {
-            compute_time_elapsed();
+            getElapsedTime();
             running = false;
         }
         return;
@@ -106,7 +106,7 @@ void Timer::stop() {
     // 2. subtract from the time_alarmed, and reset time_elapsed
     // 3. set frozen if time is not already up
 
-    compute_time_elapsed();
+    getElapsedTime();
 
     time_alarmed -= time_elapsed;
     time_elapsed = 0;
@@ -157,7 +157,7 @@ bool Timer::is_time_up() {
         return true;
     if (!running || frozen)
         return false;
-    compute_time_elapsed();
+    getElapsedTime();
 
     if (time_elapsed >= time_alarmed)
         time_up = true;
