@@ -96,7 +96,8 @@ void MatrixStore::back_substitute(int lead) {
         if (mat[i][lead] != 0) {
             for (j = lead + 1; j < varsNum + 1; j++) {
                 temp1 = mat[i][j];
-                temp2 = mat[lead][j] * mat[i][lead] * (mat[lead][lead].inverse());
+                temp2 =
+                    mat[lead][j] * mat[i][lead] * (mat[lead][lead].inverse());
                 mat[i][j] -= temp2;
             }
             mat[i][lead] = 0;

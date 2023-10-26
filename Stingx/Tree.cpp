@@ -30,13 +30,13 @@ extern vector<TransitionRelation*>* transList;
 extern int getTransIndex(string name);
 extern bool backtrack_flag;
 extern C_Polyhedron* trivial;
-extern int bang_count;
+extern int totalPrunedCnt;
 extern int singlePrePrune;
-extern int singleBang;
-extern int weave_count;
-extern int singleWeave;
+extern int prunedCnt;
+extern int totalSuccessCnt;
+extern int successCnt;
 extern Timer TotalTimer;
-extern Timer collect_timer;
+extern Timer collectTimer;
 extern int total_time;
 extern int collect_time;
 extern int singleCollect;
@@ -46,12 +46,8 @@ extern int merge_count;
 extern int bang_count_in_merge;
 extern Counter counter;
 extern Timer single_merge_sub_sequences_timer;
-extern void collect_invariants(C_Polyhedron& cpoly, C_Polyhedron& invd);
-extern void collect_invariants_for_one_location_by_eliminating(
-    int target_index,
-    C_Polyhedron& cpoly,
-    C_Polyhedron& invd);
-extern void Clear_Location_Invariant();
+extern void collectInv(int curId, C_Polyhedron& poly, C_Polyhedron& invd);
+extern void ResetLocInv();
 extern void PrintLocs();
 extern bool print_tree;
 
@@ -83,269 +79,83 @@ void Tree::set_unra(int amount) {
 void Tree::set_uner(int amount) {
     uner = amount;
 }
-void Tree::set_target_index(int index) {
-    target_index = index;
+void Tree::setCurId(int index) {
+    curId = index;
 }
-void Tree::set_max_clump_count() {
-    int max = -1;
-    vector<Clump>::iterator vi;
-
-    for (vi = clumps.begin(); vi < clumps.end(); vi++) {
-        if (vi->size() > max) {
-            max = vi->size();
+void Tree::setMaxPolyNum() {
+    int res = -1;
+    for (auto it = clumps.begin(); it < clumps.end(); it++) {
+        if (it->size() > res) {
+            res = it->size();
         }
     }
 
-    max_clump_count = max;
+    maxPolyNum = res;
+    return;
 }
 
-void Tree::Original_Prior(vector<Clump>& clumps) {
-    // copy from "prior2"
+void Tree::ReorderClumpsPrior(vector<Clump>& clumps) {
+    vector<int> relatedLocId;
+    vector<int> unrelatedLocId;
+    vector<int> relatedTransId;
+    vector<int> unrelatedTransId;
+    vector<int> targetId;
 
-    vector<int> relatedLocIndex;
-    vector<int> unrelatedLocIndex;
-    vector<int> relatedTransIndex;
-    vector<int> unrelatedTransIndex;
-    vector<int> targetIndex;
-
-    string target = (*locList)[target_index]->getName();
+    string target = (*locList)[curId]->getName();
     int transition_index;
-    string tr_preloc_name, tr_postloc_name;
-
-    vector<Clump>::iterator vi;
-
-    int index = 0;
-    for (vi = clumps.begin(); vi < clumps.end(); vi++) {
-        if (vi->get_category() == "Transition") {
-            transition_index = getTransIndex(vi->getName());
-            tr_preloc_name = (*transList)[transition_index]->getPreLocName();
-            tr_postloc_name = (*transList)[transition_index]->getPostLocName();
-            if (tr_preloc_name == target || tr_postloc_name == target) {
-                relatedTransIndex.push_back(index);
-            } else {
-                unrelatedTransIndex.push_back(index);
-            }
-        } else if (vi->get_category() == "Location") {
-            if (vi->getName() == target) {
-                relatedLocIndex.push_back(index);
-            } else {
-                unrelatedLocIndex.push_back(index);
-            }
-        }
-        index++;
-    }
-
-    set_ra(relatedLocIndex.size());
-    set_er(relatedTransIndex.size());
-    set_unra(unrelatedLocIndex.size());
-    set_uner(unrelatedTransIndex.size());
-
-    targetIndex.insert(targetIndex.end(), unrelatedLocIndex.begin(),
-                       unrelatedLocIndex.end());
-    targetIndex.insert(targetIndex.end(), unrelatedTransIndex.begin(),
-                       unrelatedTransIndex.end());
-    targetIndex.insert(targetIndex.end(), relatedTransIndex.begin(),
-                       relatedTransIndex.end());
-    targetIndex.insert(targetIndex.end(), relatedLocIndex.begin(),
-                       relatedLocIndex.end());
-    set_tree(clumps);
-}
-
-void Tree::Reorder_Target_Prior_1(vector<Clump>& clumps) {
-    vector<int> first_index;
-    vector<int> second_index;
-    string target = (*locList)[target_index]->getName();
-    int transition_index;
-    string tr_preloc_name, tr_postloc_name;
-    int relatedLocIndex = 0, relatedTransIndex = 0, unrelatedLocIndex = 0,
-        unrelatedTransIndex = 0;
-
-    vector<Clump>::iterator vi;
+    string transPreLocName, transPostLocName;
 
     int j = 0;
-    for (vi = clumps.begin(); vi < clumps.end(); vi++) {
-        if (vi->get_category() == "Transition") {
-            transition_index = getTransIndex(vi->getName());
-            tr_preloc_name = (*transList)[transition_index]->getPreLocName();
-            tr_postloc_name = (*transList)[transition_index]->getPostLocName();
-            if (tr_preloc_name == target || tr_postloc_name == target) {
-                first_index.push_back(j);
-                relatedTransIndex++;
+    for (auto it = clumps.begin(); it < clumps.end(); it++) {
+        if (it->get_category() == "Transition") {
+            transition_index = getTransIndex(it->getName());
+            transPreLocName = (*transList)[transition_index]->getPreLocName();
+            transPostLocName = (*transList)[transition_index]->getPostLocName();
+            if (transPreLocName == target || transPostLocName == target) {
+                relatedTransId.push_back(j);
             } else {
-                second_index.push_back(j);
-                unrelatedTransIndex++;
+                unrelatedTransId.push_back(j);
             }
-        } else if (vi->get_category() == "Location") {
-            if (vi->getName() == target) {
-                first_index.push_back(j);
-                relatedLocIndex++;
+        } else if (it->get_category() == "Location") {
+            if (it->getName() == target) {
+                relatedLocId.push_back(j);
             } else {
-                second_index.push_back(j);
-                unrelatedLocIndex++;
+                unrelatedLocId.push_back(j);
             }
         }
         j++;
     }
 
-    set_ra(relatedLocIndex);
-    set_er(relatedTransIndex);
-    set_unra(unrelatedLocIndex);
-    set_uner(unrelatedTransIndex);
+    set_ra(relatedLocId.size());
+    set_er(relatedTransId.size());
+    set_unra(unrelatedLocId.size());
+    set_uner(unrelatedTransId.size());
 
-    second_index.insert(second_index.end(), first_index.begin(),
-                        first_index.end());
-
-    vector<Clump> ordered_vcl;
+    targetId.insert(targetId.end(), unrelatedLocId.begin(),
+                    unrelatedLocId.end());
+    targetId.insert(targetId.end(), unrelatedTransId.begin(),
+                    unrelatedTransId.end());
+    targetId.insert(targetId.end(), relatedTransId.begin(),
+                    relatedTransId.end());
+    targetId.insert(targetId.end(), relatedLocId.begin(), relatedLocId.end());
+    vector<Clump> orderedClumps;
     for (int i = 0; i < clumps.size(); i++) {
-        ordered_vcl.push_back(clumps[second_index[i]]);
+        orderedClumps.push_back(clumps[targetId[i]]);
     }
 
-    set_tree(ordered_vcl);
-}
-
-void Tree::Reorder_Target_Prior_2(vector<Clump>& clumps) {
-    vector<int> relatedLocIndex;
-    vector<int> unrelatedLocIndex;
-    vector<int> relatedTransIndex;
-    vector<int> unrelatedTransIndex;
-    vector<int> targetIndex;
-
-    string target = (*locList)[target_index]->getName();
-    int transition_index;
-    string tr_preloc_name, tr_postloc_name;
-
-    vector<Clump>::iterator vi;
-
-    int j = 0;
-    for (vi = clumps.begin(); vi < clumps.end(); vi++) {
-        if (vi->get_category() == "Transition") {
-            transition_index = getTransIndex(vi->getName());
-            tr_preloc_name = (*transList)[transition_index]->getPreLocName();
-            tr_postloc_name = (*transList)[transition_index]->getPostLocName();
-            if (tr_preloc_name == target || tr_postloc_name == target) {
-                relatedTransIndex.push_back(j);
-            } else {
-                unrelatedTransIndex.push_back(j);
-            }
-        } else if (vi->get_category() == "Location") {
-            if (vi->getName() == target) {
-                relatedLocIndex.push_back(j);
-            } else {
-                unrelatedLocIndex.push_back(j);
-            }
-        }
-        j++;
-    }
-
-    set_ra(relatedLocIndex.size());
-    set_er(relatedTransIndex.size());
-    set_unra(unrelatedLocIndex.size());
-    set_uner(unrelatedTransIndex.size());
-
-    targetIndex.insert(targetIndex.end(), unrelatedLocIndex.begin(),
-                       unrelatedLocIndex.end());
-    targetIndex.insert(targetIndex.end(), unrelatedTransIndex.begin(),
-                       unrelatedTransIndex.end());
-    targetIndex.insert(targetIndex.end(), relatedTransIndex.begin(),
-                       relatedTransIndex.end());
-    targetIndex.insert(targetIndex.end(), relatedLocIndex.begin(),
-                       relatedLocIndex.end());
-
-    vector<Clump> ordered_vcl;
-    for (int i = 0; i < clumps.size(); i++) {
-        ordered_vcl.push_back(clumps[targetIndex[i]]);
-    }
-
-    set_tree(ordered_vcl);
-}
-
-void Tree::Reorder_Target_Prior_3(vector<Clump>& clumps) {
-    vector<int> relatedLocIndex;
-    vector<int> unrelatedLocIndex;
-    vector<int> relatedTransIndex;
-    vector<int> unrelatedTransIndex;
-    vector<int> targetIndex;
-
-    string target = (*locList)[target_index]->getName();
-    int transition_index;
-    string tr_preloc_name, tr_postloc_name;
-
-    vector<Clump>::iterator vi;
-
-    int j = 0;
-    for (vi = clumps.begin(); vi < clumps.end(); vi++) {
-        if (vi->get_category() == "Transition") {
-            transition_index = getTransIndex(vi->getName());
-            tr_preloc_name = (*transList)[transition_index]->getPreLocName();
-            tr_postloc_name = (*transList)[transition_index]->getPostLocName();
-            if (tr_preloc_name == target || tr_postloc_name == target) {
-                relatedTransIndex.push_back(j);
-            } else {
-                unrelatedTransIndex.push_back(j);
-            }
-        } else if (vi->get_category() == "Location") {
-            if (vi->getName() == target) {
-                relatedLocIndex.push_back(j);
-            } else {
-                unrelatedLocIndex.push_back(j);
-            }
-        }
-        j++;
-    }
-
-    set_ra(relatedLocIndex.size());
-    set_er(relatedTransIndex.size());
-    set_unra(unrelatedLocIndex.size());
-    set_uner(unrelatedTransIndex.size());
-
-    // ***
-    // reinter -> reintra -> unintra -> uninter
-    // ***
-    // depth min(i.e. 0)
-    /*
-    targetIndex.insert(targetIndex.end(),
-    unrelatedTransIndex.begin(), unrelatedTransIndex.end());
-    targetIndex.insert(targetIndex.end(),
-    unrelatedLocIndex.begin(), unrelatedLocIndex.end());
-    targetIndex.insert(targetIndex.end(),
-    relatedLocIndex.begin(), relatedLocIndex.end());
-    targetIndex.insert(targetIndex.end(),
-    relatedTransIndex.begin(), relatedTransIndex.end());
-    */
-    // depth max
-
-    // ***
-    // reintra -> unintra -> reinter -> uninter
-    // ***
-    // depth min(i.e. 0)
-    targetIndex.insert(targetIndex.end(), unrelatedTransIndex.begin(),
-                       unrelatedTransIndex.end());
-    targetIndex.insert(targetIndex.end(), relatedTransIndex.begin(),
-                       relatedTransIndex.end());
-    targetIndex.insert(targetIndex.end(), unrelatedLocIndex.begin(),
-                       unrelatedLocIndex.end());
-    targetIndex.insert(targetIndex.end(), relatedLocIndex.begin(),
-                       relatedLocIndex.end());
-    // depth max
-
-    vector<Clump> ordered_vcl;
-    for (int i = 0; i < clumps.size(); i++) {
-        ordered_vcl.push_back(clumps[targetIndex[i]]);
-    }
-
-    set_tree(ordered_vcl);
+    set_tree(orderedClumps);
 }
 
 void Tree::extract_vcl_for_one_location_about_intra(vector<Clump>& clumps) {
-    vector<int> relatedLocIndex;
-    vector<int> unrelatedLocIndex;
-    vector<int> relatedTransIndex;
-    vector<int> unrelatedTransIndex;
-    vector<int> targetIndex;
+    vector<int> relatedLocId;
+    vector<int> unrelatedLocId;
+    vector<int> relatedTransId;
+    vector<int> unrelatedTransId;
+    vector<int> targetId;
 
-    string target = (*locList)[target_index]->getName();
+    string target = (*locList)[curId]->getName();
     int transition_index;
-    string tr_preloc_name, tr_postloc_name;
+    string transPreLocName, transPostLocName;
 
     vector<Clump>::iterator vi;
 
@@ -353,40 +163,39 @@ void Tree::extract_vcl_for_one_location_about_intra(vector<Clump>& clumps) {
     for (vi = clumps.begin(); vi < clumps.end(); vi++) {
         if (vi->get_category() == "Transition") {
             transition_index = getTransIndex(vi->getName());
-            tr_preloc_name = (*transList)[transition_index]->getPreLocName();
-            tr_postloc_name = (*transList)[transition_index]->getPostLocName();
-            if (tr_preloc_name == target || tr_postloc_name == target) {
-                relatedTransIndex.push_back(j);
+            transPreLocName = (*transList)[transition_index]->getPreLocName();
+            transPostLocName = (*transList)[transition_index]->getPostLocName();
+            if (transPreLocName == target || transPostLocName == target) {
+                relatedTransId.push_back(j);
             } else {
-                unrelatedTransIndex.push_back(j);
+                unrelatedTransId.push_back(j);
             }
         } else if (vi->get_category() == "Location") {
             if (vi->getName() == target) {
-                relatedLocIndex.push_back(j);
+                relatedLocId.push_back(j);
             } else {
-                unrelatedLocIndex.push_back(j);
+                unrelatedLocId.push_back(j);
             }
         }
         j++;
     }
 
-    set_ra(relatedLocIndex.size());
-    // set_er(relatedTransIndex.size());
-    // set_unra(unrelatedLocIndex.size());
-    // set_uner(unrelatedTransIndex.size());
+    set_ra(relatedLocId.size());
+    // set_er(relatedTransId.size());
+    // set_unra(unrelatedLocId.size());
+    // set_uner(unrelatedTransId.size());
 
-    targetIndex.insert(targetIndex.end(), relatedLocIndex.begin(),
-                       relatedLocIndex.end());
-    vector<Clump> ordered_vcl;
+    targetId.insert(targetId.end(), relatedLocId.begin(), relatedLocId.end());
+    vector<Clump> orderedClumps;
     int rlid;
-    if (targetIndex.size() == 1) {
-        rlid = targetIndex[0];
+    if (targetId.size() == 1) {
+        rlid = targetId[0];
     } else {
         cout << endl << "Error: There are more than one related location index";
         exit(-1);
     }
-    ordered_vcl.push_back(clumps[rlid]);
-    set_tree(ordered_vcl);
+    orderedClumps.push_back(clumps[rlid]);
+    set_tree(orderedClumps);
 }
 
 void Tree::Print_Prune_Tree(int depth, string weavedorbanged) {
@@ -397,7 +206,7 @@ void Tree::Print_Prune_Tree(int depth, string weavedorbanged) {
     cout << endl
          << "( " << weavedorbanged << " Prune Tree, current length is "
          << clumpsNum - depth;
-    if (weavedorbanged == "Banged") {
+    if (weavedorbanged == "Pruned") {
         cout << endl << "( in ";
         if (clumpsNum - depth > get_ra() + get_er()) {
             cout << "unrelated transition";
@@ -410,15 +219,15 @@ void Tree::Print_Prune_Tree(int depth, string weavedorbanged) {
         cout << endl << "( ";
         autoprint(clumpsNum - 1, dth - 1);
         cout << "  ⋁  ";
-        for (int j = 0; j < get_clump(dth - 1).getCount(); j++) {
-            if (j == get_clump(dth - 1).get_gli() && dth > depth) {
+        for (int j = 0; j < getClump(dth - 1).getCount(); j++) {
+            if (j == getClump(dth - 1).getIter() && dth > depth) {
                 cout << "[" << j << "]";
             } else {
                 cout << " " << j << " ";
             }
         }
-        cout << " --  " << get_clump(dth - 1).get_category();
-        cout << ":: " << get_clump(dth - 1).getName();
+        cout << " --  " << getClump(dth - 1).get_category();
+        cout << ":: " << getClump(dth - 1).getName();
     }
 }
 
@@ -430,7 +239,7 @@ void Tree::Print_Prune_Tree(int depth, int hb, int lb, string weavedorbanged) {
     cout << endl
          << "( " << weavedorbanged << " Prune Tree, current length is "
          << hb + 1 - depth;
-    if (weavedorbanged == "Banged") {
+    if (weavedorbanged == "Pruned") {
         cout << endl << "( in ";
         if (clumpsNum - depth > get_ra() + get_er()) {
             cout << "unrelated transition";
@@ -445,10 +254,10 @@ void Tree::Print_Prune_Tree(int depth, int hb, int lb, string weavedorbanged) {
         cout << "  ⋁  ";
 
         for (int j = 0; j < get_max_clump_count(); j++) {
-            if (get_clump(dth - 1).getCount() - 1 < j) {
+            if (getClump(dth - 1).getCount() - 1 < j) {
                 cout << "   ";
             } else if (lb <= dth - 1 && dth - 1 <= hb) {
-                if (j == get_clump(dth - 1).get_gli() && dth > depth) {
+                if (j == getClump(dth - 1).getIter() && dth > depth) {
                     cout << "[" << j << "]";
                 } else {
                     cout << " " << j << " ";
@@ -459,9 +268,9 @@ void Tree::Print_Prune_Tree(int depth, int hb, int lb, string weavedorbanged) {
         }
         /*
         // old version, without smart blank with print Prune Tree
-        for (int j = 0; j < get_clump(dth-1).getCount(); j++){
+        for (int j = 0; j < getClump(dth-1).getCount(); j++){
             if (lb <= dth-1 && dth-1 <= hb){
-                if (j == get_clump(dth-1).get_gli() && dth > depth){
+                if (j == getClump(dth-1).getIter() && dth > depth){
                     cout<<"["<<j<<"]";
                 }
                 else {
@@ -476,15 +285,15 @@ void Tree::Print_Prune_Tree(int depth, int hb, int lb, string weavedorbanged) {
         cout << " --  b: "
              << counter.get_pre_pbc_about_location_and_depth(get_target_index(),
                                                              dth - 1);
-        cout << " --  " << get_clump(dth - 1).get_category();
-        if (get_clump(dth - 1).get_category() == "Location") {
+        cout << " --  " << getClump(dth - 1).get_category();
+        if (getClump(dth - 1).get_category() == "Location") {
             cout << "_Intra";
-        } else if (get_clump(dth - 1).get_category() == "Transition") {
+        } else if (getClump(dth - 1).get_category() == "Transition") {
             cout << "_Inter";
         } else {
             cout << "Neither Location nor Transition!!!";
         }
-        cout << ":: " << get_clump(dth - 1).getName();
+        cout << ":: " << getClump(dth - 1).getName();
     }
 }
 
@@ -498,7 +307,7 @@ void Tree::Print_Prune_Sequence_Tree(vector<int> sequence,
     cout << endl
          << "( " << weavedorbanged << " Prune Tree, current length is "
          << clumpsNum - depth;
-    if (weavedorbanged == "Banged") {
+    if (weavedorbanged == "Pruned") {
         cout << endl << "( in ";
         if (clumpsNum - depth > get_ra() + get_er()) {
             cout << "unrelated transition";
@@ -514,7 +323,7 @@ void Tree::Print_Prune_Sequence_Tree(vector<int> sequence,
         cout << "  ⋁  ";
 
         for (int j = 0; j < get_max_clump_count(); j++) {
-            if (get_clump(dth - 1).getCount() - 1 < j) {
+            if (getClump(dth - 1).getCount() - 1 < j) {
                 cout << "   ";
             } else if (j == sequence[i] && dth > depth) {
                 cout << "[" << j << "]";
@@ -525,8 +334,8 @@ void Tree::Print_Prune_Sequence_Tree(vector<int> sequence,
         cout << " --  b: "
              << counter.get_pst_pbc_about_location_and_depth(get_target_index(),
                                                              dth - 1);
-        cout << " --  " << get_clump(dth - 1).get_category();
-        cout << ":: " << get_clump(dth - 1).getName();
+        cout << " --  " << getClump(dth - 1).get_category();
+        cout << ":: " << getClump(dth - 1).getName();
         i++;
     }
 }
@@ -543,7 +352,7 @@ void Tree::Print_Prune_Sequence_Tree(vector<int> sequence,
     cout << endl
          << "( " << weavedorbanged << " Prune Tree, current length is "
          << hb + 1 - depth;
-    if (weavedorbanged == "Banged") {
+    if (weavedorbanged == "Pruned") {
         cout << endl << "( in ";
         if (clumpsNum - depth > get_ra() + get_er()) {
             cout << "unrelated transition";
@@ -557,7 +366,7 @@ void Tree::Print_Prune_Sequence_Tree(vector<int> sequence,
         cout << endl << "( ";
         autoprint(clumpsNum - 1, dth - 1);
         cout << "  ⋁  ";
-        for (int j = 0; j < get_clump(dth - 1).getCount(); j++) {
+        for (int j = 0; j < getClump(dth - 1).getCount(); j++) {
             if (lb <= dth - 1 && dth - 1 <= hb) {
                 if (j == sequence[i] && dth > depth) {
                     cout << "[" << j << "]";
@@ -568,15 +377,15 @@ void Tree::Print_Prune_Sequence_Tree(vector<int> sequence,
                 cout << " " << j << " ";
             }
         }
-        cout << " --  " << get_clump(dth - 1).get_category();
-        cout << ":: " << get_clump(dth - 1).getName();
+        cout << " --  " << getClump(dth - 1).get_category();
+        cout << ":: " << getClump(dth - 1).getName();
         if (lb <= dth - 1 && dth - 1 <= hb) {
             i++;
         }
     }
 }
 
-void Tree::prune_node_self_inspection(int target_index, C_Polyhedron& invd) {
+void Tree::prune_node_self_inspection(int curId, C_Polyhedron& invd) {
     int dth = size() - 1;
     vector<Clump>::iterator vi;
 
@@ -595,10 +404,10 @@ void Tree::prune_node_self_inspection(int target_index, C_Polyhedron& invd) {
     dth = first_conflict;
     while (dth-- > 0) {
         vi = clumps.begin() + dth;
-        (*vi).clear();
+        (*vi).resetIter();
         cout << endl
              << "depth: " << dth
-             << ", clear_lower_gli, gli : " << (*vi).get_gli() << " "
+             << ", clear_lower_gli, iter : " << (*vi).getIter() << " "
              << (*vi).get_category() << "::" << (*vi).getName();
     }
 }
@@ -641,7 +450,7 @@ void Tree::store_clumps_gli() {
     clumps_gli.clear();
     for (dth = 0; dth < size(); dth++) {
         vi = clumps.begin() + dth;
-        clumps_gli.push_back((*vi).get_gli());
+        clumps_gli.push_back((*vi).getIter());
     }
     // clumps_gli = new_clumps_gli;
 }
@@ -658,7 +467,7 @@ void Tree::prune_clumps_by_hierarchy_inclusion() {
     for (vi = clumps.begin(); vi < clumps.end(); vi++) {
         Location clumps_union(dimension, info, coefInfo, lambdaInfo,
                               "union_" + (*vi).getName(),
-                              target_index * (dimension + 1));
+                              curId * (dimension + 1));
         tr_union.push_back(clumps_union);
     }
     for (vk = tr_union.end() - 1; vk >= tr_union.begin(); vk--) {
@@ -674,11 +483,10 @@ void Tree::prune_clumps_by_hierarchy_inclusion() {
         int i = 0;
         for (i = 0; i < cl.getCount(); i++) {
             cout << endl << "to extract invariant";
-            (*vk).extract_invariant_for_one_location_by_eliminating(
-                cl.getReference(i).minimized_constraints());
+            (*vk).ExtractInv(cl.getReference(i).minimized_constraints());
 
             cout << endl << "to update constraints";
-            (*vk).update_dual_constraints(clumps_poly);
+            (*vk).UpdateCoefCS(clumps_poly);
         }
         cout << endl << "dth: " << dth << ", " << (*vk).getName();
         cout << endl << "this union of clumps poly: " << clumps_poly;
@@ -688,7 +496,7 @@ void Tree::prune_clumps_by_hierarchy_inclusion() {
         cout << (*vk);
     }
 
-    // take each "gli" from polys[gli] and test inclusion for polys[gli] and
+    // take each "iter" from polys[iter] and test inclusion for polys[iter] and
     // other hierarchy union
 
     cout << endl << "< < < prune_clumps_by_hierarchy inclusion()";
@@ -723,7 +531,6 @@ vector<vector<vector<int>>> Tree::sequences_generation(
     return sequences;
 }
 
-
 vector<vector<vector<int>>> Tree::divide_by_target_relation(
     C_Polyhedron& initp) {
     cout << endl << "> > > Tree::divide_by_target_relation()";
@@ -746,8 +553,7 @@ vector<vector<vector<int>>> Tree::divide_by_target_relation(
         cout << endl
              << "sub_sequences.size()/capacity():" << sub_sequences.size()
              << "/" << sub_sequences.capacity();
-        cout << endl
-             << "This PRE_LOC has banged:" << singlePrePrune;
+        cout << endl << "This PRE_LOC has banged:" << singlePrePrune;
         sequences.push_back(sub_sequences);
     }
 
@@ -779,8 +585,7 @@ vector<vector<vector<int>>> Tree::one_per_group(C_Polyhedron& initp) {
         cout << endl
              << "sub_sequences.size()/capacity():" << sub_sequences.size()
              << "/" << sub_sequences.capacity();
-        cout << endl
-             << "This PRE_LOC has banged:" << singlePrePrune;
+        cout << endl << "This PRE_LOC has banged:" << singlePrePrune;
         sequences.push_back(sub_sequences);
     }
 
@@ -822,8 +627,7 @@ vector<vector<vector<int>>> Tree::two_per_group(C_Polyhedron& initp) {
         cout << endl
              << "sub_sequences.size()/capacity():" << sub_sequences.size()
              << "/" << sub_sequences.capacity();
-        cout << endl
-             << "This PRE_LOC has banged:" << singlePrePrune;
+        cout << endl << "This PRE_LOC has banged:" << singlePrePrune;
         sequences.push_back(sub_sequences);
     }
 
@@ -860,8 +664,7 @@ vector<vector<vector<int>>> Tree::three_per_group(C_Polyhedron& initp) {
         cout << endl
              << "sub_sequences.size()/capacity():" << sub_sequences.size()
              << "/" << sub_sequences.capacity();
-        cout << endl
-             << "This PRE_LOC has banged:" << singlePrePrune;
+        cout << endl << "This PRE_LOC has banged:" << singlePrePrune;
         sequences.push_back(sub_sequences);
     }
 
@@ -898,8 +701,7 @@ vector<vector<vector<int>>> Tree::four_per_group(C_Polyhedron& initp) {
         cout << endl
              << "sub_sequences.size()/capacity():" << sub_sequences.size()
              << "/" << sub_sequences.capacity();
-        cout << endl
-             << "This PRE_LOC has banged:" << singlePrePrune;
+        cout << endl << "This PRE_LOC has banged:" << singlePrePrune;
         sequences.push_back(sub_sequences);
     }
 
@@ -942,8 +744,7 @@ vector<vector<vector<int>>> Tree::divide_target_into_double(
         cout << endl
              << "sub_sequences.size()/capacity():" << sub_sequences.size()
              << "/" << sub_sequences.capacity();
-        cout << endl
-             << "This PRE_LOC has banged:" << singlePrePrune;
+        cout << endl << "This PRE_LOC has banged:" << singlePrePrune;
         sequences.push_back(sub_sequences);
     }
 
@@ -983,8 +784,7 @@ vector<vector<vector<int>>> Tree::divide_by_inter_transition(
         cout << endl
              << "sub_sequences.size()/capacity():" << sub_sequences.size()
              << "/" << sub_sequences.capacity();
-        cout << endl
-             << "This PRE_LOC has banged:" << singlePrePrune;
+        cout << endl << "This PRE_LOC has banged:" << singlePrePrune;
         sequences.push_back(sub_sequences);
     }
 
@@ -1030,8 +830,7 @@ vector<vector<vector<int>>> Tree::divide_prior2_into_four(C_Polyhedron& initp) {
         cout << endl
              << "sub_sequences.size()/capacity():" << sub_sequences.size()
              << "/" << sub_sequences.capacity();
-        cout << endl
-             << "This PRE_LOC has banged:" << singlePrePrune;
+        cout << endl << "This PRE_LOC has banged:" << singlePrePrune;
         sequences.push_back(sub_sequences);
     }
 
@@ -1098,14 +897,14 @@ vector<vector<vector<int>>> Tree::merge_target_sub_sequences(
 
     vector<vector<vector<int>>> merged_sequences;
     int clumpsNum = clumps.size();
-    int target_index = clumpsNum - (ra + er) - 1;
+    int curId = clumpsNum - (ra + er) - 1;
 
     if (sequences.size() > 2) {
         vector<vector<vector<int>>>::iterator it;
         int hb = clumps.size() - 1;
         int lb = clumps.size();
-        for (it = sequences.begin();
-             hb > target_index && it < sequences.end() - 1; it = it + 2) {
+        for (it = sequences.begin(); hb > curId && it < sequences.end() - 1;
+             it = it + 2) {
             hb = hb;
             lb = lb - (*(*it).begin()).size() - (*(*(it + 1)).begin()).size();
             vector<vector<int>> merged_sub_sequences;
@@ -1140,7 +939,7 @@ vector<vector<vector<int>>> Tree::merge_first_sub_sequences(
         int hb = clumps.size() - 1;
         int lb = clumps.size();
         it = sequences.begin();
-        // for (it=sequences.begin(); hb>target_index && it<sequences.end()-1;
+        // for (it=sequences.begin(); hb>curId && it<sequences.end()-1;
         // it=it+2){
         hb = hb;
         lb = lb - (*(*it).begin()).size() - (*(*(it + 1)).begin()).size();
@@ -1171,7 +970,7 @@ vector<vector<vector<int>>> Tree::merge_end_sub_sequences(
     cout << endl << "| sequences.size(): " << sequences.size();
 
     vector<vector<vector<int>>> merged_sequences;
-    // int target_index = clumpsNum-(ra+er)-1;
+    // int curId = clumpsNum-(ra+er)-1;
 
     if (sequences.size() > 2) {
         vector<vector<vector<int>>>::iterator it;
@@ -1182,7 +981,7 @@ vector<vector<vector<int>>> Tree::merge_end_sub_sequences(
 
         int hb = 0 - 1;
         int lb = 0;
-        // for (it=sequences.begin(); hb>target_index && it<sequences.end()-1;
+        // for (it=sequences.begin(); hb>curId && it<sequences.end()-1;
         // it=it+2){
         hb = hb + (*(*it).begin()).size() + (*(*(it + 1)).begin()).size();
         lb = lb;
@@ -1245,7 +1044,7 @@ void Tree::Merge_recursive2(vector<vector<vector<int>>> two_sub_sequences,
                             vector<int>& sequence,
                             int i,
                             int depth,
-                            C_Polyhedron& cpoly,
+                            C_Polyhedron& poly,
                             Clump& invd_vp,
                             int hb,
                             int lb) {
@@ -1253,62 +1052,61 @@ void Tree::Merge_recursive2(vector<vector<vector<int>>> two_sub_sequences,
         // cout<<endl;
         // cout<<endl<<"/-----------------------------";
         // Print_Prune_Sequence_Tree(sequence, lb, hb, lb,"Weaved");
-        collect_timer.restart();
-        // collect_invariant_polys(cpoly, invd_vp);
+        collectTimer.restart();
+        // collect_invariant_polys(poly, invd_vp);
         // merged_sub_sequences.push_back(sequence);
         collect_invariant_polys_and_sub_sequences(invd_vp, merged_sub_sequences,
-                                                  cpoly, sequence);
-        collect_timer.stop();
+                                                  poly, sequence);
+        collectTimer.stop();
         cout << endl
              << "- The collect_invariant_polys_and_sub_sequences Time Taken "
                 "(0.01s) = "
-             << collect_timer.getElapsedTime();
+             << collectTimer.getElapsedTime();
         // cout<<endl<<"\\-----------------------------"<<endl;
         return;
     }
 
     int j = 0;
-    vector<int> banged_s;
-    bool s_banged_flag = false;
+    vector<int> prunedSeq;
+    bool prunedFlag = false;
     while (j < two_sub_sequences[i + 1].size()) {
         vector<int> s;
         s.insert(s.end(), two_sub_sequences[i + 1][j].begin(),
                  two_sub_sequences[i + 1][j].end());
 
-        if (banged_s.size() > 0 &&
-            has_the_same_sequences_from_the_left(banged_s, s)) {
+        if (prunedSeq.size() > 0 && checkSeqPrefix(prunedSeq, s)) {
             j++;
             continue;
         } else {
-            banged_s.clear();
-            s_banged_flag = false;
+            prunedSeq.clear();
+            prunedFlag = false;
         }
 
-        C_Polyhedron p(cpoly);
+        C_Polyhedron p(poly);
         int index = 0;
-        vector<int> temp_s;
-        vector<int> read_s = sequence;
+        vector<int> tmpSeq;
+        vector<int> printedSeq = sequence;
 
         for (vector<int>::iterator it = s.begin(); it < s.end(); it++) {
-            temp_s.push_back(*it);
-            read_s.push_back(*it);
-            p.intersection_assign(get_clump(depth - index).getReference(*it));
+            tmpSeq.push_back(*it);
+            printedSeq.push_back(*it);
+            p.intersection_assign(getClump(depth - index).getReference(*it));
             if (invd_vp.contains(p)) {
-                // Print_Prune_Sequence_Tree(read_s, depth-index, hb, lb,
-                // "Banged");
-                bang_count++;
+                // Print_Prune_Sequence_Tree(printedSeq, depth-index, hb, lb,
+                // "Pruned");
+                totalPrunedCnt++;
                 singlePrePrune++;
                 bang_count_in_merge++;
 
-                banged_s = temp_s;
-                s_banged_flag = true;
+                prunedSeq = tmpSeq;
+                prunedFlag = true;
                 break;
             }
             index++;
         }
 
-        if (s_banged_flag != true) {
-            Merge_recursive2(two_sub_sequences, merged_sub_sequences, read_s,
+        if (prunedFlag != true) {
+            Merge_recursive2(two_sub_sequences, merged_sub_sequences, printedSeq,
                              i + 1, depth - index, p, invd_vp, hb, lb);
         } else {
             ;
@@ -1317,7 +1115,6 @@ void Tree::Merge_recursive2(vector<vector<vector<int>>> two_sub_sequences,
     }
     return;
 }
-
 
 vector<vector<int>> Tree::dfs_sub_sequences_traverse(int hb,
                                                      int lb,
@@ -1340,21 +1137,19 @@ void Tree::dfs_sub_sequences_traverse_recursive(
     int hb,
     int lb,
     int depth,
-    C_Polyhedron& cpoly,
+    C_Polyhedron& poly,
     Clump& invd_vp) {
     if (TotalTimer.getElapsedTime() >= total_time) {
         cout << endl << "Time is up!";
         return;
     }
 
-    if (invd_vp.contains(cpoly)) {
-        bang_count++;
+    if (invd_vp.contains(poly)) {
+        totalPrunedCnt++;
         singlePrePrune++;
         counter.set_pre_pbc_at_location_and_depth(get_target_index(), depth);
         if (print_tree) {
-            Print_Prune_Tree(
-                depth, hb, lb,
-                "Banged");
+            Print_Prune_Tree(depth, hb, lb, "Pruned");
         }
         return;
     }
@@ -1363,28 +1158,28 @@ void Tree::dfs_sub_sequences_traverse_recursive(
         if (print_tree) {
             Print_Prune_Tree(depth, hb, lb, "Weaved");
         }
-        collect_timer.restart();
-        collect_invariant_polys_and_sub_sequences(invd_vp, sub_sequences, cpoly,
+        collectTimer.restart();
+        collect_invariant_polys_and_sub_sequences(invd_vp, sub_sequences, poly,
                                                   hb, lb);
-        collect_timer.stop();
+        collectTimer.stop();
 
         return;
     }
 
-    get_clump(depth - 1).clear();
-    while (get_clump(depth - 1).has_next()) {
+    getClump(depth - 1).resetIter();
+    while (getClump(depth - 1).has_next()) {
         // cout<<endl<<"in while...next()";
-        // cout<<endl<<"depth:"<<depth<<", cpoly:";
-        // cout<<endl<<cpoly;
-        C_Polyhedron p(cpoly);
-        p.intersection_assign(get_clump(depth - 1).getReference());
+        // cout<<endl<<"depth:"<<depth<<", poly:";
+        // cout<<endl<<poly;
+        C_Polyhedron p(poly);
+        p.intersection_assign(getClump(depth - 1).getReference());
         dfs_sub_sequences_traverse_recursive(sub_sequences, hb, lb, depth - 1,
                                              p, invd_vp);
         if (backtrack_flag == true) {
-            if (invd_vp.contains(cpoly)) {
+            if (invd_vp.contains(poly)) {
                 backtrack_success++;
                 cout << endl << "Pruned by backtracking in depth " << depth;
-                get_clump(depth - 1).clear();
+                getClump(depth - 1).resetIter();
                 return;
             } else {
                 if (backtrack_success >= 1) {
@@ -1394,15 +1189,15 @@ void Tree::dfs_sub_sequences_traverse_recursive(
                 backtrack_flag = false;
             }
         }
-        get_clump(depth - 1).next();
+        getClump(depth - 1).next();
     }
 
     // cout<<endl<<"< < < Tree::dfs_sub_sequences_traverse_recursive()";
     return;
 }
 
-void Tree::collect_invariant_polys(C_Polyhedron& cpoly, Clump& invd_vp) {
-    invd_vp.insert(cpoly);
+void Tree::collect_invariant_polys(C_Polyhedron& poly, Clump& invd_vp) {
+    invd_vp.insert(poly);
     cout << endl << "  invd_vp.size():" << invd_vp.getCount();
 }
 
@@ -1414,7 +1209,7 @@ void Tree::collect_sub_sequences(vector<vector<int>>& sub_sequences,
     vector<int> s;
     int dth;
     for (dth = hb; dth >= lb; dth--) {
-        s.push_back(get_clump(dth).get_gli());
+        s.push_back(getClump(dth).getIter());
     }
     cout << endl << "- s.size():" << s.size();
     cout << endl << "  s:";
@@ -1428,18 +1223,18 @@ void Tree::collect_sub_sequences(vector<vector<int>>& sub_sequences,
 void Tree::collect_invariant_polys_and_sub_sequences(
     Clump& invd_vp,
     vector<vector<int>>& sub_sequences,
-    C_Polyhedron& cpoly,
+    C_Polyhedron& poly,
     int hb,
     int lb) {
     // cout<<endl<<"> > > Tree::collect_invariant_polys_and_sub_sequences()";
     vector<int> s;
     int dth;
     for (dth = hb; dth >= lb; dth--) {
-        s.push_back(get_clump(dth).get_gli());
+        s.push_back(getClump(dth).getIter());
     }
     //  collect invd_vp
     vector<int> erase_index;
-    erase_index = invd_vp.insert_with_erase_index(cpoly);
+    erase_index = invd_vp.insert_with_erase_index(poly);
     // cout<<endl<<"  invd_vp.size():"<<invd_vp.getCount();
 
     //  add above collectors
@@ -1456,7 +1251,7 @@ void Tree::collect_invariant_polys_and_sub_sequences(
 void Tree::collect_invariant_polys_and_sub_sequences(
     Clump& invd_vp,
     vector<vector<int>>& sub_sequences,
-    C_Polyhedron& cpoly,
+    C_Polyhedron& poly,
     vector<int>& sequence) {
     // cout<<endl<<"> > > Tree::collect_invariant_polys_and_sub_sequences()";
 
@@ -1469,7 +1264,7 @@ void Tree::collect_invariant_polys_and_sub_sequences(
 
     //  collect invd_vp
     vector<int> erase_index;
-    erase_index = invd_vp.insert_with_erase_index(cpoly);
+    erase_index = invd_vp.insert_with_erase_index(poly);
     cout << endl << "  invd_vp.size():" << invd_vp.getCount();
 
     //  add above collectors
@@ -1482,35 +1277,32 @@ void Tree::collect_invariant_polys_and_sub_sequences(
     return;
 }
 
-void Tree::dfs_sequences_traverse(vector<vector<vector<int>>> sequences,
-                                  C_Polyhedron& initp,
-                                  C_Polyhedron& invd) {
-    cout << endl << "> > > Tree::dfs_sequences_traverse()";
+void Tree::treeSeqTraverse(vector<vector<vector<int>>> sequences,
+                           C_Polyhedron& initp,
+                           C_Polyhedron& invd) {
+    cout << endl << "> > > Tree::treeSeqTraverse()";
 
-    int start = -1;
+    int start = 0;
     vector<int> sequence;
     int depth = clumps.size() - 1;
-    dfs_sequences_traverse_recursive2(sequence, sequences, start, depth, initp,
-                                      invd);
-
-    cout << endl << "< < < Tree::dfs_sequences_traverse()";
+    dfsSequences(sequence, sequences, start, depth, initp, invd);
+    cout << endl << "< < < Tree::treeSeqTraverse()";
 }
 
-void Tree::dfs_sequences_traverse_recursive2(
-    vector<int>& sequence,
-    vector<vector<vector<int>>> sequences,
-    int i,
-    int depth,
-    C_Polyhedron& cpoly,
-    C_Polyhedron& invd) {
+void Tree::dfsSequences(vector<int>& sequence,
+                        vector<vector<vector<int>>> sequences,
+                        int i,
+                        int depth,
+                        C_Polyhedron& poly,
+                        C_Polyhedron& invd) {
     if (TotalTimer.getElapsedTime() >= total_time) {
         cout << endl << "Time is up!";
         return;
     }
 
-    if (i == sequences.size() - 1) {
-        weave_count++;
-        singleWeave++;
+    if (i == sequences.size()) {
+        totalSuccessCnt++;
+        successCnt++;
 
         cout << endl;
         cout << endl << "sequence:";
@@ -1521,88 +1313,77 @@ void Tree::dfs_sequences_traverse_recursive2(
         if (print_tree) {
             Print_Prune_Sequence_Tree(sequence, 0, "Weaved");
         }
-        collect_timer.restart();
-        collect_invariants_for_one_location_by_eliminating(target_index, cpoly,
-                                                           invd);
+        collectTimer.restart();
+        collectInv(curId, poly, invd);
         cout << endl;
-        cout << endl << "- Have Collected " << weave_count << " invariant(s)";
-        collect_timer.stop();
+        cout << endl << "- Have Collected " << totalSuccessCnt << " invariant(s)";
+        collectTimer.stop();
         cout << endl
-             << "- The collect_invariants Time Taken (0.01s) = "
-             << collect_timer.getElapsedTime();
-        collect_time = collect_time + collect_timer.getElapsedTime();
-        singleCollect =
-            singleCollect + collect_timer.getElapsedTime();
+             << "- The collectInv Time Taken (0.01s) = "
+             << collectTimer.getElapsedTime();
+        collect_time = collect_time + collectTimer.getElapsedTime();
+        singleCollect = singleCollect + collectTimer.getElapsedTime();
         cout << endl << "------------------------------";
-        cout << endl << "- cpoly: " << endl << "  " << cpoly;
+        cout << endl << "- poly: " << endl << "  " << poly;
         cout << endl << "- invd: " << endl << "  " << invd;
         cout << endl
              << "- invariant: " << endl
-             << "  " << (*locList)[target_index]->GetInv();
+             << "  " << (*locList)[curId]->GetInv();
         cout << endl << "\\-----------------------------";
         return;
     }
 
     int j = 0;
-    vector<int> banged_s;
-    bool s_banged_flag = false;
-    while (j < sequences[i + 1].size()) {
+    vector<int> prunedSeq;
+    bool prunedFlag = false;
+    while (j < sequences[i].size()) {
         vector<int> s;
-        s.insert(s.end(), sequences[i + 1][j].begin(),
-                 sequences[i + 1][j].end());
+        s.insert(s.end(), sequences[i][j].begin(), sequences[i][j].end());
 
-        if (banged_s.size() > 0 &&
-            has_the_same_sequences_from_the_left(banged_s, s)) {
+        if (prunedSeq.size() > 0 && checkSeqPrefix(prunedSeq, s)) {
             j++;
             continue;
         } else {
-            banged_s.clear();
-            s_banged_flag = false;
+            prunedSeq.clear();
+            prunedFlag = false;
         }
 
-        C_Polyhedron p(cpoly);
+        C_Polyhedron p(poly);
         int index = 0;
-        vector<int> temp_s;
-        vector<int> read_s = sequence;
+        vector<int> tmpSeq;
+        vector<int> printedSeq = sequence;
 
         for (vector<int>::iterator it = s.begin(); it < s.end(); it++) {
-            temp_s.push_back(*it);
-            read_s.push_back(*it);
-            p.intersection_assign(get_clump(depth - index).getReference(*it));
+            tmpSeq.push_back(*it);
+            printedSeq.push_back(*it);
+            p.intersection_assign(getClump(depth - index).getReference(*it));
             if (invd.contains(p)) {
-                bang_count++;
-                singleBang++;
+                totalPrunedCnt++;
+                prunedCnt++;
                 counter.set_pst_pbc_at_location_and_depth(get_target_index(),
                                                           depth - index);
 
-                // cout<<endl;
-                // cout<<endl<<"sequence:";
-                for (int k = 0; k < read_s.size(); k++) {
-                    // cout<<read_s[k];
-                }
                 if (print_tree) {
-                    Print_Prune_Sequence_Tree(read_s, depth - index, "Banged");
+                    Print_Prune_Sequence_Tree(printedSeq, depth - index, "Pruned");
                 }
-                banged_s = temp_s;
-                s_banged_flag = true;
+                prunedSeq = tmpSeq;
+                prunedFlag = true;
                 break;
             }
             index++;
         }
 
-        if (s_banged_flag != true) {
-            dfs_sequences_traverse_recursive2(read_s, sequences, i + 1,
-                                              depth - index, p, invd);
+        if (!prunedFlag) {
+            dfsSequences(printedSeq, sequences, i + 1, depth - index, p, invd);
         }
         j++;
     }
     return;
 }
 
-bool Tree::has_the_same_sequences_from_the_left(vector<int> banged_s,
-                                                vector<int> s) {
-    for (int i = 0; i < banged_s.size(); i++) {
-        if (banged_s[i] != s[i]) {
+bool Tree::checkSeqPrefix(vector<int> prunedSeq, vector<int> s) {
+    for (int i = 0; i < prunedSeq.size(); i++) {
+        if (prunedSeq[i] != s[i]) {
             return false;
         }
     }

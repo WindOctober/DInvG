@@ -93,13 +93,13 @@ class Counter {
 
    public:
     int get_location_size();
-    void set_location_index_and_init_depth(int target_index, int tree_size);
-    DepthCounter& get_location_pre_counter(int target_index);
-    DepthCounter& get_location_pst_counter(int target_index);
-    void set_pre_pbc_at_location_and_depth(int target_index, int depth);
-    void set_pst_pbc_at_location_and_depth(int target_index, int depth);
-    int get_pre_pbc_about_location_and_depth(int target_index, int depth);
-    int get_pst_pbc_about_location_and_depth(int target_index, int depth);
+    void set_location_index_and_init_depth(int curId, int tree_size);
+    DepthCounter& get_location_pre_counter(int curId);
+    DepthCounter& get_location_pst_counter(int curId);
+    void set_pre_pbc_at_location_and_depth(int curId, int depth);
+    void set_pst_pbc_at_location_and_depth(int curId, int depth);
+    int get_pre_pbc_about_location_and_depth(int curId, int depth);
+    int get_pst_pbc_about_location_and_depth(int curId, int depth);
 };
 
 #endif

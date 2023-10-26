@@ -913,7 +913,7 @@ void Context::splitZeroOneCase(vector<Location*>* locList,
         (*dualp) = C_Polyhedron(coefNum, UNIVERSE);
         vector<Location*>::iterator it;
         for (it = locList->begin(); it < locList->end(); it++) {
-            (*it)->extract_invariants_and_update(polyStore->getPolyRef(),
+            (*it)->ExtractAndUpdateInvOrigin(polyStore->getPolyRef(),
                                                  *dualp);
         }
         return;  // nothing to be done
@@ -954,7 +954,7 @@ void Context::splitZeroOneCase(vector<Location*>* locList,
         (*dualp) = C_Polyhedron(coefNum, UNIVERSE);
         vector<Location*>::iterator it;
         for (it = locList->begin(); it < locList->end(); it++) {
-            (*it)->extract_invariants_and_update(polyStore->getPolyRef(),
+            (*it)->ExtractAndUpdateInvOrigin(polyStore->getPolyRef(),
                                                  *dualp);
         }
         return;  // nothing to be done

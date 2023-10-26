@@ -1941,8 +1941,8 @@ void TransitionSystem::ComputeInv(Expr *condition, unordered_set<string> vars_in
             InitializeLocTrans(locsize, condition, total_info);
             (*locList)[j]->setInitPoly(init_polys[i]);
             PrintLocsTrans();
-            Compute_Invariant_Frontend();
-            vector<C_Polyhedron> LoopInv = (*locList)[locsize - 1]->get_vp_inv().get_vp();
+            ComputeProgramInv();
+            vector<C_Polyhedron> LoopInv = (*locList)[locsize - 1]->get_vp_inv().getPolysVec();
             invariant = ConnectDNF(invariant, TransPolystoExprs(LoopInv, true));
             // PrintDNF(TransPolystoExprs(LoopInv));
             LoopComment->add_invariant(TransPolystoExprs(LoopInv, true), true);

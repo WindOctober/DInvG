@@ -47,9 +47,9 @@ class Clump {
      *                              analyzer is operated in )
      * coefInfo = var_info for coef -- standard pointer for printing purposes
      *                            that should not be touched
-     * polysClump = vector of polyhedra
+     * vecPolys = vector of polyhedra
      *
-     * gli = a pointer to some position in polys.. some sort of a poor
+     * iter = a pointer to some position in polys.. some sort of a poor
      *        man's iterator. In a future version, this will be made into a
      *        full fledged iterator. Do not see the need for that now.
      *
@@ -57,8 +57,8 @@ class Clump {
 
     int coefNum;
     var_info* coefInfo;
-    vector<C_Polyhedron> polysClump;
-    int gli;
+    vector<C_Polyhedron> vecPolys;
+    int iter;
 
     string name;
     string category;
@@ -68,14 +68,14 @@ class Clump {
     void initialize(var_info* coefInfo, string name, string category);
 
    public:
-    int get_gli();
+    int getIter();
     int size();
-    int space_dimension() const { return polysClump[0].space_dimension(); }
+    int space_dimension() const { return vecPolys[0].space_dimension(); }
 
     void printPolys();
     const string& getName() const;
     const string& get_category() const;
-    const vector<C_Polyhedron>& get_vp() const;
+    const vector<C_Polyhedron>& getPolysVec() const;
     void replace_vp(vector<C_Polyhedron> new_vp);
 
     Clump();
@@ -95,10 +95,10 @@ class Clump {
     // Is there a disjunct that contains "what"
     bool contains(C_Polyhedron& what);
 
-    // operations on gli -- the java style is just co-incidental. ;-)
+    // operations on iter -- the java style is just co-incidental. ;-)
     // self-explanatory :-)
 
-    void clear();
+    void resetIter();
 
     bool has_next();
 
@@ -108,11 +108,11 @@ class Clump {
     void next();
 };
 
-inline int Clump::get_gli() {
-    return gli;
+inline int Clump::getIter() {
+    return iter;
 }
 inline int Clump::size() {
-    return polysClump.size();
+    return vecPolys.size();
 }
 
 inline const string& Clump::getName() const {
@@ -123,28 +123,28 @@ inline const string& Clump::get_category() const {
     return category;
 }
 
-inline const vector<C_Polyhedron>& Clump::get_vp() const {
-    return polysClump;
+inline const vector<C_Polyhedron>& Clump::getPolysVec() const {
+    return vecPolys;
 }
 
-inline void Clump::clear() {
-    gli = 0;
+inline void Clump::resetIter() {
+    iter = 0;
 }
 
 inline bool Clump::has_next() {
-    return (polysClump.size() > 0) && (gli < (int)polysClump.size());
+    return (vecPolys.size() > 0) && (iter < (int)vecPolys.size());
 }
 
 inline C_Polyhedron& Clump::getReference() {
-    if (gli < 0) {
+    if (iter < 0) {
         // This should not happen.
         // I suck.
         cerr << " Sloppy programming pays off.. Invariants could be lost!!"
              << endl;
-        return polysClump[0];
+        return vecPolys[0];
     }
 
-    return polysClump[gli];
+    return vecPolys[iter];
 }
 
 inline C_Polyhedron& Clump::getReference(int index) {
@@ -153,14 +153,14 @@ inline C_Polyhedron& Clump::getReference(int index) {
         // I suck.
         cerr << " Sloppy programming pays off.. Invariants could be lost!!"
              << endl;
-        return polysClump[0];
+        return vecPolys[0];
     }
 
-    return polysClump[index];
+    return vecPolys[index];
 }
 
 inline void Clump::next() {
-    gli++;
+    iter++;
 }
 
 // print the clump

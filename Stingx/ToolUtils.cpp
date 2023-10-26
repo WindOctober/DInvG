@@ -58,18 +58,18 @@ int Counter::get_location_size() {
     }
 }
 
-void Counter::set_location_index_and_init_depth(int target_index,
+void Counter::set_location_index_and_init_depth(int curId,
                                                 int tree_size) {
     int gap;
     if (get_location_size() != -1) {
-        gap = target_index - get_location_size();
+        gap = curId - get_location_size();
     } else {
         cout << endl << "get_location_size() incurs Error!";
     }
 
     if (gap < 0) {
-        pre_pbc_at_location_in_depth[target_index].clearall();
-        pst_pbc_at_location_in_depth[target_index].clearall();
+        pre_pbc_at_location_in_depth[curId].clearall();
+        pst_pbc_at_location_in_depth[curId].clearall();
     } else if (gap == 0) {
         DepthCounter pre_pbc_in_depth;
         DepthCounter pst_pbc_in_depth;
@@ -85,30 +85,30 @@ void Counter::set_location_index_and_init_depth(int target_index,
         }
     }
 
-    get_location_pre_counter(target_index).init_depth_size(tree_size);
-    get_location_pst_counter(target_index).init_depth_size(tree_size);
+    get_location_pre_counter(curId).init_depth_size(tree_size);
+    get_location_pst_counter(curId).init_depth_size(tree_size);
 }
 
-DepthCounter& Counter::get_location_pre_counter(int target_index) {
-    return pre_pbc_at_location_in_depth[target_index];
+DepthCounter& Counter::get_location_pre_counter(int curId) {
+    return pre_pbc_at_location_in_depth[curId];
 }
 
-DepthCounter& Counter::get_location_pst_counter(int target_index) {
-    return pst_pbc_at_location_in_depth[target_index];
+DepthCounter& Counter::get_location_pst_counter(int curId) {
+    return pst_pbc_at_location_in_depth[curId];
 }
 
-void Counter::set_pre_pbc_at_location_and_depth(int target_index, int depth) {
-    pre_pbc_at_location_in_depth[target_index].set_pbc_at_depth(depth);
+void Counter::set_pre_pbc_at_location_and_depth(int curId, int depth) {
+    pre_pbc_at_location_in_depth[curId].set_pbc_at_depth(depth);
 }
 
-void Counter::set_pst_pbc_at_location_and_depth(int target_index, int depth) {
-    pst_pbc_at_location_in_depth[target_index].set_pbc_at_depth(depth);
+void Counter::set_pst_pbc_at_location_and_depth(int curId, int depth) {
+    pst_pbc_at_location_in_depth[curId].set_pbc_at_depth(depth);
 }
 
-int Counter::get_pre_pbc_about_location_and_depth(int target_index, int depth) {
-    return get_location_pre_counter(target_index).get_pbc_at_depth(depth);
+int Counter::get_pre_pbc_about_location_and_depth(int curId, int depth) {
+    return get_location_pre_counter(curId).get_pbc_at_depth(depth);
 }
 
-int Counter::get_pst_pbc_about_location_and_depth(int target_index, int depth) {
-    return get_location_pst_counter(target_index).get_pbc_at_depth(depth);
+int Counter::get_pst_pbc_about_location_and_depth(int curId, int depth) {
+    return get_location_pst_counter(curId).get_pbc_at_depth(depth);
 }

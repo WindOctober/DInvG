@@ -24,6 +24,8 @@
 #include "LinExpr.h"
 #include "Macro.h"
 #include "myassertions.h"
+
+
 ostream& printPolyhedron(ostream& in,
                           C_Polyhedron const& np,
                           const var_info* info) {
@@ -100,6 +102,11 @@ ostream& printPolyhedron(ostream& in,
     return in;
 }
 
+void outputPolyhedron(C_Polyhedron* poly,const var_info* info){
+    cout<<endl<<"================================================"<<endl;
+    printPolyhedron(std::cout,*poly,info);
+    cout<<"================================================"<<endl;
+}
 void print_pure_polyhedron(C_Polyhedron const& np, const var_info* info) {
     if (np.is_universe()) {
         cout << endl << "True";
@@ -195,7 +202,7 @@ ostream& print_clump(ostream& in, Clump const& cl, const var_info* info) {
     LinExpr l(n, f2);
     Constraint_System::const_iterator vi;
     vector<C_Polyhedron>::iterator vpit;
-    vector<C_Polyhedron> cl_vp = cl.get_vp();
+    vector<C_Polyhedron> cl_vp = cl.getPolysVec();
 
     for (vpit = cl_vp.begin(); vpit != cl_vp.end(); vpit++) {
         if (vpit != cl_vp.begin()) {
@@ -397,7 +404,7 @@ void dualize(C_Polyhedron const& p, C_Polyhedron& result) {
             result.add_constraint(Variable(n + 1 + j) >= 0);
         } else if ((*vi).type() == Constraint::STRICT_INEQUALITY) {
             cerr
-                << "Location::ComputeDualConstraints -- Warning: Encountered "
+                << "Location::ComputeCoefConstraints -- Warning: Encountered "
                    "Strict Inequality"
                 << endl;
             cerr << "                " << (*vi) << endl;

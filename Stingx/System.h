@@ -65,9 +65,9 @@ class System {
 
     Context* glc_;
     // one for each location
-    vector<Location*> vloc;
+    vector<Location*> vecLocs;
 
-    vector<TransitionRelation*> vtrans;
+    vector<TransitionRelation*> vecTrans;
 
 
     void compute_initial_context();
@@ -85,8 +85,8 @@ class System {
     void addLoc(Location* loc);
     void addTrans(TransitionRelation* trans);
 
-    int getLocNum() const { return vloc.size(); }
-    int getTransNum() const { return vtrans.size(); }
+    int getLocNum() const { return vecLocs.size(); }
+    int getTransNum() const { return vecTrans.size(); }
 
     var_info* getInfo() const { return varInfo; }
     var_info* getCoefInfo() const { return coefInfo; }
