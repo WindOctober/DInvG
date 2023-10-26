@@ -51,8 +51,8 @@ class Tree {
     int er;    // related transition(inter)
     int unra;  // un-related location(intra)
     int uner;  // un-related transition(inter)
-    int target_index = -1;
-    int max_clump_count = -1;
+    int curId = -1;
+    int maxPolyNum = -1;
 
     vector<pair<int, vector<int>>> pruned_node;
     vector<int> clumps_gli;
@@ -69,18 +69,18 @@ class Tree {
     void set_er(int amount);
     void set_unra(int amount);
     void set_uner(int amount);
-    void set_target_index(int index);
-    void set_max_clump_count();
+    void setCurId(int index);
+    void setMaxPolyNum();
     int get_ra();
     int get_er();
     int get_unra();
     int get_uner();
     int get_target_index();
     int get_max_clump_count();
-    Clump& get_clump(int depth);
+    Clump& getClump(int depth);
     void Original_Prior(vector<Clump>& clumps);
     void Reorder_Target_Prior_1(vector<Clump>& clumps);
-    void Reorder_Target_Prior_2(vector<Clump>& clumps);
+    void ReorderClumpsPrior(vector<Clump>& clumps);
     void Reorder_Target_Prior_3(vector<Clump>& clumps);
     void extract_vcl_for_one_location_about_intra(vector<Clump>& clumps);
     void Print_Prune_Tree(int depth, string weavedorbanged);
@@ -95,7 +95,7 @@ class Tree {
                                    string weavedorbanged);
 
     // prune method 1
-    void prune_node_self_inspection(int target_index, C_Polyhedron& invd);
+    void prune_node_self_inspection(int curId, C_Polyhedron& invd);
     void insert_pruned_node(int depth, vector<int> node_gli);
     void clear_pruned_node();
     void store_conflict_node();
@@ -106,7 +106,7 @@ class Tree {
     // prune method 2
     void prune_clumps_by_hierarchy_inclusion();
 
-    // dfs_sequences_traverse
+    // treeSeqTraverse
     vector<vector<vector<int>>> sequences_generation(
         string divide_into_sections,
         C_Polyhedron& initp);
@@ -176,22 +176,18 @@ class Tree {
         vector<vector<int>>& sub_sequences,
         C_Polyhedron& cpoly,
         vector<int>& sequence);
-    void dfs_sequences_traverse(vector<vector<vector<int>>> sequences,
+    void treeSeqTraverse(vector<vector<vector<int>>> sequences,
                                 C_Polyhedron& initp,
                                 C_Polyhedron& invd);
-    void dfs_sequences_traverse_recursive2(
+    void dfsSequences(
         vector<int>& sequence,
         vector<vector<vector<int>>> sequences,
         int i,
         int depth,
         C_Polyhedron& cpoly,
         C_Polyhedron& invd);
-    bool has_the_same_sequences_from_the_left(vector<int> banged_s,
+    bool checkSeqPrefix(vector<int> prunedSeq,
                                               vector<int> s);
-    // void dfs_sequences_traverse_recursive(vector<int> & sequence,
-    // vector<vector<vector<int>>> sequences, int i, C_Polyhedron & initp,
-    // C_Polyhedron & invd); void read_a_sequence(vector<int> sequence,
-    // C_Polyhedron & cpoly, C_Polyhedron & invd);
 };
 
 inline vector<Clump>& Tree::get_tree() {
@@ -215,13 +211,13 @@ inline int Tree::get_uner() {
     return uner;
 }
 inline int Tree::get_target_index() {
-    return target_index;
+    return curId;
 }
 inline int Tree::get_max_clump_count() {
-    return max_clump_count;
+    return maxPolyNum;
 }
 
-inline Clump& Tree::get_clump(int depth) {
+inline Clump& Tree::getClump(int depth) {
     return clumps[depth];
 }
 

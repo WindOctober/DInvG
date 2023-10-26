@@ -46,11 +46,11 @@ System::System(System& s, Context& cc)
 }
 
 void System::addLoc(Location* loc) {
-    vloc.push_back(loc);
+    vecLocs.push_back(loc);
 }
 
 void System::addTrans(TransitionRelation* trans) {
-    vtrans.push_back(trans);
+    vecTrans.push_back(trans);
 }
 
 void System::update_dimensions() {
@@ -62,14 +62,14 @@ void System::update_dimensions() {
 Location const& System::get_location(int index) const {
     PRECONDITION((index >= 0 && index < getLocNum()),
                  "System::get_location-- index out of range");
-    Location const* ll = vloc[index];
+    Location const* ll = vecLocs[index];
     return (*ll);
 }
 
 TransitionRelation const& System::get_transition_relation(int index) const {
     PRECONDITION((index >= 0 && index < getTransNum()),
                  "System::get_transition_relation -- index out of range");
-    TransitionRelation const* tt = vtrans[index];
+    TransitionRelation const* tt = vecTrans[index];
     return (*tt);
 }
 
@@ -82,13 +82,13 @@ void System::print(ostream& os) const {
     os << " =======================================================" << endl;
     os << " System Locations" << endl;
 
-    for (vi = vloc.begin(); vi < vloc.end(); ++vi) {
+    for (vi = vecLocs.begin(); vi < vecLocs.end(); ++vi) {
         os << *(*vi) << endl;
     }
 
     os << "System Transitions " << endl;
 
-    for (vj = vtrans.begin(); vj < vtrans.end(); ++vj) {
+    for (vj = vecTrans.begin(); vj < vecTrans.end(); ++vj) {
         os << *(*vj) << endl;
     }
 }
@@ -105,12 +105,12 @@ void System::compute_initial_context() {
     glc_ = new Context(varInfo, coefInfo, lambdaInfo);
 
     vector<Location*>::iterator vi;
-    for (vi = vloc.begin(); vi != vloc.end(); ++vi) {
-        (*vi)->ComputeDualConstraints(*glc_);
+    for (vi = vecLocs.begin(); vi != vecLocs.end(); ++vi) {
+        (*vi)->ComputeCoefConstraints(*glc_);
     }
 
     vector<TransitionRelation*>::iterator vj;
-    for (vj = vtrans.begin(); vj != vtrans.end(); ++vj) {
+    for (vj = vecTrans.begin(); vj != vecTrans.end(); ++vj) {
         (*vj)->ComputeIntraConsecConstraints(*glc_);
     }
 }
@@ -143,7 +143,7 @@ void System::get_location_info(System& s, Context& cc) {
 
 bool System::location_matches(string name) {
     vector<Location*>::iterator vi;
-    for (vi = vloc.begin(); vi != vloc.end(); ++vi) {
+    for (vi = vecLocs.begin(); vi != vecLocs.end(); ++vi) {
         if ((*vi)->matches(name))
             return true;
     }
@@ -152,7 +152,7 @@ bool System::location_matches(string name) {
 
 Location* System::get_matching_location(string name) {
     vector<Location*>::iterator vi;
-    for (vi = vloc.begin(); vi != vloc.end(); ++vi) {
+    for (vi = vecLocs.begin(); vi != vecLocs.end(); ++vi) {
         if ((*vi)->matches(name))
             return (*vi);
     }
@@ -206,8 +206,8 @@ void System::get_transition_info(System& s, Context& cc) {
 
 void System::add_invariants_and_update(C_Polyhedron& pp, C_Polyhedron& dualp) {
     vector<Location*>::iterator vi;
-    for (vi = vloc.begin(); vi != vloc.end(); ++vi) {
-        (*vi)->extract_invariants_and_update(pp, dualp);
+    for (vi = vecLocs.begin(); vi != vecLocs.end(); ++vi) {
+        (*vi)->ExtractAndUpdateInvOrigin(pp, dualp);
     }
 
     return;

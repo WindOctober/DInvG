@@ -427,7 +427,7 @@ void TransitionRelation::ComputeIntraConsecConstraints(Context& context) {
                 enablePoly.add_constraint(Variable(lambdaLStart + j) >= 0);
                 disablePoly.add_constraint(Variable(lambdaLStart + j) >= 0);
             } else if ((*it).type() == Constraint::STRICT_INEQUALITY) {
-                cerr << "Location::ComputeDualConstraints -- Warning: "
+                cerr << "Location::ComputeCoefConstraints -- Warning: "
                         "Encountered "
                         "Strict Inequality"
                      << endl;
@@ -571,7 +571,7 @@ void TransitionRelation::ComputeInterConsecConstraints(vector<Clump>& clumps) {
                 enablePoly.add_constraint(Variable(lambdaIndex + j) >= 0);
                 disablePoly.add_constraint(Variable(lambdaIndex + j) >= 0);
             } else if ((*it).type() == Constraint::STRICT_INEQUALITY) {
-                cerr << "Location::ComputeDualConstraints -- Warning: "
+                cerr << "Location::ComputeCoefConstraints -- Warning: "
                         "Encountered "
                         "Strict Inequality"
                      << endl;

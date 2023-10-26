@@ -41,6 +41,8 @@ using namespace std;
 using namespace Parma_Polyhedra_Library;
 using namespace Parma_Polyhedra_Library::IO_Operators;
 
+
+void outputPolyhedron(C_Polyhedron* poly,const var_info* info);
 ostream& printPolyhedron(ostream& in,
                           C_Polyhedron const& np,
                           const var_info* info);

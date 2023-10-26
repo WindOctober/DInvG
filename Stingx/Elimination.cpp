@@ -450,25 +450,15 @@ void Project_by_Farkas(C_Polyhedron& result, int l, int r) {
 }
 
 void Project_by_Kohler(C_Polyhedron& result, int l, int r) {
-    // cout<<endl;
     cout << endl << "> > > Project_by_Kohler(), doing...";
-    // cout<<endl<<"      "<<"Before Project_by_Kohler(), result is ";
-    // cout<<endl<<"      "<<result;
-
-    // cout<<"- - - 1. Constraint_System cs is "<<endl<<"      "<<cs;
     Constraint_System::const_iterator vi;
     Generator_System::const_iterator vj;
     long unsigned int i, j;
     int equality_count = 0, non_strict_inequality_count = 0;
-
-    //    Count the number of multiplier variables(that is generator y) required
     Constraint_System cs = result.minimized_constraints();
-    // cout<<endl<<"input cs is : "<<endl<<cs<<endl;
     Constraint_System cs_only_unprotected;
     Constraint_System cs_mixed_protected;
     Constraint_System cs_only_protected;
-    // repack_constraints_based_on_protection(cs, cs_only_unprotected,
-    // cs_mixed_protected, cs_only_protected, l, r);
 
     int flag_unprotected = 0;
     int flag_protected = 0;
@@ -510,11 +500,6 @@ void Project_by_Kohler(C_Polyhedron& result, int l, int r) {
         n_y_mixed_protected++;
     for (vi = cs_only_protected.begin(); vi != cs_only_protected.end(); ++vi)
         n_y_only_protected++;
-    // cout<<endl<<"      "<<"After repacking, number of cs is "<<n_y;
-    // cout<<endl<<"      "<<"After repacking, number of cs_only_unprotected is
-    // "<<n_y_only_unprotected; cout<<endl<<"      "<<"After repacking, number
-    // of cs_mixed_protected is "<<n_y_mixed_protected; cout<<endl<<" "<<"After
-    // repacking, number of cs_only_protected is "<<n_y_only_protected;
     C_Polyhedron yTAeq0(n_y_mixed_protected + n_y_only_unprotected, UNIVERSE);
     Linear_Expression yTA(0);
 
@@ -586,48 +571,16 @@ void Project_by_Kohler(C_Polyhedron& result, int l, int r) {
              << "Warning! equality + non_strict_inequality != Rows(Lines) in "
                 "b>=Ax";
     }
-    //    Now those are all the constraints.
-    // cout<<endl<<"- - - 3. y^T*A=0 (has added some y>=0) is
-    // "<<endl<<yTAeq0<<endl; cout<<endl<<"- - - 4. y^T*A=0 's
-    // minimized_constraints() is "<<endl<<" "<<yTAeq0.minimized_constraints();
-
-    // Constraint_System cs_yTAeq0 = yTAeq0.minimized_constraints();
-    // dimension_type nc_yTAeq0=0;
-    // for (vi=cs_yTAeq0.begin();vi!=cs_yTAeq0.end(); ++vi){
-    //    nc_yTAeq0++;
-    // }
-
-    // C_Polyhedron poly_mixed_protected_yTAeq0(cs_yTAeq0);
     yTAeq0.remove_higher_space_dimensions(n_y_mixed_protected);
-    // Constraint_System cs_mixed_protected_yTAeq0 =
-    // poly_mixed_protected_yTAeq0.minimized_constraints(); dimension_type
-    // nc_mixed_protected_yTAeq0=0; for (vi=cs_mixed_protected_yTAeq0.begin();
-    // vi!=cs_mixed_protected_yTAeq0.end(); ++vi){
-    //     nc_mixed_protected_yTAeq0++;
-    // }
-
-    // C_Polyhedron poly_yTAeq0(cs_mixed_protected_yTAeq0);
-
-    //    After we get y^T*A=0, then transfer from the generator of y^T to
-    //    values of y^T
-    // cout<<endl<<"- - - 5. y^T 's generators() is "<<endl<<"
-    // "<<poly_yTAeq0.generators(); cout<<endl<<"- - - 6. y^T 's
-    // minimized_generators() is "<<endl<<poly_yTAeq0.minimized_generators();
     Generator_System gs_yTAeq0 = yTAeq0.minimized_generators();
     restruct_generators(gs_yTAeq0);
     C_Polyhedron yTbgeq0(r - l, UNIVERSE);  // Store y^T*b>=0
     for (vj = gs_yTAeq0.begin(); vj != gs_yTAeq0.end(); vj++) {
         Generator g = (*vj);
         int y[n_y_mixed_protected] = {-999};
-        // cout<<endl<<"[ ";
         for (dimension_type i = 0; i < g.space_dimension(); i++) {
             handleInt(g.coefficient(Variable(i)), y[i]);
-            // cout<<y[i]<<", ";
         }
-        // cout<<"]";
-        //     Now, y^T are extracted.
-
-        //    Now build the constraints for y^T*b>=0
         Linear_Expression yTb(0);
         j = 0;
         for (vi = cs_mixed_protected.begin(); vi != cs_mixed_protected.end();
@@ -640,13 +593,7 @@ void Project_by_Kohler(C_Polyhedron& result, int l, int r) {
             }
             j++;
         }
-        // cout<<endl<<"yTb >= 0 is "<<endl<<yTb<<" >= 0 "<<endl;
         yTbgeq0.add_constraint(yTb >= 0);
-
-        // cout<<endl<<"- - - 7. y^T*b>=0(added in the loop) is
-        // "<<endl<<yTbgqe0<<endl;
-        //     Now yTbgeq0 contains the constraints of b( coefficient of
-        //     invariant)
     }
     Constraint_System cs_only_protected_corresponding_dimensions;
     Linear_Expression b_only_protected(0);
@@ -667,41 +614,7 @@ void Project_by_Kohler(C_Polyhedron& result, int l, int r) {
         }
     }
     yTbgeq0.add_constraints(cs_only_protected_corresponding_dimensions);
-    // cout<<endl<<"- - - 8. y^T*b>=0 is "<<endl<<yTbgeq0<<endl;
-
-    //    For minimized
-    // Constraint_System cs_yTbgeq0 = yTbgeq0.minimized_constraints();
-    // C_Polyhedron poly_yTbgeq0(cs_yTbgeq0);
-    // cout<<endl<<"- - - 9. y^T*b>=0 's minimized_constraints is "<<endl<<"
-    // "<<poly_yTbgeq0;
-
-    //    Test for cout
-    // dimension_type nc_yTbgeq0=0;
-    // for (vi=cs_yTbgeq0.begin();vi!=cs_yTbgeq0.end(); ++vi){
-    //   nc_yTbgeq0++;
-    //}
-    // cout<<endl<<"- - - 10. y^T*b>=0 's minimized_generators is "<<endl<<"
-    // "<<poly_yTbgeq0.minimized_generators()<<endl;
-
     result = yTbgeq0;
-    // cout<<endl;
-    // cout<<endl<<"      "<<"After Project_by_Kohler(), result is ";
-    // cout<<endl<<"      "<<result;
-
-    // cout<<endl<<"- - - "<<" { "<<n_y<<" } "<<" * "<<" [ "<<r-l<<" ] "<<" &
-    // "<<" ' "<<cs.space_dimension()-(r-l)<<" ' "; cout<<" of Rows * Columns(
-    // [Vars] & 'to be eliminated' ) in [b] >= 'Ax'"; cout<<endl<<"      "<<"+{
-    // "<<equality_count<<" } "<<" of equalities"; cout<<endl<<"      "<<"+{
-    // "<<non_strict_inequality_count<<" } "<<" of non_strict-inequalities";
-    // cout<<endl<<"- - - "<<"   "<<nc_yTAeq0<<"   "<<" * "<<" {
-    // "<<cs_yTAeq0.space_dimension()<<" } "<<" of Rows * Columns in {y^T} * 'A'
-    // == 0"; cout<<endl<<"- - - "<<"   "<<nc_mixed_protected_yTAeq0<<"   "<<"
-    // *
-    // "<<" { "<<cs_mixed_protected_yTAeq0.space_dimension()<<" } "<<" of Rows *
-    // Columns in {y^T} * 'A' == 0 for mixed_protected"; cout<<endl<<"- - -
-    // "<<"
-    // "<<nc_yTbgeq0<<"   "<<" * "<<" [ "<<cs_yTbgeq0.space_dimension()<<" ]
-    // "<<" of Rows * Columns in {y^T} * [b] >= 0";
     cout << endl << "< < < Project_by_Kohler(), done!";
     return;
 }
@@ -714,9 +627,6 @@ void Project_by_FouMot(C_Polyhedron& result, int l, int r) {
 }
 
 void Project(C_Polyhedron& result, int l, int r) {
-    // cout<<endl;
-    // cout<<endl<<"Which Projection Strategy: ";
-
     if (projection == "kohler_improvement_eliminate_c") {
         Project_by_Kohler(result, l, r);
     } else if (projection == "farkas_eliminate_c") {
@@ -737,29 +647,6 @@ void contains_test(C_Polyhedron& poly, int lb) {
     poly_removed.remove_higher_space_dimensions(lb);
     eliminate_by_Farkas(poly_Farkas, lb);
 
-    /*
-    cout<<endl<<"      "<<"poly before removed or Farkas is : ";
-    cout<<endl<<"             "<<poly;
-    cout<<endl<<"      "<<"poly_removed is : ";
-    cout<<endl<<"             "<<poly_removed;
-    cout<<endl<<"      "<<"poly_Farkas is : ";
-    cout<<endl<<"             "<<poly_Farkas;
-    */
-
-    /*
-    if (poly_removed.contains(poly_Farkas)){
-        cout<<endl<<"poly_removed contains poly_Farkas"<<endl;
-    }
-    else {
-        cout<<endl<<"poly_removed does not contain poly_Farkas"<<endl;
-    }
-    if (poly_Farkas.contains(poly_removed)){
-        cout<<endl<<"poly_Farkas contains poly_removed"<<endl;
-    }
-    else {
-        cout<<endl<<"poly_Farkas does not contain poly_removed"<<endl;
-    }
-    */
     if (poly_removed.contains(poly_Farkas) &&
         poly_Farkas.contains(poly_removed)) {
         // Do nothing

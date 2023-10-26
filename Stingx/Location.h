@@ -145,9 +145,9 @@ class Location {
     void addClump(vector<Clump>& clumps);
     void makeContext();
 
-    void ComputeDualConstraints();
-    void ComputeDualConstraints(Context& cc);       // the coef constraints
-    void ComputeDualConstraints(C_Polyhedron& cc);  // the coef constraints
+    void ComputeCoefConstraints();
+    void ComputeCoefConstraints(Context& cc);       // the coef constraints
+    void ComputeCoefConstraints(C_Polyhedron& cc);  // the coef constraints
 
     int getDim() const;
     const var_info* getInfo() const;
@@ -217,43 +217,34 @@ class Location {
     void ppged_flag_betrue() { ppged_flag = true; }
     void ppged_flag_befalse() { ppged_flag = false; }
 
-    void extract_invariants_and_update(C_Polyhedron& pp, C_Polyhedron& dualp);
-    void extract_invariants_and_update_for_one_location_by_eliminating(
+    void ExtractAndUpdateInvOrigin(C_Polyhedron& pp, C_Polyhedron& dualp);
+    void ExtractAndUpdateInv(
         C_Polyhedron& pp,
         C_Polyhedron& dualp);
-    void propagate_invariants_and_update_for_except_initial_by_propagation(
-        C_Polyhedron& preloc_inv,
-        C_Polyhedron& trans_rel /*, C_Polyhedron & dualp*/);
     void contains_test(C_Polyhedron& pp,
                        C_Polyhedron& preInv,
                        C_Polyhedron& trans_rel);
-    void extract_invariants_and_update_for_initial_by_recursive_eliminating(
-        C_Polyhedron& pp,
-        C_Polyhedron& dualp);
-    void extract_invariants_and_update_by_binary_eliminating(
-        C_Polyhedron& pp,
-        C_Polyhedron& dualp);
 
     string const& getName() const;
 
-    void populate_coefficients();  // compute the coefficients required and add
+    void setCoefInfo();  // compute the coefficients required and add
                                    // them to the constraint store
     void addTrivial(C_Polyhedron* trivial);
     void addTrivial(C_Polyhedron& trivial);
 
-    void initialize_invariant();
-    void extract_invariant_from_generator(Generator_System const& g);
-    void extract_invariant_from_generator(Generator const& g);
-    void extract_invariant_for_one_location_by_eliminating(
+    void initInv();
+    void ExtractInvfromGenerator(Generator_System const& g);
+    void ExtractInvfromGenerator(Generator const& g);
+    void ExtractInv(
         Constraint_System const& c);
     void propagate_invariants_for_except_initial_by_propagation(
         C_Polyhedron& preloc_inv,
         C_Polyhedron& trans_rel);
     void extract_invariant_for_initial_by_recursive_eliminating(
         Constraint_System const& c);
-    void solve_invariant_from_generator(Generator_System const& g);
-    void solve_invariant_from_generator(Generator const& g);
-    void update_dual_constraints(C_Polyhedron& dualp);
+    void computeInvFromGenerator(Generator_System const& g);
+    void computeInvFromGenerator(Generator const& g);
+    void UpdateCoefCS(C_Polyhedron& dualp);
 };
 
 ostream& operator<<(ostream& in, Location const& l);  // print the location

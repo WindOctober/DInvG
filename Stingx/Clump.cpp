@@ -25,28 +25,28 @@
 #include "PolyUtils.h"
 
 extern int clump_prune_count;
-extern int bang_count;
+extern int totalPrunedCnt;
 extern int singlePrePrune;
 
 void Clump::initialize() {
-    gli = 0;
+    iter = 0;
 }
 void Clump::initialize(var_info* coefInfo) {
     coefNum = coefInfo->getDim();
     this->coefInfo = coefInfo;
-    gli = 0;
+    iter = 0;
 }
 void Clump::initialize(var_info* coefInfo, string name, string category) {
     coefNum = coefInfo->getDim();
     this->coefInfo = coefInfo;
-    gli = 0;
+    iter = 0;
     this->name = name;
     this->category = category;
 }
 
 void Clump::printPolys() {
     int PolyNo = 0;
-    for (vector<C_Polyhedron>::iterator it = polysClump.begin(); it < polysClump.end(); it++) {
+    for (vector<C_Polyhedron>::iterator it = vecPolys.begin(); it < vecPolys.end(); it++) {
         cout << endl << "PolyNo is " << ++PolyNo;
         cout << endl << (*it) << endl;
     }
@@ -54,7 +54,7 @@ void Clump::printPolys() {
 }
 
 void Clump::replace_vp(vector<C_Polyhedron> new_vp) {
-    polysClump = new_vp;
+    vecPolys = new_vp;
 }
 
 Clump::Clump() {
@@ -68,24 +68,24 @@ Clump::Clump(var_info* coefInfo, string name, string category) {
 }
 
 int Clump::getCount() {
-    return polysClump.size();
+    return vecPolys.size();
 }
 
 void Clump::insert(C_Polyhedron const& p) {
     vector<C_Polyhedron>::iterator vi;
 
-    for (vi = polysClump.begin(); vi < polysClump.end(); ++vi) {
+    for (vi = vecPolys.begin(); vi < vecPolys.end(); ++vi) {
         if ((*vi).contains(p)) {
             cout << endl << "Redundant: this contains new";
             return;
         } else if (p.contains(*vi)) {
             cout << endl << "Back Prune: new contains one of this";
-            vi = polysClump.erase(vi);
+            vi = vecPolys.erase(vi);
             vi--;
         }
     }
 
-    polysClump.push_back(p);
+    vecPolys.push_back(p);
     return;
 }
 
@@ -94,24 +94,24 @@ vector<int> Clump::insert_with_erase_index(C_Polyhedron const& p) {
     vector<int>::reverse_iterator vi;
     int i;
 
-    for (i = 0; i < (int)polysClump.size(); ++i) {
-        if (polysClump[i].contains(p)) {
+    for (i = 0; i < (int)vecPolys.size(); ++i) {
+        if (vecPolys[i].contains(p)) {
             cout << endl << "Redundant: (*vi).contains(p)";
-        } else if (p.contains(polysClump[i])) {
+        } else if (p.contains(vecPolys[i])) {
             // cout<<endl<<"p.contains(*vi)";
             cout << endl
                  << "Above part, the " << i + 1
                  << "th poly is erased by next poly in back-prune";
             erase_index.push_back(i);
-            bang_count++;
+            totalPrunedCnt++;
             singlePrePrune++;
         }
     }
     for (vi = erase_index.rbegin(); vi < erase_index.rend(); vi++) {
-        polysClump.erase(polysClump.begin() + (*vi));
+        vecPolys.erase(vecPolys.begin() + (*vi));
     }
 
-    polysClump.push_back(p);
+    vecPolys.push_back(p);
     return erase_index;
 }
 
@@ -120,17 +120,17 @@ vector<int> Clump::prune_all(C_Polyhedron& p) {
     vector<int>::iterator vi;
     cout << endl << "prune";
     int i;
-    for (i = 0; i < (int)polysClump.size(); ++i) {
-        if (p.contains(polysClump[i])) {
+    for (i = 0; i < (int)vecPolys.size(); ++i) {
+        if (p.contains(vecPolys[i])) {
             clump_prune_count++;
             node_gli.push_back(i);
-            cout << " clump_prune_count++, gli: " << gli << " i: " << i;
+            cout << " clump_prune_count++, iter: " << iter << " i: " << i;
         }
     }
     for (vi = node_gli.begin(); vi < node_gli.end(); vi++) {
-        polysClump.erase(polysClump.begin() + (*vi));
-        if (gli > (*vi)) {
-            gli--;
+        vecPolys.erase(vecPolys.begin() + (*vi));
+        if (iter > (*vi)) {
+            iter--;
         }
     }
     cout << " " << get_category() << "::" << getName();
@@ -144,16 +144,16 @@ vector<int> Clump::prune_target(C_Polyhedron& p, int target_gli) {
     cout << endl << "prune";
     int i = target_gli;
     // for (i=0; i < (int) polys.size(); ++i){
-    if (p.contains(polysClump[i])) {
+    if (p.contains(vecPolys[i])) {
         clump_prune_count++;
         node_gli.push_back(i);
-        cout << " clump_prune_count++, gli: " << gli << " i: " << i;
+        cout << " clump_prune_count++, iter: " << iter << " i: " << i;
     }
     //}
     for (vi = node_gli.begin(); vi < node_gli.end(); vi++) {
-        polysClump.erase(polysClump.begin() + (*vi));
-        if (gli > (*vi)) {
-            gli--;
+        vecPolys.erase(vecPolys.begin() + (*vi));
+        if (iter > (*vi)) {
+            iter--;
         }
     }
     cout << " " << get_category() << "::" << getName();
@@ -162,7 +162,7 @@ vector<int> Clump::prune_target(C_Polyhedron& p, int target_gli) {
 }
 
 bool Clump::contains(C_Polyhedron& poly) {
-    for (auto vi = polysClump.begin(); vi < polysClump.end(); ++vi) {
+    for (auto vi = vecPolys.begin(); vi < vecPolys.end(); ++vi) {
         if ((*vi).contains(poly))
             return true;
     }
