@@ -80,9 +80,9 @@ class Tree {
     Clump& getClump(int depth);
     void Original_Prior(vector<Clump>& clumps);
     void Reorder_Target_Prior_1(vector<Clump>& clumps);
-    void ReorderClumpsPrior(vector<Clump>& clumps);
+    void setPriorClumps(vector<Clump>& clumps);
     void Reorder_Target_Prior_3(vector<Clump>& clumps);
-    void extract_vcl_for_one_location_about_intra(vector<Clump>& clumps);
+    void setIntraClumps(vector<Clump>& clumps);
     void Print_Prune_Tree(int depth, string weavedorbanged);
     void Print_Prune_Tree(int depth, int hb, int lb, string weavedorbanged);
     void Print_Prune_Sequence_Tree(vector<int> sequence,
@@ -95,7 +95,7 @@ class Tree {
                                    string weavedorbanged);
 
     // prune method 1
-    void prune_node_self_inspection(int curId, C_Polyhedron& invd);
+    void prune_node_self_inspection(int curId, C_Polyhedron& invCoefPoly);
     void insert_pruned_node(int depth, vector<int> node_gli);
     void clear_pruned_node();
     void store_conflict_node();
@@ -107,17 +107,11 @@ class Tree {
     void prune_clumps_by_hierarchy_inclusion();
 
     // treeSeqTraverse
-    vector<vector<vector<int>>> sequences_generation(
+    vector<vector<vector<int>>> seqGen(
         string divide_into_sections,
         C_Polyhedron& initp);
-    vector<vector<vector<int>>> divide_by_target_relation(C_Polyhedron& initp);
     vector<vector<vector<int>>> one_per_group(C_Polyhedron& initp);
     vector<vector<vector<int>>> two_per_group(C_Polyhedron& initp);
-    vector<vector<vector<int>>> three_per_group(C_Polyhedron& initp);
-    vector<vector<vector<int>>> four_per_group(C_Polyhedron& initp);
-    vector<vector<vector<int>>> divide_target_into_double(C_Polyhedron& initp);
-    vector<vector<vector<int>>> divide_by_inter_transition(C_Polyhedron& initp);
-    vector<vector<vector<int>>> divide_prior2_into_four(C_Polyhedron& initp);
     vector<vector<vector<int>>> merge_sub_sequences(
         vector<vector<vector<int>>> sequences,
         C_Polyhedron initp);
@@ -178,14 +172,14 @@ class Tree {
         vector<int>& sequence);
     void treeSeqTraverse(vector<vector<vector<int>>> sequences,
                                 C_Polyhedron& initp,
-                                C_Polyhedron& invd);
+                                C_Polyhedron& invCoefPoly);
     void dfsSequences(
         vector<int>& sequence,
         vector<vector<vector<int>>> sequences,
         int i,
         int depth,
         C_Polyhedron& cpoly,
-        C_Polyhedron& invd);
+        C_Polyhedron& invCoefPoly);
     bool checkSeqPrefix(vector<int> prunedSeq,
                                               vector<int> s);
 };

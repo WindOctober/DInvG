@@ -74,7 +74,7 @@ class Clump {
 
     void printPolys();
     const string& getName() const;
-    const string& get_category() const;
+    const string& getCategory() const;
     const vector<C_Polyhedron>& getPolysVec() const;
     void replace_vp(vector<C_Polyhedron> new_vp);
 
@@ -119,7 +119,7 @@ inline const string& Clump::getName() const {
     return name;
 }
 
-inline const string& Clump::get_category() const {
+inline const string& Clump::getCategory() const {
     return category;
 }
 
