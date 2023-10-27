@@ -495,8 +495,6 @@ void Location::ExtractInv(Constraint_System const& constraints) {
     if ((int)(constraints.space_dimension()) != (varsNum + 1)) {
         Project(res, LIndex, LIndex + (varsNum + 1));
     }
-    // TODO: delete the test.
-    outputPolyhedron(&res, coefInfo);
     computeInvFromGenerator(res.minimized_generators());
     return;
 }
@@ -664,8 +662,6 @@ void Location::ExtractAndUpdateInv(C_Polyhedron& poly, C_Polyhedron& coefPoly) {
          << "「 l: " << LIndex << ", varsNum: " << varsNum
          << ", coefNum: " << coefNum << " 」";
     ExtractInv(poly.minimized_constraints());
-    outputPolyhedron(invariant, info);
-    outputPolyhedron(&coefPoly, coefInfo);
     UpdateCoefCS(coefPoly);
 }
 

@@ -1299,7 +1299,6 @@ void Tree::dfsSequences(vector<int>& sequence,
         cout << endl << "Time is up!";
         return;
     }
-
     if (i == sequences.size()) {
         totalSuccessCnt++;
         successCnt++;
@@ -1352,17 +1351,17 @@ void Tree::dfsSequences(vector<int>& sequence,
         int index = 0;
         vector<int> tmpSeq;
         vector<int> printedSeq = sequence;
-
         for (vector<int>::iterator it = s.begin(); it < s.end(); it++) {
             tmpSeq.push_back(*it);
             printedSeq.push_back(*it);
+            outputPolyhedron(&getClump(depth - index).getReference(*it),coefInfo);
             p.intersection_assign(getClump(depth - index).getReference(*it));
+            // exit(0);
             if (invd.contains(p)) {
                 totalPrunedCnt++;
                 prunedCnt++;
                 counter.set_pst_pbc_at_location_and_depth(get_target_index(),
                                                           depth - index);
-
                 if (print_tree) {
                     Print_Prune_Sequence_Tree(printedSeq, depth - index, "Pruned");
                 }
