@@ -22,7 +22,6 @@ set(SRC_FILES
     PolyUtils.cpp
     Rational.cpp
     SparseLinExpr.cpp
-    System.cpp
     Timer.cpp
     TransitionRelation.cpp
     var-info.cpp

@@ -492,9 +492,17 @@ void Location::computeInvFromGenerator(Generator_System const& generators) {
 
 void Location::ExtractInv(Constraint_System const& constraints) {
     C_Polyhedron res(constraints);
+    Variables_Set projectSet;
     if ((int)(constraints.space_dimension()) != (varsNum + 1)) {
-        Project(res, LIndex, LIndex + (varsNum + 1));
+        for (int i = 0; i < coefInfo->getDim(); i++) {
+            if (i < LIndex || i > LIndex + varsNum) {
+                projectSet.insert(Variable(i));
+            }
+        }
+        res.remove_space_dimensions(projectSet);
+        // Project(res, LIndex, LIndex + (varsNum + 1));
     }
+    assert(res.space_dimension() == (varsNum + 1));
     computeInvFromGenerator(res.minimized_generators());
     return;
 }
@@ -778,7 +786,7 @@ void Location::UpdateCoefCS(C_Polyhedron& coefPoly) {
 
     coefNum = coefInfo->getDim();
 
-    result = new C_Polyhedron(coefNum + constraintNum , UNIVERSE);  
+    result = new C_Polyhedron(coefNum + constraintNum, UNIVERSE);
     Linear_Expression lin(0);
 
     for (i = 0; i < varsNum; i++) {
@@ -805,19 +813,18 @@ void Location::UpdateCoefCS(C_Polyhedron& coefPoly) {
     for (auto it = constraints.begin(); it != constraints.end(); ++it) {
         if ((*it).type() == Constraint::NONSTRICT_INEQUALITY) {
             result->add_constraint(Variable(coefNum + j) >= 0);
-        } 
-        else if ((*it).type() == Constraint::STRICT_INEQUALITY) {
+        } else if ((*it).type() == Constraint::STRICT_INEQUALITY) {
             cerr << "Location::ComputeCoefConstraints -- Warning: Encountered "
                     "Strict Inequality"
                  << endl;
             cerr << "                " << (*it) << endl;
 
-            result->add_constraint(Variable(coefNum + j) >= 0); 
+            result->add_constraint(Variable(coefNum + j) >= 0);
         }
         j++;
     }
     result->remove_higher_space_dimensions(coefNum);
-    outputPolyhedron(result,coefInfo);
+    outputPolyhedron(result, coefInfo);
     coefPoly.intersection_assign(*result);
     delete (result);
 }

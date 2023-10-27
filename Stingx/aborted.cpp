@@ -1,3 +1,199 @@
+// compute invariants by farkas for this one location from intra-transition
+void collectInvIntra(vector<Clump>& clumps, int locId) {
+    vector<vector<vector<vector<int>>>> actualSeqs;
+    int coefNum = coefInfo->getDim();
+    C_Polyhedron initPoly(coefNum, UNIVERSE);
+
+    singlePrePrune = 0;
+    counter.set_location_index_and_init_depth(locId, clumps.size());
+    // compute invariants by using initial-value and intra-transition
+    bool initLocFlag = (*locList)[locId]->isInitLoc();
+    if (!initLocFlag) {
+        cout << endl
+             << "- ( !initLocFlag ) in Location::"
+             << (*locList)[locId]->getName();
+        vector<vector<vector<int>>> emptySeq;
+        actualSeqs.push_back(emptySeq);
+    } else {
+        (*locList)[locId]->ComputeCoefConstraints(initPoly);
+        GenerateSequencesIntra(actualSeqs, locId, clumps, initPoly);
+    }
+
+    /*
+     * Read Sequences
+     */
+    successCnt = 0;
+    singleCollect = 0;
+    prunedCnt = 0;
+    // compute invariants by using initial-value and intra-transition
+    if (!initLocFlag) {
+        cout << endl
+             << "- ( !initLocFlag ) in Location::"
+             << (*locList)[locId]->getName();
+    } else {
+        vector<vector<vector<int>>> sequences;
+        if (actualSeqs.size() == 1) {
+            sequences = actualSeqs[0];
+        } else {
+            cout << endl << "Error: There are more than one sequences";
+        }
+        TraverseSequencesIntra(sequences, locId, clumps, initPoly);
+    }
+
+    return;
+}
+
+void TraverseSequencesIntra(vector<vector<vector<int>>> sequences,
+                            int index,
+                            vector<Clump>& clumps,
+                            C_Polyhedron& initPoly) {
+    C_Polyhedron invCoefPoly(*trivial);
+    Tree tr = Tree();  // empty tree
+    tr.setCurId(index);
+    vector<Clump>::iterator it;
+    for (it = clumps.begin(); it < clumps.end(); it++) {
+        (*it).resetIter();
+    }
+    cout << endl
+         << endl
+         << "/ Start to solve Location " << (*locList)[index]->getName();
+    // extract only-one-clumps which is intra-transition about this location
+    tr.setIntraClumps(clumps);
+    tr.setMaxPolyNum();
+    cout << endl << "/ Read(Traverse) Sequences";
+    tr.treeSeqTraverse(sequences, initPoly, invCoefPoly);
+
+    cout << endl << "\\ Read(Traverse) Sequences";
+    cout << endl << "\\ End to solve Location " << (*locList)[index]->getName();
+}
+
+vector<int> get_intertid_from_prelid_without_some(int prelid, string some) {
+    vector<int> tid;
+    int size = transList->size();
+
+    for (int ti = 0; ti < size; ti++) {
+        if ((*transList)[ti]->get_preloc_index() == prelid &&
+            (*transList)[ti]->get_postloc_index() != prelid &&
+            (*transList)[ti]->getPostLocName() != some) {
+            tid.push_back(ti);
+        }
+    }
+
+    return tid;
+}
+
+void GenerateSequencesIntra(vector<vector<vector<vector<int>>>>& actualSeqs,
+                            int index,
+                            vector<Clump>& clumps,
+                            C_Polyhedron& initPoly) {
+    Tree tr = Tree();
+    tr.setCurId(index);
+    for (auto it = clumps.begin(); it < clumps.end(); it++) {
+        (*it).resetIter();
+    }
+    cout << endl
+         << "/ Start to solve Location " << (*locList)[index]->getName();
+    tr.setIntraClumps(clumps);
+    tr.setMaxPolyNum();
+
+    cout << endl << "/ Generate Sequences";
+    vector<vector<vector<int>>> sequences;
+    sequences = tr.seqGen("one_per_group", initPoly);
+    actualSeqs.push_back(sequences);
+
+    cout << endl << "\\ Generate Sequences";
+    cout << endl << "\\ End to solve Location " << (*locList)[index]->getName();
+}
+
+
+#include <iostream>
+#include <queue>
+
+#include "Elimination.h"
+#include "Location.h"
+#include "TransitionRelation.h"
+#include "ppl.hh"
+
+using namespace std;
+using namespace Parma_Polyhedra_Library;
+using namespace Parma_Polyhedra_Library::IO_Operators;
+
+// push back all the transitions (from location) into bfslist
+void push_back_alltrans_from_location(int locId,
+                                      vector<int>& trans_bfslist);
+
+// push back all the transitions (from the post-location of p-transition) into
+// bfslist
+void push_back_alltrans_from_transition(int propagate_trans_index,
+                                        vector<int>& trans_bfslist);
+
+// propagate invariants from preLoc into postLoc by projection or matrix-method
+void propagate_invariants(C_Polyhedron& preloc_inv,
+                          C_Polyhedron& trans_relation,
+                          int postloc_index);
+
+// propagate invariants from preLoc into postLoc by projection or matrix-method
+// return the C_Polyhedron::propagation-result
+void propagation_invariants(C_Polyhedron& preloc_inv,
+                            C_Polyhedron& trans_relation,
+                            int postloc_index,
+                            C_Polyhedron& p);
+
+// propagate the preLoc's invariants into postLoc's initial-value by projection
+// or matrix-method
+void propagate_from_inv_to_initval(C_Polyhedron& preloc_inv,
+                                   C_Polyhedron& trans_relation,
+                                   int postloc_index);
+
+// propagate the p-transition obtained from the front element, from pre's
+// invariant to post's invariant
+void propagate_from_inv_to_inv_by_transition(int trans_index);
+
+// propagate the p-transition obtained from the front element, from pre's
+// invariant to post's invariant return the C_Polyhedron::propagation-result
+C_Polyhedron propagation_from_inv_to_inv_by_transition(int trans_index);
+
+// propagate the p-transition, which is obtained from the front element, from
+// pre's invariants to post's initial-value
+void propagate_from_inv_to_initval_by_transition(int trans_index);
+
+// propagate invariants from initial location
+void propagate_invariants_from_initial_location_to_all_others();
+
+// return the initial-location-index which has initial-value and should have
+// computed invariants
+vector<int> get_initial_lid();
+
+// return the vector of exit-location-index
+vector<int> get_exit_vlid();
+
+// return the exit-location-index
+int get_exit_lid();
+
+// has locations which has not been computed invariants by propagation
+bool has_empty_ppg_flag_except_exit();
+
+// all invariants are worked out, which means that there is no empty ppg_flag or
+// there is no location need to compute propagation and Farkas
+bool invgen_need_working();
+
+// return the location-index which will propagate to others
+vector<int> get_ppging_lid();
+
+// return the transition-index which will propagate to others
+vector<int> get_ppging_tid();
+
+// return the location-index which has initial-value, ppged_flag and should be
+// computed invariants by farkas
+vector<int> get_ppged_lid();
+
+// return the transition-index which postLoc is exit-loction
+// exit-incoming, i.e. towards to exit
+vector<int> get_exitic_tid();
+
+// compute other invariants by propagation with Farkas
+void InvPropagation(vector<Clump>& clumps);
+
 
 /*
  * lsting: Invariant Generation using Constraint Solving.
@@ -29,25 +225,25 @@ extern vector<int> get_intertid_from_prelid_without_some(int prelid,
 extern vector<int> get_intertid_to_postlid(int postlid);
 extern void collectInvIntra(
     vector<Clump>& clumps,
-    int loc_index);
+    int locId);
 extern vector<Location*>* locList;
 extern vector<TransitionRelation*>* transList;
 extern vector<int>** location_matrix;
 
-void push_back_alltrans_from_location(int loc_index,
+void push_back_alltrans_from_location(int locId,
                                       vector<int>& trans_bfslist) {
     int locSize = locList->size();
     vector<int>::iterator trans_index;
     cout << endl
          << "+ Push back all transitions from location:: "
-         << (*locList)[loc_index]->getName();
+         << (*locList)[locId]->getName();
 
-    cout << endl << "+ " << (*locList)[loc_index]->getName() << ": ";
+    cout << endl << "+ " << (*locList)[locId]->getName() << ": ";
     for (int j = 0; j < locSize; j++) {
         cout << "[";
-        for (vector<int>::iterator it = location_matrix[loc_index][j].begin();
-             it < location_matrix[loc_index][j].end(); it++) {
-            if (j == loc_index) {
+        for (vector<int>::iterator it = location_matrix[locId][j].begin();
+             it < location_matrix[locId][j].end(); it++) {
+            if (j == locId) {
                 // ignore the intra-transitions which points to themselves
                 cout << "-" << *it << "-";
             } else if ((*locList)[j]->get_ppg_flag()) {

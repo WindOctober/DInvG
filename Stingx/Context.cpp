@@ -23,7 +23,6 @@
 
 #include "Clump.h"
 #include "Location.h"
-#include "System.h"
 #include "Timer.h"
 #include "myassertions.h"
 
@@ -32,7 +31,6 @@ extern bool zero;
 extern bool one;
 extern int prune_count;
 extern int context_count;
-extern vector<System*>* global_sub_system_list;
 void breakfn();
 
 extern int* tt;
@@ -552,25 +550,6 @@ bool Context::factorizationSplit() {
     return true;
 }
 
-void Context::RecursiveSplit(System& s, C_Polyhedron* dualp) {
-    int i = 1;
-
-    while (i > 0) {
-        if (polyStore->contained(dualp)) {
-            prune_count++;
-            return;
-        }
-        i = factorizationSplit();
-
-        if (i > 0) {
-            childClump->RecursiveSplit(s, dualp);
-            delete (childClump);
-        } else {
-            terminal_strategy(s, dualp);
-            return;
-        }
-    }
-}
 
 void Context::RecursiveSplit(vector<Location*>* locList,
                                  C_Polyhedron* dualp,
@@ -786,31 +765,6 @@ int Context::choose_unresolved_multiplier() {
     }
 
     return ret;
-}
-
-void Context::terminal_strategy(System& s, C_Polyhedron* dualp) {
-    // compute a new transition relation for each terminal
-
-    int index = get_multiplier_status();
-
-    if (index == NO_UNRESOLVED_MULTIPLIER) {
-        // now add the invariants and update dualp
-        s.add_invariants_and_update(polyStore->getPolyRef(), (*dualp));
-        return;  // nothing to be done
-    }
-
-    // else print the new system
-
-    System* new_sys = new System(s, (*this));
-    global_sub_system_list->push_back(new_sys);
-
-    // print the new system
-    cout << " Terminal Transition System :" << endl;
-    cout << (*new_sys) << endl;
-    cout << endl;
-
-    // that is it
-    return;
 }
 
 void Context::splitZeroOneCase(Clump& clump) {

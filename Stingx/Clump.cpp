@@ -26,7 +26,6 @@
 
 extern int clump_prune_count;
 extern int totalPrunedCnt;
-extern int singlePrePrune;
 
 void Clump::initialize() {
     iter = 0;
@@ -104,7 +103,6 @@ vector<int> Clump::insert_with_erase_index(C_Polyhedron const& p) {
                  << "th poly is erased by next poly in back-prune";
             erase_index.push_back(i);
             totalPrunedCnt++;
-            singlePrePrune++;
         }
     }
     for (vi = erase_index.rbegin(); vi < erase_index.rend(); vi++) {
@@ -133,7 +131,7 @@ vector<int> Clump::prune_all(C_Polyhedron& p) {
             iter--;
         }
     }
-    cout << " " << get_category() << "::" << getName();
+    cout << " " << getCategory() << "::" << getName();
 
     return node_gli;
 }
@@ -156,7 +154,7 @@ vector<int> Clump::prune_target(C_Polyhedron& p, int target_gli) {
             iter--;
         }
     }
-    cout << " " << get_category() << "::" << getName();
+    cout << " " << getCategory() << "::" << getName();
 
     return node_gli;
 }

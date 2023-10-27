@@ -49,7 +49,6 @@
 
 class Location;
 class Clump;
-class System;
 
 using namespace std;
 using namespace Parma_Polyhedra_Library;
@@ -242,7 +241,6 @@ class Context {
     bool is_simplifiable_context();
     // Check if the context is simplifiable
 
-    void RecursiveSplit(System& s, C_Polyhedron* dual_poly);
 
     void RecursiveSplit(vector<Location*>* locList,
                             C_Polyhedron* dual_poly,
@@ -256,8 +254,6 @@ class Context {
 
     void RecursiveSplit(Clump& clist);
     // A recursive strategy function
-
-    void terminal_strategy(System& s, C_Polyhedron* dual_poly);
     void collect_generators(Generator_System& g);
 
     void validate_generators(

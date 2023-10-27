@@ -42,7 +42,7 @@ using namespace Parma_Polyhedra_Library;
 using namespace Parma_Polyhedra_Library::IO_Operators;
 
 // push back all the transitions (from location) into bfslist
-void push_back_alltrans_from_location(int loc_index,
+void push_back_alltrans_from_location(int locId,
                                       vector<int>& trans_bfslist);
 
 // push back all the transitions (from the post-location of p-transition) into
