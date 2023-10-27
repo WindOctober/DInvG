@@ -148,7 +148,7 @@ bool searchTransRel(char* w, TransitionRelation** m);
 void addPreInvtoTrans();
 void print_status();
 
-void checkFinalInv();
+void check_invariant_ok();
 void ScanInput();
 
 bool searchLoc(char* name, Location** what) {
@@ -251,8 +251,6 @@ void TraverseSequences(vector<vector<vector<int>>> sequences,
                        vector<Clump>& clumps,
                        C_Polyhedron& initPoly) {
     C_Polyhedron invd(*trivial);
-    // TODO: delete the test part below.
-    outputPolyhedron(trivial, coefInfo);
     Tree tr = Tree();
     tr.setCurId(index);
     vector<Clump>::iterator it;
@@ -474,7 +472,7 @@ void PrintStatusBeforeSolving() {
     cout << "\\----------------------------- " << endl;
 }
 
-void PrintStatusAfterSolver() {
+void Print_Status_after_Solver() {
     cout << endl;
     cout << "/----------------------------- " << endl;
     cout << "| Status after Solver: " << endl;
@@ -692,13 +690,7 @@ void ComputeProgramInv() {
 
         // only compute invariants at initial location
         bool initLocFlag = (*locList)[index]->getInitFlag();
-        if (!initLocFlag) {
-            cout << endl
-                 << "- ( !initLocFlag ) in Location::"
-                 << (*locList)[index]->getName();
-            vector<vector<vector<int>>> emptySeq;
-            actualSeqs.push_back(emptySeq);
-        } else {
+        if (initLocFlag) {
             GenerateSequences(actualSeqs, index, clumps, initPoly);
         }
 
@@ -716,7 +708,7 @@ void ComputeProgramInv() {
         // only compute invariants at initial location
         bool initLocFlag = (*locList)[index]->getInitFlag();
         if (initLocFlag) {
-            vector<vector<vector<int>>> sequences = actualSeqs[index];
+            vector<vector<vector<int>>> sequences = actualSeqs[0];
             TraverseSequences(sequences, index, clumps, initPoly);
         }
 
@@ -835,9 +827,9 @@ int main() {
     if (djinv) {
         PrintInvInExitLoc();
     }
-    PrintStatusAfterSolver();
+    Print_Status_after_Solver();
     if (inv_check) {
-        checkFinalInv();
+        check_invariant_ok();
     }
 
     return 0;
@@ -867,15 +859,15 @@ void print_status() {
     cout << "----------------------------------------------------" << endl;
 }
 
-void checkFinalInv() {
-    cout << endl << "> > > In checkFinalInv()";
+void check_invariant_ok() {
+    cout << endl << "> > > In check_invariant_ok()";
     cerr << "Checking for invariant..." << endl;
     vector<TransitionRelation*>::iterator it;
     for (it = transList->begin(); it != transList->end(); ++it) {
         (*it)->check_map();
     }
     cerr << "Done!" << endl;
-    cout << endl << "< < < Out of checkFinalInv()";
+    cout << endl << "< < < Out of check_invariant_ok()";
 }
 
 void ScanInput() {
