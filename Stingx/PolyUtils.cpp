@@ -45,25 +45,25 @@ ostream& printPolyhedron(ostream& in,
     // info names the first info->dimension() dimensions of the polyhedron
     // The remaining will just receive some fake name, say "__A"-->"__Z"
     int n = np.space_dimension(), nf = info->getDim(), i;
-    var_info* f2;
+    var_info* primedInfo;
     char a[4] = {'_', '_', 'A', '\0'};
     if (nf >= n) {
-        f2 = new var_info();
+        primedInfo = new var_info();
         for (i = 0; i < n; i++)
-            f2->insert(info->getName(i));
+            primedInfo->insert(info->getName(i));
     } else {
-        f2 = new var_info();
+        assert(n==nf*2);
+        primedInfo = new var_info();
         for (i = 0; i < nf; i++)
-            f2->insert(info->getName(i));
+            primedInfo->insert(info->getName(i));
         for (i = nf; i < n; i++) {
-            a[2] = 'A' + i - nf;
-            f2->insert(a);
+            primedInfo->insert(("'"+string(info->getName(i-nf))).c_str());
         }
     }
     bool flag = true;
     int j;
 
-    LinExpr l(n, f2);
+    LinExpr l(n, primedInfo);
 
     Constraint_System const& cs = np.minimized_constraints();
 
@@ -97,7 +97,7 @@ ostream& printPolyhedron(ostream& in,
         }
     }
 
-    delete (f2);
+    delete (primedInfo);
 
     return in;
 }
@@ -122,25 +122,25 @@ void print_pure_polyhedron(C_Polyhedron const& np, const var_info* info) {
     // info names the first info->dimension() dimensions of the polyhedron
     // The remaining will just receive some fake name, say "__A"-->"__Z"
     int n = np.space_dimension(), nf = info->getDim(), i;
-    var_info* f2;
+    var_info* primedInfo;
     char a[4] = {'_', '_', 'A', '\0'};
     if (nf >= n) {
-        f2 = new var_info();
+        primedInfo = new var_info();
         for (i = 0; i < n; i++)
-            f2->insert(info->getName(i));
+            primedInfo->insert(info->getName(i));
     } else {
-        f2 = new var_info();
+        assert(n==nf*2);
+        primedInfo = new var_info();
         for (i = 0; i < nf; i++)
-            f2->insert(info->getName(i));
+            primedInfo->insert(info->getName(i));
         for (i = nf; i < n; i++) {
-            a[2] = 'A' + i - nf;
-            f2->insert(a);
+            primedInfo->insert(("'"+string(info->getName(i))).c_str());
         }
     }
     bool flag = true;
     int j;
 
-    LinExpr l(n, f2);
+    LinExpr l(n, primedInfo);
 
     Constraint_System const& cs = np.minimized_constraints();
 
@@ -173,7 +173,7 @@ void print_pure_polyhedron(C_Polyhedron const& np, const var_info* info) {
         }
     }
 
-    delete (f2);
+    delete (primedInfo);
 }
 
 

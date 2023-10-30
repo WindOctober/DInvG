@@ -50,12 +50,12 @@ using namespace Parma_Polyhedra_Library::IO_Operators;
 
 class Location {
    private:
-    int varsNum;                  // the number of variables in the location
+    int varsNum;  // the number of variables in the location
     var_info *info, *coefInfo, *lambdaInfo;  // the primal and coef var-infos
-    bool initFlag=false;           // has the initial condition been set
-    string locName;            // name
-    Context* context;             // the solver for intra-location transitions
-    C_Polyhedron* poly;        // the initial condition
+    bool initFlag = false;  // has the initial condition been set
+    string locName;         // name
+    Context* context;       // the solver for intra-location transitions
+    C_Polyhedron* poly;     // the initial condition
     // If there is none, then initialized to false
 
     // the final invariant that I will compute for the location
@@ -93,12 +93,12 @@ class Location {
                     string name);
     // Initialize but do not form new coefficients
     void InitWithoutPopulating(int varsNum,
-                                       var_info* info,
-                                       var_info* coefInfo,
-                                       var_info* lambdaInfo,
-                                       C_Polyhedron* p,
-                                       string name,
-                                       int left);
+                               var_info* info,
+                               var_info* coefInfo,
+                               var_info* lambdaInfo,
+                               C_Polyhedron* p,
+                               string name,
+                               int left);
 
     // added by Hongming, 2022/10/11, Shanghai Jiao Tong University
 
@@ -117,7 +117,11 @@ class Location {
              C_Polyhedron* p,
              string name);
 
-    Location(int varsNum, var_info* info, var_info* coefInfo, var_info* lambdaInfo, string name);
+    Location(int varsNum,
+             var_info* info,
+             var_info* coefInfo,
+             var_info* lambdaInfo,
+             string name);
 
     // A location with preset var-infos and a given starting point
 
@@ -196,7 +200,7 @@ class Location {
 
     C_Polyhedron& get_non_const_poly_reference() { return *poly; }
 
-    void set_invariant_polyhedron(C_Polyhedron* what) {
+    void setPreInvPoly(C_Polyhedron* what) {
         preInv->intersection_assign((*what));
     }
 
@@ -205,22 +209,8 @@ class Location {
     Clump* getDisClump() { return disabled_clump; }
     Clump const& getDisClumpRef() const { return (*disabled_clump); }
 
-    bool get_ppg_flag() const { return propagation_flag; }
-    void ppg_flag_betrue() { propagation_flag = true; }
-    void ppg_flag_befalse() { propagation_flag = false; }
-    
-    bool get_ppging_flag() const { return ppging_flag; }
-    void ppging_flag_betrue() { ppging_flag = true; }
-    void ppging_flag_befalse() { ppging_flag = false; }
-
-    bool get_ppged_flag() const { return ppged_flag; }
-    void ppged_flag_betrue() { ppged_flag = true; }
-    void ppged_flag_befalse() { ppged_flag = false; }
-
     void ExtractAndUpdateInvOrigin(C_Polyhedron& pp, C_Polyhedron& dualp);
-    void ExtractAndUpdateInv(
-        C_Polyhedron& pp,
-        C_Polyhedron& dualp);
+    void ExtractAndUpdateInv(C_Polyhedron& pp, C_Polyhedron& dualp);
     void contains_test(C_Polyhedron& pp,
                        C_Polyhedron& preInv,
                        C_Polyhedron& trans_rel);
@@ -228,20 +218,14 @@ class Location {
     string const& getName() const;
 
     void setCoefInfo();  // compute the coefficients required and add
-                                   // them to the constraint store
+                         // them to the constraint store
     void addTrivial(C_Polyhedron* trivial);
     void addTrivial(C_Polyhedron& trivial);
 
     void initInv();
     void ExtractInvfromGenerator(Generator_System const& g);
     void ExtractInvfromGenerator(Generator const& g);
-    void ExtractInv(
-        Constraint_System const& c);
-    void propagate_invariants_for_except_initial_by_propagation(
-        C_Polyhedron& preloc_inv,
-        C_Polyhedron& trans_rel);
-    void extract_invariant_for_initial_by_recursive_eliminating(
-        Constraint_System const& c);
+    void ExtractInv(Constraint_System const& c);
     void computeInvFromGenerator(Generator_System const& g);
     void computeInvFromGenerator(Generator const& g);
     void UpdateCoefCS(C_Polyhedron& dualp);

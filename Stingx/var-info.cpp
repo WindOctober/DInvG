@@ -162,7 +162,7 @@ void var_info::print(ostream& out) const {
     out << "]]" << endl;
 }
 
-int var_info::search_and_insert(const char* what) {
+int var_info::searchElseInsert(const char* what) {
     int index;
     index = search(what);
     if (index == VAR_NOT_FOUND) {

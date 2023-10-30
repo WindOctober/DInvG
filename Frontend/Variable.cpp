@@ -13,7 +13,7 @@ VariableInfo::VariableInfo()
     structure_array_flag = false;
     numerical_array_flag = false;
 }
-void VariableInfo::search_and_insert(VariableInfo var, vector<VariableInfo> &Vars)
+void VariableInfo::searchElseInsert(VariableInfo var, vector<VariableInfo> &Vars)
 {
     QualType Emptytype;
     for (int i = 0; i < Vars.size(); i++)

@@ -22,7 +22,7 @@ public:
     bool getStructureArray() const { return structure_array_flag; }
     bool getNumericalArray() const { return numerical_array_flag; }
 
-    static void search_and_insert(VariableInfo var, vector<VariableInfo> &Vars);
+    static void searchElseInsert(VariableInfo var, vector<VariableInfo> &Vars);
     static Expr *search_for_value(VariableInfo var, vector<VariableInfo> &Vars);
     
     void assign(string varname, Expr *expr, QualType type);

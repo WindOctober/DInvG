@@ -7,8 +7,8 @@
 #include <regex>
 #include <unordered_set>
 extern var_info *info, *coefInfo, *lambdaInfo;
-extern vector<Location *> *locList;
-extern vector<TransitionRelation *> *transList;
+extern vector<Location *> locList;
+extern vector<TransitionRelation *> transList;
 extern unordered_set<string> global_vars;
 extern set<string> MainFuncs;
 vector<ArrIndex> ArrayIndex;
@@ -946,7 +946,7 @@ void TransitionSystem::AddVars(VariableInfo &var)
     }
     for (int i = 0; i < Vars.size(); i++)
     {
-        VariableInfo::search_and_insert(var, Vars[i]);
+        VariableInfo::searchElseInsert(var, Vars[i]);
     }
     return;
 }
@@ -961,7 +961,7 @@ void TransitionSystem::AddVars(VariableInfo &var, Expr *expr)
     for (int i = 0; i < Vars.size(); i++)
     {
         var.assign("", TransExprbyCurVars(expr, Vars[i]), var.getQualType());
-        VariableInfo::search_and_insert(var, Vars[i]);
+        VariableInfo::searchElseInsert(var, Vars[i]);
     }
     return;
 }
@@ -1824,7 +1824,7 @@ void TransitionSystem::InitializeLocTrans(int locsize, Expr *condition, var_info
         if (i == locsize - 1)
             locname = "le";
         Location *loc = new Location(info->getDim(), info, coefInfo, lambdaInfo, locname);
-        locList->push_back(loc);
+        locList.push_back(loc);
     }
     for (int i = 0; i < total_info->getDim(); i++)
     {
@@ -1859,9 +1859,9 @@ void TransitionSystem::InitializeLocTrans(int locsize, Expr *condition, var_info
                 trans_name = "Exit_Transition_from_" + to_string(i) + "by breakstmt";
                 p->remove_space_dimensions(project_set);
                 TransitionRelation *trans = new TransitionRelation(info->getDim(), info, coefInfo, lambdaInfo, trans_name);
-                trans->set_locs((*locList)[i], (*locList)[j]);
-                trans->set_relation(p);
-                transList->push_back(trans);
+                trans->setLocs(locList[i], locList[j]);
+                trans->setRel(p);
+                transList.push_back(trans);
                 continue;
             }
             if (j != locsize - 1)
@@ -1873,9 +1873,9 @@ void TransitionSystem::InitializeLocTrans(int locsize, Expr *condition, var_info
                 trans_name = "Transition_" + to_string(i) + "_" + to_string(j);
                 p->remove_space_dimensions(project_set);
                 TransitionRelation *trans = new TransitionRelation(info->getDim(), info, coefInfo, lambdaInfo, trans_name);
-                trans->set_locs((*locList)[i], (*locList)[j]);
-                trans->set_relation(p);
-                transList->push_back(trans);
+                trans->setLocs(locList[i], locList[j]);
+                trans->setRel(p);
+                transList.push_back(trans);
             }
             else
             {
@@ -1900,9 +1900,9 @@ void TransitionSystem::InitializeLocTrans(int locsize, Expr *condition, var_info
                         continue;
                     q->remove_space_dimensions(project_set);
                     TransitionRelation *trans = new TransitionRelation(info->getDim(), info, coefInfo, lambdaInfo, trans_name);
-                    trans->set_locs((*locList)[i], (*locList)[j]);
-                    trans->set_relation(q);
-                    transList->push_back(trans);
+                    trans->setLocs(locList[i], locList[j]);
+                    trans->setRel(q);
+                    transList.push_back(trans);
                 }
             }
         }
@@ -1936,13 +1936,11 @@ void TransitionSystem::ComputeInv(Expr *condition, unordered_set<string> vars_in
             // DONE: remove useless result.
             if (j == locsize - 1)
                 continue;
-            locList = new vector<Location *>();
-            transList = new vector<TransitionRelation *>();
             InitializeLocTrans(locsize, condition, total_info);
-            (*locList)[j]->setInitPoly(init_polys[i]);
+            locList[j]->setInitPoly(init_polys[i]);
             PrintLocsTrans();
             ComputeProgramInv();
-            vector<C_Polyhedron> LoopInv = (*locList)[locsize - 1]->get_vp_inv().getPolysVec();
+            vector<C_Polyhedron> LoopInv = locList[locsize - 1]->get_vp_inv().getPolysVec();
             invariant = ConnectDNF(invariant, TransPolystoExprs(LoopInv, true));
             // PrintDNF(TransPolystoExprs(LoopInv));
             LoopComment->add_invariant(TransPolystoExprs(LoopInv, true), true);
@@ -1950,11 +1948,10 @@ void TransitionSystem::ComputeInv(Expr *condition, unordered_set<string> vars_in
 
             for (int index = 0; index < locsize - 1; index++)
             {
-                LoopInv.push_back((*locList)[index]->GetInv());
+                LoopInv.push_back(locList[index]->GetInv());
             }
             // PrintDNF(TransPolystoExprs(LoopInv));
             LoopComment->add_invariant(TransPolystoExprs(LoopInv, true), true);
-            delete locList, transList;
         }
     }
     InequalityDNF = invariant;
@@ -2001,19 +1998,19 @@ vector<vector<Expr *>> TransitionSystem::OutLoop(Expr *cond, unordered_set<strin
     UsedVars.clear();
     for (const auto &var : rec_vars)
     {
-        total_info->search_and_insert(var.c_str());
+        total_info->searchElseInsert(var.c_str());
     }
     for (const auto &var : rec_vars)
     {
-        total_info->search_and_insert((var + INITSUFFIX).c_str());
+        total_info->searchElseInsert((var + INITSUFFIX).c_str());
     }
     for (const auto &var : LocalVars)
     {
-        total_info->search_and_insert(var.c_str());
+        total_info->searchElseInsert(var.c_str());
     }
     for (const auto &var : LocalVars)
     {
-        total_info->search_and_insert((var + INITSUFFIX).c_str());
+        total_info->searchElseInsert((var + INITSUFFIX).c_str());
     }
     for (int i = 0; i < total_info->getDim(); i++)
     {
@@ -2051,7 +2048,7 @@ vector<vector<Expr *>> TransitionSystem::OutLoop(Expr *cond, unordered_set<strin
     //         unordered_set<string> rec;
     //         TraverseExprForVars(RemainDNF[i][j],rec);
     //         for(auto name:rec){
-    //             rec_info->search_and_insert(name.c_str());
+    //             rec_info->searchElseInsert(name.c_str());
     //         }
     //     }
     // }

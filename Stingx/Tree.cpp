@@ -25,8 +25,8 @@
 
 extern int dimension;
 extern var_info *info, *coefInfo, *lambdaInfo;
-extern vector<Location*>* locList;
-extern vector<TransitionRelation*>* transList;
+extern vector<Location*> locList;
+extern vector<TransitionRelation*> transList;
 extern int getTransIndex(string name);
 extern bool backtrack_flag;
 extern C_Polyhedron* trivial;
@@ -96,7 +96,7 @@ void Tree::setPriorClumps(vector<Clump>& clumps) {
     vector<int> unrelatedTransId;
     vector<int> targetId;
 
-    string target = (*locList)[curId]->getName();
+    string target = locList[curId]->getName();
     int transition_index;
     string transPreLocName, transPostLocName;
 
@@ -104,8 +104,8 @@ void Tree::setPriorClumps(vector<Clump>& clumps) {
     for (auto it = clumps.begin(); it < clumps.end(); it++) {
         if (it->getCategory() == "Transition") {
             transition_index = getTransIndex(it->getName());
-            transPreLocName = (*transList)[transition_index]->getPreLocName();
-            transPostLocName = (*transList)[transition_index]->getPostLocName();
+            transPreLocName = transList[transition_index]->getPreLocName();
+            transPostLocName = transList[transition_index]->getPostLocName();
             if (transPreLocName == target || transPostLocName == target) {
                 relatedTransId.push_back(j);
             } else {
@@ -148,7 +148,7 @@ void Tree::setIntraClumps(vector<Clump>& clumps) {
     vector<int> unrelatedTransId;
     vector<int> targetId;
 
-    string target = (*locList)[curId]->getName();
+    string target = locList[curId]->getName();
     int transition_index;
     string transPreLocName, transPostLocName;
 
@@ -243,22 +243,6 @@ void Tree::Print_Prune_Tree(int depth, int hb, int lb, string weavedorbanged) {
                 cout << " " << j << " ";
             }
         }
-        /*
-        // old version, without smart blank with print Prune Tree
-        for (int j = 0; j < getClump(dth-1).getCount(); j++){
-            if (lb <= dth-1 && dth-1 <= hb){
-                if (j == getClump(dth-1).getIter() && dth > depth){
-                    cout<<"["<<j<<"]";
-                }
-                else {
-                    cout<<" "<<j<<" ";
-                }
-            }
-            else {
-                cout<<" "<<j<<" ";
-            }
-        }
-        */
         cout << " --  b: "
              << counter.get_pre_pbc_about_location_and_depth(get_target_index(),
                                                              dth - 1);
@@ -362,33 +346,6 @@ void Tree::Print_Prune_Sequence_Tree(vector<int> sequence,
     }
 }
 
-void Tree::prune_node_self_inspection(int curId, C_Polyhedron& invCoefPoly) {
-    int dth = size() - 1;
-    vector<Clump>::iterator vi;
-
-    store_clumps_gli();
-    clear_pruned_node();
-    // for (; dth>=0/*clumps.size()-ra-er*/; dth--){
-    vi = clumps.begin() + dth;
-    // vector<int> node_gli = (*vi).prune_all(invCoefPoly);
-    vector<int> node_gli = (*vi).prune_target(invCoefPoly, clumps_gli[dth]);
-    if (node_gli.size()) {
-        insert_pruned_node(dth, node_gli);
-        backtrack_flag = false;
-    }
-    //}
-    store_conflict_node();
-    dth = first_conflict;
-    while (dth-- > 0) {
-        vi = clumps.begin() + dth;
-        (*vi).resetIter();
-        cout << endl
-             << "depth: " << dth
-             << ", clear_lower_gli, iter : " << (*vi).getIter() << " "
-             << (*vi).getCategory() << "::" << (*vi).getName();
-    }
-}
-
 void Tree::insert_pruned_node(int depth, vector<int> node_gli) {
     pruned_node.emplace_back(depth, node_gli);
 }
@@ -430,53 +387,6 @@ void Tree::store_clumps_gli() {
         clumps_gli.push_back((*vi).getIter());
     }
     // clumps_gli = new_clumps_gli;
-}
-
-void Tree::prune_clumps_by_hierarchy_inclusion() {
-    cout << endl;
-    cout << endl << "> > > prune_clumps_by_hierarchy_inclusion()";
-    vector<Clump>::iterator vi;
-    vector<C_Polyhedron>::iterator vj;
-    vector<Location> tr_union;
-    vector<Location>::iterator vk;
-
-    // initialize union
-    for (vi = clumps.begin(); vi < clumps.end(); vi++) {
-        Location clumps_union(dimension, info, coefInfo, lambdaInfo,
-                              "union_" + (*vi).getName(),
-                              curId * (dimension + 1));
-        tr_union.push_back(clumps_union);
-    }
-    for (vk = tr_union.end() - 1; vk >= tr_union.begin(); vk--) {
-        cout << (*vk);
-    }
-
-    // build up union for each hierarchy
-    int dth = tr_union.size() - 1;
-    while (dth >= 0) {
-        vk = tr_union.begin() + dth;
-        Clump cl = clumps[dth];
-        C_Polyhedron clumps_poly(coefInfo->getDim(), UNIVERSE);
-        int i = 0;
-        for (i = 0; i < cl.getCount(); i++) {
-            cout << endl << "to extract invariant";
-            (*vk).ExtractInv(cl.getReference(i).minimized_constraints());
-
-            cout << endl << "to update constraints";
-            (*vk).UpdateCoefCS(clumps_poly);
-        }
-        cout << endl << "dth: " << dth << ", " << (*vk).getName();
-        cout << endl << "this union of clumps poly: " << clumps_poly;
-        dth--;
-    }
-    for (vk = tr_union.end() - 1; vk >= tr_union.begin(); vk--) {
-        cout << (*vk);
-    }
-
-    // take each "iter" from polys[iter] and test inclusion for polys[iter] and
-    // other hierarchy union
-
-    cout << endl << "< < < prune_clumps_by_hierarchy inclusion()";
 }
 
 vector<vector<vector<int>>> Tree::seqGen(string divide_into_sections,
@@ -1018,7 +928,7 @@ void Tree::dfsSequences(vector<int>& sequence,
         cout << endl << "- invCoefPoly: " << endl << "  " << invCoefPoly;
         cout << endl
              << "- invariant: " << endl
-             << "  " << (*locList)[curId]->GetInv();
+             << "  " << locList[curId]->GetInv();
         cout << endl << "\\-----------------------------";
         return;
     }

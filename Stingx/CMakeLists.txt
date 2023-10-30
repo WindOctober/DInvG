@@ -3,11 +3,17 @@ cmake_minimum_required(VERSION 3.10)
 project(lstingX LANGUAGES CXX)
 
 # Add include directories
-
+find_package(BISON)
+find_package(FLEX)
+BISON_TARGET(LinTSParser LinTS.y ${CMAKE_CURRENT_BINARY_DIR}/LinTSParser.cpp DEFINES_FILE ${CMAKE_CURRENT_BINARY_DIR}/parser.h)
+FLEX_TARGET(LinTSLexer LinTS.l ${CMAKE_CURRENT_BINARY_DIR}/LinTSLexer.cpp)
+ADD_FLEX_BISON_DEPENDENCY(LinTSLexer LinTSParser)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ")
 # Add source files
 set(SRC_FILES
+    ${BISON_LinTSParser_OUTPUTS}
+    ${FLEX_LinTSLexer_OUTPUTS}
     Clump.cpp
     Context.cpp
     DisequalityStore.cpp
@@ -21,6 +27,7 @@ set(SRC_FILES
     PolyStore.cpp
     PolyUtils.cpp
     Rational.cpp
+    LinTS.cpp
     SparseLinExpr.cpp
     Timer.cpp
     TransitionRelation.cpp
@@ -28,7 +35,6 @@ set(SRC_FILES
     Elimination.cpp
     Tree.cpp
     ToolUtils.cpp
-    Propagation.cpp
     Macro.cpp
     lstingx.cpp
 )

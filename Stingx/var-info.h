@@ -65,7 +65,7 @@ class var_info {
 
     virtual var_info* prime();
 
-    virtual int search_and_insert(const char* what);
+    virtual int searchElseInsert(const char* what);
 
     virtual void print_info(ostream& out) const { print(out); }
 

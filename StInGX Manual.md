@@ -49,7 +49,7 @@ Try in the following command:
 3. If you can see some output information (instead of error) as follows, then the StInGX could be used on your system! And you can skip section 1.3. (After run "lstingx" without input, you could run command `ctrl+c` to exit)
 
 ```
-- Initialize_before_Parser doing...Done!
+- Initialize doing...Done!
 
 - ScanInput doing...
 argc: 1

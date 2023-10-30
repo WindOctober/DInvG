@@ -242,11 +242,11 @@ void TransitionRelation::compute_post_new(const C_Polyhedron* p,
     q.remove_space_dimensions(vs);
 }
 
-void TransitionRelation::set_locs(Location* preLoc, Location* postLoc) {
+void TransitionRelation::setLocs(Location* preLoc, Location* postLoc) {
     this->preLoc = preLoc;
     this->postLoc = postLoc;
 }
-void TransitionRelation::set_relation(C_Polyhedron* rel) {
+void TransitionRelation::setRel(C_Polyhedron* rel) {
     this->transPoly = rel;
     ResetConstraintsNum();
     split_relation();
@@ -691,6 +691,10 @@ const string& TransitionRelation::getPostLocName() const {
 
 const C_Polyhedron& TransitionRelation::getTransRel() const {
     return *transPoly;
+}
+
+C_Polyhedron* TransitionRelation::getTransRelRef() const {
+    return transPoly;
 }
 
 const var_info* TransitionRelation::getInfo() const {
