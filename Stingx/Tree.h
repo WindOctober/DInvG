@@ -78,10 +78,7 @@ class Tree {
     int get_target_index();
     int get_max_clump_count();
     Clump& getClump(int depth);
-    void Original_Prior(vector<Clump>& clumps);
-    void Reorder_Target_Prior_1(vector<Clump>& clumps);
     void setPriorClumps(vector<Clump>& clumps);
-    void Reorder_Target_Prior_3(vector<Clump>& clumps);
     void setIntraClumps(vector<Clump>& clumps);
     void Print_Prune_Tree(int depth, string weavedorbanged);
     void Print_Prune_Tree(int depth, int hb, int lb, string weavedorbanged);
@@ -94,8 +91,6 @@ class Tree {
                                    int lb,
                                    string weavedorbanged);
 
-    // prune method 1
-    void prune_node_self_inspection(int curId, C_Polyhedron& invCoefPoly);
     void insert_pruned_node(int depth, vector<int> node_gli);
     void clear_pruned_node();
     void store_conflict_node();
@@ -103,10 +98,6 @@ class Tree {
     int get_first_conflict();
     void clear_first_conflict();
 
-    // prune method 2
-    void prune_clumps_by_hierarchy_inclusion();
-
-    // treeSeqTraverse
     vector<vector<vector<int>>> seqGen(
         string divide_into_sections,
         C_Polyhedron& initp);

@@ -141,8 +141,8 @@ class TransitionRelation {
                        string name,
                        int index);
 
-    void set_locs(Location* preLoc, Location* postLoc);
-    void set_relation(C_Polyhedron* rel);
+    void setLocs(Location* preLoc, Location* postLoc);
+    void setRel(C_Polyhedron* rel);
 
     void ResetConstraintsNum();
 
@@ -178,7 +178,7 @@ class TransitionRelation {
     void addPreInv();
 
     const C_Polyhedron& getTransRel() const;
-
+    C_Polyhedron* getTransRelRef() const;
     const var_info* getInfo() const;
 
     C_Polyhedron const& get_guard_poly() const { return (*guard); }
