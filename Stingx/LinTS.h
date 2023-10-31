@@ -1,19 +1,24 @@
 #ifndef __LINTS_STING_H_
 #define __LINTS_STING_H_
 
+#include <map>
 #include <ppl.hh>
 #include <stack>
+#include <utility>
 #include "Location.h"
 #include "TransitionRelation.h"
 #include "var-info.h"
 // TODO: Add error detection: Locations or Transitions with duplicate names are
 // not allowed.
+// TODO: Convert the SearchLocName function into a map stl.
 class LinTS {
    public:
     LinTS();
 
-    void ComputeLinTSInv(bool skipAlg);
+    void ComputeLinTSInv();
     void ComputeInitInv();
+    C_Polyhedron* computeOneStepTransPoly(C_Polyhedron& init,
+                                          C_Polyhedron& trans);
 
     void tarjan(int start);
     bool tarjanAlg();
@@ -23,7 +28,8 @@ class LinTS {
     void Propagation();
     void PrintInv();
 
-    LinTS* projectSubTS(vector<int> projectLocs);
+    void MergeSubMap(map<string, vector<C_Polyhedron*>> subMap);
+    LinTS* projectSubTS(vector<int> projectLocs, int index, C_Polyhedron* poly);
 
     void addVariable(char* var);
     void addTransRel(char* transName,
@@ -40,6 +46,7 @@ class LinTS {
     int getVarNum() { return varNum; }
     int getVarIndex(char* var);
     int getVarIndex(string var);
+    map<string, vector<C_Polyhedron*>> getInvMap() { return InvMap; }
     Location* getInitLocation();
 
     void PrintLinTS(int debugLevel = 0, bool skipBasic = false);
@@ -47,6 +54,7 @@ class LinTS {
    private:
     // About Tarjan Alg.
     vector<vector<int>> edges;
+    map<pair<int, int>, int> transInEdge;
     vector<bool> visited;
     stack<int> s;
     vector<int> low, dfn;
@@ -60,6 +68,7 @@ class LinTS {
     Location* initLoc = NULL;
     vector<Location*>* locList;
     vector<TransitionRelation*>* transList;
+    map<string, vector<C_Polyhedron*>> InvMap;
     C_Polyhedron *trivial, *dualp;
     vector<Clump> clumps;
 };
