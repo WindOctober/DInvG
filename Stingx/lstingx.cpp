@@ -7,7 +7,6 @@
 #include "parser.h"
 #include "Location.h"
 #include "PolyUtils.h"
-#include "Propagation.h"
 #include "LinTS.h"
 #include "TransitionRelation.h"
 #include "Tree.h"
@@ -251,7 +250,7 @@ int main() {
     int parserResult=yyparse(root);
     tt = new int[lambdaInfo->getDim()];
     root->PrintLinTS(1);
-    root->ComputeLinTSInv(false);
+    root->ComputeLinTSInv();
     root->PrintInv();
     addPreInvtoTrans();
     PrintStatusBeforeSolving();
