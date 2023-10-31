@@ -27,10 +27,6 @@
 #include "PolyUtils.h"
 #include "myassertions.h"
 
-extern bool zero;
-extern bool one;
-extern bool falsepath;
-extern bool noexitpath;
 
 void TransitionRelation::initialize(int varsNum,
                                     var_info* info,
@@ -166,8 +162,7 @@ bool TransitionRelation::add_preservation_relation(Constraint const& cc) {
 
     for (int i = 0; i < varsNum; ++i) {
         flag &= handleInt(cc.coefficient(Variable(i)), coef);
-        flag &=
-            handleInt(cc.coefficient(Variable(i + varsNum)), primed_coef);
+        flag &= handleInt(cc.coefficient(Variable(i + varsNum)), primed_coef);
         if (!flag)
             return false;
         if (coef == 0 && primed_coef == 0)
@@ -363,7 +358,7 @@ void TransitionRelation::ComputeIntraConsecConstraints(Context& context) {
         Constraint_System disableCS;
         Constraint_System::const_iterator it;
         int preLIndex = preLoc->getLIndex(), postLIndex = postLoc->getLIndex();
-        assert(preLIndex==postLIndex);
+        assert(preLIndex == postLIndex);
         int i, j;
         C_Polyhedron enablePoly(2 * varsNum + 2 + constraints_num, UNIVERSE);
         C_Polyhedron disablePoly(2 * varsNum + 2 + constraints_num, UNIVERSE);
@@ -387,9 +382,8 @@ void TransitionRelation::ComputeIntraConsecConstraints(Context& context) {
             expr = -1 * Variable(postLStart + i);  // - c_postloc_i
             j = 0;
             for (it = constraints.begin(); it != constraints.end(); it++) {
-                expr +=
-                    handleInt((*it).coefficient(Variable(varsNum + i))) *
-                    Variable(lambdaLStart + j);
+                expr += handleInt((*it).coefficient(Variable(varsNum + i))) *
+                        Variable(lambdaLStart + j);
                 j++;
             }
             enablePoly.add_constraint(expr == 0);
@@ -399,9 +393,8 @@ void TransitionRelation::ComputeIntraConsecConstraints(Context& context) {
             expr = Linear_Expression(0);
             j = 0;
             for (it = constraints.begin(); it != constraints.end(); it++) {
-                expr +=
-                    handleInt((*it).coefficient(Variable(varsNum + i))) *
-                    Variable(lambdaLStart + j);
+                expr += handleInt((*it).coefficient(Variable(varsNum + i))) *
+                        Variable(lambdaLStart + j);
                 j++;
             }
             disablePoly.add_constraint(expr == 0);
@@ -450,34 +443,34 @@ void TransitionRelation::ComputeIntraConsecConstraints(Context& context) {
         for (it = constraints.begin(); it != constraints.end(); ++it) {
             for (i = 0; i <= varsNum; i++)
                 e[index].setCoefficient(
-                    preLIndex + i,
-                    handleInt((*it).coefficient(Variable(i))));
+                    preLIndex + i, handleInt((*it).coefficient(Variable(i))));
 
             for (i = 0; i <= varsNum; i++)
-                e[lambdaNum].setCoefficient(postLIndex + i,
-                                             handleInt((*it).coefficient(
-                                                 Variable(postLStart + i))));
+                e[lambdaNum].setCoefficient(
+                    postLIndex + i,
+                    handleInt((*it).coefficient(Variable(postLStart + i))));
 
             if ((*it).is_inequality())
                 context.addIneqExpr(Expression(e));
             else if ((*it).is_equality())
                 context.addEqExpr(Expression(e));
         }
-        if (falsepath) {
+        // This section corresponds to the false scenario, namely the -1>=0 case
+        // in the Farkas Lemma.
+        lexpr *= 0;
+        for (it = disableCS.begin(); it != disableCS.end(); ++it) {
             lexpr *= 0;
-            for (it = disableCS.begin(); it != disableCS.end(); ++it) {
-                lexpr *= 0;
-                for (i = 0; i <= varsNum; i++)
-                    lexpr[preLIndex + i] =
-                        handleInt((*it).coefficient(Variable(i)));
-                lexpr[coefNum] = handleInt((*it).inhomogeneous_term());
-                if ((*it).is_inequality())
-                    dispoly.add_constraint((lexpr.toLinExpression()) >= 0);
-                else if ((*it).is_equality())
-                    dispoly.add_constraint((lexpr.toLinExpression()) == 0);
-            }
-            disableClump->insert(dispoly);
+            for (i = 0; i <= varsNum; i++)
+                lexpr[preLIndex + i] =
+                    handleInt((*it).coefficient(Variable(i)));
+            lexpr[coefNum] = handleInt((*it).inhomogeneous_term());
+            if ((*it).is_inequality())
+                dispoly.add_constraint((lexpr.toLinExpression()) >= 0);
+            else if ((*it).is_equality())
+                dispoly.add_constraint((lexpr.toLinExpression()) == 0);
         }
+        disableClump->insert(dispoly);
+
         cout << endl
              << "  pushing back clump with " << disableClump->getCount()
              << " Polyhedra (in falsepath)...";
@@ -497,7 +490,7 @@ void TransitionRelation::ComputeInterConsecConstraints(vector<Clump>& clumps) {
          << name;
     Clump clump(coefInfo, name, "Transition");
     bool transFlag = true;
-    if (transPoly->is_empty() || getPostLocName() == EXIT_LOCATION) {
+    if (transPoly->is_empty()) {
         transFlag = false;
     }
     cout << endl << "  Compute this transition: " << transFlag;
@@ -518,9 +511,8 @@ void TransitionRelation::ComputeInterConsecConstraints(vector<Clump>& clumps) {
             expr = Variable(i);  // place holder for \mu * c_i
             j = 0;
             for (it = constraints.begin(); it != constraints.end(); it++) {
-                expr +=
-                    handleInt((*it).coefficient(Variable(i))) *
-                    Variable(lambdaIndex + j);  // coefficient for \lambda_j
+                expr += handleInt((*it).coefficient(Variable(i))) *
+                        Variable(lambdaIndex + j);  // coefficient for \lambda_j
                 j++;
             }
             enablePoly.add_constraint(expr == 0);
@@ -532,9 +524,8 @@ void TransitionRelation::ComputeInterConsecConstraints(vector<Clump>& clumps) {
             expr = -1 * Variable(primedIndex + i);  // - c_postloc_i
             j = 0;
             for (it = constraints.begin(); it != constraints.end(); it++) {
-                expr +=
-                    handleInt((*it).coefficient(Variable(varsNum + i))) *
-                    Variable(lambdaIndex + j);
+                expr += handleInt((*it).coefficient(Variable(varsNum + i))) *
+                        Variable(lambdaIndex + j);
                 j++;
             }
             enablePoly.add_constraint(expr == 0);
@@ -543,9 +534,8 @@ void TransitionRelation::ComputeInterConsecConstraints(vector<Clump>& clumps) {
             expr = Linear_Expression(0);
             j = 0;
             for (it = constraints.begin(); it != constraints.end(); it++) {
-                expr +=
-                    handleInt((*it).coefficient(Variable(varsNum + i))) *
-                    Variable(lambdaIndex + j);  // coefficient for \lambda_j
+                expr += handleInt((*it).coefficient(Variable(varsNum + i))) *
+                        Variable(lambdaIndex + j);  // coefficient for \lambda_j
                 j++;
             }
             disablePoly.add_constraint(expr == 0);
@@ -589,63 +579,62 @@ void TransitionRelation::ComputeInterConsecConstraints(vector<Clump>& clumps) {
         constraints = enablePoly.minimized_constraints();
         disableCS = disablePoly.minimized_constraints();
         LinExpr templateExpr(coefNum, coefInfo);
-        if (one) {
-            C_Polyhedron polyhedron(coefNum, UNIVERSE);
-            for (it = constraints.begin(); it != constraints.end(); ++it) {
-                for (i = 0; i <= varsNum; i++) {
-                    templateExpr[preLIndex + i] =
-                        handleInt((*it).coefficient(Variable(i)));
-                    templateExpr[postLIndex + i] = handleInt(
-                        (*it).coefficient(Variable(primedIndex + i)));
-                }
-                if ((*it).is_inequality())
-                    polyhedron.add_constraint(
-                        (templateExpr.toLinExpression()) >= 0);
-                else if ((*it).is_equality())
-                    polyhedron.add_constraint(
-                        (templateExpr.toLinExpression()) == 0);
+        // This section corresponds to the case when \mu=1 in terms of
+        // increments. For details, please refer to the optimization in the
+        // SAS04 paper.
+        C_Polyhedron IncreasingPoly(coefNum, UNIVERSE);
+        for (it = constraints.begin(); it != constraints.end(); ++it) {
+            for (i = 0; i <= varsNum; i++) {
+                templateExpr[preLIndex + i] =
+                    handleInt((*it).coefficient(Variable(i)));
+                templateExpr[postLIndex + i] =
+                    handleInt((*it).coefficient(Variable(primedIndex + i)));
             }
-            clump.insert(polyhedron);
+            if ((*it).is_inequality())
+                IncreasingPoly.add_constraint((templateExpr.toLinExpression()) >=
+                                          0);
+            else if ((*it).is_equality())
+                IncreasingPoly.add_constraint((templateExpr.toLinExpression()) ==
+                                          0);
         }
-        if (zero) {
-            C_Polyhedron polyhedron(coefNum, UNIVERSE);
+        clump.insert(IncreasingPoly);
+        // This section corresponds to the local case when \mu=0. For details,
+        // please refer to the optimization in the SAS04 paper.
+        C_Polyhedron LocalPoly(coefNum, UNIVERSE);
+        templateExpr *= 0;
+        for (it = constraints.begin(); it != constraints.end(); ++it) {
+            for (i = 0; i <= varsNum; i++)
+                templateExpr[postLIndex + i] =
+                    handleInt((*it).coefficient(Variable(primedIndex + i)));
+            if ((*it).is_inequality())
+                LocalPoly.add_constraint((templateExpr.toLinExpression()) >=
+                                          0);
+            else if ((*it).is_equality())
+                LocalPoly.add_constraint((templateExpr.toLinExpression()) ==
+                                          0);
+        }
+        clump.insert(LocalPoly);
+        // This section corresponds to the false scenario, namely the -1>=0 case
+        // in the Farkas Lemma.
+        C_Polyhedron FalsePoly(coefNum, UNIVERSE);
+        templateExpr *= 0;
+        for (it = disableCS.begin(); it != disableCS.end(); ++it) {
             templateExpr *= 0;
-            for (it = constraints.begin(); it != constraints.end(); ++it) {
-                for (i = 0; i <= varsNum; i++)
-                    templateExpr[postLIndex + i] = handleInt(
-                        (*it).coefficient(Variable(primedIndex + i)));
-                if ((*it).is_inequality())
-                    polyhedron.add_constraint(
-                        (templateExpr.toLinExpression()) >= 0);
-                else if ((*it).is_equality())
-                    polyhedron.add_constraint(
-                        (templateExpr.toLinExpression()) == 0);
+            for (i = 0; i <= varsNum; i++) {
+                templateExpr[preLIndex + i] =
+                    handleInt((*it).coefficient(Variable(i)));
+                templateExpr[postLIndex + i] =
+                    handleInt((*it).coefficient(Variable(primedIndex + i)));
             }
-            clump.insert(polyhedron);
+            templateExpr[coefNum] = handleInt((*it).inhomogeneous_term());
+            if ((*it).is_inequality())
+                FalsePoly.add_constraint((templateExpr.toLinExpression()) >=
+                                          0);
+            else if ((*it).is_equality())
+                FalsePoly.add_constraint((templateExpr.toLinExpression()) ==
+                                          0);
         }
-        if (falsepath) {
-            C_Polyhedron polyhedron(coefNum, UNIVERSE);
-            // mu=1 in disabled path
-            templateExpr *= 0;
-            for (it = disableCS.begin(); it != disableCS.end(); ++it) {
-                templateExpr *= 0;
-                for (i = 0; i <= varsNum; i++) {
-                    templateExpr[preLIndex + i] =
-                        handleInt((*it).coefficient(Variable(i)));
-                    templateExpr[postLIndex + i] = handleInt(
-                        (*it).coefficient(Variable(primedIndex + i)));
-                }
-                templateExpr[coefNum] =
-                    handleInt((*it).inhomogeneous_term());
-                if ((*it).is_inequality())
-                    polyhedron.add_constraint(
-                        (templateExpr.toLinExpression()) >= 0);
-                else if ((*it).is_equality())
-                    polyhedron.add_constraint(
-                        (templateExpr.toLinExpression()) == 0);
-            }
-            clump.insert(polyhedron);
-        }
+        clump.insert(FalsePoly);
     }
     cout << endl
          << "< < < Inter-Transition::" << name << " pushing back clump with "
@@ -663,8 +652,7 @@ void TransitionRelation::ComputeIntraConsecConstraints(vector<Clump>& clumps) {
     if (preLoc->getName() != postLoc->getName()) {
         ComputeInterConsecConstraints(clumps);
         return;
-    }
-    else{
+    } else {
         Context* context = preLoc->getContext();
         ComputeIntraConsecConstraints(*context);
     }
@@ -747,8 +735,8 @@ void TransitionRelation::addPreInv() {
     C_Polyhedron temp(preLoc->getPreInvRef());
     guard->intersection_assign(temp);
     temp.add_space_dimensions_and_embed(varsNum);
-    cout<<temp<<endl;
-    cout<<"note"<<endl;
+    cout << temp << endl;
+    cout << "note" << endl;
     transPoly->intersection_assign(temp);
     ResetConstraintsNum();
     return;

@@ -71,7 +71,7 @@ class Context {
 
     Context* childClump;
     var_info *info, *coefInfo, *lambdaInfo;
-
+    int *tt;
     int varsNum, coefNum,
         lambdaNum;  // No. of dimensions, coef dimensions, multipliers respectively
 

@@ -17,15 +17,13 @@ class LinTS {
 
     void ComputeLinTSInv();
     void ComputeInitInv();
+    void TraverseSequences(vector<vector<vector<int>>> sequences,C_Polyhedron* initPoly);
+    vector<vector<vector<int>>> GenerateSequences(C_Polyhedron* initPoly);
     C_Polyhedron* computeOneStepTransPoly(C_Polyhedron& init,
                                           C_Polyhedron& trans);
 
     void tarjan(int start);
     bool tarjanAlg();
-
-    void SplitLinTS();
-    void ComputeInv();
-    void Propagation();
     void PrintInv();
 
     void MergeSubMap(map<string, vector<C_Polyhedron*>> subMap);
