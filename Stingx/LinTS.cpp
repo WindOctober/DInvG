@@ -5,10 +5,12 @@
 #include <tuple>
 #include <unordered_set>
 #include "PolyUtils.h"
+#include "Tree.h"
 using namespace std;
 using namespace Parma_Polyhedra_Library;
 using namespace Parma_Polyhedra_Library::IO_Operators;
 
+void prettyPrintInfo(string str);
 LinTS::LinTS() {
     info = new var_info();
     coefInfo = new var_info();
@@ -16,8 +18,11 @@ LinTS::LinTS() {
     varNum = 0;
     locNum = 0;
     transNum = 0;
-    (*locList).clear();
-    (*transList).clear();
+    initLocIndex = -1;
+    initLoc = NULL;
+    locList = new vector<Location*>();
+    transList = new vector<TransitionRelation*>();
+    return;
 }
 
 void LinTS::tarjan(int cur) {
@@ -66,6 +71,7 @@ bool LinTS::tarjanAlg() {
         visited.push_back(false);
         low.push_back(0);
         dfn.push_back(0);
+        sccNo[i] = -1;
     }
     for (int i = 0; i < transNum; i++) {
         TransitionRelation* trans = (*transList)[i];
@@ -78,7 +84,7 @@ bool LinTS::tarjanAlg() {
     sccCnt = 0;
     timeCnt = 0;
     tarjan(initLocIndex);
-    if (sccSize[initLocIndex] == locNum)
+    if (sccSize[sccNo[initLocIndex]] == locNum)
         return false;
     else
         return true;
@@ -94,6 +100,8 @@ void LinTS::ComputeLinTSInv() {
             initLoc = (*locList)[i];
         }
     }
+    if (initLocIndex == -1)
+        return;
     bool splitFlag = tarjanAlg();
     // It's important to note that if splitFlag=True, it indicates that the
     // current graph contains multiple SCCs. In this case, our strategy should
@@ -138,7 +146,7 @@ void LinTS::ComputeLinTSInv() {
     }
     // The LinTS that arrives here should be a complete SCC, indivisible.
     ComputeInitInv();
-    InvMap[initLoc->getName()].push_back(initLoc->GetInv());
+    InvMap[initLoc->getName()].push_back(&(initLoc->getInvRef()));
     // Now that we know the invariant of the initial node of this SCC, we can
     // remove this node from the SCC and analyze the invariant of the resulting
     // graph.
@@ -148,8 +156,12 @@ void LinTS::ComputeLinTSInv() {
         if (i != initLocIndex)
             projectset.push_back(i);
     }
+    if (projectset.size() == 0)
+        return;
     for (int i = 0; i < edges[initLocIndex].size(); i++) {
         int to = edges[initLocIndex][i];
+        if (to == initLocIndex)
+            continue;
         pair<int, int> key = make_pair(initLocIndex, to);
         if (transInEdge.find(key) == transInEdge.end()) {
             perror("[ERROR] The expected edge cannot be found.");
@@ -161,7 +173,7 @@ void LinTS::ComputeLinTSInv() {
             computeOneStepTransPoly(initPoly, transPoly);
         subRoot = projectSubTS(projectset, to, newInitPoly);
         subRoot->ComputeLinTSInv();
-
+        MergeSubMap(subRoot->getInvMap());
         delete subRoot;
     }
 }
@@ -184,8 +196,42 @@ void LinTS::ComputeInitInv() {
         (*locList)[i]->addClump(clumps);
     }
     vector<vector<vector<int>>> actualSeqs;
-    actualSeqs = GenerateSequences(initLocIndex, clumps, initPoly);
-    TraverseSequences(actualSeqs, initLocIndex, clumps, initPoly);
+    actualSeqs = GenerateSequences(&initPoly);
+    TraverseSequences(actualSeqs, &initPoly);
+    return;
+}
+
+vector<vector<vector<int>>> LinTS::GenerateSequences(C_Polyhedron* initPoly) {
+    Tree tr = Tree();
+    tr.setCurId(initLocIndex);
+    tr.setInfo(info, coefInfo, lambdaInfo);
+    tr.setLocTrans(locList, transList);
+    for (auto it = clumps.begin(); it < clumps.end(); it++) {
+        (*it).resetIter();
+    }
+    tr.setPriorClumps(clumps);
+    tr.setMaxPolyNum();
+    cout << endl << "/ Generate Sequences";
+    vector<vector<vector<int>>> sequences;
+    sequences = tr.seqGen("two_per_group", *initPoly);
+    return sequences;
+}
+
+void LinTS::TraverseSequences(vector<vector<vector<int>>> sequences,
+                              C_Polyhedron* initPoly) {
+    C_Polyhedron invCoefPoly(*trivial);
+    Tree tr = Tree();
+    tr.setCurId(initLocIndex);
+    tr.setInfo(info, coefInfo, lambdaInfo);
+    tr.setLocTrans(locList, transList);
+    for (auto it = clumps.begin(); it < clumps.end(); it++) {
+        (*it).resetIter();
+    }
+    tr.setPriorClumps(clumps);
+    tr.setMaxPolyNum();
+    cout << endl << "/ Read(Traverse) Sequences";
+    tr.treeSeqTraverse(sequences, *initPoly, invCoefPoly);
+    return;
 }
 
 C_Polyhedron* LinTS::computeOneStepTransPoly(C_Polyhedron& init,
@@ -194,36 +240,16 @@ C_Polyhedron* LinTS::computeOneStepTransPoly(C_Polyhedron& init,
     for (int i = 0; i < varNum; i++) {
         projectSet.insert(Variable(i));
     }
-    C_Polyhedron newInitPoly;
+    C_Polyhedron* newInitPoly = new C_Polyhedron(varNum * 2, UNIVERSE);
     C_Polyhedron* resInitPoly = new C_Polyhedron(varNum, UNIVERSE);
     for (auto constraint : init.minimized_constraints()) {
-        newInitPoly.add_constraint(constraint);
+        newInitPoly->add_constraint(constraint);
     }
     for (auto constraint : trans.minimized_constraints()) {
-        newInitPoly.add_constraint(constraint);
+        newInitPoly->add_constraint(constraint);
     }
-    newInitPoly.remove_space_dimensions(projectSet);
-    for (auto constraint : newInitPoly.minimized_constraints()) {
-        Constraint resConstraint;
-        Linear_Expression le;
-        for (int i = varNum; i < 2 * varNum; ++i) {
-            Variable var(i);
-            if (constraint.coefficient(var) != 0) {
-                Variable tmpVar(i - varNum);
-                le += constraint.coefficient(var) * tmpVar;
-            }
-        }
-
-        if (constraint.is_equality()) {
-            resConstraint = (le == -constraint.inhomogeneous_term());
-        } else if (constraint.is_strict_inequality()) {
-            resConstraint = (le < -constraint.inhomogeneous_term());
-        } else {
-            resConstraint = (le <= -constraint.inhomogeneous_term());
-        }
-        resInitPoly->add_constraint(resConstraint);
-    }
-    return resInitPoly;
+    newInitPoly->remove_space_dimensions(projectSet);
+    return newInitPoly;
 }
 
 void LinTS::MergeSubMap(map<string, vector<C_Polyhedron*>> subMap) {
@@ -243,11 +269,13 @@ LinTS* LinTS::projectSubTS(vector<int> projectLocs,
                            int initIndex,
                            C_Polyhedron* initPoly) {
     LinTS* subRoot = new LinTS();
+    unordered_set<int> projectSet;
     for (int i = 0; i < varNum; i++) {
         subRoot->addVariable(info->getName(i));
     }
     for (int i = 0; i < projectLocs.size(); i++) {
         int id = projectLocs[i];
+        projectSet.insert(id);
         Location* loc = (*locList)[id];
         C_Polyhedron* poly = new C_Polyhedron(varNum, UNIVERSE);
         if (id == initIndex) {
@@ -261,8 +289,8 @@ LinTS* LinTS::projectSubTS(vector<int> projectLocs,
         TransitionRelation* trans = (*transList)[i];
         int preLocIndex = SearchLocIndex(trans->getPreLocName());
         int postLocIndex = SearchLocIndex(trans->getPostLocName());
-        if (sccNo[preLocIndex] != sccNo[projectLocs[0]] ||
-            sccNo[postLocIndex] != sccNo[projectLocs[0]])
+        if (projectSet.find(preLocIndex) == projectSet.end() ||
+            projectSet.find(postLocIndex) == projectSet.end())
             continue;
         C_Polyhedron* poly = new C_Polyhedron(varNum * 2, UNIVERSE);
         poly->intersection_assign(trans->getTransRel());
@@ -283,6 +311,8 @@ void LinTS::addTransRel(char* transName,
                         char* preLoc,
                         char* postLoc,
                         C_Polyhedron* poly) {
+    if (poly->is_empty())
+        return;
     TransitionRelation* trans =
         new TransitionRelation(varNum, info, coefInfo, lambdaInfo, transName);
     trans->setRel(poly);
@@ -296,7 +326,7 @@ void LinTS::addTransRel(char* transName,
 
 void LinTS::addLocInit(char* locName, C_Polyhedron* poly) {
     Location* loc = new Location(varNum, info, coefInfo, lambdaInfo, locName);
-    if (poly)
+    if (poly && !poly->is_empty())
         loc->setPoly(poly);
     locNum++;
     locList->push_back(loc);
@@ -374,6 +404,21 @@ void prettyPrintInfo(string str) {
     printf("\n");
 }
 
+void LinTS::PrintInv() {
+    for (int i = 0; i < locNum; i++) {
+        string name = (*locList)[i]->getName();
+        if (InvMap.find(name) == InvMap.end()) {
+            prettyPrintInfo("The invariant for Location " + name + "is empty");
+            continue;
+        }
+        vector<C_Polyhedron*> disInv = InvMap[name];
+        prettyPrintInfo("The invariant for Location " + name);
+        for (int i = 0; i < disInv.size(); i++) {
+            outputPolyhedron(disInv[i], info);
+        }
+    }
+    return;
+}
 void LinTS::PrintLinTS(int debugLevel, bool skipBasic) {
     if (skipBasic)
         goto level1;

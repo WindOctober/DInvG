@@ -30,8 +30,6 @@
 #include "SparseLinExpr.h"
 #include "var-info.h"
 
-extern C_Polyhedron* trivial;
-
 void PolyStore::initialize(int varsNum, var_info* info) {
     this->varsNum = varsNum;
     this->info = info;
@@ -75,10 +73,6 @@ void PolyStore::make_trivial_polyhedron() {
     return;
 }
 
-bool PolyStore::is_trivial() const {
-    // check that that the origin is the only point in the polyhedron
-    return trivial->contains(*p);
-}
 
 void PolyStore::extract_linear_part(MatrixStore& m) const {
     // First obtain the set of constraints in the polyhedron

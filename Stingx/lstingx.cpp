@@ -4,12 +4,12 @@
 #include <string>
 #include <vector>
 #include "Elimination.h"
-#include "parser.h"
+#include "LinTS.h"
 #include "Location.h"
 #include "PolyUtils.h"
-#include "LinTS.h"
 #include "TransitionRelation.h"
 #include "Tree.h"
+#include "parser.h"
 #include "ppl.hh"
 #include "var-info.h"
 using namespace std;
@@ -17,12 +17,6 @@ using namespace Parma_Polyhedra_Library;
 using namespace Parma_Polyhedra_Library::IO_Operators;
 bool gendrop;
 bool print_tree;
-bool zero;
-bool one;
-bool falsepath;
-bool noexitpath;
-bool djinv;
-bool arrinv;
 int prop_steps;
 int time_limit;
 int total_time;
@@ -34,8 +28,6 @@ int clear_lower_gli_depth = -1;
 bool backhere_flag = false;
 int related_location_number;
 int related_transition_number;
-
-
 
 int global_binary_i = 0;
 long int global_contains_time = 0;
@@ -57,7 +49,6 @@ int totalSuccessCnt;
 int totalPrunedCnt;
 int backtrack_count;
 int backtrack_success;
-bool backtrack_flag;
 int prune_count;
 int clump_prune_count;
 int context_count;
@@ -83,84 +74,22 @@ bool searchLoc(char* name, Location** what) {
     return false;
 }
 
-void collectInv(int index, C_Polyhedron& cpoly, C_Polyhedron& invCoefPoly) {
-    invCoefPoly = C_Polyhedron(coefInfo->getDim(), UNIVERSE);
-    locList[index]->ExtractAndUpdateInv(cpoly, invCoefPoly);
-    return;
-}
-
-vector<vector<vector<int>>> GenerateSequences(int index,
-                                              vector<Clump>& clumps,
-                                              C_Polyhedron& initPoly) {
-    Tree tr = Tree();
-    tr.setCurId(index);
-
-    for (auto it = clumps.begin(); it < clumps.end(); it++) {
-        (*it).resetIter();
-    }
-
-    cout << endl
-         << "/ Start to solve Location " << locList[index]->getName();
-
-    tr.setPriorClumps(clumps);
-
-    tr.setMaxPolyNum();
-
-    cout << endl << "/ Generate Sequences";
-    vector<vector<vector<int>>> sequences;
-    sequences = tr.seqGen(some_per_group, initPoly);
-    return sequences;
-}
-
-void TraverseSequences(vector<vector<vector<int>>> sequences,
-                       int index,
-                       vector<Clump>& clumps,
-                       C_Polyhedron& initPoly) {
-    C_Polyhedron invCoefPoly(*trivial);
-    Tree tr = Tree();
-    tr.setCurId(index);
-    vector<Clump>::iterator it;
-    for (it = clumps.begin(); it < clumps.end(); it++) {
-        (*it).resetIter();
-    }
-
-    cout << endl
-         << endl
-         << "/ Start to solve Location " << locList[index]->getName();
-
-    tr.setPriorClumps(clumps);
-    tr.setMaxPolyNum();
-    cout << endl << "/ Read(Traverse) Sequences";
-    tr.treeSeqTraverse(sequences, initPoly, invCoefPoly);
-}
-
 void Initialize() {
     cout << endl << "- Initialize doing...";
-    totalSuccessCnt = totalPrunedCnt = backtrack_count = 0;
-    backtrack_success = 0;
-    backtrack_flag = false;
+
     merge_count = 0;
     inv_check = false;
     clump_prune_count = prune_count = 0;
     context_count = 0;
-    lambdaInfo = new var_info();
-    coefInfo = new var_info();
-    print_tree = true;
+
     projection = "kohler_improvement_eliminate_c";
     treePrior = "target_prior2";
-    some_per_group = "two_per_group";
     gendrop = false;
-    zero = one = true;
-    falsepath = true;
-    noexitpath = true;
-    djinv = true;
-    arrinv = false;
     prop_steps = 2;
     time_limit = 360000;
     total_time = 360000;
     cout << "Done!" << endl;
 }
-
 
 void PrintStatusBeforeSolving() {
     cout << endl;
@@ -171,11 +100,6 @@ void PrintStatusBeforeSolving() {
     cout << "| DFS Search method : " << treePrior << endl;
     cout << "| Sequences Divide method : " << some_per_group << endl;
     cout << "| Projection method : " << projection << endl;
-    cout << "| Local invariants to be generated : " << zero << endl;
-    cout << "| Increasing invariants to be generated : " << one << endl;
-    cout << "| Falsepath to be enabled : " << falsepath << endl;
-    cout << "| Exit-Transition is computed : " << (!noexitpath) << endl;
-    cout << "| Display Disjunctive Invariants : " << djinv << endl;
     cout << "\\----------------------------- " << endl;
 }
 
@@ -209,29 +133,6 @@ void Print_Status_after_Solver() {
     cout << "\\----------------------------- " << endl;
 }
 
-int getLocIndex(string locName) {
-    int i = 0;
-    for (auto it = locList.begin(); it < locList.end(); it++) {
-        if ((*it)->getName() == locName) {
-            return i;
-        }
-        i++;
-    }
-    return -1;
-}
-
-int getTransIndex(string name) {
-    int i = 0;
-    for (auto it = transList.begin(); it < transList.end(); it++) {
-        if ((*it)->getName() == name) {
-            return i;
-        }
-        i++;
-    }
-    return -1;
-}
-
-
 void ResetLocInv() {
     for (auto it = locList.begin(); it < locList.end(); it++) {
         cout << endl
@@ -240,27 +141,23 @@ void ResetLocInv() {
     }
 }
 
-void ComputeProgramInv();
+void ComputeProgramInv() {
+    return;
+}
 
 #ifdef USE_LSTINGX_MAIN
 int main() {
     ios::sync_with_stdio(false);
-    LinTS* root=new LinTS();
+    LinTS* root = new LinTS();
     Initialize();
-    int parserResult=yyparse(root);
-    tt = new int[lambdaInfo->getDim()];
+    int parserResult = yyparse(root);
+    // TODO : Reimplement the addPreInvtoLoc function within LinTS for testing
+    // invariant strengthening techniques.
+    // TODO : Consider refining the output before and after the tool runs to
+    // make it more visually appealing.
     root->PrintLinTS(1);
     root->ComputeLinTSInv();
     root->PrintInv();
-    addPreInvtoTrans();
-    PrintStatusBeforeSolving();
-    
-
-    Print_Status_after_Solver();
-    if (inv_check) {
-        check_invariant_ok();
-    }
-
     return 0;
 }
 #endif
@@ -281,8 +178,6 @@ void addPreInvtoTrans() {
 
 void print_status() {
     cout << "---------------------------------------------------" << endl;
-    cout << " Local invariants to be generated : " << zero << endl;
-    cout << " Increasing invariants to be generated : " << one << endl;
     cout << " # of initial propagation steps:" << prop_steps << endl;
     cout << " Weave Time allowed:" << time_limit << endl;
     cout << "----------------------------------------------------" << endl;

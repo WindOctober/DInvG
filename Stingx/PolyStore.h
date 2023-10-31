@@ -71,7 +71,6 @@ class PolyStore {
     void add_constraint(Constraint const& cc);
 
     bool isConsistent() const;  // Check if the system is satisfiable
-    bool is_trivial() const;     // Check if the system is trivial
 
     // push the linear equalities
     // part of the store into the Matrix Store m
