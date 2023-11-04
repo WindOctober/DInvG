@@ -241,7 +241,6 @@ C_Polyhedron* LinTS::computeOneStepTransPoly(C_Polyhedron& init,
         projectSet.insert(Variable(i));
     }
     C_Polyhedron* newInitPoly = new C_Polyhedron(varNum * 2, UNIVERSE);
-    C_Polyhedron* resInitPoly = new C_Polyhedron(varNum, UNIVERSE);
     for (auto constraint : init.minimized_constraints()) {
         newInitPoly->add_constraint(constraint);
     }
