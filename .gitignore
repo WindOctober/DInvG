@@ -14,6 +14,7 @@ test.c
 result.c
 output.txt
 test/*
+*.py
 
 # Prerequisites
 *.d
