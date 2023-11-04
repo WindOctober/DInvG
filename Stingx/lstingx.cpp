@@ -16,13 +16,8 @@ using namespace std;
 using namespace Parma_Polyhedra_Library;
 using namespace Parma_Polyhedra_Library::IO_Operators;
 bool gendrop;
-bool print_tree;
-int prop_steps;
-int time_limit;
 int total_time;
 string projection;
-string treePrior;
-string some_per_group;
 bool clear_lower_gli = false;
 int clear_lower_gli_depth = -1;
 bool backhere_flag = false;
@@ -56,10 +51,7 @@ int merge_count;
 int bang_count_in_merge;
 Counter counter;
 void addPreInvtoTrans();
-void print_status();
-
 void check_invariant_ok();
-// void ScanInput();
 
 bool searchLoc(char* name, Location** what) {
     vector<Location*>::iterator it;
@@ -83,24 +75,9 @@ void Initialize() {
     context_count = 0;
 
     projection = "kohler_improvement_eliminate_c";
-    treePrior = "target_prior2";
     gendrop = false;
-    prop_steps = 2;
-    time_limit = 360000;
     total_time = 360000;
     cout << "Done!" << endl;
-}
-
-void PrintStatusBeforeSolving() {
-    cout << endl;
-    cout << "/----------------------------- " << endl;
-    cout << "| Status before Solver: " << endl;
-    cout << "----------------------------- " << endl;
-    cout << "| Print Tree : " << print_tree << endl;
-    cout << "| DFS Search method : " << treePrior << endl;
-    cout << "| Sequences Divide method : " << some_per_group << endl;
-    cout << "| Projection method : " << projection << endl;
-    cout << "\\----------------------------- " << endl;
 }
 
 void Print_Status_after_Solver() {
@@ -133,13 +110,6 @@ void Print_Status_after_Solver() {
     cout << "\\----------------------------- " << endl;
 }
 
-void ResetLocInv() {
-    for (auto it = locList.begin(); it < locList.end(); it++) {
-        cout << endl
-             << "- Location " << (*it)->getName() << ": initialize invariant";
-        (*it)->initInv();
-    }
-}
 
 void ComputeProgramInv() {
     return;
@@ -176,12 +146,6 @@ void addPreInvtoTrans() {
     return;
 }
 
-void print_status() {
-    cout << "---------------------------------------------------" << endl;
-    cout << " # of initial propagation steps:" << prop_steps << endl;
-    cout << " Weave Time allowed:" << time_limit << endl;
-    cout << "----------------------------------------------------" << endl;
-}
 
 void check_invariant_ok() {
     cout << endl << "> > > In check_invariant_ok()";
