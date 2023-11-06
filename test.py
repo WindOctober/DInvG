@@ -1,32 +1,21 @@
 import subprocess
-import re
-
-def get_time_from_stingx_diff():
-    """Run the stingx_diff.sh script and extract user and system times using regex."""
-    
-    # Run the stingx_diff.sh script with the time command and capture the stderr output
-    command = "/usr/bin/time -f \"%U + %S\" ./stingx_diff.sh"
-    process = subprocess.Popen(command, shell=True, stderr=subprocess.PIPE, stdout=subprocess.DEVNULL)
-    _, stderr = process.communicate()
-    # Convert stderr to string
-    output = stderr.decode('utf-8')
-
-    user_time, sys_time = re.search(r"(\d+\.\d+) \+ (\d+\.\d+)", output).groups()
-    print(user_time,sys_time)
-    return float(user_time) + float(sys_time)
-
-def main():
-    runs = 10
-    total_time = 0.0
-
-    # Initialize the debug script
-    subprocess.run("./debug.sh", shell=True)
-
-    for _ in range(runs):
-        total_time += get_time_from_stingx_diff()
-
-    average_time = total_time / runs
-    print(f"Average user+system CPU time over {runs} runs: {average_time:.2f} seconds")
+import os
 
 if __name__ == "__main__":
-    main()
+    resPath='./result'
+    if not os.path.exists(resPath):
+        os.makedirs(resPath)
+    benchPath='./Benchmark/PLDI'
+    for dirPath,dirNames,fileNames in os.walk(benchPath):
+        for file in fileNames:
+            relPath=os.path.relpath(dirPath,benchPath)
+            newPath=os.path.join(resPath,relPath)
+            newFilePath=os.path.join(newPath,file)
+            if not os.path.exists(newPath):
+                os.makedirs(newPath)
+            command=f"./bin/Inv sv {os.path.join(dirPath,file)}"
+            result=subprocess.run(command, shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+            with open(newFilePath,'w',encoding='utf-8') as f:
+                f.write(result.stdout.decode('utf-8'))
+                f.write(result.stderr.decode('utf-8'))
+            

@@ -1,0 +1,10 @@
+BasedOnStyle: Chromium
+IndentWidth: 4
+SpaceInEmptyParentheses: false
+BreakBeforeBraces: Attach
+SpaceAfterCStyleCast: false
+SpacesInAngles: false
+SpaceAfterTemplateKeyword: false
+SpacesInCStyleCastParentheses: false
+SpacesInParentheses: false
+SpacesInSquareBrackets: false
