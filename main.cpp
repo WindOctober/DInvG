@@ -15,8 +15,8 @@ class SVASTConsumer : public ASTConsumer {
 
     virtual void HandleTranslationUnit(ASTContext& context) {
         Decl* rootDecl = context.getTranslationUnitDecl();
-        rootDecl->dumpColor();
-        return;
+        // rootDecl->dump();
+        // return;
         CParser::ParserState curState=CParser::ParserState::PREPROCESS;
         CParser preParser(&context,curState);
         preParser.TraverseDecl(rootDecl);

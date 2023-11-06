@@ -15,16 +15,16 @@ extern clang::ASTContext* globalContext;
 // invariants among them. Currently, the parser's approach is relatively
 // simplistic, thus it may require further optimization.
 class CParser : public clang::RecursiveASTVisitor<CParser> {
-public:
-    enum class ParserState{
-        PREPROCESS,
-        PARSING
-    };
-    CParser(clang::ASTContext* context,ParserState pState);
-    bool VisitFunctionDecl(clang::FunctionDecl *funcDecl);
+   public:
+    enum class ParserState { PREPROCESS, PARSING };
+    CParser(clang::ASTContext* context, ParserState pState);
+    bool VisitFunctionDecl(clang::FunctionDecl* funcDecl);
 
-private:
-    void TraverseProgramStmt(clang::Stmt* stmt, ProgramState* curState,clang::Stmt* nextStmt);
+   private:
+    void ProcessProgramState(ProgramState* state);
+    void TraverseProgramStmt(clang::Stmt* stmt,
+                             ProgramState* curState,
+                             clang::Stmt* nextStmt);
     ParserState pState;
-    
+    int LoopCount;
 };
