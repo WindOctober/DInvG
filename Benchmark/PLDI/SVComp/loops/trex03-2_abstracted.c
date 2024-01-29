@@ -28,14 +28,14 @@ int main()
   _Bool c1=__VERIFIER_nondet_bool(), c2=__VERIFIER_nondet_bool();
   
   // START HAVOCABSTRACTION
-  if ((x3 > (0)) & ((x2 > (0)) & (x1 > (0)))) {
+  if ((x3 > (0)) && ((x2 > (0)) && (x1 > (0)))) {
   x3 = __VERIFIER_nondet_uint();
   x2 = __VERIFIER_nondet_uint();
   x1 = __VERIFIER_nondet_uint();
   c2 = __VERIFIER_nondet_bool();
   c1 = __VERIFIER_nondet_bool();
   }
-  if ((x3 > (0)) & ((x2 > (0)) & (x1 > (0)))) abort();
+  if ((x3 > (0)) && ((x2 > (0)) && (x1 > (0)))) abort();
   // END HAVOCABSTRACTION
 
   __VERIFIER_assert(x1==0 || x2==0 || x3==0);

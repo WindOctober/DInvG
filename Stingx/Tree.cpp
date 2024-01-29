@@ -25,7 +25,13 @@
 
 void Tree::collectInv(int index, C_Polyhedron& cpoly, C_Polyhedron& invCoefPoly) {
     invCoefPoly = C_Polyhedron(coefInfo->getDim(), UNIVERSE);
-    (*locList)[index]->ExtractAndUpdateInv(cpoly, invCoefPoly);
+    if (!projectFlag)
+    {
+        for(int i=0;i<(*locList).size();i++)
+            (*locList)[i]->ExtractAndUpdateInv(cpoly, invCoefPoly);
+    }
+    else
+        (*locList)[index]->ExtractAndUpdateInv(cpoly, invCoefPoly);
     return;
 }
 int Tree::getTransIndex(string name){
@@ -79,6 +85,9 @@ void Tree::set_uner(int amount) {
 }
 void Tree::setCurId(int index) {
     curId = index;
+}
+void Tree::deactivateProject() {
+    projectFlag=false;
 }
 void Tree::setMaxPolyNum() {
     int res = -1;
@@ -418,14 +427,8 @@ vector<vector<vector<int>>> Tree::one_per_group(C_Polyhedron& initp) {
         int length_hb = (*it).first;
         int length_lb = (*it).second;
         vector<vector<int>> sub_sequences;
-        cout << endl;
-        cout << endl << "From hb:" << length_hb << " To lb:" << length_lb;
 
         sub_sequences = dfs_sub_sequences_traverse(length_hb, length_lb, initp);
-
-        cout << endl
-             << "sub_sequences.size()/capacity():" << sub_sequences.size()
-             << "/" << sub_sequences.capacity();
         sequences.push_back(sub_sequences);
     }
 
@@ -460,17 +463,11 @@ vector<vector<vector<int>>> Tree::two_per_group(C_Polyhedron& initp) {
         int length_lb = (*it).second;
         vector<vector<int>> sub_sequences;
         cout << endl;
-        cout << endl << "From hb:" << length_hb << " To lb:" << length_lb;
 
         sub_sequences = dfs_sub_sequences_traverse(length_hb, length_lb, initp);
-
-        cout << endl
-             << "sub_sequences.size()/capacity():" << sub_sequences.size()
-             << "/" << sub_sequences.capacity();
         sequences.push_back(sub_sequences);
     }
 
-    cout << endl << "< < < Tree::two_per_group()";
     return sequences;
 }
 
@@ -642,23 +639,23 @@ void Tree::dfsSequences(vector<int>& sequence,
     if (i == sequences.size()) {
         totalSuccessCnt++;
 
-        cout << endl;
-        cout << endl << "sequence:";
-        for (int k = 0; k < sequence.size(); k++) {
-            cout << sequence[k];
-        }
-        cout << endl << "/-----------------------------";
+        // cout << endl;
+        // cout << endl << "sequence:";
+        // for (int k = 0; k < sequence.size(); k++) {
+        //     cout << sequence[k];
+        // }
+        // cout << endl << "/-----------------------------";
         collectInv(curId, poly, invCoefPoly);
-        cout << endl;
-        cout << endl
-             << "- Have Collected " << totalSuccessCnt << " invariant(s)";
-        cout << endl << "------------------------------";
-        cout << endl << "- poly: " << endl << "  " << poly;
-        cout << endl << "- invCoefPoly: " << endl << "  " << invCoefPoly;
-        cout << endl
-             << "- invariant: " << endl
-             << "  " << (*locList)[curId]->GetInv();
-        cout << endl << "\\-----------------------------";
+        // cout << endl;
+        // cout << endl
+        //      << "- Have Collected " << totalSuccessCnt << " invariant(s)";
+        // cout << endl << "------------------------------";
+        // cout << endl << "- poly: " << endl << "  " << poly;
+        // cout << endl << "- invCoefPoly: " << endl << "  " << invCoefPoly;
+        // cout << endl
+        //      << "- invariant: " << endl
+        //      << "  " << (*locList)[curId]->GetInv();
+        // cout << endl << "\\-----------------------------";
         return;
     }
 
@@ -685,7 +682,6 @@ void Tree::dfsSequences(vector<int>& sequence,
             tmpSeq.push_back(*it);
             printedSeq.push_back(*it);
             p.intersection_assign(getClump(depth - index).getReference(*it));
-            // exit(0);
             if (invCoefPoly.contains(p)) {
                 totalPrunedCnt++;
                 prunedSeq = tmpSeq;

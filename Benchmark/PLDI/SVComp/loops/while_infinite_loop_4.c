@@ -9,23 +9,15 @@ void __VERIFIER_assert(int cond) {
   return;
 }
 
-int x=0;
 
-void eval(void) 
-{
-  while (1) {
+int main() {
+  int x=0;
+  while(1)
+  {
+    while (1) {
       x=1;
       break;
   }
-  return;
-}
-
-
-int main() {
-
-  while(1)
-  {
-    eval();
     __VERIFIER_assert(x==0);    
   }
 

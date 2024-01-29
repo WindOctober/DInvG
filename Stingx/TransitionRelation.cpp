@@ -38,7 +38,7 @@ void TransitionRelation::initialize(int varsNum,
                                     string name) {
     this->varsNum = varsNum;
     this->info = info;
-    fp = info->prime();
+    primedInfo = info->prime();
     this->coefInfo = coefInfo;
 
     this->lambdaInfo = lambdaInfo;
@@ -46,7 +46,7 @@ void TransitionRelation::initialize(int varsNum,
     this->postLoc = postLoc;
     this->transPoly = rel;
     this->name = name;
-    populate_multipliers();
+    populateMultipliers();
 
     guard = new C_Polyhedron(varsNum, UNIVERSE);
     update = new C_Polyhedron(2 * varsNum, UNIVERSE);
@@ -59,13 +59,13 @@ void TransitionRelation::initialize(int varsNum,
                                     string name) {
     this->varsNum = varsNum;
     this->info = info;
-    fp = info->prime();
+    primedInfo = info->prime();
     this->coefInfo = coefInfo;
 
     this->lambdaInfo = lambdaInfo;
 
     this->name = name;
-    populate_multipliers();
+    populateMultipliers();
 
     guard = new C_Polyhedron(varsNum, UNIVERSE);
     update = new C_Polyhedron(2 * varsNum, UNIVERSE);
@@ -82,7 +82,7 @@ void TransitionRelation::InitWithoutPopulating(int varsNum,
                                                int index) {
     this->varsNum = varsNum;
     this->info = info;
-    fp = info->prime();
+    primedInfo = info->prime();
     this->coefInfo = coefInfo;
 
     this->lambdaInfo = lambdaInfo;
@@ -104,7 +104,7 @@ void TransitionRelation::InitWithoutPopulating(int varsNum,
                                                int index) {
     this->varsNum = varsNum;
     this->info = info;
-    fp = info->prime();
+    primedInfo = info->prime();
     this->coefInfo = coefInfo;
 
     this->lambdaInfo = lambdaInfo;
@@ -349,7 +349,6 @@ void TransitionRelation::ComputeIntraConsecConstraints(Context& context) {
     if (transPoly->is_empty()) {
         legalFlag = false;
     }
-    cout << endl << "  Compute this transition: " << legalFlag;
 
     if (legalFlag) {
         int lambdaNum = lambdaInfo->getDim();
@@ -470,10 +469,6 @@ void TransitionRelation::ComputeIntraConsecConstraints(Context& context) {
                 dispoly.add_constraint((lexpr.toLinExpression()) == 0);
         }
         disableClump->insert(dispoly);
-
-        cout << endl
-             << "  pushing back clump with " << disableClump->getCount()
-             << " Polyhedra (in falsepath)...";
     }
 
     cout << endl
@@ -483,17 +478,11 @@ void TransitionRelation::ComputeIntraConsecConstraints(Context& context) {
 }
 
 void TransitionRelation::ComputeInterConsecConstraints(vector<Clump>& clumps) {
-    cout << endl;
-    cout << endl
-         << "> > > (inter transition) In ComputeInterConsecConstraints(), "
-            "TransitionRelation : "
-         << name;
     Clump clump(coefInfo, name, "Transition");
     bool transFlag = true;
     if (transPoly->is_empty()) {
         transFlag = false;
     }
-    cout << endl << "  Compute this transition: " << transFlag;
 
     if (transFlag) {
         Constraint_System constraints, disableCS;
@@ -636,13 +625,9 @@ void TransitionRelation::ComputeInterConsecConstraints(vector<Clump>& clumps) {
         }
         clump.insert(FalsePoly);
     }
-    cout << endl
-         << "< < < Inter-Transition::" << name << " pushing back clump with "
-         << clump.getCount() << " Polyhedra...";
     if (clump.getCount() != 0) {
         clumps.push_back(clump);
     }
-    cout << "done";
 
     return;
 }
@@ -659,7 +644,7 @@ void TransitionRelation::ComputeIntraConsecConstraints(vector<Clump>& clumps) {
     return;
 }
 
-void TransitionRelation::populate_multipliers() {
+void TransitionRelation::populateMultipliers() {
     index = lambdaInfo->getDim();
     string str = "M_" + name;
     lambdaInfo->insert(str.c_str());
@@ -686,7 +671,7 @@ C_Polyhedron* TransitionRelation::getTransRelRef() const {
 }
 
 const var_info* TransitionRelation::getInfo() const {
-    return fp;
+    return primedInfo;
 }
 
 ostream& operator<<(ostream& in, TransitionRelation const& t) {
@@ -735,8 +720,6 @@ void TransitionRelation::addPreInv() {
     C_Polyhedron temp(preLoc->getPreInvRef());
     guard->intersection_assign(temp);
     temp.add_space_dimensions_and_embed(varsNum);
-    cout << temp << endl;
-    cout << "note" << endl;
     transPoly->intersection_assign(temp);
     ResetConstraintsNum();
     return;

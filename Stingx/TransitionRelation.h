@@ -54,7 +54,7 @@ class TransitionRelation {
    private:
     int varsNum;
     var_info *info, *coefInfo, *lambdaInfo,
-        *fp;  // lambdaInfo is the var_info for non-linear multipliers
+        *primedInfo;  // lambdaInfo is the var_info for non-linear multipliers
     Location *preLoc, *postLoc;
     // the actual transition relation as a 2n dimensional polyhedron
     C_Polyhedron* transPoly;
@@ -64,8 +64,6 @@ class TransitionRelation {
     // for faster post computation.
     C_Polyhedron *guard, *update;
     set<int> preserved;
-
-    //
 
     int constraints_num;  // the range multipliers in its coef and the
                                     // number of constraint variables
@@ -157,7 +155,7 @@ class TransitionRelation {
 
     void ComputeInterConsecConstraints(vector<Clump>& clumps);
 
-    void populate_multipliers();  // Compute the number of multipliers required
+    void populateMultipliers();  // Compute the number of multipliers required
                                   // and add them to the constraint store
 
     int get_mult_index() const { return index; }

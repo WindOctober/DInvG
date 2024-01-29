@@ -17,10 +17,10 @@ class SVASTConsumer : public ASTConsumer {
         Decl* rootDecl = context.getTranslationUnitDecl();
         // rootDecl->dump();
         // return;
-        CParser::ParserState curState=CParser::ParserState::PREPROCESS;
-        CParser preParser(&context,curState);
-        preParser.TraverseDecl(rootDecl);
-        curState=CParser::ParserState::PREPROCESS;
+        CParser::ParserState curState=CParser::ParserState::PARSING;
+        // CParser preParser(&context,curState);
+        // preParser.TraverseDecl(rootDecl);
+        // curState=CParser::ParserState::PARSING;
         CParser Parser(&context,curState);
         Parser.TraverseDecl(rootDecl);
         return;

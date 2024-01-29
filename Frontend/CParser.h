@@ -1,8 +1,10 @@
+#ifndef CPARSER_H_
+#define CPARSER_H_
 #include <clang/Frontend/CompilerInstance.h>
 
+#include "LinTS.h"
 #include "ParserUtility.h"
 #include "ProgramState.h"
-
 extern clang::ASTContext* globalContext;
 // NOTE: This parser by default analyzes the reachability properties within the
 // program and assumes that SV-COMP-related functions in the program have
@@ -21,10 +23,40 @@ class CParser : public clang::RecursiveASTVisitor<CParser> {
     bool VisitFunctionDecl(clang::FunctionDecl* funcDecl);
 
    private:
+    clang::Expr* ProcessSpecialFunction(std::string funcName,
+                                        clang::CallExpr* call,
+                                        ProgramState* state);
     void ProcessProgramState(ProgramState* state);
     void TraverseProgramStmt(clang::Stmt* stmt,
                              ProgramState* curState,
-                             clang::Stmt* nextStmt);
+                             clang::Stmt* nextStmt,
+                             bool processing);
+    clang::Expr* PreProcessExpr(clang::Expr* expr, ProgramState* state);
+    void setLinTSInit(
+        int index,
+        std::vector<Parma_Polyhedra_Library::C_Polyhedron*> initPolys);
+    void ComputeLinTSInv(int index, ProgramState* curState);
     ParserState pState;
     int LoopCount;
+    int globalLocCount;
+    std::map<int, std::vector<Parma_Polyhedra_Library::C_Polyhedron*>>
+        linTSInit;
+    std::map<int,
+             std::map<int, std::vector<Parma_Polyhedra_Library::C_Polyhedron*>>>
+        linTSLocConstrants;
+    std::map<int, std::map<int, std::vector<bool>>> linTSLocNondetFlags;
+    std::map<int, std::map<int, Parma_Polyhedra_Library::C_Polyhedron*>>
+        linTSLocEqualities;
+    std::map<int,
+             std::map<int, std::vector<Parma_Polyhedra_Library::C_Polyhedron*>>>
+        linTSAssertion;
+    std::map<int, clang::Stmt*> IncStmts;
+    std::map<int, std::unordered_set<int>> LinTSBreakLoc;
+    std::map<int, LinTS*> linTSMap;
+    std::map<int, std::vector<Parma_Polyhedra_Library::C_Polyhedron*>>
+        loopExitCond;
+    std::map<int, std::vector<bool>> loopExitFlags;
+    std::map<int, std::map<int, int>> LocIdMap;
+    enum LinTS::VERIFIEDRESULT finalRes;
 };
+#endif

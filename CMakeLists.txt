@@ -45,9 +45,6 @@ if(NOT LLVM_CONFIG_EXECUTABLE)
   message(FATAL_ERROR "llvm-config executable not found. Set LLVM_CONFIG to the path to llvm-config executable.")
 endif()
 
-execute_process(COMMAND ${LLVM_CONFIG} --libs --system-libs OUTPUT_VARIABLE LLVM_LIBRARY)
-string(REPLACE "\n" "" LLVM_LIBRARY ${LLVM_LIBRARY})
-
 set(CLANG_LIBS
   -Wl,--start-group
   -lclang

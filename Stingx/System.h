@@ -97,7 +97,7 @@ class System {
 
     // the non-inlines
     void update_dimensions();  // recompute the lamdaNum and coefNum based on the information
-    // void populate_multipliers();
+    // void populateMultipliers();
 
     Location const& get_location(int i) const;
 
