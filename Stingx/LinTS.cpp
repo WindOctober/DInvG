@@ -1,6 +1,7 @@
 #include "LinTS.h"
 #include <stdio.h>
 #include <string.h>
+#include <z3++.h>
 #include <stack>
 #include <tuple>
 #include <unordered_set>
@@ -9,13 +10,30 @@
 using namespace std;
 using namespace Parma_Polyhedra_Library;
 using namespace Parma_Polyhedra_Library::IO_Operators;
-
+using namespace z3;
 void prettyPrintInfo(string str);
 LinTS::LinTS() {
     info = new var_info();
     coefInfo = new var_info();
     lambdaInfo = new var_info();
     varNum = 0;
+    locNum = 0;
+    transNum = 0;
+    initLocIndex = -1;
+    initLoc = NULL;
+    locList = new vector<Location*>();
+    transList = new vector<TransitionRelation*>();
+    return;
+}
+
+LinTS::LinTS(LinTS* ts) {
+    info = new var_info();
+    coefInfo = new var_info();
+    lambdaInfo = new var_info();
+    for (int i = 0; i < ts->varNum; i++) {
+        info->insert(ts->info->getName(i));
+    }
+    varNum = ts->varNum;
     locNum = 0;
     transNum = 0;
     initLocIndex = -1;
@@ -144,6 +162,7 @@ void LinTS::ComputeLinTSInv() {
         }
         return;
     }
+
     // The LinTS that arrives here should be a complete SCC, indivisible.
     ComputeInitInv();
     InvMap[initLoc->getName()].push_back(&(initLoc->getInvRef()));
@@ -188,6 +207,9 @@ void LinTS::ComputeInitInv() {
     for (int i = 0; i < locNum; i++) {
         (*locList)[i]->makeContext();
     }
+    for (auto i = 0; i < transNum; ++i) {
+        (*transList)[i]->addPreInv();
+    }
     initLoc->ComputeCoefConstraints(initPoly);
     for (int i = 0; i < transNum; i++) {
         (*transList)[i]->ComputeIntraConsecConstraints(clumps);
@@ -199,6 +221,213 @@ void LinTS::ComputeInitInv() {
     actualSeqs = GenerateSequences(&initPoly);
     TraverseSequences(actualSeqs, &initPoly);
     return;
+}
+
+void LinTS::ComputeOverInv() {
+    for (int i = 0; i < locNum; i++) {
+        if ((*locList)[i]->getInitFlag()) {
+            if (initLocIndex != -1) {
+                perror("[ERROR] Only one initial Location is allowed.");
+            }
+            initLocIndex = i;
+            initLoc = (*locList)[i];
+        }
+    }
+    if (initLocIndex == -1)
+        return;
+    int coefNum = coefInfo->getDim();
+    C_Polyhedron initPoly(coefNum, UNIVERSE);
+    trivial = new C_Polyhedron(coefNum, UNIVERSE);
+    for (int i = 0; i < locNum; i++) {
+        (*locList)[i]->addTrivial(trivial);
+    }
+    for (int i = 0; i < locNum; i++) {
+        (*locList)[i]->makeContext();
+    }
+    for (auto i = 0; i < transNum; ++i) {
+        (*transList)[i]->addPreInv();
+    }
+    initLoc->ComputeCoefConstraints(initPoly);
+    for (int i = 0; i < transNum; i++) {
+        (*transList)[i]->ComputeIntraConsecConstraints(clumps);
+    }
+    for (int i = 0; i < locNum; i++) {
+        (*locList)[i]->addClump(clumps);
+    }
+    vector<vector<vector<int>>> actualSeqs;
+    actualSeqs = GenerateSequences(&initPoly);
+    TraverseSequencesTotal(actualSeqs, &initPoly);
+    for(int i=0;i<locNum;i++){
+        C_Polyhedron* inv=new C_Polyhedron((*locList)[i]->GetInv());
+        string locName=(*locList)[i]->getName();
+        vector<C_Polyhedron*> invs;
+        invs.push_back(inv);
+        InvMap.insert(make_pair(locName,invs));
+    }
+    return;
+}
+
+// TODO: adjust this section of the code to a suitable location.
+Constraint_System NegateConstraint(Constraint_System cs, int dim) {
+    Constraint_System res;
+    for (Constraint constraint : cs) {
+        Linear_Expression linexpr;
+        for (int i = 0; i < dim; i++)
+            linexpr += constraint.coefficient(Variable(i)) * Variable(i);
+        linexpr += constraint.inhomogeneous_term();
+        res.insert((linexpr + 1) <= 0);
+        if (constraint.is_equality()) {
+            res.insert((linexpr - 1) >= 0);
+        }
+    }
+    return res;
+}
+void TraverseSequenceForPolys(vector<vector<Constraint>>& systems,
+                              vector<int>& indices,
+                              vector<C_Polyhedron*>& polys,
+                              int depth,
+                              int& dim) {
+    if (depth == systems.size()) {
+        C_Polyhedron* poly = new C_Polyhedron(dim, UNIVERSE);
+        for (int i = 0; i < indices.size(); i++) {
+            poly->add_constraint(systems[i][indices[i]]);
+        }
+        polys.push_back(poly);
+        return;
+    }
+    for (int i = 0; i < systems[depth].size(); i++) {
+        indices[depth] = i;
+        TraverseSequenceForPolys(systems, indices, polys, depth + 1, dim);
+    }
+    return;
+}
+enum LinTS::VERIFIEDRESULT LinTS::CheckAssertion(
+    vector<C_Polyhedron*> constraints,
+    vector<C_Polyhedron*> assertions) {
+    cout << "Now we should to prove that A ==> B, where A is DNF : \n";
+    for (int i = 0; i < constraints.size(); i++) {
+        cout << *constraints[i] << endl;
+        outputPolyhedron(constraints[i], info);
+    }
+    cout << "\n and B is DNF: \n ";
+    for (int i = 0; i < assertions.size(); i++) {
+        cout << *assertions[i] << endl;
+        outputPolyhedron(assertions[i], info);
+    }
+    bool flag = false;
+    for (int i = 0; i < constraints.size(); i++) {
+        C_Polyhedron* poly = constraints[i];
+        for (int j = 0; j < assertions.size(); j++) {
+            Constraint_System recCS = assertions[j]->minimized_constraints();
+            C_Polyhedron* tmpPoly = new C_Polyhedron(*poly);
+            tmpPoly->add_constraints(recCS);
+            if (!tmpPoly->is_empty()) {
+                flag = true;
+                break;
+            }
+        }
+    }
+    if (!flag)
+        return VERIFIEDRESULT::WRONG;
+    flag = false;
+    vector<C_Polyhedron*> negateAssertions;
+    vector<vector<Constraint>> systems;
+    for (int i = 0; i < assertions.size(); i++) {
+        vector<Constraint> tmp;
+        C_Polyhedron* poly = assertions[i];
+        for (Constraint cs :
+             NegateConstraint(poly->minimized_constraints(), varNum)) {
+            tmp.push_back(cs);
+        }
+        systems.push_back(tmp);
+    }
+    vector<int> seq(systems.size(), 0);
+    TraverseSequenceForPolys(systems, seq, negateAssertions, 0, varNum);
+    for (int i = 0; i < constraints.size(); i++) {
+        C_Polyhedron* poly = constraints[i];
+        for (int j = 0; j < negateAssertions.size(); j++) {
+            C_Polyhedron* tmpPoly = new C_Polyhedron(*poly);
+            tmpPoly->intersection_assign(*negateAssertions[j]);
+            if (!tmpPoly->is_empty()) {
+                flag = true;
+                break;
+            }
+        }
+        if (flag)
+            break;
+    }
+    if (!flag)
+        return VERIFIEDRESULT::CORRECT;
+    flag = false;
+    for (int i = 0; i < constraints.size(); i++) {
+        C_Polyhedron* poly = constraints[i];
+        for (int j = 0; j < negateAssertions.size(); j++) {
+            C_Polyhedron* tmpPoly = new C_Polyhedron(*poly);
+            C_Polyhedron* assertionPoly = negateAssertions[j];
+            Variables_Set projectSet;
+            for (Constraint cs : assertionPoly->minimized_constraints()) {
+                for (int i = 0; i < varNum; i++) {
+                    if (cs.coefficient(Variable(i)) != 0) {
+                        projectSet.insert(i);
+                    }
+                }
+            }
+            context solverContext;
+            // tmpPoly->remove_space_dimensions(projectSet);
+            // tmpPoly->intersection_assign(*assertionPoly);
+            int dim = varNum;
+            vector<expr> vars;
+            for (int i = 0; i < dim; i++) {
+                vars.push_back(solverContext.int_const(
+                    (string("var") + to_string(i)).c_str()));
+            }
+            solver s(solverContext);
+            for (Constraint cs : tmpPoly->minimized_constraints()) {
+                expr tmpExpr = solverContext.int_val(0);
+                for (int i = 0; i < dim; i++) {
+                    tmpExpr =
+                        tmpExpr +
+                        vars[i] * solverContext.int_val(int(
+                                      cs.coefficient(Variable(i)).get_si()));
+                }
+                tmpExpr = tmpExpr + solverContext.int_val(
+                                        int(cs.inhomogeneous_term().get_si()));
+                if (cs.is_equality())
+                    s.add(tmpExpr == 0);
+                else
+                    s.add(tmpExpr >= 0);
+            }
+            for (Constraint cs : assertionPoly->minimized_constraints()) {
+                expr tmpExpr = solverContext.int_val(0);
+                for (int i = 0; i < dim; i++) {
+                    tmpExpr =
+                        tmpExpr +
+                        vars[i] * solverContext.int_val(int(
+                                      cs.coefficient(Variable(i)).get_si()));
+                }
+                tmpExpr = tmpExpr + solverContext.int_val(
+                                        int(cs.inhomogeneous_term().get_si()));
+                if (cs.is_equality())
+                    s.add(tmpExpr == 0);
+                else
+                    s.add(tmpExpr >= 0);
+            }
+            if (s.check() == z3::sat) {
+                cout << "sat" << endl << s.get_model() << endl;
+                flag = true;
+                break;
+            }
+        }
+        if (flag)
+            break;
+    }
+    if (!flag)
+        return VERIFIEDRESULT::CORRECT;
+    return VERIFIEDRESULT::UNKNOWN;
+}
+
+enum LinTS::VERIFIEDRESULT LinTS::CheckAssertion() {
+    return VERIFIEDRESULT::CORRECT;
 }
 
 vector<vector<vector<int>>> LinTS::GenerateSequences(C_Polyhedron* initPoly) {
@@ -234,6 +463,24 @@ void LinTS::TraverseSequences(vector<vector<vector<int>>> sequences,
     return;
 }
 
+void LinTS::TraverseSequencesTotal(vector<vector<vector<int>>> sequences,
+                              C_Polyhedron* initPoly) {
+    C_Polyhedron invCoefPoly(*trivial);
+    Tree tr = Tree();
+    tr.setCurId(initLocIndex);
+    tr.setInfo(info, coefInfo, lambdaInfo);
+    tr.setLocTrans(locList, transList);
+    tr.deactivateProject();
+    for (auto it = clumps.begin(); it < clumps.end(); it++) {
+        (*it).resetIter();
+    }
+    tr.setPriorClumps(clumps);
+    tr.setMaxPolyNum();
+    cout << endl << "/ Read(Traverse) Sequences";
+    tr.treeSeqTraverse(sequences, *initPoly, invCoefPoly);
+    return;
+}
+
 C_Polyhedron* LinTS::computeOneStepTransPoly(C_Polyhedron& init,
                                              C_Polyhedron& trans) {
     Variables_Set projectSet;
@@ -249,6 +496,32 @@ C_Polyhedron* LinTS::computeOneStepTransPoly(C_Polyhedron& init,
     }
     newInitPoly->remove_space_dimensions(projectSet);
     return newInitPoly;
+}
+
+C_Polyhedron* LinTS::getUpDimensionPoly(C_Polyhedron* poly) {
+    C_Polyhedron* newPoly = new C_Polyhedron(varNum * 2, UNIVERSE);
+
+    Constraint_System cs = poly->constraints();
+    Constraint_System res;
+
+    for (const Constraint& c : cs) {
+        Linear_Expression le;
+        for (unsigned int i = 0; i < varNum; ++i) {
+            Coefficient coef = c.coefficient(Variable(i));
+            le += coef * Variable(varNum + i);
+        }
+        if (c.is_equality()) {
+            res.insert(le + c.inhomogeneous_term() == 0);
+        } else if (c.is_inequality()) {
+            res.insert(le + c.inhomogeneous_term() >= 0);
+        } else {
+            throw runtime_error("");
+        }
+    }
+
+    newPoly->add_constraints(res);
+
+    return newPoly;
 }
 
 void LinTS::MergeSubMap(map<string, vector<C_Polyhedron*>> subMap) {
@@ -301,8 +574,8 @@ LinTS* LinTS::projectSubTS(vector<int> projectLocs,
 }
 
 void LinTS::addVariable(char* var) {
-    info->insert(var);
-    varNum++;
+    info->searchElseInsert(var);
+    varNum = info->getDim();
     return;
 }
 
@@ -336,6 +609,11 @@ void LinTS::setLocPreInv(char* locName, C_Polyhedron* inv) {
     loc->setPreInvPoly(inv);
     return;
 }
+void LinTS::setLocAssert(char* locName, vector<C_Polyhedron*> polys) {
+    Location* loc = SearchLoc(locName);
+    loc->setAssertion(polys);
+    return;
+}
 
 Location* LinTS::SearchLoc(string name) {
     for (int i = 0; i < locList->size(); i++) {
@@ -363,6 +641,15 @@ int LinTS::SearchLocIndex(string name) {
 }
 
 // NOTE: Get Function Part:
+int LinTS::getLocIndex(char* name) {
+    for (int i = 0; i < locNum; i++) {
+        Location* loc = (*locList)[i];
+        string locName = loc->getName();
+        if (string(name) == locName)
+            return i;
+    }
+    return -1;
+}
 int LinTS::getVarIndex(char* var) {
     return info->search(var);
 }

@@ -63,19 +63,12 @@ class Location {
     // initially so that I could run auto-strengthening. But this is to
     // cumbersome.
     C_Polyhedron* invariant;
-
-    // the final invariant that will be computed for the location
-    // which is a disjunctive form stored in a vector.
-    Clump vp_inv;
-
-    // location has a disjunctive-form invariant
-    bool vp_inv_flag;
-
+    vector<C_Polyhedron*> assertions;
     // A pre-assigned invariant that i will use to strengthen transitions.
     C_Polyhedron* preInv;
 
     // A vector of polyhedra stores the disabled-path condition
-    Clump* disabled_clump;
+    Clump* disableClump;
 
     // has context been made
     bool contextReady;
@@ -101,13 +94,6 @@ class Location {
                                int left);
 
     // added by Hongming, 2022/10/11, Shanghai Jiao Tong University
-
-    // Record whether this location has been propagated in bfslist
-    bool propagation_flag;
-    // record whether this location has propagating to others
-    bool ppging_flag;
-    // record whether this location has been propagated by others
-    bool ppged_flag;
 
    public:
     Location(int varsNum,
@@ -172,20 +158,6 @@ class Location {
     void invariant_intersected_with(C_Polyhedron& what) {
         invariant->intersection_assign(what);
     }
-
-    // push back disjunctive-invariant into vector-poly
-    void set_vp_inv(C_Polyhedron& what) {
-        vp_inv.insert(what);
-        vp_inv_flag = true;
-    }
-    void set_vp_inv(C_Polyhedron* what) {
-        vp_inv.insert(*what);
-        vp_inv_flag = true;
-    }
-    bool get_vp_inv_flag() const { return vp_inv_flag; }
-
-    Clump const& get_vp_inv() const { return vp_inv; }
-
     C_Polyhedron* get_initial();
 
     Context* getContext();
@@ -202,12 +174,17 @@ class Location {
 
     void setPreInvPoly(C_Polyhedron* what) {
         preInv->intersection_assign((*what));
+        return;
+    }
+    void setAssertion(vector<C_Polyhedron*> polys) {
+        assertions = polys;
+        return;
     }
 
     C_Polyhedron const& getPreInvRef() const { return (*preInv); }
 
-    Clump* getDisClump() { return disabled_clump; }
-    Clump const& getDisClumpRef() const { return (*disabled_clump); }
+    Clump* getDisClump() { return disableClump; }
+    Clump const& getDisClumpRef() const { return (*disableClump); }
 
     void ExtractAndUpdateInvOrigin(C_Polyhedron& pp, C_Polyhedron& dualp);
     void ExtractAndUpdateInv(C_Polyhedron& pp, C_Polyhedron& dualp);

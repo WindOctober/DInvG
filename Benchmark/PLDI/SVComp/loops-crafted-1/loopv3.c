@@ -1,6 +1,3 @@
-int SIZE = 50000001;
-
-
 int __VERIFIER_nondet_int();
 extern void abort(void);
 extern void __assert_fail(const char *, const char *, unsigned int, const char *) __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__noreturn__));
@@ -19,6 +16,7 @@ void __VERIFIER_assert(int cond) {
 
 int main() {
   int i,j;
+  int SIZE = 50000001;
   i = 0; j=0;
   while(i<SIZE){ 
 

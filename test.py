@@ -10,7 +10,7 @@ if __name__ == "__main__":
         for file in fileNames:
             relPath=os.path.relpath(dirPath,benchPath)
             newPath=os.path.join(resPath,relPath)
-            newFilePath=os.path.join(newPath,file)
+            newFilePath=os.path.join(newPath,file.replace(".c",".out"))
             if not os.path.exists(newPath):
                 os.makedirs(newPath)
             command=f"./bin/Inv sv {os.path.join(dirPath,file)}"

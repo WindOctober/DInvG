@@ -6,7 +6,7 @@ void assume_abort_if_not(int cond) {
   if(!cond) {abort();}
 }
 extern int __VERIFIER_nondet_int(void);
-int last ;
+
 void __VERIFIER_assert(int cond) {
   if (!(cond)) {
      ERROR: {reach_error();abort();}
@@ -15,8 +15,9 @@ void __VERIFIER_assert(int cond) {
 }
 
 
-int SIZE = 20;
 int main() {
+	int SIZE = 20;
+	int last;
 	last = __VERIFIER_nondet_int();
 	assume_abort_if_not(last > 0);
 	int a=0,b=0,c=0,st=0,d=0;
@@ -34,11 +35,6 @@ int main() {
 		else if(st==1 && last>=SIZE) { 
 			d++;
 		}
-		if(d == SIZE) {
-			a = 0; 
-			b = 1;
-		}
-			
 		__VERIFIER_assert(a==b && c==SIZE);
 	}
 	return 0;

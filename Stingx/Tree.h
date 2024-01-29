@@ -56,7 +56,7 @@ class Tree {
     int uner;  // un-related transition(inter)
     int curId = -1;
     int maxPolyNum = -1;
-
+    bool projectFlag=true;
     vector<pair<int, vector<int>>> pruned_node;
     vector<int> clumps_gli;
     vector<int> conflict_depth;
@@ -82,7 +82,7 @@ class Tree {
     void set_uner(int amount);
     void setCurId(int index);
     void setMaxPolyNum();
-    
+    void deactivateProject();
     int get_ra();
     int get_er();
     int get_unra();

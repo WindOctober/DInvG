@@ -42,14 +42,10 @@ void Location::initialize(int varsNum,
     this->poly = p;
     this->locName = name;
     this->preInv = new C_Polyhedron(varsNum, UNIVERSE);
-    this->disabled_clump = new Clump(coefInfo, name, "Location");
+    this->disableClump = new Clump(coefInfo, name, "Location");
     setCoefInfo();
     invariant = new C_Polyhedron(varsNum, UNIVERSE);
     contextReady = false;
-    propagation_flag = false;
-    ppging_flag = false;
-    ppged_flag = false;
-    vp_inv_flag = false;
 }
 
 void Location::InitWithoutPopulating(int varsNum,
@@ -66,14 +62,10 @@ void Location::InitWithoutPopulating(int varsNum,
     this->poly = p;
     this->locName = name;
     this->preInv = new C_Polyhedron(varsNum, UNIVERSE);
-    this->disabled_clump = new Clump(coefInfo, name, "Location");
+    this->disableClump = new Clump(coefInfo, name, "Location");
     LIndex = LIndex;
     invariant = new C_Polyhedron(varsNum, UNIVERSE);
     contextReady = false;
-    propagation_flag = false;
-    ppging_flag = false;
-    ppged_flag = false;
-    vp_inv_flag = false;
 }
 
 Context* Location::getContext() {
@@ -209,17 +201,10 @@ ostream& operator<<(ostream& in, Location const& l) {
         in << "[ no initial condition set]" << endl;
     }
 
-    if (name == EXIT_LOCATION && l.get_vp_inv_flag()) {
-        in << "Disjunctive Invariant: [[ " << endl;
-        in << "  " << endl;
-        print_clump(in, l.get_vp_inv(), info);
-        in << "  " << endl;
-    } else {
-        in << "Invariant: [[ " << endl;
-        in << "| " << endl;
-        printPolyhedron(in, l.GetInv(), info);
-        in << "| " << endl;
-    }
+    in << "Invariant: [[ " << endl;
+    in << "| " << endl;
+    printPolyhedron(in, l.GetInv(), info);
+    in << "| " << endl;
     in << "]]" << endl;
 
     return in;
@@ -509,20 +494,16 @@ void Location::addTrivial(C_Polyhedron& trivial) {
 
 void Location::ExtractAndUpdateInvOrigin(C_Polyhedron& poly,
                                          C_Polyhedron& coefPoly) {
-    cout << endl << "For location: " << locName;
-    cout << endl
-         << "「 l: " << LIndex << ", varsNum: " << varsNum
-         << ", coefNum: " << coefInfo->getDim() << " 」";
+    // cout << endl << "For location: " << locName;
+    // cout << endl
+    //      << "「 l: " << LIndex << ", varsNum: " << varsNum
+    //      << ", coefNum: " << coefInfo->getDim() << " 」";
     ExtractInvfromGenerator(poly.minimized_generators());
     UpdateCoefCS(coefPoly);
 }
 
 void Location::ExtractAndUpdateInv(C_Polyhedron& poly, C_Polyhedron& coefPoly) {
     int coefNum = coefInfo->getDim();
-    cout << endl << "For location: " << locName;
-    cout << endl
-         << "「 l: " << LIndex << ", varsNum: " << varsNum
-         << ", coefNum: " << coefNum << " 」";
     ExtractInv(poly.minimized_constraints());
     UpdateCoefCS(coefPoly);
 }
@@ -678,7 +659,6 @@ void Location::UpdateCoefCS(C_Polyhedron& coefPoly) {
         j++;
     }
     result->remove_higher_space_dimensions(coefNum);
-    outputPolyhedron(result, coefInfo);
     coefPoly.intersection_assign(*result);
     delete (result);
 }

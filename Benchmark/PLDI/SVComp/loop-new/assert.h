@@ -12,4 +12,4 @@ void __VERIFIER_assert(int cond) {
   return;
 }
 int __VERIFIER_nondet_int();
-#define LARGE_INT 1000000
+#define LARGE_INT 10000

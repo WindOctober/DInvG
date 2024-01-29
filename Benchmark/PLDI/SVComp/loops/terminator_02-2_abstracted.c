@@ -34,11 +34,11 @@ int main()
     if (!(z>100)) return 0;
     if (!(z<200)) return 0;
     // START HAVOCABSTRACTION
-    if ((z > (100)) & (x < (100))) {
+    if ((z > (100)) && (x < (100))) {
     z = __VERIFIER_nondet_int();
     x = __VERIFIER_nondet_int();
     }
-    if ((z > (100)) & (x < (100))) abort();
+    if ((z > (100)) && (x < (100))) abort();
     // END HAVOCABSTRACTION                       
 
     __VERIFIER_assert(x>=100 || z<=100);

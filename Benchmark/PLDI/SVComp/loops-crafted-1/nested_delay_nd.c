@@ -15,13 +15,14 @@ void __VERIFIER_assert(int cond) {
 }
 
 
-int SIZE = 200000; 
+
 
 int main()
 {
 	last = __VERIFIER_nondet_int();
 	assume_abort_if_not(last > 0);
 	int a=0,b=0,c=0,st=0,d=0;
+	int SIZE = 200000; 
 	while(1) {
 		st=1;  
 		for(c=0;c<SIZE;c++) {

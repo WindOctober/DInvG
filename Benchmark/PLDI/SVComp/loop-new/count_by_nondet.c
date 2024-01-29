@@ -2,8 +2,9 @@
 int main() {
     int i = 0;
     int k = 0;
+    int j;
     while(i < LARGE_INT) {
-        int j = __VERIFIER_nondet_int();
+        j = __VERIFIER_nondet_int();
         if (!(1 <= j && j < LARGE_INT)) return 0;
         i = i + j;
         k ++;
