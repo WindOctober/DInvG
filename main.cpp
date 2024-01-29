@@ -17,11 +17,11 @@ class SVASTConsumer : public ASTConsumer {
         Decl* rootDecl = context.getTranslationUnitDecl();
         // rootDecl->dump();
         // return;
-        CParser::ParserState curState=CParser::ParserState::PARSING;
+        CParser::ParserState curState = CParser::ParserState::PARSING;
         // CParser preParser(&context,curState);
         // preParser.TraverseDecl(rootDecl);
         // curState=CParser::ParserState::PARSING;
-        CParser Parser(&context,curState);
+        CParser Parser(&context, curState);
         Parser.TraverseDecl(rootDecl);
         return;
     }
@@ -80,7 +80,6 @@ int main(int argc, const char** argv) {
         ClangTool tool(*compilationDB, sources);
         return tool.run(newFrontendActionFactory<SVFrontendAction>().get());
     }
-    perror(
-        "Please choose at least one from the following command modes: [--sv]");
+    perror("Please choose at least one from the following command modes: [sv]");
 }
 #endif
