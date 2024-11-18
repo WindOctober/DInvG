@@ -1,21 +1,20 @@
-build/**
+build/
 compile_commands.json
-Bak/**
+Bak/
 lstingX
-Result/**
+result/
 origin-lstingX
 *.sh
-bin/**
-.vscode/**
-tmp/**
+bin/
+.vscode/
+tmp/
 .DS_Store
 core
 test.c
 test*
 result.c
 output.txt
-test/**
-*.py
+test/
 
 # Prerequisites
 *.d
