@@ -12,7 +12,6 @@ tmp/
 core
 test.c
 test*
-result.c
 output.txt
 test/
 

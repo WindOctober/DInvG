@@ -1,4 +1,4 @@
-# VMCAI2025 AE
+# DInvG
 
 ## Installation
 
@@ -41,3 +41,11 @@ In the specific experimental setup, only a single core was used for testing (the
 ## License
 This project is licensed under the MIT License. See the LICENSE file for details.
 
+
+## Contact
+
+If you encounter any issues while using this tool, please submit them via [GitHub Issues](https://github.com). If I fail to respond in a timely manner, feel free to contact me via email:
+
+📧 **Email**: [Windocotber@sjtu.edu.cn](mailto:Windocotber@sjtu.edu.cn)
+
+Thank you for your support and feedback! 😊

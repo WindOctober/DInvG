@@ -36,10 +36,6 @@ class SVFrontendAction : public ASTFrontendAction {
     }
 };
 
-// Here, I have used a set of command-line parameters specifically for SV-COMP
-// verification. In the future, we anticipate expanding to more front-end
-// extractions related to pointers and arrays. These parameters are primarily
-// for PLDI2024.
 static cl::OptionCategory SVCompCategory("the option for sv-competition");
 static cl::SubCommand SVComp(
     "sv",
