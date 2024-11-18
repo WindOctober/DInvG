@@ -1,2 +1,1 @@
-./Benchmark/PLDI/SVComp/loop-new/assert.h
-[info] Using default compilation options.
+/bin/sh: 1: ./bin/Inv: not found

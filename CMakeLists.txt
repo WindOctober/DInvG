@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.16.3)
 
+set(CMAKE_CXX_STANDARD 14)
 option(USE_LSTINGX "Use the lstingx main function" OFF)
 if(USE_LSTINGX)
     add_definitions(-DUSE_LSTINGX_MAIN)
@@ -10,7 +11,16 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE INTERNAL "")
 set(COPY_COMPILE_COMMANDS "${CMAKE_SOURCE_DIR}/compile_commands.json")
 add_compile_options(-fexceptions)
+
 add_executable(Inv ${CMAKE_SOURCE_DIR}/main.cpp)
+add_executable(Inv_NoProp ${CMAKE_SOURCE_DIR}/main.cpp)
+
+set_target_properties(Inv_NoProp PROPERTIES
+    CXX_STANDARD 14
+    CXX_STANDARD_REQUIRED YES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin"
+)
+
 set(EXECUTABLE_OUTPUT_PATH "${CMAKE_SOURCE_DIR}")
 include_directories(${CMAKE_SOURCE_DIR})
 message("C++ compiler ID: " ${CMAKE_CXX_COMPILER_ID})
@@ -88,18 +98,22 @@ link_directories(${LLVM_LD_PATH})
 include_directories(${LLVM_INCLUDE_FLAGS})
 target_link_libraries(Inv ${CLANG_LIBS})
 
+add_subdirectory(Frontend)
+include_directories(${CMAKE_SOURCE_DIR}/Frontend)
 include_directories(${CMAKE_SOURCE_DIR}/Stingx)
 add_subdirectory(Stingx)
 target_link_libraries(Inv lstingx)
 
-#set CXX flags
+target_link_libraries(Inv_NoProp ${CLANG_LIBS})
+target_link_libraries(Inv_NoProp lstingx)
+target_link_libraries(Inv_NoProp Frontend_NoProp)
+target_link_libraries(Inv Frontend)
+
+
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS}  ${LLVM_LD_FLAGS}")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -I/usr/lib/gcc/x86_64-linux-gnu/9/include -fexceptions -DENABLE_LLVM_SHARED=1 ${LLVM_CXX_FLAGS}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fexceptions -DENABLE_LLVM_SHARED=1 ${LLVM_CXX_FLAGS}")
 
 #Frontend commands
 
-add_subdirectory(Frontend)
-include_directories(${CMAKE_SOURCE_DIR}/Frontend)
-target_link_libraries(Frontend lstingx)
-target_link_libraries(Inv Frontend)
+
 

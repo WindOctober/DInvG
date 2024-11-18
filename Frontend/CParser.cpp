@@ -298,10 +298,13 @@ void CParser::ComputeLinTSInv(int index, ProgramState* curState) {
                                                transPolys[start][end]);
                     }
                 }
-                curTS->PrintLinTS(1);
-                curTS->ComputeLinTSInv();
+                #ifdef DINVG_PROPAGATION
+                    curTS->ComputeLinTSInv();
+                #else
+                    curTS->ComputeOverInv();
+                #endif
                 map<string, vector<C_Polyhedron*>> invMap = curTS->getInvMap();
-                curTS->PrintInv();
+                // curTS->PrintInv();
                 // TODO: consider more complicated case.
                 bool restartFlag = false;
                 for (int k = 0; k < loclist.size(); k++) {
@@ -363,8 +366,8 @@ void CParser::ComputeLinTSInv(int index, ProgramState* curState) {
                             res->add_constraints(
                                 locConstraints->minimized_constraints());
                             res->remove_space_dimensions(projectSet);
-                            cout << endl << "[Exit Invariant]: ";
-                            cout << *res << endl;
+                            // cout << endl << "[Exit Invariant]: ";
+                            // cout << *res << endl;
 
                             exitInv.push_back(res);
 
@@ -378,8 +381,8 @@ void CParser::ComputeLinTSInv(int index, ProgramState* curState) {
                                 res->add_constraints(
                                     locConstraints->minimized_constraints());
                                 res->remove_space_dimensions(projectSet);
-                                cout << endl << "[Exit Invariant]: ";
-                                cout << *res << endl;
+                                // cout << endl << "[Exit Invariant]: ";
+                                // cout << *res << endl;
                                 exitInv.push_back(res);
                             }
                         }
@@ -613,7 +616,7 @@ void CParser::TraverseProgramStmt(Stmt* stmt,
             ProcessProgramState(curState);
         return;
     }
-    cout << "[curStmt] " << stmt->getStmtClassName() << endl;
+    // cout << "[curStmt] " << stmt->getStmtClassName() << endl;
     // TODO: All conditional expressions may need to be preprocessed. The
     // purpose of the preprocessing function is to safely convert them into
     // Expr* that can be transformed into linear expressions.
